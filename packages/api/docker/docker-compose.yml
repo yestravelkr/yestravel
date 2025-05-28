@@ -1,0 +1,18 @@
+version: '3'
+
+services:
+  yestravel-postgresql:
+    build:
+      context: ./postgresql
+      dockerfile: Dockerfile
+    container_name: yestravel-postgresql
+    ports:
+      - '54321:5432'
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=yestravel
+    volumes:
+      - ./postgresql/data:/var/lib/postgresql/data
+      - ./postgresql/create-database.sql:/docker-entrypoint-initdb.d/create-database.sql
+    restart: always

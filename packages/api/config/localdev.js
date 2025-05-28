@@ -1,0 +1,17 @@
+module.exports = {
+  name: '여기는 localdev.js 입니다.',
+  database: {
+    yestravel: {
+      type: 'postgres',
+      host: '127.0.0.1',
+      roHost: '127.0.0.1',
+      port: 54321,
+      username: 'postgres',
+      password: 'postgres',
+      database: 'yestravel',
+      migrationsRun: false,
+      entities: ['src/module/**/*.entity.ts'],
+      migrations: ['src/database/migration/*.ts'],
+    },
+  },
+};
