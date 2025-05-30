@@ -18,7 +18,7 @@ ARG PACKAGE_TOKEN
 ENV PACKAGE_TOKEN=$PACKAGE_TOKEN
 
 WORKDIR /app
-COPY --from=builder /app/dist ./dist
+COPY --from=builder /apps/dist ./dist
 COPY config ./config
 COPY .npmrc ./
 COPY package.json yarn.lock ./

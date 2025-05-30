@@ -2,7 +2,8 @@
   "name": "yestravel",
   "private": true,
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "apps/*"
   ],
   "scripts": {
     "prepare": "husky install",
