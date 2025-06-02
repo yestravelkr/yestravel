@@ -3,8 +3,8 @@ version: '3'
 services:
   yestravel-postgresql:
     build:
-      context: ./postgresql
-      dockerfile: Dockerfile
+      context: postgresql
+      dockerfile: postgresql/Dockerfile
     container_name: yestravel-postgresql
     ports:
       - '54321:5432'
