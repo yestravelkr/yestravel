@@ -40,4 +40,4 @@ docker/postgresql/data
 
 .env
 
-src/@generated/
+@generated/

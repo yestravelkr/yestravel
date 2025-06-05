@@ -10,7 +10,7 @@ import { TRPCModule } from 'nestjs-trpc';
     SharedModule,
     SampleModule,
     TRPCModule.forRoot({
-      autoSchemaFile: './src/@generated',
+      autoSchemaFile: './@generated',
     }),
   ],
   controllers: [AppController],
