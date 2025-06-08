@@ -1,5 +1,3 @@
-import {Ctx, Input, Mutation, Router, UseMiddlewares} from 'nestjs-trpc';
-import {z} from "zod";
 import { MessagePattern } from '@nestjs/microservices';
 import {BackofficeAuthService} from "@src/module/backoffice/auth/backoffice.auth.service";
 import {Controller, Inject} from "@nestjs/common";

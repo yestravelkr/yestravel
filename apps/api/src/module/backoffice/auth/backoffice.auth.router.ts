@@ -9,8 +9,7 @@ export class BackofficeAuthRouter {
 
   constructor(
     @Inject(MicroserviceClient) private readonly microserviceClient: MicroserviceClient
-  ) {
-  }
+  ) {}
 
 
   @Mutation({
@@ -24,9 +23,7 @@ export class BackofficeAuthRouter {
   })
   async register(@Input('email') email: string, @Input('password') password: string): Promise<{ message: string }>{
 
-    const res = await this.microserviceClient.send('backoffice.auth.register', { email, password });
-    console.log(res);
-    return res;
+    return this.microserviceClient.send('backoffice.auth.register', { email, password });
   }
 
 }
