@@ -6,9 +6,7 @@ import {MicroserviceOptions} from "@nestjs/microservices";
 import {InMemoryMicroserviceStrategy} from "@src/module/trpc/inmemoryMicroserviceStrategy";
 
 async function bootstrap() {
-  console.log('1', DataSources.yestravel)
   await DataSources.yestravel.initialize();
-  console.log('2')
   // App Microservice
   const microservice = await NestFactory.createMicroservice<MicroserviceOptions>(
     AppModule,

@@ -10,7 +10,6 @@ export class ModuleLoader {
     });
 
     const routers: any[] = [];
-
     for (const file of files) {
       try {
         const module = await import(file);
@@ -18,9 +17,7 @@ export class ModuleLoader {
         // 모든 export된 클래스들을 찾아서 Router 데코레이터가 있는지 확인
         Object.keys(module).forEach(key => {
           const exportedClass = module[key];
-          if (this.isRouterClass(exportedClass)) {
-            routers.push(exportedClass);
-          }
+          routers.push(exportedClass);
         });
       } catch (error) {
         console.warn(`Failed to load router from ${file}:`, error.message);
@@ -28,12 +25,5 @@ export class ModuleLoader {
     }
 
     return routers;
-  }
-
-  private static isRouterClass(cls: any): boolean {
-    // Router 데코레이터가 있는지 확인
-    return cls &&
-      typeof cls === 'function' &&
-      Reflect.hasMetadata('trpc:router', cls);
   }
 }

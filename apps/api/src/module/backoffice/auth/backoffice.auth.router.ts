@@ -1,15 +1,9 @@
 import {Ctx, Input, Mutation, Router, UseMiddlewares} from 'nestjs-trpc';
 import {z} from "zod";
-import {BackofficeAuthService} from "@src/module/backoffice/auth/backoffice.auth.service";
-import {Inject} from "@nestjs/common";
-import {MicroserviceClient} from "@src/module/trpc/microserviceClient";
+import {BaseTrpcRouter} from "@src/module/trpc/baseTrpcRouter";
 
 @Router({ alias: 'backofficeAuth' })
-export class BackofficeAuthRouter {
-
-  constructor(
-    @Inject(MicroserviceClient) private readonly microserviceClient: MicroserviceClient
-  ) {}
+export class BackofficeAuthRouter extends BaseTrpcRouter {
 
 
   @Mutation({
