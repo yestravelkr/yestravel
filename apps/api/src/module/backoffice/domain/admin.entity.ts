@@ -1,5 +1,7 @@
-import {Column, Entity, PrimaryGeneratedColumn} from "typeorm";
+import {Column, Entity, EntityManager, PrimaryGeneratedColumn} from "typeorm";
 import * as bcrypt from "bcrypt";
+import {TransactionService} from "@src/module/shared/transaction/transaction.service";
+import {getEntityManager} from "@src/database/datasources";
 
 @Entity('admin')
 export class AdminEntity {
@@ -22,3 +24,12 @@ export class AdminEntity {
   }
 
 }
+
+export const getAdminRepository = (source?: TransactionService | EntityManager) => getEntityManager(source).getRepository(AdminEntity).extend({
+  async register(email: string, password: string): Promise<AdminEntity> {
+    const admin = new AdminEntity();
+    admin.email = email;
+    await admin.setPassword(password);
+    return this.save(admin);
+  },
+});

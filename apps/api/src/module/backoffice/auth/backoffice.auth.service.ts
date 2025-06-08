@@ -10,7 +10,6 @@ export class BackofficeAuthService {
   ) {}
 
   async register(email: string, password: string) {
-    // new AdminEntity();
-    // return await this.repositoryProvider.AdminRepository.register(email, password);
+    return this.repositoryProvider.AdminRepository.register(email, password);
   }
 }

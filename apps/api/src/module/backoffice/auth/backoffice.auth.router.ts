@@ -15,9 +15,9 @@ export class BackofficeAuthRouter extends BaseTrpcRouter {
       message: z.string(),
     }),
   })
-  async register(@Input('email') email: string, @Input('password') password: string): Promise<{ message: string }>{
+  async register(@Input() data: {email: string, password: string}): Promise<{ message: string }>{
 
-    return this.microserviceClient.send('backoffice.auth.register', { email, password });
+    return this.microserviceClient.send('backoffice.auth.register', data);
   }
 
 }

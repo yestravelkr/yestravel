@@ -1,7 +1,8 @@
 import { ConfigProvider } from '@src/config';
-import { DataSource } from 'typeorm';
+import {DataSource, EntityManager} from 'typeorm';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import { PostgresConnectionOptions } from 'typeorm/driver/postgres/PostgresConnectionOptions';
+import {TransactionService} from "@src/module/shared/transaction/transaction.service";
 
 export class DataSources {
   private static yestravelInstance: DataSource;
@@ -29,4 +30,13 @@ export class DataSources {
     }
     return this.yestravelInstance;
   }
+}
+
+
+
+export function getEntityManager(source?: EntityManager | TransactionService | DataSource): EntityManager | DataSource {
+  if (source instanceof TransactionService) {
+    return source.getTransaction() ?? DataSources.yestravel;
+  }
+  return source ?? DataSources.yestravel;
 }
