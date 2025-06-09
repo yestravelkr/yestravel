@@ -9,9 +9,7 @@ module.exports = {
       username: 'postgres',
       password: 'postgres',
       database: 'yestravel',
-      migrationsRun: false,
-      entities: ['src/module/**/*.entity.ts'],
-      migrations: ['src/database/migration/*.ts'],
+      migrationsRun: false
     },
   },
 };

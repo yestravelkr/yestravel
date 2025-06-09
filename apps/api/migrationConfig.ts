@@ -1,4 +1,4 @@
-import { ConfigProvider } from '@src/config';
+import { ConfigProvider } from './src/config';
 import { DataSource } from 'typeorm';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 

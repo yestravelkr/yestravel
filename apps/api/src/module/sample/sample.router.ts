@@ -1,13 +1,9 @@
-import { Inject } from '@nestjs/common';
-import { SampleService } from '@src/module/sample/sample.service';
 import { Input, Query, Router } from 'nestjs-trpc';
 import { z } from 'zod';
+import {BaseTrpcRouter} from "@src/module/trpc/baseTrpcRouter";
 
 @Router({ alias: 'sample' })
-export class SampleRouter {
-  constructor(
-    @Inject(SampleService) private readonly sampleService: SampleService
-  ) {}
+export class SampleRouter extends BaseTrpcRouter {
 
   @Query({
     input: z.object({
@@ -15,14 +11,14 @@ export class SampleRouter {
     }),
     output: z.string(),
   })
-  getHello(@Input('name') name?: string): string {
-    return this.sampleService.getHello() + name;
+  getHello(@Input('name') name?: string): Promise<string> {
+    return this.microserviceClient.send('sample.getHello', name);
   }
 
   @Query({
     output: z.string(),
   })
-  getSample(): string {
-    return this.sampleService.getSample();
+  async getSample() {
+    return this.microserviceClient.send('sample.getSample', {});
   }
 }
