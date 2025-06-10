@@ -4,6 +4,11 @@ dotenv.config();
 import config from 'config';
 import { PostgresConnectionOptions } from 'typeorm/driver/postgres/PostgresConnectionOptions';
 
+type JwtConfigType = {
+  secret: string;
+  expiresIn: string;
+}
+
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export const ConfigProvider = {
   stage: config.get<string>('stage'),
@@ -17,4 +22,10 @@ export const ConfigProvider = {
       synchronize: false,
     },
   },
+  auth: {
+    jwt: {
+      access: config.get<JwtConfigType>('auth.jwt.access'),
+      refresh: config.get<JwtConfigType>('auth.jwt.refresh')
+    }
+  }
 } as const;
