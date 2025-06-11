@@ -4,6 +4,7 @@ import {MicroserviceClient} from "@src/module/trpc/microserviceClient";
 import {BackofficeAuthRouter} from "@src/module/backoffice/auth/backoffice.auth.router";
 import {AutoRouterModule} from "@src/module/trpc/routerModule";
 import {TRPCAppContext} from "@src/module/trpc/trpcAppContext";
+import {BackofficeAuthMiddleware} from "@src/module/backoffice/auth/backoffice.auth.middleware";
 
 @Global()
 @Module({
@@ -24,11 +25,11 @@ class TrpcModuleExport {
     }),
     AutoRouterModule.forRoot({
       basePath: __dirname,
-      pattern: '../**/*.router.{ts,js}',
+      pattern: '../**/*.{router,middleware}.{ts,js}',
     }),
   ],
   providers: [
-    TRPCAppContext,
+    TRPCAppContext
   ],
 })
 export class TrpcModule {

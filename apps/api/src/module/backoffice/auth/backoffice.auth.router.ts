@@ -1,6 +1,7 @@
-import {Ctx, Input, Mutation, Router, UseMiddlewares} from 'nestjs-trpc';
+import {Ctx, Input, Mutation, Query, Router, UseMiddlewares} from 'nestjs-trpc';
 import {z} from "zod";
 import {BaseTrpcRouter} from "@src/module/trpc/baseTrpcRouter";
+import {BackofficeAuthMiddleware} from "@src/module/backoffice/auth/backoffice.auth.middleware";
 
 @Router({ alias: 'backofficeAuth' })
 export class BackofficeAuthRouter extends BaseTrpcRouter {
@@ -39,5 +40,16 @@ export class BackofficeAuthRouter extends BaseTrpcRouter {
     });
     return { accessToken }
   }
+
+  @UseMiddlewares(BackofficeAuthMiddleware)
+  @Query({
+    output: z.object({
+      message: z.string(),
+    }),
+  })
+  test(@Ctx() ctx: any): { message: string } {
+    return { message: `인증된 사용자 ${ctx.admin.email}` };
+  }
+
 
 }
