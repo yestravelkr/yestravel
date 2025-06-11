@@ -5,6 +5,11 @@ import {ConfigProvider} from "@src/config";
 
 const jwtService = new JwtService();
 
+export type AdminAuthPayload = {
+  id: number;
+  email: string;
+}
+
 @Injectable()
 export class BackofficeAuthService {
   constructor(
@@ -23,7 +28,7 @@ export class BackofficeAuthService {
     if (!admin.checkPassword(password)) {
       throw new Error('Invalid password');
     }
-    const payload = { email: admin.email, id: admin.id };
+    const payload: AdminAuthPayload = { email: admin.email, id: admin.id };
     const accessToken = jwtService.sign(payload, ConfigProvider.auth.jwt.access);
     const refreshToken = jwtService.sign(payload, ConfigProvider.auth.jwt.refresh);
     return { accessToken, refreshToken };

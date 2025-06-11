@@ -5,6 +5,8 @@ import {TRPCError} from "@trpc/server";
 import {TRPC_ERROR_CODES_BY_KEY} from "@trpc/server/src/unstable-core-do-not-import/rpc/codes";
 import {JwtService} from "@nestjs/jwt";
 import {ConfigProvider} from "@src/config";
+import {AdminAuthPayload} from "@src/module/backoffice/auth/backoffice.auth.service";
+import type {CreateExpressContextOptions} from "@trpc/server/adapters/express";
 
 const jwtService = new JwtService();
 
@@ -41,4 +43,8 @@ export class BackofficeAuthMiddleware implements TRPCMiddleware {
         }
       });
     }
+}
+
+export interface BackofficeAuthorizedContext extends CreateExpressContextOptions {
+  admin: AdminAuthPayload
 }
