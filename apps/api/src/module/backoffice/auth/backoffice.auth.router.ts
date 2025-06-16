@@ -20,4 +20,24 @@ export class BackofficeAuthRouter extends BaseTrpcRouter {
     return this.microserviceClient.send('backoffice.auth.register', data);
   }
 
+  @Mutation({
+    input: z.object({
+      email: z.string().email('이메일 형식이 아닙니다.'),
+      password: z.string(),
+    }),
+    output: z.object({
+      accessToken: z.string(),
+    }),
+  })
+  async login(@Input() data: {email: string, password: string}, @Ctx() ctx: any): Promise<{ accessToken: string }> {
+    const { accessToken, refreshToken } = await this.microserviceClient.send('backoffice.auth.login', data);
+
+    ctx.res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production', // 프로덕션 환경에서는 secure 설정
+      maxAge: 1000 * 60 * 60 * 24 * 30, // 30일
+    });
+    return { accessToken }
+  }
+
 }

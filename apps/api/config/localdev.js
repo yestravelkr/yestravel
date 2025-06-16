@@ -12,4 +12,15 @@ module.exports = {
       migrationsRun: false
     },
   },
+
+  auth: {
+    jwt: {
+      access: {
+        secret: 'JWT_ACCEESS_SECRET',
+      },
+      refresh: {
+        secret: 'JWT_REFRESH_SECRET',
+      }
+    }
+  }
 };
