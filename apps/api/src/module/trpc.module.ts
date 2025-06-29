@@ -20,7 +20,7 @@ class TrpcModuleExport {
   imports: [
     TrpcModuleExport,
     TRPCModule.forRoot({
-      autoSchemaFile: './@generated',
+      autoSchemaFile: '../../packages/api-types/src',
       context: TRPCAppContext,
     }),
     AutoRouterModule.forRoot({
