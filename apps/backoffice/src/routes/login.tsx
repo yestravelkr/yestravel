@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { useForm } from 'react-hook-form';
 
 import { trpc } from '@/shared';
+import { Role, useAuthStore } from '@/store';
 
 export const Route = createFileRoute('/login')({
   component: RouteComponent,
@@ -16,11 +17,22 @@ function RouteComponent() {
   }>();
 
   const navigate = Route.useNavigate();
+  const { login } = useAuthStore();
 
   const loginMutation = trpc.backofficeAuth.login.useMutation({
     onSuccess: (data) => {
       console.log('로그인 성공:', data);
-      localStorage.setItem('accessToken', data.accessToken);
+
+      // AuthStore에 로그인 정보 저장 (localStorage 사용하지 않음)
+      login(
+        {
+          id: 'temp-id', // 실제로는 서버에서 받아와야 함
+          email: methods.getValues('email'),
+          role: Role.ADMIN, // 백오피스는 기본적으로 ADMIN
+        },
+        data.accessToken,
+      );
+
       navigate({ to: '/', replace: true });
     },
     onError: (error) => {
