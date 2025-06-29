@@ -26,5 +26,13 @@ module.exports = {
         expiresIn: '30d',
       }
     }
+  },
+  cors: {
+    origin: [
+      // TODO: 프로덕션 도메인들 (실제 배포 시 수정 필요)
+      'https://admin.yestravel.kr',
+      'https://backoffice.yestravel.kr',
+    ],
+    credentials: true,
   }
 };
