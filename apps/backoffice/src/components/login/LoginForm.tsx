@@ -1,6 +1,8 @@
 import { useForm } from 'react-hook-form';
 import tw from 'tailwind-styled-components';
 
+import { LoginFormData, LoginFormSchema } from './LoginFormSchema';
+
 import { LoadingSpinner, trpc } from '@/shared';
 import { Role, useAuthStore } from '@/store';
 
@@ -9,10 +11,7 @@ interface LoginFormProps {
 }
 
 export function LoginForm({ onSuccess }: LoginFormProps) {
-  const methods = useForm<{
-    email: string;
-    password: string;
-  }>();
+  const { register, handleSubmit, formState } = useForm<LoginFormData>();
 
   const { login } = useAuthStore();
 
@@ -24,7 +23,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
       login(
         {
           id: 'temp-id', // 실제로는 서버에서 받아와야 함
-          email: methods.getValues('email'),
+          email: '',
           role: Role.ADMIN, // 백오피스는 기본적으로 ADMIN
         },
         data.accessToken,
@@ -38,32 +37,34 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
     },
   });
 
-  const handleSubmit = async (data: { email: string; password: string }) => {
-    loginMutation.mutate(data);
+  const onSubmit = async (formData: LoginFormData) => {
+    loginMutation.mutate(formData);
   };
 
   return (
     <FormCard>
-      <StyledForm onSubmit={methods.handleSubmit(handleSubmit)}>
+      <StyledForm onSubmit={handleSubmit(onSubmit)}>
         {/* 이메일 입력 */}
         <InputGroup>
           <Label htmlFor="email">이메일</Label>
           <Input
             type="email"
             id="email"
-            {...methods.register('email', {
+            {...register('email', {
               required: '이메일을 입력해주세요',
-              pattern: {
-                value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                message: '올바른 이메일 형식을 입력해주세요',
+              validate: (value) => {
+                const result = LoginFormSchema.shape.email.safeParse(value);
+                return (
+                  result.success ||
+                  result.error.issues[0]?.message ||
+                  '이메일 형식이 올바르지 않습니다'
+                );
               },
             })}
             placeholder="admin@yestravel.co.kr"
           />
-          {methods.formState.errors.email && (
-            <ErrorMessage>
-              {methods.formState.errors.email.message}
-            </ErrorMessage>
+          {formState.errors.email && (
+            <ErrorMessage>{formState.errors.email.message}</ErrorMessage>
           )}
         </InputGroup>
 
@@ -73,19 +74,21 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
           <Input
             type="password"
             id="password"
-            {...methods.register('password', {
+            {...register('password', {
               required: '비밀번호를 입력해주세요',
-              minLength: {
-                value: 8,
-                message: '비밀번호는 최소 8자 이상이어야 합니다',
+              validate: (value) => {
+                const result = LoginFormSchema.shape.password.safeParse(value);
+                return (
+                  result.success ||
+                  result.error.issues[0]?.message ||
+                  '비밀번호를 입력해주세요'
+                );
               },
             })}
             placeholder="••••••••"
           />
-          {methods.formState.errors.password && (
-            <ErrorMessage>
-              {methods.formState.errors.password.message}
-            </ErrorMessage>
+          {formState.errors.password && (
+            <ErrorMessage>{formState.errors.password.message}</ErrorMessage>
           )}
         </InputGroup>
 
