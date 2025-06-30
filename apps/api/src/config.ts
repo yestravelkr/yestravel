@@ -9,6 +9,13 @@ type JwtConfigType = {
   expiresIn: string;
 }
 
+type CorsConfigType = {
+  origin: boolean | string | string[];
+  credentials: boolean;
+  methods?: string[];
+  allowedHeaders?: string[];
+}
+
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export const ConfigProvider = {
   stage: config.get<string>('stage'),
@@ -27,5 +34,6 @@ export const ConfigProvider = {
       access: config.get<JwtConfigType>('auth.jwt.access'),
       refresh: config.get<JwtConfigType>('auth.jwt.refresh')
     }
-  }
+  },
+  cors: config.get<CorsConfigType>('cors')
 } as const;

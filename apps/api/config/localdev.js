@@ -22,5 +22,8 @@ module.exports = {
         secret: 'JWT_REFRESH_SECRET',
       }
     }
+  },
+  cors: {
+    origin: true,
   }
 };

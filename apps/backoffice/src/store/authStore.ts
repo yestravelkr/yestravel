@@ -1,5 +1,4 @@
-import { persist } from 'zustand/middleware';
-import { create } from 'zustand/react';
+import { create } from 'zustand';
 
 export enum Role {
   ADMIN = 'ADMIN',
@@ -18,33 +17,41 @@ type AuthState = {
   user: User | null;
   role: Role;
   isLogin: boolean;
+  accessToken: string | null;
 };
 
 type AuthActions = {
-  login: (user: User) => void;
+  login: (user: User, accessToken: string) => void;
   logout: () => void;
+  setAccessToken: (token: string) => void;
 };
 
 type AuthStore = AuthState & AuthActions;
 
-export const useAuthStore = create<AuthStore>()(
-  persist(
-    (set) => ({
+export const useAuthStore = create<AuthStore>((set) => ({
+  isLogin: false,
+  role: Role.GUEST,
+  user: null,
+  accessToken: null,
+
+  login: (user, accessToken) => {
+    set({
+      user,
+      isLogin: true,
+      role: user.role,
+      accessToken,
+    });
+  },
+
+  logout: () =>
+    set({
+      user: null,
       isLogin: false,
       role: Role.GUEST,
-      user: null,
-      login: (user) => {
-        set({ user, isLogin: true, role: user.role });
-      },
-      logout: () =>
-        set({
-          user: null,
-          isLogin: false,
-          role: Role.GUEST,
-        }),
+      accessToken: null,
     }),
-    {
-      name: 'auth-storage',
-    },
-  ),
-);
+
+  setAccessToken: (token: string) => {
+    set({ accessToken: token });
+  },
+}));
