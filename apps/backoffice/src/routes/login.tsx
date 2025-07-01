@@ -1,8 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { useForm } from 'react-hook-form';
+import tw from 'tailwind-styled-components';
 
-import { trpc } from '@/shared';
-import { Role, useAuthStore } from '@/store';
+import { LoginForm } from '@/components/login';
 
 export const Route = createFileRoute('/login')({
   component: RouteComponent,
@@ -11,61 +10,76 @@ export const Route = createFileRoute('/login')({
 });
 
 function RouteComponent() {
-  const methods = useForm<{
-    email: string;
-    password: string;
-  }>();
-
   const navigate = Route.useNavigate();
-  const { login } = useAuthStore();
 
-  const loginMutation = trpc.backofficeAuth.login.useMutation({
-    onSuccess: (data) => {
-      console.log('로그인 성공:', data);
-
-      // AuthStore에 로그인 정보 저장 (localStorage 사용하지 않음)
-      login(
-        {
-          id: 'temp-id', // 실제로는 서버에서 받아와야 함
-          email: methods.getValues('email'),
-          role: Role.ADMIN, // 백오피스는 기본적으로 ADMIN
-        },
-        data.accessToken,
-      );
-
-      navigate({ to: '/', replace: true });
-    },
-    onError: (error) => {
-      console.error('로그인 실패:', error);
-      alert('로그인 실패');
-    },
-  });
-
-  const handleSubmit = async (data: { email: string; password: string }) => {
-    loginMutation.mutate(data);
+  const handleLoginSuccess = () => {
+    navigate({ to: '/', replace: true });
   };
 
   return (
-    <div>
-      <form onSubmit={methods.handleSubmit(handleSubmit)}>
-        <label htmlFor="email">
-          에미일:
-          <input type="text" id={'email'} {...methods.register('email')} />
-        </label>
-        <br />
-        <label htmlFor="password">
-          비번:
-          <input
-            type="password"
-            id={'password'}
-            {...methods.register('password')}
-          />
-        </label>
-        <br />
-        <button disabled={loginMutation.isPending}>
-          {loginMutation.isPending ? '로그인 중...' : 'Admin 로그인'}
-        </button>
-      </form>
-    </div>
+    <Container>
+      <ContentWrapper>
+        {/* 로고 섹션 */}
+        <LogoSection>
+          <Logo src="/logo.png" alt="YesTravel Logo" />
+          <Title>백오피스 로그인</Title>
+          <Subtitle>관리자 계정으로 로그인하세요</Subtitle>
+        </LogoSection>
+
+        {/* 로그인 폼 */}
+        <LoginForm onSuccess={handleLoginSuccess} />
+
+        {/* 푸터 */}
+        <Footer>
+          <FooterText>© 2024 YesTravel. All rights reserved.</FooterText>
+        </Footer>
+      </ContentWrapper>
+    </Container>
   );
 }
+
+// Styled Components
+const Container = tw.div`
+  min-h-screen 
+  bg-gradient-to-br from-blue-50 to-indigo-100 
+  flex items-center justify-center 
+  p-4
+`;
+
+const ContentWrapper = tw.div`
+  w-full 
+  max-w-md
+`;
+
+const LogoSection = tw.div`
+  text-center 
+  mb-8
+`;
+
+const Logo = tw.img`
+  h-16 
+  w-auto 
+  mx-auto 
+  mb-4
+`;
+
+const Title = tw.h1`
+  text-2xl 
+  font-bold 
+  text-gray-900 
+  mb-2
+`;
+
+const Subtitle = tw.p`
+  text-gray-600
+`;
+
+const Footer = tw.div`
+  text-center 
+  mt-8
+`;
+
+const FooterText = tw.p`
+  text-sm 
+  text-gray-500
+`;
