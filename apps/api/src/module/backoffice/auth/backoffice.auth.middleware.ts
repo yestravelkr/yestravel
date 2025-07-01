@@ -26,7 +26,7 @@ export class BackofficeAuthMiddleware implements TRPCMiddleware {
 
       let adminPayload;
       try {
-        adminPayload = jwtService.verify(token, ConfigProvider.auth.jwt.access);
+        adminPayload = jwtService.verify(token, ConfigProvider.auth.jwt.backoffice.access);
       } catch (e) {
         throw new TRPCError({
           code: "UNAUTHORIZED",

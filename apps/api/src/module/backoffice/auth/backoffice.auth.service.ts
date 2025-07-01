@@ -29,8 +29,8 @@ export class BackofficeAuthService {
       throw new Error('Invalid password');
     }
     const payload: AdminAuthPayload = { email: admin.email, id: admin.id };
-    const accessToken = jwtService.sign(payload, ConfigProvider.auth.jwt.access);
-    const refreshToken = jwtService.sign(payload, ConfigProvider.auth.jwt.refresh);
+    const accessToken = jwtService.sign(payload, ConfigProvider.auth.jwt.backoffice.access);
+    const refreshToken = jwtService.sign(payload, ConfigProvider.auth.jwt.backoffice.refresh);
     return { accessToken, refreshToken };
   }
 }
