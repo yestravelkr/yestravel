@@ -2,11 +2,11 @@ import { createFileRoute, Outlet } from '@tanstack/react-router';
 import { PropsWithChildren } from 'react';
 
 import { Header, Navigation } from '@/components';
-// import { authBeforeLoad } from '@/shared/routes';
+import { authBeforeLoad } from '@/shared';
 
 export const Route = createFileRoute('/_auth')({
   component: RouteComponent,
-  // beforeLoad: authBeforeLoad,
+  beforeLoad: authBeforeLoad,
 });
 
 function RouteComponent() {
