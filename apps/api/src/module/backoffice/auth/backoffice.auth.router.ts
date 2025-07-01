@@ -44,6 +44,21 @@ export class BackofficeAuthRouter extends BaseTrpcRouter {
     return { accessToken }
   }
 
+  @Mutation({
+    output: z.object({
+      accessToken: z.string(),
+    }),
+  })
+  async refresh(@Ctx() ctx: any): Promise<{ accessToken: string }> {
+    const refreshToken = ctx.req.cookies?.refreshToken;
+    
+    if (!refreshToken) {
+      throw new Error('Refresh token not found');
+    }
+
+    return this.microserviceClient.send('backoffice.auth.refresh', { refreshToken });
+  }
+
   @UseMiddlewares(BackofficeAuthMiddleware)
   @Query({
     output: z.object({
