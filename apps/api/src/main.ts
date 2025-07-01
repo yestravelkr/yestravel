@@ -5,6 +5,7 @@ import {TrpcModule} from "@src/module/trpc.module";
 import {MicroserviceOptions} from "@nestjs/microservices";
 import {InMemoryMicroserviceStrategy} from "@src/module/trpc/inmemoryMicroserviceStrategy";
 import { ConfigProvider } from '@src/config';
+import cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   await DataSources.yestravel.initialize();
@@ -18,6 +19,7 @@ async function bootstrap() {
   await microservice.listen();
   const trpcApp = await NestFactory.create(TrpcModule);
   
+  trpcApp.use(cookieParser());
   trpcApp.enableCors(ConfigProvider.cors);
   
   await trpcApp.listen(3000);
