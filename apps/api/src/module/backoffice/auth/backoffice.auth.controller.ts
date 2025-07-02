@@ -31,4 +31,10 @@ export class BackofficeAuthController {
     return this.backofficeAuthService.login(email, password);
   }
 
+  @MessagePattern('backoffice.auth.refresh')
+  async refresh(data: { refreshToken: string }): Promise<{ accessToken: string }> {
+    const { refreshToken } = data;
+    return this.backofficeAuthService.refreshToken(refreshToken);
+  }
+
 }

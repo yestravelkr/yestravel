@@ -18,6 +18,9 @@ const appRouter = t.router({
     })).output(z.object({
       accessToken: z.string(),
     })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    refresh: publicProcedure.output(z.object({
+      accessToken: z.string(),
+    })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
     test: publicProcedure.output(z.object({
       message: z.string(),
     })).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)

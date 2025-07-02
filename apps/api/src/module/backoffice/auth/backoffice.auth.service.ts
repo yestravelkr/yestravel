@@ -29,8 +29,32 @@ export class BackofficeAuthService {
       throw new Error('Invalid password');
     }
     const payload: AdminAuthPayload = { email: admin.email, id: admin.id };
-    const accessToken = jwtService.sign(payload, ConfigProvider.auth.jwt.access);
-    const refreshToken = jwtService.sign(payload, ConfigProvider.auth.jwt.refresh);
+    const accessToken = jwtService.sign(payload, ConfigProvider.auth.jwt.backoffice.access);
+    const refreshToken = jwtService.sign(payload, ConfigProvider.auth.jwt.backoffice.refresh);
     return { accessToken, refreshToken };
+  }
+
+  async refreshToken(refreshToken: string): Promise<{ accessToken: string }> {
+    let payload: AdminAuthPayload;
+    
+    try {
+      payload = jwtService.verify(refreshToken, ConfigProvider.auth.jwt.backoffice.refresh);
+    } catch (e) {
+      throw new Error('Invalid refresh token');
+    }
+
+    // 사용자가 여전히 존재하는지 확인
+    const admin = await this.repositoryProvider.AdminRepository.findOneByOrFail({
+      id: payload.id,
+      email: payload.email
+    }).catch(() => {
+      throw new Error('Admin not found');
+    });
+
+    // 새로운 access token 발급
+    const newPayload: AdminAuthPayload = { email: admin.email, id: admin.id };
+    const accessToken = jwtService.sign(newPayload, ConfigProvider.auth.jwt.backoffice.access);
+    
+    return { accessToken };
   }
 }

@@ -9,6 +9,11 @@ type JwtConfigType = {
   expiresIn: string;
 }
 
+type AppJwtConfigType = {
+  access: JwtConfigType;
+  refresh: JwtConfigType;
+}
+
 type CorsConfigType = {
   origin: boolean | string | string[];
   credentials: boolean;
@@ -31,8 +36,9 @@ export const ConfigProvider = {
   },
   auth: {
     jwt: {
-      access: config.get<JwtConfigType>('auth.jwt.access'),
-      refresh: config.get<JwtConfigType>('auth.jwt.refresh')
+      backoffice: config.get<AppJwtConfigType>('auth.jwt.backoffice'),
+      store: config.get<AppJwtConfigType>('auth.jwt.store'),
+      influencer: config.get<AppJwtConfigType>('auth.jwt.influencer')
     }
   },
   cors: config.get<CorsConfigType>('cors')
