@@ -6,7 +6,7 @@ import { RoleType } from '@src/module/backoffice/domain/role.enum';
 import { BaseEntity } from '@src/module/backoffice/domain/base.entity';
 
 @Entity('admin')
-export class AdminEntity implements BaseEntity {
+export class AdminEntity extends BaseEntity {
   @Column({ unique: true, length: 50, type: 'varchar' })
   email: string;
 
