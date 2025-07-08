@@ -1,7 +1,6 @@
-import { Column, Entity } from 'typeorm';
+import { Column } from 'typeorm';
 import { BaseEntity } from '@src/module/backoffice/domain/base.entity';
 
-@Entity('bank_info')
 export class BankEntity extends BaseEntity {
   @Column({
     name: 'name',
@@ -26,10 +25,4 @@ export class BankEntity extends BaseEntity {
     nullable: true,
   })
   accountHolder?: string;
-
-  @Column({
-    name: 'partner_id',
-    nullable: false,
-  })
-  partnerId: string;
 }
