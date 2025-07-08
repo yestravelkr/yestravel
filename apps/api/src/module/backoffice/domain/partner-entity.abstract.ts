@@ -12,6 +12,15 @@ export abstract class PartnerEntity extends BaseEntity {
   @Column({ name: 'phone_number', type: 'varchar', length: 20, nullable: true })
   phoneNumber?: string;
 
+  @Column({
+    name: 'thumbnail',
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+    default: null,
+  })
+  thumbnail?: string;
+
   // 사업자 정보
   @Column({
     name: 'business_type',
