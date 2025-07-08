@@ -1,7 +1,5 @@
-import { Column, DeleteDateColumn, EntityManager } from 'typeorm';
+import { Column, DeleteDateColumn } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { TransactionService } from '@src/module/shared/transaction/transaction.service';
-import { getEntityManager } from '@src/database/datasources';
 import { RoleType } from '@src/module/backoffice/domain/role.enum';
 import { BaseEntity } from '@src/module/backoffice/domain/base.entity';
 
@@ -35,17 +33,3 @@ export class LoginEntity extends BaseEntity {
     return bcrypt.compare(plainPassword, this.password);
   }
 }
-
-export const getAdminRepository = (
-  source?: TransactionService | EntityManager
-) =>
-  getEntityManager(source)
-    .getRepository(LoginEntity)
-    .extend({
-      async register(email: string, password: string): Promise<LoginEntity> {
-        const admin = new LoginEntity();
-        admin.email = email;
-        await admin.setPassword(password);
-        return this.save(admin);
-      },
-    });
