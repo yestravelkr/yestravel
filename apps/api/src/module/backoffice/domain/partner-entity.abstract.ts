@@ -60,7 +60,6 @@ export abstract class PartnerEntity extends BaseEntity {
   @DeleteDateColumn({ name: 'deleted_at', nullable: true })
   deletedAt?: Date;
 
-  // Helper methods
   getBankInfo() {
     if (!this.bankName || !this.accountNumber || !this.accountHolder) {
       return null;
