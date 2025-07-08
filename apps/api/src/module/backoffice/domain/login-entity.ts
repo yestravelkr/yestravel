@@ -9,7 +9,7 @@ export class LoginEntity extends BaseEntity {
   @Column({ unique: true, length: 50, type: 'varchar' })
   email: string;
 
-  @Column({ length: 20, type: 'varchar' })
+  @Column({ type: 'varchar' })
   password: string;
 
   @Column({ length: 20, type: 'varchar' })
