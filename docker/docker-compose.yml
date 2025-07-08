@@ -4,7 +4,7 @@ services:
   yestravel-postgresql:
     build:
       context: postgresql
-      dockerfile: postgresql/Dockerfile
+      dockerfile: Dockerfile
     container_name: yestravel-postgresql
     ports:
       - '54321:5432'
