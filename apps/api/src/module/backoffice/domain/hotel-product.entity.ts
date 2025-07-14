@@ -1,6 +1,6 @@
 import { ChildEntity, Column } from 'typeorm';
 
-@ChildEntity('hotel')
+@ChildEntity('hotelProduct')
 export class HotelProductEntity {
   @Column()
   hotelName: string;
