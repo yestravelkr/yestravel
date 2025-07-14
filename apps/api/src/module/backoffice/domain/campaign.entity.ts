@@ -4,18 +4,36 @@ import { ProductType } from '@src/module/backoffice/domain/base-product.entity';
 
 @Entity('campaign')
 export class CampaignEntity extends BaseEntity {
-  @Column()
+  @Column({
+    type: 'varchar',
+  })
   title: string;
 
-  @Column()
-  startAt: string;
+  @Column({
+    type: 'timestamptz',
+  })
+  startAt: Date;
 
-  @Column()
-  endAt: string;
+  @Column({
+    type: 'timestamptz',
+  })
+  endAt: Date;
 
   @Column({
     type: 'enum',
     enum: ProductType,
   })
   productType: ProductType;
+
+  @Column({
+    type: 'text',
+    nullable: true,
+  })
+  description: string;
+
+  @Column({
+    type: 'varchar',
+    nullable: true,
+  })
+  thumbnail: string;
 }
