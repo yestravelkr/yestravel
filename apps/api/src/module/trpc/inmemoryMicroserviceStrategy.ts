@@ -1,8 +1,12 @@
 // in-memory-microservice.strategy.ts
 import { CustomTransportStrategy, Server } from '@nestjs/microservices';
-import {SharedEventBus} from "@src/module/trpc/eventBus";
+import { SharedEventBus } from '@src/module/trpc/eventBus';
+import { firstValueFrom, Observable, isObservable } from 'rxjs';
 
-export class InMemoryMicroserviceStrategy extends Server implements CustomTransportStrategy {
+export class InMemoryMicroserviceStrategy
+  extends Server
+  implements CustomTransportStrategy
+{
   private handlers = new Map();
   private eventBus = SharedEventBus.instance;
 
@@ -11,12 +15,33 @@ export class InMemoryMicroserviceStrategy extends Server implements CustomTransp
       try {
         const handler = this.handlers.get(JSON.stringify(pattern));
         if (handler) {
-          const result = await handler(data);
+          let result = await handler(data);
+
+          // Handle Observable conversion
+          if (isObservable(result)) {
+            try {
+              result = await firstValueFrom(result as Observable<any>);
+            } catch (observableError) {
+              console.error('Observable conversion error:', observableError);
+              this.eventBus.error(requestId, observableError);
+              return;
+            }
+          }
+
           this.eventBus.respond(requestId, result);
         } else {
-          this.eventBus.error(requestId, new Error(`Handler not found for pattern: ${JSON.stringify(pattern)}`));
+          this.eventBus.error(
+            requestId,
+            new Error(
+              `Handler not found for pattern: ${JSON.stringify(pattern)}`
+            )
+          );
         }
       } catch (error) {
+        console.error(
+          'InMemoryMicroserviceStrategy Error handling request:',
+          error
+        );
         this.eventBus.error(requestId, error);
       }
     });
