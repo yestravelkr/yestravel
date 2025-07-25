@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import {RepositoryProvider} from "@src/module/shared/transaction/repository.provider";
 import { JwtService } from '@nestjs/jwt';
 import {ConfigProvider} from "@src/config";
@@ -23,10 +23,10 @@ export class BackofficeAuthService {
   async login(email: string, password: string): Promise<{ accessToken: string, refreshToken: string }> {
     const admin = await this.repositoryProvider.AdminRepository.findOneByOrFail({email})
       .catch(() => {
-        throw new Error('Admin not found')
+        throw new NotFoundException('Admin not found')
       });
     if (!admin.checkPassword(password)) {
-      throw new Error('Invalid password');
+      throw new UnauthorizedException('Invalid password');
     }
     const payload: AdminAuthPayload = { email: admin.email, id: admin.id };
     const accessToken = jwtService.sign(payload, ConfigProvider.auth.jwt.backoffice.access);
@@ -40,7 +40,7 @@ export class BackofficeAuthService {
     try {
       payload = jwtService.verify(refreshToken, ConfigProvider.auth.jwt.backoffice.refresh);
     } catch (e) {
-      throw new Error('Invalid refresh token');
+      throw new UnauthorizedException('Invalid refresh token');
     }
 
     // 사용자가 여전히 존재하는지 확인
@@ -48,7 +48,7 @@ export class BackofficeAuthService {
       id: payload.id,
       email: payload.email
     }).catch(() => {
-      throw new Error('Admin not found');
+      throw new NotFoundException('Admin not found');
     });
 
     // 새로운 access token 발급
