@@ -1,8 +1,7 @@
 import { Column } from 'typeorm';
 import { BusinessType } from '@src/module/backoffice/domain/social-media-platform.enum';
-import { BaseEntity } from '@src/module/backoffice/domain/base.entity';
 
-export class BusinessInfoEntity extends BaseEntity {
+export class BusinessInfoEntity {
   @Column({
     name: 'business_type',
     type: 'enum',
