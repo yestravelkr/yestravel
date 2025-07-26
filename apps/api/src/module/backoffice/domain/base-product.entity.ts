@@ -28,7 +28,7 @@ export abstract class BaseProductEntity extends BaseEntity {
   @Column({ name: 'campaign_id', type: 'integer' })
   campaignId: number;
 
-  @OneToOne(() => CampaignEntity, campaign => campaign.product)
+  @OneToOne(() => CampaignEntity)
   @JoinColumn({ name: 'campaign_id' })
   campaign: CampaignEntity;
 }
