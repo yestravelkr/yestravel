@@ -1,9 +1,7 @@
 import {
   Column,
-  Entity,
   JoinColumn,
   OneToOne,
-  TableInheritance,
 } from 'typeorm';
 import { BaseEntity } from '@src/module/backoffice/domain/base.entity';
 import { CampaignEntity } from '@src/module/backoffice/domain/campaign.entity';
@@ -14,19 +12,18 @@ export enum ProductType {
   DELIVERY = 'DELIVERY',
 }
 
-@Entity('product')
-@TableInheritance({
-  column: {
-    type: 'enum',
-    enum: ProductType,
-  },
-})
 export abstract class BaseProductEntity extends BaseEntity {
   @Column()
   name: string;
 
   @Column()
   price: number;
+
+  @Column({
+    type: 'enum',
+    enum: ProductType,
+  })
+  type: ProductType;
 
   @Column({ name: 'campaign_id', type: 'integer' })
   campaignId: number;
