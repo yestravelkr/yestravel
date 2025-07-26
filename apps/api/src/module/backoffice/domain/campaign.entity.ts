@@ -1,6 +1,6 @@
-import { Column, Entity } from 'typeorm';
+import { Column, Entity, OneToOne } from 'typeorm';
 import { BaseEntity } from '@src/module/backoffice/domain/base.entity';
-import { ProductType } from '@src/module/backoffice/domain/base-product.entity';
+import { BaseProductEntity } from '@src/module/backoffice/domain/base-product.entity';
 
 @Entity('campaign')
 export class CampaignEntity extends BaseEntity {
@@ -20,12 +20,6 @@ export class CampaignEntity extends BaseEntity {
   endAt: Date;
 
   @Column({
-    type: 'enum',
-    enum: ProductType,
-  })
-  productType: ProductType;
-
-  @Column({
     type: 'text',
     nullable: true,
   })
@@ -36,4 +30,7 @@ export class CampaignEntity extends BaseEntity {
     nullable: true,
   })
   thumbnail: string;
+
+  @OneToOne(() => BaseProductEntity, product => product.campaign)
+  product?: BaseProductEntity;
 }
