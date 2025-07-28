@@ -4,6 +4,23 @@ import { TransactionService } from '@src/module/shared/transaction/transaction.s
 import { getEntityManager } from '@src/database/datasources';
 import { BrandManagerEntity } from '@src/module/backoffice/domain/brand-manager.entity';
 
+interface RegisterBrandDto {
+  name: string;
+  email?: string;
+  phoneNumber?: string;
+  businessInfo?: {
+    type?: string;
+    name?: string;
+    licenseNumber?: string;
+    ceoName?: string;
+  };
+  bankInfo?: {
+    name?: string;
+    accountNumber?: string;
+    accountHolder?: string;
+  };
+}
+
 @Entity('brand')
 export class BrandEntity extends PartnerEntity {
   @OneToMany(() => BrandManagerEntity, brandManager => brandManager.brand)
@@ -12,4 +29,21 @@ export class BrandEntity extends PartnerEntity {
 
 export const getBrandRepository = (
   source?: TransactionService | EntityManager
-) => getEntityManager(source).getRepository(BrandEntity).extend({});
+) => getEntityManager(source).getRepository(BrandEntity).extend({
+  async register(dto: RegisterBrandDto): Promise<BrandEntity> {
+    const brand = new BrandEntity();
+    brand.name = dto.name;
+    brand.email = dto.email;
+    brand.phoneNumber = dto.phoneNumber;
+    
+    if (dto.businessInfo) {
+      brand.businessInfo = dto.businessInfo as any;
+    }
+    
+    if (dto.bankInfo) {
+      brand.bankInfo = dto.bankInfo as any;
+    }
+    
+    return this.save(brand);
+  },
+});
