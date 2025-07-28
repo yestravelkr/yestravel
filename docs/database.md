@@ -271,6 +271,83 @@ export class UserService {
 }
 ```
 
+### 커스텀 리포지토리 패턴 (권장)
+
+트랜잭션 지원과 도메인별 메서드를 위한 확장 리포지토리:
+
+```typescript
+// brand.entity.ts
+import { Entity, EntityManager } from 'typeorm';
+import { TransactionService } from '@src/module/shared/transaction/transaction.service';
+import { getEntityManager } from '@src/database/datasources';
+import { z } from 'zod';
+import { registerBrandInputSchema } from './brand.schema';
+
+@Entity('brand')
+export class BrandEntity extends PartnerEntity {
+  // 엔티티 필드들...
+}
+
+// 커스텀 리포지토리 확장
+export const getBrandRepository = (
+  source?: TransactionService | EntityManager  // 트랜잭션 지원
+) => getEntityManager(source).getRepository(BrandEntity).extend({
+  
+  // 도메인별 생성 메서드
+  async register(dto: z.infer<typeof registerBrandInputSchema>): Promise<BrandEntity> {
+    const brand = new BrandEntity();
+    brand.name = dto.name;
+    brand.email = dto.email;
+    brand.phoneNumber = dto.phoneNumber;
+    
+    if (dto.businessInfo) {
+      brand.businessInfo = dto.businessInfo as any;
+    }
+    
+    if (dto.bankInfo) {
+      brand.bankInfo = dto.bankInfo as any;
+    }
+    
+    return this.save(brand);
+  },
+  
+  // 도메인별 조회 메서드
+  async findWithRelations(id: number): Promise<BrandEntity | null> {
+    return this.findOne({
+      where: { id },
+      relations: ['businessInfo', 'bankInfo', 'brandManagers'],
+    });
+  },
+});
+```
+
+**서비스에서 사용:**
+
+```typescript
+@Injectable()
+export class BrandService {
+  constructor(private readonly transactionService: TransactionService) {}
+
+  async register(dto: z.infer<typeof registerBrandInputSchema>): Promise<BrandEntity> {
+    // 트랜잭션 컨텍스트와 함께 커스텀 리포지토리 사용
+    const brandRepository = getBrandRepository(this.transactionService);
+    return brandRepository.register(dto);
+  }
+
+  async findById(id: number): Promise<BrandEntity | null> {
+    // 일반 컨텍스트에서 커스텀 리포지토리 사용
+    const brandRepository = getBrandRepository();
+    return brandRepository.findWithRelations(id);
+  }
+}
+```
+
+**패턴의 장점:**
+- **트랜잭션 지원**: `TransactionService`를 통한 자동 트랜잭션 관리
+- **도메인별 메서드**: 비즈니스 로직에 특화된 리포지토리 메서드
+- **타입 안전성**: Zod 스키마와 통합된 타입 안전성
+- **재사용성**: 다양한 서비스에서 공통 리포지토리 로직 재사용
+
 ### 쿼리 빌더
 
 ```typescript
@@ -539,6 +616,33 @@ yarn migration:show
 # 마이그레이션 재설정 (개발 전용)
 yarn migration:revert # 필요시 여러 번 실행
 ```
+
+**중복 생성 오류 해결:**
+마이그레이션 실행 시 "이미 존재합니다" 오류가 발생하는 경우:
+
+```bash
+# 오류 예시: CREATE TYPE "public"."admin_role_enum" 에서 중복 오류 발생
+```
+
+**해결 방법:**
+1. **마이그레이션 파일 검토**: 중복 생성 확인
+   ```typescript
+   // 잘못된 예: 이미 존재하는 테이블/타입 재생성
+   await queryRunner.query(`CREATE TYPE "public"."admin_role_enum" AS ENUM('admin', 'super_admin')`);
+   await queryRunner.query(`CREATE TABLE "admin" (...)`);
+   
+   // 수정: 중복 생성 제거 또는 IF NOT EXISTS 사용
+   await queryRunner.query(`CREATE TYPE IF NOT EXISTS "public"."admin_role_enum" AS ENUM('admin', 'super_admin')`);
+   ```
+
+2. **마이그레이션 순서 확인**: 이전 마이그레이션에서 이미 생성된 항목 확인
+3. **개발 환경 재설정** (필요시):
+   ```bash
+   # 주의: 모든 데이터가 삭제됩니다
+   docker-compose down -v
+   docker-compose up -d
+   yarn migration:run
+   ```
 
 **성능 문제:**
 ```sql
