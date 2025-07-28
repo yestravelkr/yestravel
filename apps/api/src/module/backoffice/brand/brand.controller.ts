@@ -1,8 +1,9 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
-import { BrandService, RegisterBrandDto } from '@src/module/backoffice/brand/brand.service';
+import { BrandService } from '@src/module/backoffice/brand/brand.service';
 import { TransactionService } from '@src/module/shared/transaction/transaction.service';
 import { Transactional } from '@src/module/shared/transaction/transaction.decorator';
+import { BrandEntity } from '@src/module/backoffice/domain/brand.entity';
 
 @Controller()
 export class BrandController {
@@ -13,51 +14,32 @@ export class BrandController {
 
   @MessagePattern('backoffice.brand.register')
   @Transactional
-  async register(data: RegisterBrandDto) {
-    const brand = await this.brandService.register(data);
-    
-    return {
-      id: brand.id,
-      name: brand.name,
-      email: brand.email,
-      phoneNumber: brand.phoneNumber,
-      businessInfo: brand.businessInfo,
-      bankInfo: brand.bankInfo,
-      createdAt: brand.createdAt,
+  async register(data: {
+    name: string;
+    email?: string;
+    phoneNumber?: string;
+    businessInfo?: {
+      type?: string;
+      name?: string;
+      licenseNumber?: string;
+      ceoName?: string;
     };
+    bankInfo?: {
+      name?: string;
+      accountNumber?: string;
+      accountHolder?: string;
+    };
+  }) {
+    return this.brandService.register(data);
   }
   
   @MessagePattern('backoffice.brand.findAll')
   async findAll() {
-    const brands = await this.brandService.findAll();
-    
-    return brands.map(brand => ({
-      id: brand.id,
-      name: brand.name,
-      email: brand.email,
-      phoneNumber: brand.phoneNumber,
-      businessInfo: brand.businessInfo,
-      bankInfo: brand.bankInfo,
-      createdAt: brand.createdAt,
-    }));
+    return this.brandService.findAll();
   }
   
   @MessagePattern('backoffice.brand.findById')
   async findById(data: { id: number }) {
-    const brand = await this.brandService.findById(data.id);
-    
-    if (!brand) {
-      return null;
-    }
-    
-    return {
-      id: brand.id,
-      name: brand.name,
-      email: brand.email,
-      phoneNumber: brand.phoneNumber,
-      businessInfo: brand.businessInfo,
-      bankInfo: brand.bankInfo,
-      createdAt: brand.createdAt,
-    };
+    return this.brandService.findById(data.id);
   }
 }

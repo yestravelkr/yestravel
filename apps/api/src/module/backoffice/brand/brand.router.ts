@@ -1,4 +1,4 @@
-import { Router, Query, UseMiddlewares } from 'nestjs-trpc';
+import {Router, Query, UseMiddlewares, Mutation, Input} from 'nestjs-trpc';
 import { z } from 'zod';
 import { BackofficeAuthMiddleware } from '@src/module/backoffice/auth/backoffice.auth.middleware';
 import { BackofficeAuthorizedContext } from '@src/module/backoffice/auth/backoffice.auth.middleware';
@@ -7,16 +7,16 @@ import { BaseTrpcRouter } from '@src/module/trpc/baseTrpcRouter';
 import { BusinessType } from '@src/module/backoffice/domain/social-media-platform.enum';
 
 const businessInfoSchema = z.object({
-  type: z.nativeEnum(BusinessType).optional(),
-  name: z.string().optional(),
-  licenseNumber: z.string().optional(),
-  ceoName: z.string().optional(),
+  type: z.nativeEnum(BusinessType).optional().nullable(),
+  name: z.string().optional().nullable(),
+  licenseNumber: z.string().optional().nullable(),
+  ceoName: z.string().optional().nullable(),
 });
 
 const bankInfoSchema = z.object({
-  name: z.string().optional(),
-  accountNumber: z.string().optional(),
-  accountHolder: z.string().optional(),
+  name: z.string().optional().nullable(),
+  accountNumber: z.string().optional().nullable(),
+  accountHolder: z.string().optional().nullable(),
 });
 
 const brandSchema = z.object({
@@ -37,18 +37,19 @@ const registerBrandInput = z.object({
   bankInfo: bankInfoSchema.optional(),
 });
 
-@Router({ alias: 'backoffice.brand' })
+@Router({ alias: 'backofficeBrand' })
 export class BrandRouter extends BaseTrpcRouter {
   @UseMiddlewares(BackofficeAuthMiddleware)
-  @Query({
+  @Mutation({
     input: registerBrandInput,
     output: brandSchema,
   })
   async register(
     @Ctx() ctx: BackofficeAuthorizedContext,
-    input: z.infer<typeof registerBrandInput>
+    @Input() input: z.infer<typeof registerBrandInput>
   ) {
-    return this.microserviceClient.send('backoffice.brand.register', input);
+    const output = await this.microserviceClient.send('backoffice.brand.register', input);
+    return brandSchema.parse(output);
   }
   
   @UseMiddlewares(BackofficeAuthMiddleware)
@@ -56,7 +57,8 @@ export class BrandRouter extends BaseTrpcRouter {
     output: z.array(brandSchema),
   })
   async findAll(@Ctx() ctx: BackofficeAuthorizedContext) {
-    return this.microserviceClient.send('backoffice.brand.findAll', {});
+    const output = await this.microserviceClient.send('backoffice.brand.findAll', {});
+    return z.array(brandSchema).parse(output);
   }
   
   @UseMiddlewares(BackofficeAuthMiddleware)
@@ -70,6 +72,7 @@ export class BrandRouter extends BaseTrpcRouter {
     @Ctx() ctx: BackofficeAuthorizedContext,
     input: { id: number }
   ) {
-    return this.microserviceClient.send('backoffice.brand.findById', input);
+    const output = await this.microserviceClient.send('backoffice.brand.findById', input);
+    return brandSchema.nullable().parse(output);
   }
 }
