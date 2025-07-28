@@ -25,6 +25,79 @@ const appRouter = t.router({
       message: z.string(),
     })).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
   }),
+  backoffice.brand: t.router({
+    register: publicProcedure.input(z.object({
+      name: z.string().min(1, 'Brand name is required'),
+      email: z.string().email().optional(),
+      phoneNumber: z.string().optional(),
+      businessInfo: z.object({
+        type: z.nativeEnum(BusinessType).optional(),
+        name: z.string().optional(),
+        licenseNumber: z.string().optional(),
+        ceoName: z.string().optional(),
+      }).optional(),
+      bankInfo: z.object({
+        name: z.string().optional(),
+        accountNumber: z.string().optional(),
+        accountHolder: z.string().optional(),
+      }).optional(),
+    })).output(z.object({
+      id: z.number(),
+      name: z.string(),
+      email: z.string().email().optional().nullable(),
+      phoneNumber: z.string().optional().nullable(),
+      businessInfo: z.object({
+        type: z.nativeEnum(BusinessType).optional(),
+        name: z.string().optional(),
+        licenseNumber: z.string().optional(),
+        ceoName: z.string().optional(),
+      }).optional().nullable(),
+      bankInfo: z.object({
+        name: z.string().optional(),
+        accountNumber: z.string().optional(),
+        accountHolder: z.string().optional(),
+      }).optional().nullable(),
+      createdAt: z.date(),
+    })).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    findAll: publicProcedure.output(z.array(z.object({
+      id: z.number(),
+      name: z.string(),
+      email: z.string().email().optional().nullable(),
+      phoneNumber: z.string().optional().nullable(),
+      businessInfo: z.object({
+        type: z.nativeEnum(BusinessType).optional(),
+        name: z.string().optional(),
+        licenseNumber: z.string().optional(),
+        ceoName: z.string().optional(),
+      }).optional().nullable(),
+      bankInfo: z.object({
+        name: z.string().optional(),
+        accountNumber: z.string().optional(),
+        accountHolder: z.string().optional(),
+      }).optional().nullable(),
+      createdAt: z.date(),
+    }))).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    findById: publicProcedure.input(z.object({
+      id: z.number(),
+    })).output(z.object({
+      id: z.number(),
+      name: z.string(),
+      email: z.string().email().optional().nullable(),
+      phoneNumber: z.string().optional().nullable(),
+      businessInfo: z.object({
+        type: z.nativeEnum(BusinessType).optional(),
+        name: z.string().optional(),
+        licenseNumber: z.string().optional(),
+        ceoName: z.string().optional(),
+      }).optional().nullable(),
+      bankInfo: z.object({
+        name: z.string().optional(),
+        accountNumber: z.string().optional(),
+        accountHolder: z.string().optional(),
+      }).optional().nullable(),
+      createdAt: z.date(),
+    }).nullable()).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
+  }),
   sample: t.router({
     getHello: publicProcedure.input(z.object({
       name: z.string().optional(),
