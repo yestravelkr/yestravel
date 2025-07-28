@@ -3,6 +3,8 @@ import { PartnerEntity } from '@src/module/backoffice/domain/partner-entity.abst
 import { TransactionService } from '@src/module/shared/transaction/transaction.service';
 import { getEntityManager } from '@src/database/datasources';
 import { BrandManagerEntity } from '@src/module/backoffice/domain/brand-manager.entity';
+import { z } from 'zod';
+import { registerBrandInputSchema } from "@src/module/backoffice/brand/brand.schema";
 
 @Entity('brand')
 export class BrandEntity extends PartnerEntity {
@@ -13,22 +15,7 @@ export class BrandEntity extends PartnerEntity {
 export const getBrandRepository = (
   source?: TransactionService | EntityManager
 ) => getEntityManager(source).getRepository(BrandEntity).extend({
-  async register(dto: {
-    name: string;
-    email?: string;
-    phoneNumber?: string;
-    businessInfo?: {
-      type?: string;
-      name?: string;
-      licenseNumber?: string;
-      ceoName?: string;
-    };
-    bankInfo?: {
-      name?: string;
-      accountNumber?: string;
-      accountHolder?: string;
-    };
-  }): Promise<BrandEntity> {
+  async register(dto: z.infer<typeof registerBrandInputSchema>): Promise<BrandEntity> {
     const brand = new BrandEntity();
     brand.name = dto.name;
     brand.email = dto.email;

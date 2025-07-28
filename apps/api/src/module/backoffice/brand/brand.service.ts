@@ -1,6 +1,8 @@
 import { Injectable, ConflictException } from '@nestjs/common';
 import { RepositoryProvider } from '@src/module/shared/transaction/repository.provider';
 import { BrandEntity } from '@src/module/backoffice/domain/brand.entity';
+import { z } from 'zod';
+import { registerBrandInputSchema } from '@src/module/backoffice/brand/brand.schema';
 
 @Injectable()
 export class BrandService {
@@ -8,22 +10,7 @@ export class BrandService {
     private readonly repositoryProvider: RepositoryProvider
   ) {}
 
-  async register(dto: {
-    name: string;
-    email?: string;
-    phoneNumber?: string;
-    businessInfo?: {
-      type?: string;
-      name?: string;
-      licenseNumber?: string;
-      ceoName?: string;
-    };
-    bankInfo?: {
-      name?: string;
-      accountNumber?: string;
-      accountHolder?: string;
-    };
-  }): Promise<BrandEntity> {
+  async register(dto: z.infer<typeof registerBrandInputSchema>): Promise<BrandEntity> {
     // Check if brand with the same name already exists
     const existingBrand = await this.repositoryProvider.BrandRepository.findOneBy({ name: dto.name });
     
