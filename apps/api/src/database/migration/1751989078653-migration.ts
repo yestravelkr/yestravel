@@ -64,23 +64,6 @@ export class migration1751989078653 implements MigrationInterface {
                                CONSTRAINT "PK_602f363dac69d049730abb11cc4" PRIMARY KEY ("id")
                              )`);
     await queryRunner.query(
-      `CREATE TYPE "public"."admin_role_enum" AS ENUM('ADMIN_SUPER', 'ADMIN_STAFF', 'PARTNER_SUPER', 'PARTNER_STAFF')`
-    );
-    await queryRunner.query(`CREATE TABLE "admin"
-                             (
-                               "id"           SERIAL                     NOT NULL,
-                               "created_at"   TIMESTAMP                  NOT NULL DEFAULT now(),
-                               "updated_at"   TIMESTAMP                  NOT NULL DEFAULT now(),
-                               "email"        character varying(50)      NOT NULL,
-                               "password"     character varying          NOT NULL,
-                               "name"         character varying(20)      NOT NULL,
-                               "phone_number" character varying(20)      NOT NULL,
-                               "role"         "public"."admin_role_enum" NOT NULL,
-                               "deleted_at"   TIMESTAMP,
-                               CONSTRAINT "UQ_de87485f6489f5d0995f5841952" UNIQUE ("email"),
-                               CONSTRAINT "PK_e032310bcef831fb83101899b10" PRIMARY KEY ("id")
-                             )`);
-    await queryRunner.query(
       `CREATE TYPE "public"."brand_manager_role_enum" AS ENUM('ADMIN_SUPER', 'ADMIN_STAFF', 'PARTNER_SUPER', 'PARTNER_STAFF')`
     );
     await queryRunner.query(`CREATE TABLE "brand_manager"
@@ -150,8 +133,6 @@ export class migration1751989078653 implements MigrationInterface {
     );
     await queryRunner.query(`DROP TABLE "brand_manager"`);
     await queryRunner.query(`DROP TYPE "public"."brand_manager_role_enum"`);
-    await queryRunner.query(`DROP TABLE "admin"`);
-    await queryRunner.query(`DROP TYPE "public"."admin_role_enum"`);
     await queryRunner.query(`DROP TABLE "influencer_manager"`);
     await queryRunner.query(
       `DROP TYPE "public"."influencer_manager_role_enum"`
