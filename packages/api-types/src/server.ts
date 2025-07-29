@@ -25,6 +25,11 @@ const appRouter = t.router({
       message: z.string(),
     })).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
   }),
+  backofficeBrand: t.router({
+    register: publicProcedure.input(registerBrandInputSchema).output(brandSchema).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    findAll: publicProcedure.output(z.array(brandSchema)).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    findById: publicProcedure.input(findBrandByIdInputSchema).output(brandSchema.nullable()).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
+  }),
   sample: t.router({
     getHello: publicProcedure.input(z.object({
       name: z.string().optional(),

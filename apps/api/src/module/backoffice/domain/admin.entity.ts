@@ -10,10 +10,10 @@ export const getAdminRepository = (
   source?: TransactionService | EntityManager
 ) =>
   getEntityManager(source)
-    .getRepository(LoginEntity)
+    .getRepository(AdminEntity)
     .extend({
-      async register(email: string, password: string): Promise<LoginEntity> {
-        const admin = new LoginEntity();
+      async register(email: string, password: string): Promise<AdminEntity> {
+        const admin = new AdminEntity();
         admin.email = email;
         await admin.setPassword(password);
         return this.save(admin);

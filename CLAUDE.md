@@ -53,20 +53,59 @@ module/
 ├── module.controller.ts  # 메시지 핸들러 (@MessagePattern)
 ├── module.service.ts     # 비즈니스 로직
 ├── module.module.ts      # NestJS 모듈 설정
+├── module.schema.ts      # Zod 스키마 정의 (타입은 z.infer로 추론)
 └── module.middleware.ts  # 인증 (선택사항)
 ```
 
 **메시지 규약:** 모든 내부 통신에 `moduleName.methodName` 사용
 
+**모듈 구조 (예: Brand):**
+```
+brand/
+├── brand.router.ts       # tRPC 엔드포인트 (@Router)
+├── brand.controller.ts   # 메시지 핸들러 (@MessagePattern)
+├── brand.service.ts      # 비즈니스 로직
+├── brand.module.ts       # NestJS 모듈
+└── brand.schema.ts       # Zod 스키마 및 타입
+```
+
 ## 필수 패턴
+
+**스키마 정의 (module.schema.ts):**
+```typescript
+import { z } from 'zod';
+
+// Input/Output 스키마 정의
+export const createModuleInputSchema = z.object({
+  name: z.string().min(1),
+  email: z.string().email().optional(),
+});
+
+export const moduleSchema = z.object({
+  id: z.number(),
+  name: z.string(),
+  email: z.string().optional().nullable(),
+  createdAt: z.date(),
+});
+
+// 타입은 필요한 곳에서 z.infer로 추론
+```
 
 **새 라우터:**
 ```typescript
 @Router({ alias: 'moduleName' })
 export class ModuleRouter extends BaseTrpcRouter {
-  @Query({ input: z.object({}), output: z.string() })
-  async getData() {
-    return this.microserviceClient.send('moduleName.getData', {});
+  @UseMiddlewares(BackofficeAuthMiddleware)
+  @Mutation({ 
+    input: createModuleInputSchema, 
+    output: moduleSchema 
+  })
+  async create(
+    @Ctx() ctx: BackofficeAuthorizedContext,
+    @Input() input: z.infer<typeof createModuleInputSchema>
+  ) {
+    const output = await this.microserviceClient.send('moduleName.create', input);
+    return moduleSchema.parse(output);
   }
 }
 ```
@@ -75,9 +114,20 @@ export class ModuleRouter extends BaseTrpcRouter {
 ```typescript
 @Controller()
 export class ModuleController {
-  @MessagePattern('moduleName.getData')
-  async getData() {
-    return this.moduleService.getData();
+  @MessagePattern('moduleName.create')
+  @Transactional
+  async create(data: z.infer<typeof createModuleInputSchema>): Promise<z.infer<typeof moduleSchema>> {
+    const result = await this.moduleService.create(data);
+    return this.formatResponse(result);
+  }
+  
+  private formatResponse(entity: ModuleEntity): z.infer<typeof moduleSchema> {
+    return {
+      id: entity.id,
+      name: entity.name,
+      email: entity.email,
+      createdAt: entity.createdAt,
+    };
   }
 }
 ```
@@ -104,8 +154,18 @@ async performTransaction(data: any) {
 
 - **자동 발견**: 새 라우터는 자동으로 로드됩니다 (수동 등록 불필요)
 - **타입 안전성**: 모든 입력/출력 검증에 Zod 스키마 사용
+- **스키마 패턴**: 타입은 `z.infer<typeof schemaName>`으로 추론, 미리 정의하지 않음
+- **모듈 구조**: BackofficeModule로 그룹화된 하위 모듈들 (Brand, Auth 등)
 - **환경**: API 시작 전에 항상 `yarn generateEnv` 실행
 - **포트**: tRPC 서버는 3000 포트에서 실행
 - **데이터베이스**: Docker를 통한 PostgreSQL, TypeORM 마이그레이션으로 관리
+
+## 실제 구현 예시
+
+**Brand 모듈**: 브랜드 파트너 관리
+- **Router**: `@Router({ alias: 'backofficeBrand' })`
+- **Endpoints**: `register`, `findAll`, `findById`
+- **Schema**: 중첩 객체 (businessInfo, bankInfo) 포함
+- **인증**: BackofficeAuthMiddleware 적용
 
 특정 주제에 대한 자세한 정보는 `/docs` 폴더의 해당 문서 파일을 참조하세요.

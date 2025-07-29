@@ -4,13 +4,13 @@ import { AppService } from './app.service';
 import { SharedModule } from '@src/module/shared/shared.module';
 import { SampleModule } from '@src/module/sample/sample.module';
 import { TRPCModule } from 'nestjs-trpc';
-import {BackofficeAuthModule} from "@src/module/backoffice/auth/backoffice.auth.module";
+import { BackofficeModule } from '@src/module/backoffice/backoffice.module';
 
 @Module({
   imports: [
     SharedModule,
     SampleModule,
-    BackofficeAuthModule
+    BackofficeModule
   ],
   controllers: [AppController],
   providers: [AppService],

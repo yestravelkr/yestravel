@@ -6,15 +6,16 @@
 
 Claude Code 사용자를 위해 새 기능 추가 시 다음 체크리스트를 따르세요:
 
-1. ✅ 모듈 디렉토리 구조 생성
-2. ✅ 적절한 데코레이터로 tRPC 라우터 구현
-3. ✅ 메시지 패턴으로 NestJS 컨트롤러 구현
-4. ✅ 비즈니스 로직으로 서비스 구현
-5. ✅ NestJS 모듈 설정
-6. ✅ 필요시 인증/권한 부여 추가
-7. ✅ 필요시 데이터베이스 엔티티 및 마이그레이션 추가
-8. ✅ 테스트 작성
-9. ✅ 문서 업데이트
+1. ✅ **모듈 디렉토리 구조 생성** (schema 파일 포함)
+2. ✅ **Zod 스키마 정의** (`module.schema.ts`)
+3. ✅ **tRPC 라우터 구현** (스키마 기반 검증)
+4. ✅ **NestJS 컨트롤러 구현** (응답 포맷팅 포함)
+5. ✅ **서비스 및 비즈니스 로직 구현**
+6. ✅ **NestJS 모듈 설정** (적절한 모듈 그룹화)
+7. ✅ **인증/권한 부여 추가** (필요시)
+8. ✅ **데이터베이스 엔티티 및 마이그레이션 추가** (필요시)
+9. ✅ **테스트 작성**
+10. ✅ **문서 업데이트**
 
 ## 단계별 구현
 
@@ -23,111 +24,328 @@ Claude Code 사용자를 위해 새 기능 추가 시 다음 체크리스트를 
 `apps/api/src/module/` 하위에 다음 구조로 새 디렉토리를 생성하세요:
 
 ```
-apps/api/src/module/your-module/
-├── your-module.router.ts
-├── your-module.controller.ts
-├── your-module.service.ts
-├── your-module.module.ts
-└── your-module.middleware.ts (선택사항)
+apps/api/src/module/backoffice/brand/
+├── brand.schema.ts          # Zod 스키마 및 타입 정의 (새로운!)
+├── brand.router.ts          # tRPC 엔드포인트
+├── brand.controller.ts      # 메시지 패턴 핸들러
+├── brand.service.ts         # 비즈니스 로직
+├── brand.module.ts          # NestJS 모듈 설정
+└── brand.middleware.ts      # 인증/권한 부여 (선택사항)
 ```
 
-### 2단계: tRPC 라우터 구현
+**중요한 변경사항:**
+- **`module.schema.ts` 파일이 추가**되어 모든 입력/출력 스키마를 중앙 관리
+- 모듈들은 도메인별로 그룹화 (예: `backoffice/`, `shop/`)
+
+## 실제 구현 예시: 브랜드 관리 모듈
+
+백오피스 브랜드 관리 기능을 구현한 실제 예시를 통해 현재 패턴을 학습해보세요:
+
+### 2단계: 스키마 정의 (`brand.schema.ts`)
+
+**모든 입력/출력 스키마를 중앙에서 관리:**
 
 ```typescript
-// your-module.router.ts
 import { z } from 'zod';
-import { BaseTrpcRouter } from '../trpc/baseTrpcRouter';
-import { Router, Query, Mutation } from '../trpc/decorators';
+import { BusinessType } from '@src/module/backoffice/domain/social-media-platform.enum';
 
-@Router({ alias: 'yourModule' })
-export class YourModuleRouter extends BaseTrpcRouter {
-  @Query({ 
-    input: z.object({ id: z.string() }), 
-    output: z.object({ id: z.string(), name: z.string() }) 
+// 중첩 객체용 기본 스키마
+export const businessInfoSchema = z.object({
+  type: z.nativeEnum(BusinessType).optional().nullable(),
+  name: z.string().optional().nullable(),
+  licenseNumber: z.string().optional().nullable(),
+  ceoName: z.string().optional().nullable(),
+});
+
+export const bankInfoSchema = z.object({
+  name: z.string().optional().nullable(),
+  accountNumber: z.string().optional().nullable(),
+  accountHolder: z.string().optional().nullable(),
+});
+
+// 메인 브랜드 스키마
+export const brandSchema = z.object({
+  id: z.number(),
+  name: z.string(),
+  email: z.string().email().optional().nullable(),
+  phoneNumber: z.string().optional().nullable(),
+  businessInfo: businessInfoSchema.optional().nullable(),
+  bankInfo: bankInfoSchema.optional().nullable(),
+  createdAt: z.date(),
+});
+
+// 입력 스키마
+export const registerBrandInputSchema = z.object({
+  name: z.string().min(1, 'Brand name is required'),
+  email: z.string().email().optional(),
+  phoneNumber: z.string().optional(),
+  businessInfo: businessInfoSchema.optional(),
+  bankInfo: bankInfoSchema.optional(),
+});
+
+export const findBrandByIdInputSchema = z.object({
+  id: z.number(),
+});
+
+// 타입은 사용하는 곳에서 z.infer로 추론 - export type 정의하지 않음!
+```
+
+### 3단계: tRPC 라우터 구현 (`brand.router.ts`)
+
+**스키마 기반 검증과 인증을 포함한 실제 라우터:**
+
+```typescript
+import {Router, Query, UseMiddlewares, Mutation, Input} from 'nestjs-trpc';
+import { BackofficeAuthMiddleware } from '@src/module/backoffice/auth/backoffice.auth.middleware';
+import { BackofficeAuthorizedContext } from '@src/module/backoffice/auth/backoffice.auth.middleware';
+import { Ctx } from 'nestjs-trpc';
+import { BaseTrpcRouter } from '@src/module/trpc/baseTrpcRouter';
+import { z } from 'zod';
+import { 
+  registerBrandInputSchema,
+  findBrandByIdInputSchema,
+  brandSchema
+} from '@src/module/backoffice/brand/brand.schema';
+
+@Router({ alias: 'backofficeBrand' })  // 도메인 prefix 사용
+export class BrandRouter extends BaseTrpcRouter {
+  @UseMiddlewares(BackofficeAuthMiddleware)  // 인증 필수
+  @Mutation({
+    input: registerBrandInputSchema,
+    output: brandSchema,
   })
-  async getById(input: { id: string }) {
-    return this.microserviceClient.send('yourModule.getById', input);
+  async register(
+    @Ctx() ctx: BackofficeAuthorizedContext,
+    @Input() input: z.infer<typeof registerBrandInputSchema>  // z.infer 사용
+  ) {
+    const output = await this.microserviceClient.send('backoffice.brand.register', input);
+    return brandSchema.parse(output); // 응답 검증
   }
-
-  @Mutation({ input: z.object({ name: z.string() }) })
-  async create(input: { name: string }) {
-    return this.microserviceClient.send('yourModule.create', input);
+  
+  @UseMiddlewares(BackofficeAuthMiddleware)
+  @Query({
+    output: z.array(brandSchema),  // 배열 응답
+  })
+  async findAll(@Ctx() ctx: BackofficeAuthorizedContext) {
+    const output = await this.microserviceClient.send('backoffice.brand.findAll', {});
+    return z.array(brandSchema).parse(output);
+  }
+  
+  @UseMiddlewares(BackofficeAuthMiddleware)
+  @Query({
+    input: findBrandByIdInputSchema,
+    output: brandSchema.nullable(),  // nullable 응답
+  })
+  async findById(
+    @Ctx() ctx: BackofficeAuthorizedContext,
+    @Input() input: z.infer<typeof findBrandByIdInputSchema>
+  ) {
+    const output = await this.microserviceClient.send('backoffice.brand.findById', input);
+    return brandSchema.nullable().parse(output);
   }
 }
 ```
 
-### 3단계: NestJS 컨트롤러 구현
+### 4단계: NestJS 컨트롤러 구현 (`brand.controller.ts`)
+
+**응답 포맷팅과 트랜잭션을 포함한 실제 컨트롤러:**
 
 ```typescript
-// your-module.controller.ts
 import { Controller } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
-import { YourModuleService } from './your-module.service';
+import { BrandService } from '@src/module/backoffice/brand/brand.service';
+import { TransactionService } from '@src/module/shared/transaction/transaction.service';
+import { Transactional } from '@src/module/shared/transaction/transaction.decorator';
+import { BrandEntity } from '@src/module/backoffice/domain/brand.entity';
+import { z } from 'zod';
+import { 
+  registerBrandInputSchema,
+  findBrandByIdInputSchema,
+  brandSchema
+} from '@src/module/backoffice/brand/brand.schema';
 
 @Controller()
-export class YourModuleController {
-  constructor(private readonly yourModuleService: YourModuleService) {}
-
-  @MessagePattern('yourModule.getById')
-  async getById(data: { id: string }) {
-    return this.yourModuleService.getById(data.id);
-  }
-
-  @MessagePattern('yourModule.create')
-  async create(data: { name: string }) {
-    return this.yourModuleService.create(data);
-  }
-}
-```
-
-### 4단계: 서비스 계층 구현
-
-```typescript
-// your-module.service.ts
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { YourEntity } from './entities/your-entity.entity';
-
-@Injectable()
-export class YourModuleService {
+export class BrandController {
   constructor(
-    @InjectRepository(YourEntity)
-    private readonly yourEntityRepository: Repository<YourEntity>,
+    private readonly brandService: BrandService,
+    private readonly transactionService: TransactionService
   ) {}
 
-  async getById(id: string): Promise<YourEntity> {
-    const entity = await this.yourEntityRepository.findOne({ where: { id } });
-    if (!entity) {
-      throw new Error('엔티티를 찾을 수 없습니다');
-    }
-    return entity;
+  // TypeORM 메타데이터 제거를 위한 응답 포맷팅 - 중요!
+  private formatBrandResponse(brand: BrandEntity): z.infer<typeof brandSchema> {
+    return {
+      id: brand.id,
+      name: brand.name,
+      email: brand.email,
+      phoneNumber: brand.phoneNumber,
+      businessInfo: brand.businessInfo ? {
+        type: brand.businessInfo.type,
+        name: brand.businessInfo.name,
+        licenseNumber: brand.businessInfo.licenseNumber,
+        ceoName: brand.businessInfo.ceoName
+      } : null,
+      bankInfo: brand.bankInfo ? {
+        name: brand.bankInfo.name,
+        accountNumber: brand.bankInfo.accountNumber,
+        accountHolder: brand.bankInfo.accountHolder
+      } : null,
+      createdAt: brand.createdAt,
+    };
   }
 
-  async create(data: { name: string }): Promise<YourEntity> {
-    const entity = this.yourEntityRepository.create(data);
-    return this.yourEntityRepository.save(entity);
+  @MessagePattern('backoffice.brand.register')
+  @Transactional  // 데이터베이스 트랜잭션
+  async register(data: z.infer<typeof registerBrandInputSchema>): Promise<z.infer<typeof brandSchema>> {
+    const brand = await this.brandService.register(data);
+    return this.formatBrandResponse(brand);
+  }
+  
+  @MessagePattern('backoffice.brand.findAll')
+  async findAll(): Promise<Array<z.infer<typeof brandSchema>>> {
+    const brands = await this.brandService.findAll();
+    return brands.map(brand => this.formatBrandResponse(brand));
+  }
+  
+  @MessagePattern('backoffice.brand.findById')
+  async findById(data: z.infer<typeof findBrandByIdInputSchema>): Promise<z.infer<typeof brandSchema> | null> {
+    const brand = await this.brandService.findById(data.id);
+    
+    if (!brand) {
+      return null;
+    }
+    
+    return this.formatBrandResponse(brand);
   }
 }
 ```
 
-### 5단계: NestJS 모듈 설정
+### 5단계: 서비스 계층 구현 (`brand.service.ts`)
+
+**HttpException을 사용한 적절한 에러 처리:**
 
 ```typescript
-// your-module.module.ts
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { TransactionService } from '@src/module/shared/transaction/transaction.service';
+import { BrandEntity, getBrandRepository } from '@src/module/backoffice/domain/brand.entity';
+import { z } from 'zod';
+import { registerBrandInputSchema } from '@src/module/backoffice/brand/brand.schema';
+
+@Injectable()
+export class BrandService {
+  constructor(private readonly transactionService: TransactionService) {}
+
+  async register(dto: z.infer<typeof registerBrandInputSchema>): Promise<BrandEntity> {
+    const brandRepository = getBrandRepository(this.transactionService);
+    return brandRepository.register(dto);
+  }
+
+  async findAll(): Promise<BrandEntity[]> {
+    const brandRepository = getBrandRepository();
+    return brandRepository.find({
+      relations: ['businessInfo', 'bankInfo'],
+    });
+  }
+
+  async findById(id: number): Promise<BrandEntity | null> {
+    const brandRepository = getBrandRepository();
+    const brand = await brandRepository.findOne({
+      where: { id },
+      relations: ['businessInfo', 'bankInfo'],
+    });
+    
+    // null 반환 - 컨트롤러에서 처리
+    return brand;
+  }
+}
+```
+
+**Repository 패턴 (`brand.entity.ts`):**
+
+```typescript
+import { Entity, EntityManager } from 'typeorm';
+import { PartnerEntity } from '@src/module/backoffice/domain/partner-entity.abstract';
+import { TransactionService } from '@src/module/shared/transaction/transaction.service';
+import { getEntityManager } from '@src/database/datasources';
+import { z } from 'zod';
+import { registerBrandInputSchema } from "@src/module/backoffice/brand/brand.schema";
+
+@Entity('brand')
+export class BrandEntity extends PartnerEntity {
+  // 엔티티 필드들...
+}
+
+// 커스텀 Repository 확장
+export const getBrandRepository = (
+  source?: TransactionService | EntityManager
+) => getEntityManager(source).getRepository(BrandEntity).extend({
+  async register(dto: z.infer<typeof registerBrandInputSchema>): Promise<BrandEntity> {
+    const brand = new BrandEntity();
+    brand.name = dto.name;
+    brand.email = dto.email;
+    brand.phoneNumber = dto.phoneNumber;
+    
+    if (dto.businessInfo) {
+      brand.businessInfo = dto.businessInfo as any;
+    }
+    
+    if (dto.bankInfo) {
+      brand.bankInfo = dto.bankInfo as any;
+    }
+    
+    return this.save(brand);
+  },
+});
+```
+
+### 6단계: NestJS 모듈 설정 및 조직화
+
+**개별 모듈 (`brand.module.ts`):**
+
+```typescript
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { YourModuleController } from './your-module.controller';
-import { YourModuleService } from './your-module.service';
-import { YourEntity } from './entities/your-entity.entity';
+import { BrandController } from '@src/module/backoffice/brand/brand.controller';
+import { BrandService } from '@src/module/backoffice/brand/brand.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([YourEntity])],
-  controllers: [YourModuleController],
-  providers: [YourModuleService],
-  exports: [YourModuleService],
+  controllers: [BrandController],
+  providers: [BrandService],
+  exports: [BrandService],
 })
-export class YourModuleModule {}
+export class BrandModule {}
+```
+
+**계층적 모듈 조직 (`backoffice.module.ts`):**
+
+```typescript
+import { Module } from '@nestjs/common';
+import { AuthModule } from '@src/module/backoffice/auth/auth.module';
+import { BrandModule } from '@src/module/backoffice/brand/brand.module';
+
+@Module({
+  imports: [
+    AuthModule,
+    BrandModule,
+    // 기타 백오피스 모듈들
+  ],
+})
+export class BackofficeModule {}
+```
+
+**최상위 모듈 (`app.module.ts`):**
+
+```typescript
+import { Module } from '@nestjs/common';
+import { BackofficeModule } from '@src/module/backoffice/backoffice.module';
+import { ShopModule } from '@src/module/shop/shop.module';
+
+@Module({
+  imports: [
+    BackofficeModule,  // 도메인별 그룹화
+    ShopModule,
+    // 기타 도메인 모듈들
+  ],
+})
+export class AppModule {}
 ```
 
 ### 6단계: 인증 추가 (선택사항)
@@ -373,16 +591,46 @@ describe('YourModule (e2e)', () => {
 });
 ```
 
+## 핵심 패턴 및 원칙
+
+### 스키마 중심 설계 (`module.schema.ts`)
+- **모든 입력/출력 스키마를 중앙 관리**
+- **z.infer 타입 추론 사용** - export type 정의하지 않음
+- **중첩 객체는 별도 스키마로분리**
+- **런타임 검증과 타입 안전성 보장**
+
+### 응답 포맷팅 패턴
+- **TypeORM 메타데이터 제거를 위한 formatResponse 메서드**
+- **중첩 엔티티 처리 (businessInfo, bankInfo)**
+- **null 안전성 보장**
+
+### 모듈 조직 패턴
+- **계층적 모듈 구조** (BackofficeModule → BrandModule)
+- **도메인별 그룹화** (backoffice/, shop/)
+- **관심사 분리 및 명확한 책임**
+
+### 에러 처리 패턴
+- **서비스 계층**: NestJS HttpException 사용
+  - `NotFoundException`, `UnauthorizedException`, `BadRequestException`
+- **자동 변환**: HttpException → tRPC Error
+- **Repository 패턴**: findOneBy 사용 후 에러 처리
+
+### 트랜잭션 패턴
+- **`@Transactional` 데코레이터 사용**
+- **TransactionService 의존성 주입**
+- **커스텀 Repository에서 트랜잭션 컨텍스트 활용**
+
 ## Claude Code를 위한 중요 사항
 
-1. **자동 발견**: 새 라우터는 자동으로 발견되고 로드됩니다
-2. **메시지 패턴**: 항상 `moduleName.methodName` 규칙을 따르세요
-3. **타입 안전성**: 입력/출력 검증을 위해 Zod 스키마를 사용하세요
-4. **에러 처리**: 일관된 에러 응답을 위해 TRPCError를 사용하세요
-5. **데이터베이스**: TypeORM 데코레이터 및 마이그레이션을 사용하세요
-6. **인증**: 제공된 미들웨어 패턴을 사용하세요
-7. **테스트**: 단위, 통합, E2E 테스트를 작성하세요
-8. **트랜잭션**: 데이터베이스 작업에 `@Transactional` 데코레이터를 사용하세요
+1. **🎯 스키마 중심**: `module.schema.ts`에서 모든 스키마 정의, z.infer 사용
+2. **🔄 응답 포맷팅**: TypeORM 메타데이터 제거를 위한 formatResponse 메서드 필수
+3. **🏗️ 계층적 모듈**: BackofficeModule → 개별 모듈 구조 사용
+4. **⚠️ 에러 처리**: 서비스에서 HttpException, 자동 tRPC 변환
+5. **💾 트랜잭션**: 데이터 변경 시 `@Transactional` 데코레이터 사용
+6. **🔐 인증**: UseMiddlewares로 BackofficeAuthMiddleware 적용
+7. **📨 메시지 패턴**: `domain.module.method` 규칙 (예: backoffice.brand.register)
+8. **🧪 테스트**: 단위, 통합, E2E 테스트 작성
+9. **🔍 자동 발견**: 라우터 자동 로드, 수동 등록 불필요
 
 ## 실행 및 테스트
 
