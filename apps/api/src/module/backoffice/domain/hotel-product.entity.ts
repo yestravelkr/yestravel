@@ -1,21 +1,22 @@
-import { Entity, Column } from 'typeorm';
+import { Entity, Column, ChildEntity } from 'typeorm';
 import {
-  BaseProductEntity,
+  ProductEntity,
   ProductType,
-} from '@src/module/backoffice/domain/base-product.entity';
+} from '@src/module/backoffice/domain/product.entity';
 
 @Entity('hotel_product')
-export class HotelProductEntity extends BaseProductEntity {
+@ChildEntity(ProductType.HOTEL)
+export class HotelProductEntity extends ProductEntity {
   constructor() {
     super();
     this.type = ProductType.HOTEL;
   }
 
-  @Column()
+  @Column({ name: 'hotel_name' })
   hotelName: string;
 
   @Column()
   address: string;
 
-  // 룸 옵션 리스트
+  // TODO: 룸 옵션 리스트 추가
 }
