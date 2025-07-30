@@ -1,10 +1,12 @@
 import {
+  Entity,
   Column,
   JoinColumn,
   OneToOne,
+  TableInheritance,
 } from 'typeorm';
-import { BaseEntity } from '@src/module/backoffice/domain/base.entity';
 import { CampaignEntity } from '@src/module/backoffice/domain/campaign.entity';
+import { BaseEntity } from '@src/module/backoffice/domain/base.entity';
 
 export enum ProductType {
   HOTEL = 'HOTEL',
@@ -12,7 +14,9 @@ export enum ProductType {
   DELIVERY = 'DELIVERY',
 }
 
-export abstract class BaseProductEntity extends BaseEntity {
+@Entity('product')
+@TableInheritance({ column: { type: 'varchar', name: 'type' } })
+export class ProductEntity extends BaseEntity {
   @Column()
   name: string;
 
