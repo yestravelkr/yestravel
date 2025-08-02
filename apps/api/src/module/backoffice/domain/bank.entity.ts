@@ -1,7 +1,6 @@
 import { Column } from 'typeorm';
-import { BaseEntity } from '@src/module/backoffice/domain/base.entity';
 
-export class BankEntity extends BaseEntity {
+export class BankEntity {
   @Column({
     name: 'name',
     type: 'varchar',
