@@ -1,5 +1,7 @@
-import { Column, Entity } from 'typeorm';
+import { Column, Entity, EntityManager } from 'typeorm';
 import { BaseEntity } from '@src/module/backoffice/domain/base.entity';
+import { TransactionService } from '@src/module/shared/transaction/transaction.service';
+import { getEntityManager } from '@src/database/datasources';
 
 @Entity('campaign')
 export class CampaignEntity extends BaseEntity {
@@ -30,3 +32,7 @@ export class CampaignEntity extends BaseEntity {
   })
   thumbnail: string;
 }
+
+export const getCampaignRepository = (
+  source?: TransactionService | EntityManager
+) => getEntityManager(source).getRepository(CampaignEntity);
