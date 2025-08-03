@@ -11,6 +11,10 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: HomeIcon,
       },
       {
+        title: '브랜드',
+        url: '/brand',
+      },
+      {
         title: '상품',
         url: '/product',
       },
