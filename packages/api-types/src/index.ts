@@ -2,3 +2,4 @@
 // Export all types and router from the generated server.ts
 
 export * from './server';
+export * from './brand';

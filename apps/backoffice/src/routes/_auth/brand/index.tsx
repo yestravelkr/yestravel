@@ -1,30 +1,10 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
+import type { Brand } from '@yestravelkr/api-types';
 import tw from 'tailwind-styled-components';
-import { z } from 'zod';
 
 import { InboxIcon } from '@/components/icons';
 import { Table, EmptyState, TableSkeleton } from '@/shared/components';
 import { trpc } from '@/shared/trpc';
-
-// Brand 타입 정의 (API 응답 기반)
-type Brand = {
-  id: number;
-  name: string;
-  email?: string | null;
-  phoneNumber?: string | null;
-  businessInfo?: {
-    type?: string | null;
-    name?: string | null;
-    licenseNumber?: string | null;
-    ceoName?: string | null;
-  } | null;
-  bankInfo?: {
-    name?: string | null;
-    accountNumber?: string | null;
-    accountHolder?: string | null;
-  } | null;
-  createdAt: Date | string;
-};
 
 export const Route = createFileRoute('/_auth/brand/')({
   component: BrandListPage,

@@ -7,8 +7,10 @@ import { z } from 'zod';
 import { 
   registerBrandInputSchema,
   findBrandByIdInputSchema,
-  brandSchema
-} from '@src/module/backoffice/brand/brand.schema';
+  brandSchema,
+  type RegisterBrandInput,
+  type FindBrandByIdInput
+} from '@yestravelkr/api-types';
 
 @Router({ alias: 'backofficeBrand' })
 export class BrandRouter extends BaseTrpcRouter {
@@ -19,7 +21,7 @@ export class BrandRouter extends BaseTrpcRouter {
   })
   async register(
     @Ctx() ctx: BackofficeAuthorizedContext,
-    @Input() input: z.infer<typeof registerBrandInputSchema>
+    @Input() input: RegisterBrandInput
   ) {
     const output = await this.microserviceClient.send('backoffice.brand.register', input);
     return brandSchema.parse(output);
@@ -41,7 +43,7 @@ export class BrandRouter extends BaseTrpcRouter {
   })
   async findById(
     @Ctx() ctx: BackofficeAuthorizedContext,
-    @Input() input: z.infer<typeof findBrandByIdInputSchema>
+    @Input() input: FindBrandByIdInput
   ) {
     const output = await this.microserviceClient.send('backoffice.brand.findById', input);
     return brandSchema.nullable().parse(output);
