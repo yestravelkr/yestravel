@@ -1,5 +1,12 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
+import { type RegisterBrandInput } from '@yestravelkr/api-types';
+import { useState } from 'react';
 import tw from 'tailwind-styled-components';
+
+import { BrandForm } from '@/shared/components';
+import { Toast, ToastsContainer } from '@/shared/components/toast/Toast';
+import { useToast } from '@/shared/hooks';
+import { trpc } from '@/shared/trpc';
 
 export const Route = createFileRoute('/_auth/brand/$brandId')({
   component: BrandDetailPage,
@@ -7,44 +14,105 @@ export const Route = createFileRoute('/_auth/brand/$brandId')({
 
 function BrandDetailPage() {
   const { brandId } = Route.useParams();
+  const [isEditMode, setIsEditMode] = useState(false);
+  const { toasts, removeToast, success, error } = useToast();
+
+  // API 호출
+  const {
+    data: brand,
+    isLoading,
+    isError,
+  } = trpc.backofficeBrand.findById.useQuery({
+    id: parseInt(brandId),
+  });
+
+  // 수정 API가 구현되면 업데이트 mutation 사용
+  // const updateMutation = trpc.backofficeBrand.update.useMutation();
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  const handleEditClick = () => {
+    setIsEditMode(true);
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditMode(false);
+  };
+
+  const handleSubmit = async (data: RegisterBrandInput) => {
+    setIsUpdating(true);
+    try {
+      // TODO: 실제 업데이트 API가 구현되면 변경
+      // await updateMutation.mutateAsync(data);
+
+      // 현재는 수정 API가 없으므로 시뮬레이션
+      console.log('브랜드 수정 데이터:', data);
+
+      // 시뮬레이션: 1초 대기
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      success('브랜드 정보가 성공적으로 수정되었습니다.');
+      setIsEditMode(false);
+
+      // 실제 API 구현 시에는 데이터 재조회 필요
+      // queryClient.invalidateQueries(['backofficeBrand.findById', brandId]);
+    } catch (err) {
+      console.error('브랜드 수정 실패:', err);
+      error('브랜드 수정에 실패했습니다. 다시 시도해주세요.');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <Container>
+        <LoadingContainer>
+          <LoadingText>브랜드 정보를 불러오는 중...</LoadingText>
+        </LoadingContainer>
+      </Container>
+    );
+  }
+
+  if (isError || !brand) {
+    return (
+      <Container>
+        <ErrorContainer>
+          <ErrorText>브랜드를 찾을 수 없습니다.</ErrorText>
+          <BackButton to="/brand">목록으로 돌아가기</BackButton>
+        </ErrorContainer>
+      </Container>
+    );
+  }
 
   return (
-    <Container>
-      <Header>
+    <>
+      <Container>
         <BackButton to="/brand">← 목록으로</BackButton>
-        <TitleSection>
-          <Title>브랜드 상세정보</Title>
-          <Badge>ID: {brandId}</Badge>
-        </TitleSection>
-      </Header>
 
-      <ContentGrid>
-        <MainContent>
-          <Section>
-            <SectionTitle>기본 정보</SectionTitle>
-            <Placeholder>브랜드 기본 정보가 여기에 표시됩니다.</Placeholder>
-          </Section>
+        <BrandForm
+          data={brand}
+          isEditMode={isEditMode}
+          onSubmit={handleSubmit}
+          isSubmitting={isUpdating}
+          submitButtonText="저장"
+          showCancelButton={true}
+          onCancel={handleCancelEdit}
+          onEdit={handleEditClick}
+        />
+      </Container>
 
-          <Section>
-            <SectionTitle>사업자 정보</SectionTitle>
-            <Placeholder>사업자 정보가 여기에 표시됩니다.</Placeholder>
-          </Section>
-
-          <Section>
-            <SectionTitle>계좌 정보</SectionTitle>
-            <Placeholder>계좌 정보가 여기에 표시됩니다.</Placeholder>
-          </Section>
-        </MainContent>
-
-        <Sidebar>
-          <ActionCard>
-            <ActionTitle>관리 작업</ActionTitle>
-            <ActionButton>정보 수정</ActionButton>
-            <ActionButton variant="danger">브랜드 삭제</ActionButton>
-          </ActionCard>
-        </Sidebar>
-      </ContentGrid>
-    </Container>
+      {/* Toast notifications */}
+      <ToastsContainer>
+        {toasts.map((toast) => (
+          <Toast
+            key={toast.id}
+            message={toast.message}
+            type={toast.type}
+            onClose={() => removeToast(toast.id)}
+          />
+        ))}
+      </ToastsContainer>
+    </>
   );
 }
 
@@ -52,101 +120,35 @@ const Container = tw.div`
   p-6
 `;
 
-const Header = tw.div`
-  mb-6
+const LoadingContainer = tw.div`
+  flex 
+  items-center 
+  justify-center 
+  h-64
+`;
+
+const LoadingText = tw.p`
+  text-gray-500
+`;
+
+const ErrorContainer = tw.div`
+  flex 
+  flex-col 
+  items-center 
+  justify-center 
+  h-64 
+  space-y-4
+`;
+
+const ErrorText = tw.p`
+  text-red-600 
+  text-lg
 `;
 
 const BackButton = tw(Link)`
   text-gray-600 
   hover:text-gray-900 
   text-sm 
-  mb-2 
+  mb-6 
   inline-block
-`;
-
-const TitleSection = tw.div`
-  flex 
-  items-center 
-  gap-3
-`;
-
-const Title = tw.h1`
-  text-2xl 
-  font-bold 
-  text-gray-900
-`;
-
-const Badge = tw.span`
-  px-3 
-  py-1 
-  bg-gray-100 
-  text-gray-600 
-  text-sm 
-  rounded-full
-`;
-
-const ContentGrid = tw.div`
-  grid 
-  grid-cols-1 
-  lg:grid-cols-3 
-  gap-6
-`;
-
-const MainContent = tw.div`
-  lg:col-span-2 
-  space-y-6
-`;
-
-const Section = tw.div`
-  bg-white 
-  rounded-lg 
-  shadow-sm 
-  border 
-  border-gray-200 
-  p-6
-`;
-
-const SectionTitle = tw.h2`
-  text-lg 
-  font-semibold 
-  text-gray-900 
-  mb-4
-`;
-
-const Placeholder = tw.p`
-  text-gray-500
-`;
-
-const Sidebar = tw.div`
-  lg:col-span-1
-`;
-
-const ActionCard = tw.div`
-  bg-white 
-  rounded-lg 
-  shadow-sm 
-  border 
-  border-gray-200 
-  p-6
-`;
-
-const ActionTitle = tw.h3`
-  text-lg 
-  font-semibold 
-  text-gray-900 
-  mb-4
-`;
-
-const ActionButton = tw.button<{ variant?: 'danger' }>`
-  w-full 
-  px-4 
-  py-2 
-  rounded-lg 
-  font-medium 
-  transition-colors 
-  mb-3
-  ${(p) =>
-    p.variant === 'danger'
-      ? 'bg-red-50 text-red-600 hover:bg-red-100'
-      : 'bg-gray-50 text-gray-700 hover:bg-gray-100'}
 `;
