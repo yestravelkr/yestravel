@@ -1,8 +1,9 @@
-import {Router, Query, UseMiddlewares, Mutation, Input} from 'nestjs-trpc';
-import { BackofficeAuthMiddleware } from '@src/module/backoffice/auth/backoffice.auth.middleware';
-import { BackofficeAuthorizedContext } from '@src/module/backoffice/auth/backoffice.auth.middleware';
-import { Ctx } from 'nestjs-trpc';
+import {Ctx, Input, Mutation, Query, Router, UseMiddlewares} from 'nestjs-trpc';
 import { BaseTrpcRouter } from '@src/module/trpc/baseTrpcRouter';
+import { 
+  BackofficeAuthMiddleware,
+  BackofficeAuthorizedContext
+} from '@src/module/backoffice/auth/backoffice.auth.middleware';
 import { z } from 'zod';
 import { 
   registerBrandInputSchema,
@@ -14,6 +15,7 @@ import {
 
 @Router({ alias: 'backofficeBrand' })
 export class BrandRouter extends BaseTrpcRouter {
+  
   @UseMiddlewares(BackofficeAuthMiddleware)
   @Mutation({
     input: registerBrandInputSchema,
