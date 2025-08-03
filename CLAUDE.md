@@ -71,24 +71,59 @@ brand/
 
 ## 필수 패턴
 
-**스키마 정의 (module.schema.ts):**
+**타입 정의 및 공유 (packages/api-types):**
 ```typescript
+// packages/api-types/src/module.ts
 import { z } from 'zod';
 
-// Input/Output 스키마 정의
-export const createModuleInputSchema = z.object({
-  name: z.string().min(1),
-  email: z.string().email().optional(),
-});
-
+// 스키마 정의 - nullish() 사용 (optional().nullable() 대신)
 export const moduleSchema = z.object({
   id: z.number(),
   name: z.string(),
-  email: z.string().optional().nullable(),
+  email: z.string().email().nullish(), // undefined 또는 null 허용
+  metadata: z.object({
+    field: z.string().nullish(),
+  }).nullish(),
   createdAt: z.date(),
 });
 
-// 타입은 필요한 곳에서 z.infer로 추론
+// Input 스키마
+export const createModuleInputSchema = z.object({
+  name: z.string().min(1),
+  email: z.string().email().nullish(), // Input도 nullish() 사용
+});
+
+// 타입 추론
+export type Module = z.infer<typeof moduleSchema>;
+export type CreateModuleInput = z.infer<typeof createModuleInputSchema>;
+```
+
+**API에서 타입 사용:**
+```typescript
+// apps/api/src/module/module.schema.ts
+export {
+  moduleSchema,
+  createModuleInputSchema,
+  type Module,
+  type CreateModuleInput,
+} from '@yestravelkr/api-types';
+
+// apps/api/src/module/module.controller.ts
+import type { Module, CreateModuleInput } from './module.schema';
+
+@MessagePattern('module.create')
+async create(data: CreateModuleInput): Promise<Module> {
+  // 구현
+}
+```
+
+**프론트엔드에서 타입 사용:**
+```typescript
+// apps/backoffice/src/routes/module/index.tsx
+import type { Module } from '@yestravelkr/api-types';
+
+const { data: modules } = trpc.module.findAll.useQuery();
+// modules는 자동으로 Module[] 타입
 ```
 
 **새 라우터:**
@@ -260,5 +295,47 @@ EOF
 - 명확하고 구체적인 변경 내용 기술
 - 여러 변경사항은 리스트로 정리
 - pre-commit hook이 자동으로 lint와 prettier 적용
+
+## 타입 작성 가이드
+
+**Zod 스키마 작성 규칙:**
+- **nullish() 통일 사용**: `optional().nullable()` 대신 모든 곳에서 `nullish()` 사용
+- **null/undefined 구분 안함**: API 통신에서 null과 undefined를 구분하지 않음
+- **Input/Output 동일**: Input과 Output 스키마 모두 `nullish()` 사용
+- **중앙 집중식 관리**: 모든 스키마는 `packages/api-types`에서 정의
+- **타입 추론**: 직접 타입 정의 대신 `z.infer<typeof schema>` 사용
+
+**스키마 패턴:**
+```typescript
+// ✅ 좋은 예 - Input/Output 모두 nullish() 사용
+export const createUserInputSchema = z.object({
+  name: z.string().min(1),
+  email: z.string().email().nullish(),
+  profileData: userProfileSchema.nullish(),
+});
+
+export const userSchema = z.object({
+  id: z.number(),
+  name: z.string(),
+  email: z.string().email().nullish(),
+  profile: userProfileSchema.nullish(),
+  createdAt: z.date(),
+});
+
+// ❌ 나쁜 예 - optional()이나 nullable() 따로 사용
+export const userSchema = z.object({
+  id: z.number(),
+  email: z.string().email().optional().nullable(),
+  profile: userProfileSchema.optional(),
+});
+```
+
+**파일 구조:**
+```
+packages/api-types/src/
+├── user.ts          # 사용자 관련 스키마
+├── brand.ts          # 브랜드 관련 스키마
+└── index.ts          # 모든 타입 export
+```
 
 특정 주제에 대한 자세한 정보는 `/docs` 폴더의 해당 문서 파일을 참조하세요.
