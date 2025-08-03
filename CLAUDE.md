@@ -335,7 +335,15 @@ export const userSchema = z.object({
 packages/api-types/src/
 ├── user.ts          # 사용자 관련 스키마
 ├── brand.ts          # 브랜드 관련 스키마
-└── index.ts          # 모든 타입 export
+├── server.ts         # 자동 생성 파일 (수정 금지)
+├── index.ts          # 모든 타입 export
+├── .prettierignore   # server.ts 제외
+└── .eslintignore     # server.ts 제외
 ```
+
+**중요 규칙:**
+- **server.ts는 자동 생성 파일**: API에서 자동으로 생성되므로 직접 수정 금지
+- **Linting 제외**: server.ts는 prettier, eslint 적용 제외
+- **타입 정의 위치**: 실제 스키마는 각 모듈별 파일에서 정의 (brand.ts, user.ts 등)
 
 특정 주제에 대한 자세한 정보는 `/docs` 폴더의 해당 문서 파일을 참조하세요.
