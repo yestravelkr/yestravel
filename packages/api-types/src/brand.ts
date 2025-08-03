@@ -45,9 +45,14 @@ export const findBrandByIdInputSchema = z.object({
   id: z.number(),
 });
 
+export const updateBrandInputSchema = registerBrandInputSchema.extend({
+  id: z.number(),
+});
+
 // Inferred types
 export type BusinessInfo = z.infer<typeof businessInfoSchema>;
 export type BankInfo = z.infer<typeof bankInfoSchema>;
 export type Brand = z.infer<typeof brandSchema>;
 export type RegisterBrandInput = z.infer<typeof registerBrandInputSchema>;
 export type FindBrandByIdInput = z.infer<typeof findBrandByIdInputSchema>;
+export type UpdateBrandInput = z.infer<typeof updateBrandInputSchema>;

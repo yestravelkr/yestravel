@@ -1,7 +1,7 @@
-import { Injectable, ConflictException } from '@nestjs/common';
+import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
 import { RepositoryProvider } from '@src/module/shared/transaction/repository.provider';
 import { BrandEntity } from '@src/module/backoffice/domain/brand.entity';
-import { type RegisterBrandInput } from '@yestravelkr/api-types';
+import { type RegisterBrandInput, type UpdateBrandInput } from '@yestravelkr/api-types';
 
 @Injectable()
 export class BrandService {
@@ -28,5 +28,26 @@ export class BrandService {
   
   async findById(id: number): Promise<BrandEntity | null> {
     return this.repositoryProvider.BrandRepository.findOneBy({ id });
+  }
+  
+  async update(dto: UpdateBrandInput): Promise<BrandEntity> {
+    const { id, ...updateData } = dto;
+    
+    // Check if brand exists
+    const existingBrand = await this.repositoryProvider.BrandRepository.findOneBy({ id });
+    if (!existingBrand) {
+      throw new NotFoundException('Brand not found');
+    }
+    
+    // Check for name conflict if name is being updated
+    if (updateData.name !== existingBrand.name) {
+      const brandWithSameName = await this.repositoryProvider.BrandRepository.findOneBy({ name: updateData.name });
+      if (brandWithSameName) {
+        throw new ConflictException('Brand with this name already exists');
+      }
+    }
+    
+    // Use repository update method to preserve relationships
+    return this.repositoryProvider.BrandRepository.updateBrand(id, updateData);
   }
 }

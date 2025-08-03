@@ -8,9 +8,11 @@ import { z } from 'zod';
 import { 
   registerBrandInputSchema,
   findBrandByIdInputSchema,
+  updateBrandInputSchema,
   brandSchema,
   type RegisterBrandInput,
-  type FindBrandByIdInput
+  type FindBrandByIdInput,
+  type UpdateBrandInput
 } from '@yestravelkr/api-types';
 
 @Router({ alias: 'backofficeBrand' })
@@ -49,5 +51,18 @@ export class BrandRouter extends BaseTrpcRouter {
   ) {
     const output = await this.microserviceClient.send('backoffice.brand.findById', input);
     return brandSchema.nullable().parse(output);
+  }
+  
+  @UseMiddlewares(BackofficeAuthMiddleware)
+  @Mutation({
+    input: updateBrandInputSchema,
+    output: brandSchema,
+  })
+  async update(
+    @Ctx() ctx: BackofficeAuthorizedContext,
+    @Input() input: UpdateBrandInput
+  ) {
+    const output = await this.microserviceClient.send('backoffice.brand.update', input);
+    return brandSchema.parse(output);
   }
 }

@@ -7,7 +7,8 @@ import { BrandEntity } from '@src/module/backoffice/domain/brand.entity';
 import { 
   type Brand,
   type RegisterBrandInput,
-  type FindBrandByIdInput
+  type FindBrandByIdInput,
+  type UpdateBrandInput
 } from '@yestravelkr/api-types';
 
 @Controller()
@@ -59,6 +60,13 @@ export class BrandController {
       return null;
     }
     
+    return this.formatBrandResponse(brand);
+  }
+  
+  @MessagePattern('backoffice.brand.update')
+  @Transactional
+  async update(data: UpdateBrandInput): Promise<Brand> {
+    const brand = await this.brandService.update(data);
     return this.formatBrandResponse(brand);
   }
 }
