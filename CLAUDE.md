@@ -217,4 +217,48 @@ const Container = tw.div`
 - 충분한 여백과 명확한 타이포그래피
 - 호버 효과와 트랜지션 애니메이션
 
+## Git 커밋 규칙
+
+**커밋 메시지 형식:**
+```
+<PREFIX>: <커밋 메시지 내용>
+
+- 상세 설명 1
+- 상세 설명 2
+
+🤖 Generated with [Claude Code](https://claude.ai/code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+```
+
+**커밋 메시지 Prefix:**
+- `FEAT`: 새로운 기능 추가
+- `CHORE`: 빌드 업무, 패키지 매니저 설정 등
+- `STYLE`: 코드 스타일 변경 (포맷팅, 세미콜론 누락 등)
+- `REFACTOR`: 코드 리팩토링
+- `DOCS`: 문서 수정
+
+**예시:**
+```bash
+git commit -m "$(cat <<'EOF'
+FEAT: 백오피스 브랜드 관리 페이지 추가
+
+- 브랜드 리스트 페이지 생성
+- 브랜드 생성 페이지 생성  
+- 브랜드 상세/수정 페이지 생성
+- 네비게이션에 브랜드 메뉴 추가
+
+🤖 Generated with [Claude Code](https://claude.ai/code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+EOF
+)"
+```
+
+**주의사항:**
+- 커밋 메시지는 한글로 작성
+- 명확하고 구체적인 변경 내용 기술
+- 여러 변경사항은 리스트로 정리
+- pre-commit hook이 자동으로 lint와 prettier 적용
+
 특정 주제에 대한 자세한 정보는 `/docs` 폴더의 해당 문서 파일을 참조하세요.
