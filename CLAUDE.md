@@ -168,4 +168,53 @@ async performTransaction(data: any) {
 - **Schema**: 중첩 객체 (businessInfo, bankInfo) 포함
 - **인증**: BackofficeAuthMiddleware 적용
 
+## 백오피스 프론트엔드 패턴
+
+**기술 스택:**
+- **React + Vite + TypeScript**: 빠른 개발 환경
+- **TanStack Router**: 파일 기반 라우팅 시스템
+- **Tailwind CSS + tailwind-styled-components**: 스타일링
+- **tRPC + React Query**: 타입 안전한 API 통신
+- **Zustand**: 전역 상태 관리
+
+**폴더 구조:**
+```
+apps/backoffice/src/
+├── components/
+│   ├── auth/           # 인증 관련 컴포넌트
+│   ├── icons/          # SVG 아이콘 컴포넌트
+│   ├── navigation/     # 네비게이션 컴포넌트
+│   └── ui/             # 공통 UI 컴포넌트
+├── routes/             # 파일 기반 라우팅
+│   ├── _auth/          # 인증된 사용자 레이아웃
+│   └── login.tsx       # 로그인 페이지
+├── shared/             # 공통 유틸리티
+│   └── trpc/           # tRPC 클라이언트 설정
+└── store/              # Zustand 스토어
+    └── authStore.ts    # 인증 상태 관리
+```
+
+**스타일링 패턴:**
+```typescript
+import tw from 'tailwind-styled-components';
+
+const Container = tw.div`
+  flex 
+  flex-col 
+  h-screen 
+  bg-gray-50
+`;
+```
+
+**네비게이션 구조:**
+- SVG 아이콘 사용 (폰트 이모지 대신)
+- 그룹별로 구분된 메뉴 구조
+- 액티브 상태 스타일링 지원
+
+**디자인 가이드라인:**
+- 포스타입/인스타그램 스타일의 미니멀한 UI
+- 화이트/그레이 톤의 깔끔한 디자인
+- 충분한 여백과 명확한 타이포그래피
+- 호버 효과와 트랜지션 애니메이션
+
 특정 주제에 대한 자세한 정보는 `/docs` 폴더의 해당 문서 파일을 참조하세요.
