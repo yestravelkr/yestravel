@@ -1,5 +1,8 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
-import { type RegisterBrandInput } from '@yestravelkr/api-types';
+import {
+  type RegisterBrandInput,
+  type UpdateBrandInput,
+} from '@yestravelkr/api-types';
 import { useState } from 'react';
 import tw from 'tailwind-styled-components';
 
@@ -26,9 +29,18 @@ function BrandDetailPage() {
     id: parseInt(brandId),
   });
 
-  // 수정 API가 구현되면 업데이트 mutation 사용
-  // const updateMutation = trpc.backofficeBrand.update.useMutation();
-  const [isUpdating, setIsUpdating] = useState(false);
+  // 수정 API mutation
+  const updateMutation = trpc.backofficeBrand.update.useMutation({
+    onSuccess: () => {
+      success('브랜드 정보가 성공적으로 수정되었습니다.');
+      setIsEditMode(false);
+    },
+    onError: (err) => {
+      console.error('브랜드 수정 실패:', err);
+      error('브랜드 수정에 실패했습니다. 다시 시도해주세요.');
+    },
+  });
+  const utils = trpc.useUtils();
 
   const handleEditClick = () => {
     setIsEditMode(true);
@@ -39,27 +51,21 @@ function BrandDetailPage() {
   };
 
   const handleSubmit = async (data: RegisterBrandInput) => {
-    setIsUpdating(true);
     try {
-      // TODO: 실제 업데이트 API가 구현되면 변경
-      // await updateMutation.mutateAsync(data);
+      // UpdateBrandInput 형태로 변환 (id 추가)
+      const updateData: UpdateBrandInput = {
+        ...data,
+        id: parseInt(brandId),
+      };
 
-      // 현재는 수정 API가 없으므로 시뮬레이션
-      console.log('브랜드 수정 데이터:', data);
+      await updateMutation.mutateAsync(updateData);
 
-      // 시뮬레이션: 1초 대기
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      success('브랜드 정보가 성공적으로 수정되었습니다.');
-      setIsEditMode(false);
-
-      // 실제 API 구현 시에는 데이터 재조회 필요
-      // queryClient.invalidateQueries(['backofficeBrand.findById', brandId]);
+      // 데이터 재조회
+      await utils.backofficeBrand.findById.invalidate({
+        id: parseInt(brandId),
+      });
     } catch (err) {
-      console.error('브랜드 수정 실패:', err);
-      error('브랜드 수정에 실패했습니다. 다시 시도해주세요.');
-    } finally {
-      setIsUpdating(false);
+      // 에러는 mutation의 onError에서 처리
     }
   };
 
@@ -93,7 +99,7 @@ function BrandDetailPage() {
           data={brand}
           isEditMode={isEditMode}
           onSubmit={handleSubmit}
-          isSubmitting={isUpdating}
+          isSubmitting={updateMutation.isPending}
           submitButtonText="저장"
           showCancelButton={true}
           onCancel={handleCancelEdit}
