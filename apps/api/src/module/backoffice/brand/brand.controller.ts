@@ -7,8 +7,9 @@ import { BrandEntity } from '@src/module/backoffice/domain/brand.entity';
 import { 
   type Brand,
   type RegisterBrandInput,
-  type FindBrandByIdInput
-} from '@yestravelkr/api-types';
+  type FindBrandByIdInput,
+  type UpdateBrandInput
+} from '@yestravelkr/yestravel-schema';
 
 @Controller()
 export class BrandController {

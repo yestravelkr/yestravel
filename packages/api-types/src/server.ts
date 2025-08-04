@@ -1,6 +1,5 @@
 import { initTRPC } from "@trpc/server";
 import { z } from "zod";
-import { registerBrandInputSchema, findBrandByIdInputSchema, brandSchema } from "./brand";
 
 const t = initTRPC.create();
 const publicProcedure = t.procedure;
@@ -25,11 +24,6 @@ const appRouter = t.router({
     test: publicProcedure.output(z.object({
       message: z.string(),
     })).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
-  }),
-  backofficeBrand: t.router({
-    register: publicProcedure.input(registerBrandInputSchema).output(brandSchema).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
-    findAll: publicProcedure.output(z.array(brandSchema)).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
-    findById: publicProcedure.input(findBrandByIdInputSchema).output(brandSchema.nullable()).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
   }),
   sample: t.router({
     getHello: publicProcedure.input(z.object({

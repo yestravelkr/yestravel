@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
-import type { Brand } from '@yestravelkr/api-types';
+import type { Brand } from '@yestravelkr/yestravel-schema';
 import tw from 'tailwind-styled-components';
 
 import { InboxIcon } from '@/components/icons';
