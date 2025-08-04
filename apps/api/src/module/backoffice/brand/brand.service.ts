@@ -12,20 +12,20 @@ export class BrandService {
   async register(dto: RegisterBrandInput): Promise<BrandEntity> {
     // Check if brand with the same name already exists
     const existingBrand = await this.repositoryProvider.BrandRepository.findOneBy({ name: dto.name });
-    
+
     if (existingBrand) {
       throw new ConflictException('Brand with this name already exists');
     }
-    
+
     return this.repositoryProvider.BrandRepository.register(dto);
   }
-  
+
   async findAll(): Promise<BrandEntity[]> {
     return this.repositoryProvider.BrandRepository.find({
       order: { createdAt: 'DESC' }
     });
   }
-  
+
   async findById(id: number): Promise<BrandEntity | null> {
     return this.repositoryProvider.BrandRepository.findOneBy({ id });
   }

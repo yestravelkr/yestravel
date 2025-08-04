@@ -71,15 +71,15 @@ const Header = tw.div`
 `;
 
 const BackButton = tw(Link)`
-  text-gray-600 
-  hover:text-gray-900 
-  text-sm 
-  mb-2 
+  text-gray-600
+  hover:text-gray-900
+  text-sm
+  mb-2
   inline-block
 `;
 
 const Title = tw.h1`
-  text-2xl 
-  font-bold 
+  text-2xl
+  font-bold
   text-gray-900
 `;

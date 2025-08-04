@@ -19,15 +19,15 @@ export const getBrandRepository = (
     brand.name = dto.name;
     brand.email = dto.email;
     brand.phoneNumber = dto.phoneNumber;
-    
+
     if (dto.businessInfo) {
       brand.businessInfo = dto.businessInfo as any;
     }
-    
+
     if (dto.bankInfo) {
       brand.bankInfo = dto.bankInfo as any;
     }
-    
+
     return this.save(brand);
   },
 });

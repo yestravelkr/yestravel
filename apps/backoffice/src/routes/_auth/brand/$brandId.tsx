@@ -121,9 +121,9 @@ const Container = tw.div`
 `;
 
 const LoadingContainer = tw.div`
-  flex 
-  items-center 
-  justify-center 
+  flex
+  items-center
+  justify-center
   h-64
 `;
 
@@ -132,23 +132,23 @@ const LoadingText = tw.p`
 `;
 
 const ErrorContainer = tw.div`
-  flex 
-  flex-col 
-  items-center 
-  justify-center 
-  h-64 
+  flex
+  flex-col
+  items-center
+  justify-center
+  h-64
   space-y-4
 `;
 
 const ErrorText = tw.p`
-  text-red-600 
+  text-red-600
   text-lg
 `;
 
 const BackButton = tw(Link)`
-  text-gray-600 
-  hover:text-gray-900 
-  text-sm 
-  mb-6 
+  text-gray-600
+  hover:text-gray-900
+  text-sm
+  mb-6
   inline-block
 `;

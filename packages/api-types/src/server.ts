@@ -1,5 +1,6 @@
 import { initTRPC } from "@trpc/server";
 import { z } from "zod";
+import { registerBrandInputSchema, findBrandByIdInputSchema, brandSchema } from "./brand";
 
 const t = initTRPC.create();
 const publicProcedure = t.procedure;

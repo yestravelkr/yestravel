@@ -90,25 +90,25 @@ const Container = tw.div`
 `;
 
 const Header = tw.div`
-  flex 
-  justify-between 
-  items-center 
+  flex
+  justify-between
+  items-center
   mb-6
 `;
 
 const Title = tw.h1`
-  text-2xl 
-  font-bold 
+  text-2xl
+  font-bold
   text-gray-900
 `;
 
 const CreateButton = tw(Link)`
-  px-4 
-  py-2 
-  bg-blue-600 
-  text-white 
-  rounded-lg 
-  hover:bg-blue-700 
+  px-4
+  py-2
+  bg-blue-600
+  text-white
+  rounded-lg
+  hover:bg-blue-700
   transition-colors
   font-medium
 `;
@@ -116,26 +116,26 @@ const CreateButton = tw(Link)`
 const Content = tw.div``;
 
 const BrandName = tw.div`
-  font-medium 
+  font-medium
   text-gray-900
 `;
 
 const BrandEmail = tw.div`
-  text-sm 
+  text-sm
   text-gray-500
 `;
 
 const BusinessInfo = tw.div`
-  text-sm 
+  text-sm
   text-gray-900
 `;
 
 const PhoneNumber = tw.div`
-  text-sm 
+  text-sm
   text-gray-900
 `;
 
 const CreatedAt = tw.div`
-  text-sm 
+  text-sm
   text-gray-500
 `;
