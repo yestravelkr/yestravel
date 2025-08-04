@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
-import { type RegisterBrandInput, type UpdateBrandInput } from '@yestravelkr/yestravel-schema';
+import { type RegisterBrandInput } from '@yestravelkr/yestravel-schema';
 import { useState } from 'react';
 import tw from 'tailwind-styled-components';
 

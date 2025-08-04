@@ -8,7 +8,6 @@ import {
   type Brand,
   type RegisterBrandInput,
   type FindBrandByIdInput,
-  type UpdateBrandInput
 } from '@yestravelkr/yestravel-schema';
 
 @Controller()

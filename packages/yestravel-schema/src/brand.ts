@@ -45,9 +45,19 @@ export const findBrandByIdInputSchema = z.object({
   id: z.number(),
 });
 
+export const updateBrandInputSchema = z.object({
+  id: z.number(),
+  name: z.string().min(1, 'Brand name is required').nullish(),
+  email: z.string().email().nullish(),
+  phoneNumber: z.string().nullish(),
+  businessInfo: businessInfoSchema.nullish(),
+  bankInfo: bankInfoSchema.nullish(),
+});
+
 // Inferred types
 export type BusinessInfo = z.infer<typeof businessInfoSchema>;
 export type BankInfo = z.infer<typeof bankInfoSchema>;
 export type Brand = z.infer<typeof brandSchema>;
 export type RegisterBrandInput = z.infer<typeof registerBrandInputSchema>;
 export type FindBrandByIdInput = z.infer<typeof findBrandByIdInputSchema>;
+export type UpdateBrandInput = z.infer<typeof updateBrandInputSchema>;

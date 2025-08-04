@@ -1,7 +1,7 @@
 import { Injectable, ConflictException } from '@nestjs/common';
 import { RepositoryProvider } from '@src/module/shared/transaction/repository.provider';
 import { BrandEntity } from '@src/module/backoffice/domain/brand.entity';
-import { type RegisterBrandInput, type UpdateBrandInput } from '@yestravelkr/yestravel-schema';
+import { type RegisterBrandInput } from '@yestravelkr/yestravel-schema';
 
 @Injectable()
 export class BrandService {

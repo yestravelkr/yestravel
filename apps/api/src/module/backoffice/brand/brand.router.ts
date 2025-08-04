@@ -8,11 +8,9 @@ import { z } from 'zod';
 import { 
   registerBrandInputSchema,
   findBrandByIdInputSchema,
-  updateBrandInputSchema,
   brandSchema,
   type RegisterBrandInput,
   type FindBrandByIdInput,
-  type UpdateBrandInput
 } from '@yestravelkr/yestravel-schema';
 
 @Router({ alias: 'backofficeBrand' })
