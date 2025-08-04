@@ -1,0 +1,24 @@
+{
+  "name": "@yestravelkr/yestravel-schema",
+  "version": "0.0.1",
+  "description": "Shared schemas for YesTravel",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist",
+    "lint": "echo 'No lint rules for schema package'",
+    "lint:fix": "echo 'No lint rules for schema package'"
+  },
+  "dependencies": {
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "typescript": "^5.2.2"
+  },
+  "files": [
+    "dist"
+  ]
+}
