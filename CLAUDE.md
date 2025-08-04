@@ -71,24 +71,59 @@ brand/
 
 ## 필수 패턴
 
-**스키마 정의 (module.schema.ts):**
+**타입 정의 및 공유 (packages/api-types):**
 ```typescript
+// packages/api-types/src/module.ts
 import { z } from 'zod';
 
-// Input/Output 스키마 정의
-export const createModuleInputSchema = z.object({
-  name: z.string().min(1),
-  email: z.string().email().optional(),
-});
-
+// 스키마 정의 - nullish() 사용 (optional().nullable() 대신)
 export const moduleSchema = z.object({
   id: z.number(),
   name: z.string(),
-  email: z.string().optional().nullable(),
+  email: z.string().email().nullish(), // undefined 또는 null 허용
+  metadata: z.object({
+    field: z.string().nullish(),
+  }).nullish(),
   createdAt: z.date(),
 });
 
-// 타입은 필요한 곳에서 z.infer로 추론
+// Input 스키마
+export const createModuleInputSchema = z.object({
+  name: z.string().min(1),
+  email: z.string().email().nullish(), // Input도 nullish() 사용
+});
+
+// 타입 추론
+export type Module = z.infer<typeof moduleSchema>;
+export type CreateModuleInput = z.infer<typeof createModuleInputSchema>;
+```
+
+**API에서 타입 사용:**
+```typescript
+// apps/api/src/module/module.schema.ts
+export {
+  moduleSchema,
+  createModuleInputSchema,
+  type Module,
+  type CreateModuleInput,
+} from '@yestravelkr/api-types';
+
+// apps/api/src/module/module.controller.ts
+import type { Module, CreateModuleInput } from './module.schema';
+
+@MessagePattern('module.create')
+async create(data: CreateModuleInput): Promise<Module> {
+  // 구현
+}
+```
+
+**프론트엔드에서 타입 사용:**
+```typescript
+// apps/backoffice/src/routes/module/index.tsx
+import type { Module } from '@yestravelkr/api-types';
+
+const { data: modules } = trpc.module.findAll.useQuery();
+// modules는 자동으로 Module[] 타입
 ```
 
 **새 라우터:**
@@ -167,5 +202,148 @@ async performTransaction(data: any) {
 - **Endpoints**: `register`, `findAll`, `findById`
 - **Schema**: 중첩 객체 (businessInfo, bankInfo) 포함
 - **인증**: BackofficeAuthMiddleware 적용
+
+## 백오피스 프론트엔드 패턴
+
+**기술 스택:**
+- **React + Vite + TypeScript**: 빠른 개발 환경
+- **TanStack Router**: 파일 기반 라우팅 시스템
+- **Tailwind CSS + tailwind-styled-components**: 스타일링
+- **tRPC + React Query**: 타입 안전한 API 통신
+- **Zustand**: 전역 상태 관리
+
+**폴더 구조:**
+```
+apps/backoffice/src/
+├── components/
+│   ├── auth/           # 인증 관련 컴포넌트
+│   ├── icons/          # SVG 아이콘 컴포넌트
+│   ├── navigation/     # 네비게이션 컴포넌트
+│   └── ui/             # 공통 UI 컴포넌트
+├── routes/             # 파일 기반 라우팅
+│   ├── _auth/          # 인증된 사용자 레이아웃
+│   └── login.tsx       # 로그인 페이지
+├── shared/             # 공통 유틸리티
+│   └── trpc/           # tRPC 클라이언트 설정
+└── store/              # Zustand 스토어
+    └── authStore.ts    # 인증 상태 관리
+```
+
+**스타일링 패턴:**
+```typescript
+import tw from 'tailwind-styled-components';
+
+const Container = tw.div`
+  flex 
+  flex-col 
+  h-screen 
+  bg-gray-50
+`;
+```
+
+**네비게이션 구조:**
+- SVG 아이콘 사용 (폰트 이모지 대신)
+- 그룹별로 구분된 메뉴 구조
+- 액티브 상태 스타일링 지원
+
+**디자인 가이드라인:**
+- 포스타입/인스타그램 스타일의 미니멀한 UI
+- 화이트/그레이 톤의 깔끔한 디자인
+- 충분한 여백과 명확한 타이포그래피
+- 호버 효과와 트랜지션 애니메이션
+
+## Git 커밋 규칙
+
+**커밋 메시지 형식:**
+```
+<PREFIX>: <커밋 메시지 내용>
+
+- 상세 설명 1
+- 상세 설명 2
+
+🤖 Generated with [Claude Code](https://claude.ai/code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+```
+
+**커밋 메시지 Prefix:**
+- `FEAT`: 새로운 기능 추가
+- `CHORE`: 빌드 업무, 패키지 매니저 설정 등
+- `STYLE`: 코드 스타일 변경 (포맷팅, 세미콜론 누락 등)
+- `REFACTOR`: 코드 리팩토링
+- `DOCS`: 문서 수정
+
+**예시:**
+```bash
+git commit -m "$(cat <<'EOF'
+FEAT: 백오피스 브랜드 관리 페이지 추가
+
+- 브랜드 리스트 페이지 생성
+- 브랜드 생성 페이지 생성  
+- 브랜드 상세/수정 페이지 생성
+- 네비게이션에 브랜드 메뉴 추가
+
+🤖 Generated with [Claude Code](https://claude.ai/code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+EOF
+)"
+```
+
+**주의사항:**
+- 커밋 메시지는 한글로 작성
+- 명확하고 구체적인 변경 내용 기술
+- 여러 변경사항은 리스트로 정리
+- pre-commit hook이 자동으로 lint와 prettier 적용
+
+## 타입 작성 가이드
+
+**Zod 스키마 작성 규칙:**
+- **nullish() 통일 사용**: `optional().nullable()` 대신 모든 곳에서 `nullish()` 사용
+- **null/undefined 구분 안함**: API 통신에서 null과 undefined를 구분하지 않음
+- **Input/Output 동일**: Input과 Output 스키마 모두 `nullish()` 사용
+- **중앙 집중식 관리**: 모든 스키마는 `packages/api-types`에서 정의
+- **타입 추론**: 직접 타입 정의 대신 `z.infer<typeof schema>` 사용
+
+**스키마 패턴:**
+```typescript
+// ✅ 좋은 예 - Input/Output 모두 nullish() 사용
+export const createUserInputSchema = z.object({
+  name: z.string().min(1),
+  email: z.string().email().nullish(),
+  profileData: userProfileSchema.nullish(),
+});
+
+export const userSchema = z.object({
+  id: z.number(),
+  name: z.string(),
+  email: z.string().email().nullish(),
+  profile: userProfileSchema.nullish(),
+  createdAt: z.date(),
+});
+
+// ❌ 나쁜 예 - optional()이나 nullable() 따로 사용
+export const userSchema = z.object({
+  id: z.number(),
+  email: z.string().email().optional().nullable(),
+  profile: userProfileSchema.optional(),
+});
+```
+
+**파일 구조:**
+```
+packages/api-types/src/
+├── user.ts          # 사용자 관련 스키마
+├── brand.ts          # 브랜드 관련 스키마
+├── server.ts         # 자동 생성 파일 (수정 금지)
+├── index.ts          # 모든 타입 export
+├── .prettierignore   # server.ts 제외
+└── .eslintignore     # server.ts 제외
+```
+
+**중요 규칙:**
+- **server.ts는 자동 생성 파일**: API에서 자동으로 생성되므로 직접 수정 금지
+- **Linting 제외**: server.ts는 prettier, eslint 적용 제외
+- **타입 정의 위치**: 실제 스키마는 각 모듈별 파일에서 정의 (brand.ts, user.ts 등)
 
 특정 주제에 대한 자세한 정보는 `/docs` 폴더의 해당 문서 파일을 참조하세요.

@@ -1,4 +1,5 @@
-import { NavGroup } from '@/components/navigation/type.ts';
+import { HomeIcon } from '@/components/icons';
+import { NavGroup } from '@/components/navigation/type';
 
 export const NAV_GROUPS: NavGroup[] = [
   {
@@ -7,12 +8,15 @@ export const NAV_GROUPS: NavGroup[] = [
       {
         title: '홈',
         url: '/',
-        icon: () => <span>🏠</span>,
+        icon: HomeIcon,
+      },
+      {
+        title: '브랜드',
+        url: '/brand',
       },
       {
         title: '상품',
         url: '/product',
-        icon: () => <span>🛍</span>,
       },
     ],
   },
@@ -21,17 +25,10 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       {
         title: '에러',
-        icon: () => <span>🐞</span>,
         items: [
-          // {
-          //   title: '404',
-          //   url: '/404',
-          //   icon: () => <span>🚫</span>,
-          // },
           {
             title: '403',
             url: '/unauthorized',
-            icon: () => <span>🔞</span>,
           },
         ],
       },

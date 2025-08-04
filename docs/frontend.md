@@ -6,8 +6,8 @@
 
 - **프레임워크**: React 19 with TypeScript
 - **빌드 도구**: Vite
-- **라우팅**: TanStack Router
-- **스타일링**: Tailwind CSS
+- **라우팅**: TanStack Router (파일 기반)
+- **스타일링**: Tailwind CSS + tailwind-styled-components
 - **상태 관리**: Zustand
 - **폼 처리**: React Hook Form
 - **API 통합**: tRPC client
@@ -18,18 +18,25 @@
 apps/backoffice/
 ├── src/
 │   ├── components/          # 재사용 가능한 UI 컴포넌트
+│   │   ├── auth/           # 인증 관련 컴포넌트
+│   │   ├── icons/          # SVG 아이콘 컴포넌트
+│   │   ├── navigation/     # 네비게이션 컴포넌트
+│   │   ├── ui/             # 공통 UI 컴포넌트
 │   │   ├── header.tsx
-│   │   ├── navigation/
 │   │   └── index.ts
 │   ├── routes/             # 페이지 컴포넌트 및 라우팅
 │   │   ├── __root.tsx      # 루트 레이아웃
 │   │   ├── _auth/          # 보호된 라우트
+│   │   │   ├── route.tsx   # 인증된 사용자 레이아웃
+│   │   │   └── index.tsx
 │   │   ├── login.tsx
 │   │   └── unauthorized.tsx
 │   ├── store/              # Zustand 스토어
 │   │   ├── authStore.ts
 │   │   └── index.ts
 │   ├── shared/             # 공유 유틸리티
+│   │   ├── routes/         # 라우트 유틸리티
+│   │   └── trpc/           # tRPC 클라이언트 설정
 │   ├── assets/             # 정적 에셋
 │   ├── App.tsx             # 메인 앱 컴포넌트
 │   └── main.tsx            # 진입점
@@ -344,32 +351,61 @@ function UsersList() {
 
 ## Tailwind CSS로 스타일링
 
-### 일반적인 패턴
+### tailwind-styled-components 사용
 
 ```typescript
+import tw from 'tailwind-styled-components';
+
 // 레이아웃 컴포넌트
-const Layout = ({ children }: { children: ReactNode }) => (
-  <div className="min-h-screen bg-gray-50">
-    <div className="container mx-auto px-4 py-8">
-      {children}
-    </div>
-  </div>
-);
+const Container = tw.div`
+  flex 
+  flex-col 
+  h-screen 
+  bg-gray-50
+`;
 
-// 카드 컴포넌트
-const Card = ({ children, className }: { children: ReactNode; className?: string }) => (
-  <div className={cn("bg-white rounded-lg shadow-md p-6", className)}>
-    {children}
-  </div>
-);
+const ContentWrapper = tw.div`
+  flex 
+  flex-1 
+  overflow-hidden
+`;
 
-// 그리드 레이아웃
-const Grid = ({ children }: { children: ReactNode }) => (
-  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-    {children}
-  </div>
-);
+// 헤더 컴포넌트
+const HeaderContainer = tw.header`
+  bg-white 
+  border-b 
+  border-gray-200
+  sticky 
+  top-0 
+  z-50
+`;
+
+// 네비게이션 링크
+const StyledLink = tw(Link)`
+  flex 
+  items-center 
+  gap-2 
+  px-3 
+  py-2 
+  text-sm 
+  text-gray-600 
+  rounded-lg 
+  transition-colors
+  hover:bg-gray-100 
+  hover:text-gray-900
+  [&.active]:bg-blue-50
+  [&.active]:text-blue-600
+  [&.active]:font-medium
+`;
 ```
+
+### 디자인 가이드라인
+
+- **포스타입/인스타그램 스타일**: 미니멀하고 깔끔한 UI
+- **색상 팔레트**: 주로 화이트/그레이 톤 사용
+- **타이포그래피**: 명확하고 읽기 쉬운 폰트 계층 구조
+- **여백**: 충분한 여백으로 콘텐츠 강조
+- **인터랙션**: 부드러운 호버 효과와 트랜지션
 
 ## 성능 최적화
 
@@ -448,37 +484,78 @@ describe('Button', () => {
 
 ```typescript
 // vite.config.ts
-import { defineConfig } from 'vite';
+import tailwindcss from '@tailwindcss/vite';
+import TanStackRouterVite from '@tanstack/router-plugin/vite';
 import react from '@vitejs/plugin-react';
-import path from 'path';
+import { defineConfig } from 'vite';
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    TanStackRouterVite({ autoCodeSplitting: true }),
+    react(),
+    tailwindcss(),
+  ],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
-    },
-  },
-  build: {
-    outDir: 'dist',
-    sourcemap: true,
-  },
-  server: {
-    port: 5173,
-    proxy: {
-      '/api': {
-        target: 'http://localhost:3000',
-        changeOrigin: true,
-      },
+      '@': '/src',
     },
   },
 });
 ```
 
-Claude Code 사용자를 위한 안내:
-- 기존 패턴과 컴포넌트 사용
-- 파일 구조 규칙 따르기
-- 적절한 에러 처리 및 로딩 상태 구현
-- 모든 컴포넌트에 TypeScript 사용
-- 컴포넌트 철저히 테스트
-- 컴포넌트를 작고 집중적으로 유지
+## 아이콘 시스템
+
+### SVG 아이콘 컴포넌트
+
+```typescript
+// src/components/icons/index.tsx
+export const HomeIcon = () => (
+  <svg
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+    <polyline points="9 22 9 12 15 12 15 22" />
+  </svg>
+);
+```
+
+### 네비게이션 구조
+
+```typescript
+// src/components/navigation/data.tsx
+import { HomeIcon } from '@/components/icons';
+import { NavGroup } from '@/components/navigation/type';
+
+export const NAV_GROUPS: NavGroup[] = [
+  {
+    title: '기본',
+    items: [
+      {
+        title: '홈',
+        url: '/',
+        icon: HomeIcon,
+      },
+      {
+        title: '상품',
+        url: '/product',
+      },
+    ],
+  },
+];
+```
+
+## Claude Code 사용자를 위한 안내
+
+- **스타일링**: tailwind-styled-components를 사용하여 스타일 컴포넌트 생성
+- **아이콘**: 폰트 이모지 대신 SVG 아이콘 컴포넌트 사용
+- **레이아웃**: 포스타입/인스타그램 스타일의 미니멀한 디자인 적용
+- **타입 안전성**: 모든 컴포넌트에 TypeScript 사용
+- **파일 구조**: 기능별로 그룹화된 컴포넌트 구조 유지
+- **라우팅**: TanStack Router의 파일 기반 라우팅 활용

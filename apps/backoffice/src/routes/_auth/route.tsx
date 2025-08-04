@@ -1,5 +1,5 @@
 import { createFileRoute, Outlet } from '@tanstack/react-router';
-import { PropsWithChildren } from 'react';
+import tw from 'tailwind-styled-components';
 
 import { Header, Navigation } from '@/components';
 import { authBeforeLoad } from '@/shared';
@@ -11,18 +11,33 @@ export const Route = createFileRoute('/_auth')({
 
 function RouteComponent() {
   return (
-    <div className="flex flex-col h-screen">
+    <Container>
       <Header />
-      <Body>
+      <ContentWrapper>
         <Navigation />
-        <main className="flex-1 p-6 overflow-auto bg-gray-100">
+        <MainContent>
           <Outlet />
-        </main>
-      </Body>
-    </div>
+        </MainContent>
+      </ContentWrapper>
+    </Container>
   );
 }
 
-const Body = (props: PropsWithChildren) => (
-  <div className={'flex flex-1 overflow-hidden'}>{props.children}</div>
-);
+const Container = tw.div`
+  flex 
+  flex-col 
+  h-screen 
+  bg-gray-50
+`;
+
+const ContentWrapper = tw.div`
+  flex 
+  flex-1 
+  overflow-hidden
+`;
+
+const MainContent = tw.main`
+  flex-1 
+  overflow-auto 
+  bg-white
+`;

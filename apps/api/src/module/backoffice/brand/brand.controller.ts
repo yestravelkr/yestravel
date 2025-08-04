@@ -4,12 +4,11 @@ import { BrandService } from '@src/module/backoffice/brand/brand.service';
 import { TransactionService } from '@src/module/shared/transaction/transaction.service';
 import { Transactional } from '@src/module/shared/transaction/transaction.decorator';
 import { BrandEntity } from '@src/module/backoffice/domain/brand.entity';
-import { z } from 'zod';
 import { 
-  registerBrandInputSchema,
-  findBrandByIdInputSchema,
-  brandSchema
-} from '@src/module/backoffice/brand/brand.schema';
+  type Brand,
+  type RegisterBrandInput,
+  type FindBrandByIdInput
+} from '@yestravelkr/api-types';
 
 @Controller()
 export class BrandController {
@@ -18,7 +17,7 @@ export class BrandController {
     private readonly transactionService: TransactionService
   ) {}
 
-  private formatBrandResponse(brand: BrandEntity): z.infer<typeof brandSchema> {
+  private formatBrandResponse(brand: BrandEntity): Brand {
     return {
       id: brand.id,
       name: brand.name,
@@ -41,19 +40,19 @@ export class BrandController {
 
   @MessagePattern('backoffice.brand.register')
   @Transactional
-  async register(data: z.infer<typeof registerBrandInputSchema>): Promise<z.infer<typeof brandSchema>> {
+  async register(data: RegisterBrandInput): Promise<Brand> {
     const brand = await this.brandService.register(data);
     return this.formatBrandResponse(brand);
   }
   
   @MessagePattern('backoffice.brand.findAll')
-  async findAll(): Promise<Array<z.infer<typeof brandSchema>>> {
+  async findAll(): Promise<Brand[]> {
     const brands = await this.brandService.findAll();
     return brands.map(brand => this.formatBrandResponse(brand));
   }
   
   @MessagePattern('backoffice.brand.findById')
-  async findById(data: z.infer<typeof findBrandByIdInputSchema>): Promise<z.infer<typeof brandSchema> | null> {
+  async findById(data: FindBrandByIdInput): Promise<Brand | null> {
     const brand = await this.brandService.findById(data.id);
     
     if (!brand) {
