@@ -17,8 +17,14 @@ export class CampaignService {
     });
   }
 
-  async findById(id: number): Promise<CampaignEntity | null> {
-    return this.repositoryProvider.CampaignRepository.findOneBy({ id });
+  async findById(id: number): Promise<CampaignEntity> {
+    const campaign = await this.repositoryProvider.CampaignRepository.findOneBy({ id });
+    
+    if (!campaign) {
+      throw new NotFoundException('Campaign not found');
+    }
+    
+    return campaign;
   }
 
   async create(
@@ -47,11 +53,11 @@ export class CampaignService {
       throw new NotFoundException('Campaign not found');
     }
 
-    if (dto.title !== undefined) campaign.title = dto.title;
-    if (dto.startAt !== undefined) campaign.startAt = dto.startAt;
-    if (dto.endAt !== undefined) campaign.endAt = dto.endAt;
-    if (dto.description !== undefined) campaign.description = dto.description;
-    if (dto.thumbnail !== undefined) campaign.thumbnail = dto.thumbnail;
+    campaign.title = dto.title ?? campaign.title;
+    campaign.startAt = dto.startAt ?? campaign.startAt;
+    campaign.endAt = dto.endAt ?? campaign.endAt;
+    campaign.description = dto.description ?? campaign.description;
+    campaign.thumbnail = dto.thumbnail ?? campaign.thumbnail;
 
     return this.repositoryProvider.CampaignRepository.save(campaign);
   }
@@ -65,6 +71,6 @@ export class CampaignService {
       throw new NotFoundException('Campaign not found');
     }
 
-    await this.repositoryProvider.CampaignRepository.remove(campaign);
+    await this.repositoryProvider.CampaignRepository.softRemove(campaign);
   }
 }

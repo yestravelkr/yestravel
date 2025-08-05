@@ -21,16 +21,7 @@ export class CampaignController {
   ) {}
 
   private formatCampaignResponse(campaign: CampaignEntity): z.infer<typeof campaignSchema> {
-    return {
-      id: campaign.id,
-      title: campaign.title,
-      startAt: campaign.startAt,
-      endAt: campaign.endAt,
-      description: campaign.description,
-      thumbnail: campaign.thumbnail,
-      createdAt: campaign.createdAt,
-      updatedAt: campaign.updatedAt,
-    };
+    return campaignSchema.parse(campaign);
   }
 
   @MessagePattern('backoffice.campaign.findAll')
@@ -40,13 +31,8 @@ export class CampaignController {
   }
   
   @MessagePattern('backoffice.campaign.findById')
-  async findById(data: z.infer<typeof findCampaignByIdInputSchema>): Promise<z.infer<typeof campaignSchema> | null> {
+  async findById(data: z.infer<typeof findCampaignByIdInputSchema>): Promise<z.infer<typeof campaignSchema>> {
     const campaign = await this.campaignService.findById(data.id);
-    
-    if (!campaign) {
-      return null;
-    }
-    
     return this.formatCampaignResponse(campaign);
   }
 

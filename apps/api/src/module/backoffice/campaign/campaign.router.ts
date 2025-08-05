@@ -26,14 +26,14 @@ export class CampaignRouter extends BaseTrpcRouter {
   @UseMiddlewares(BackofficeAuthMiddleware)
   @Query({
     input: findCampaignByIdInputSchema,
-    output: campaignSchema.nullable(),
+    output: campaignSchema,
   })
   async findById(
     @Ctx() ctx: BackofficeAuthorizedContext,
     @Input() input: z.infer<typeof findCampaignByIdInputSchema>
   ) {
     const output = await this.microserviceClient.send('backoffice.campaign.findById', input);
-    return campaignSchema.nullable().parse(output);
+    return campaignSchema.parse(output);
   }
 
   @UseMiddlewares(BackofficeAuthMiddleware)

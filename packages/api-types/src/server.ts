@@ -31,6 +31,13 @@ const appRouter = t.router({
     findAll: publicProcedure.output(z.array(brandSchema)).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
     findById: publicProcedure.input(findBrandByIdInputSchema).output(brandSchema.nullable()).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
   }),
+  backofficeCampaign: t.router({
+    findAll: publicProcedure.output(z.array(campaignSchema)).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    findById: publicProcedure.input(findCampaignByIdInputSchema).output(campaignSchema).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    create: publicProcedure.input(createCampaignInputSchema).output(campaignSchema).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    update: publicProcedure.input(updateCampaignInputSchema).output(campaignSchema).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    delete: publicProcedure.input(deleteCampaignInputSchema).output(z.object({ success: z.boolean() })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
+  }),
   sample: t.router({
     getHello: publicProcedure.input(z.object({
       name: z.string().optional(),
