@@ -4,7 +4,7 @@ import { BrandService } from '@src/module/backoffice/brand/brand.service';
 import { TransactionService } from '@src/module/shared/transaction/transaction.service';
 import { Transactional } from '@src/module/shared/transaction/transaction.decorator';
 import { BrandEntity } from '@src/module/backoffice/domain/brand.entity';
-import { 
+import {
   type Brand,
   type RegisterBrandInput,
   type FindBrandByIdInput,
@@ -45,24 +45,24 @@ export class BrandController {
     const brand = await this.brandService.register(data);
     return this.formatBrandResponse(brand);
   }
-  
+
   @MessagePattern('backoffice.brand.findAll')
   async findAll(): Promise<Brand[]> {
     const brands = await this.brandService.findAll();
     return brands.map(brand => this.formatBrandResponse(brand));
   }
-  
+
   @MessagePattern('backoffice.brand.findById')
   async findById(data: FindBrandByIdInput): Promise<Brand | null> {
     const brand = await this.brandService.findById(data.id);
-    
+
     if (!brand) {
       return null;
     }
-    
+
     return this.formatBrandResponse(brand);
   }
-  
+
   @MessagePattern('backoffice.brand.update')
   @Transactional
   async update(data: UpdateBrandInput): Promise<Brand> {

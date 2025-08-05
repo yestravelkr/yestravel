@@ -19,18 +19,18 @@ export const getBrandRepository = (
     brand.name = dto.name;
     brand.email = dto.email;
     brand.phoneNumber = dto.phoneNumber;
-    
+
     if (dto.businessInfo) {
       brand.businessInfo = dto.businessInfo as any;
     }
-    
+
     if (dto.bankInfo) {
       brand.bankInfo = dto.bankInfo as any;
     }
-    
+
     return this.save(brand);
   },
-  
+
   async updateBrand(id: number, updateData: Omit<UpdateBrandInput, 'id'>): Promise<BrandEntity> {
     await this.update(id, {
       name: updateData.name,
@@ -39,7 +39,7 @@ export const getBrandRepository = (
       businessInfo: updateData.businessInfo as any,
       bankInfo: updateData.bankInfo as any,
     });
-    
+
     // Return the updated entity
     const updatedBrand = await this.findOneBy({ id });
     if (!updatedBrand) {
