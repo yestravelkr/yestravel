@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { TransactionService } from '@src/module/shared/transaction/transaction.service';
 import { getAdminRepository } from '@src/module/backoffice/domain/admin.entity';
 import { getBrandRepository } from '@src/module/backoffice/domain/brand.entity';
+import { getCampaignRepository } from '@src/module/backoffice/domain/campaign.entity';
 
 @Injectable()
 export class RepositoryProvider {
@@ -10,8 +11,12 @@ export class RepositoryProvider {
   get AdminRepository() {
     return getAdminRepository(this.transaction);
   }
-  
+
   get BrandRepository() {
     return getBrandRepository(this.transaction);
+  }
+
+  get CampaignRepository() {
+    return getCampaignRepository(this.transaction);
   }
 }
