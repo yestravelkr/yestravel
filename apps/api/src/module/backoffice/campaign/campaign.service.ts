@@ -53,23 +53,21 @@ export class CampaignService {
       throw new NotFoundException('Campaign not found');
     }
 
-    campaign.title = dto.title ?? campaign.title;
-    campaign.startAt = dto.startAt ?? campaign.startAt;
-    campaign.endAt = dto.endAt ?? campaign.endAt;
-    campaign.description = dto.description ?? campaign.description;
-    campaign.thumbnail = dto.thumbnail ?? campaign.thumbnail;
+    campaign.title = dto.title;
+    campaign.startAt = dto.startAt;
+    campaign.endAt = dto.endAt;
+    campaign.description = dto.description;
+    campaign.thumbnail = dto.thumbnail;
 
     return this.repositoryProvider.CampaignRepository.save(campaign);
   }
 
   async delete(id: number): Promise<void> {
-    const campaign = await this.repositoryProvider.CampaignRepository.findOneBy(
+    const campaign = await this.repositoryProvider.CampaignRepository.findOneByOrFail(
       { id }
-    );
-
-    if (!campaign) {
+    ).catch(() => {
       throw new NotFoundException('Campaign not found');
-    }
+    });
 
     await this.repositoryProvider.CampaignRepository.softRemove(campaign);
   }
