@@ -17,13 +17,18 @@ export const createCampaignInputSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   startAt: z.date(),
   endAt: z.date(),
-  description: z.string().optional(),
-  thumbnail: z.string().optional(),
+  description: z.string().nullish(),
+  thumbnail: z.string().nullish(),
 });
 
-export const updateCampaignInputSchema = createCampaignInputSchema.extend({
+export const updateCampaignInputSchema = z.object({
   id: z.number(),
-}).required();
+  title: z.string().min(1, 'Title is required').nullish(),
+  startAt: z.date().nullish(),
+  endAt: z.date().nullish(),
+  description: z.string().nullish(),
+  thumbnail: z.string().nullish(),
+});
 
 export const findCampaignByIdInputSchema = z.object({
   id: z.number(),

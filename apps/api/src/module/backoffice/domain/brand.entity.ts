@@ -3,7 +3,7 @@ import { PartnerEntity } from '@src/module/backoffice/domain/partner-entity.abst
 import { TransactionService } from '@src/module/shared/transaction/transaction.service';
 import { getEntityManager } from '@src/database/datasources';
 import { BrandManagerEntity } from '@src/module/backoffice/domain/brand-manager.entity';
-import { type RegisterBrandInput, type UpdateBrandInput } from '@yestravelkr/yestravel-schema';
+import {RegisterBrandInput, UpdateBrandInput} from "@src/module/backoffice/brand/brand.type";
 
 @Entity('brand')
 export class BrandEntity extends PartnerEntity {

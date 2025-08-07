@@ -4,13 +4,13 @@ import { BackofficeAuthorizedContext } from '@src/module/backoffice/auth/backoff
 import { Ctx } from 'nestjs-trpc';
 import { BaseTrpcRouter } from '@src/module/trpc/baseTrpcRouter';
 import { z } from 'zod';
-import { 
+import {
   createCampaignInputSchema,
   updateCampaignInputSchema,
   findCampaignByIdInputSchema,
   deleteCampaignInputSchema,
   campaignSchema
-} from '@src/module/backoffice/campaign/campaign.schema';
+} from '@yestravelkr/yestravel-schema';
 
 @Router({ alias: 'backofficeCampaign' })
 export class CampaignRouter extends BaseTrpcRouter {

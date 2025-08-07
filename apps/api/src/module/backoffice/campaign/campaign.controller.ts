@@ -5,13 +5,20 @@ import { TransactionService } from '@src/module/shared/transaction/transaction.s
 import { Transactional } from '@src/module/shared/transaction/transaction.decorator';
 import { CampaignEntity } from '@src/module/backoffice/domain/campaign.entity';
 import { z } from 'zod';
-import { 
+import {
   createCampaignInputSchema,
   updateCampaignInputSchema,
   findCampaignByIdInputSchema,
   deleteCampaignInputSchema,
   campaignSchema
-} from '@src/module/backoffice/campaign/campaign.schema';
+} from '@yestravelkr/yestravel-schema';
+import type {
+  CreateCampaignInput,
+  UpdateCampaignInput,
+  FindCampaignByIdInput,
+  DeleteCampaignInput,
+  Campaign
+} from './campaign.type';
 
 @Controller()
 export class CampaignController {

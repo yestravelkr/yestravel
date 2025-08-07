@@ -4,11 +4,12 @@ import { BrandService } from '@src/module/backoffice/brand/brand.service';
 import { TransactionService } from '@src/module/shared/transaction/transaction.service';
 import { Transactional } from '@src/module/shared/transaction/transaction.decorator';
 import { BrandEntity } from '@src/module/backoffice/domain/brand.entity';
-import {
-  type Brand,
-  type RegisterBrandInput,
-  type FindBrandByIdInput,
-} from '@yestravelkr/yestravel-schema';
+import type {
+  Brand,
+  RegisterBrandInput,
+  FindBrandByIdInput,
+  UpdateBrandInput,
+} from './brand.type';
 
 @Controller()
 export class BrandController {
