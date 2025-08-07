@@ -61,4 +61,11 @@ export class BrandController {
 
     return this.formatBrandResponse(brand);
   }
+
+  @MessagePattern('backoffice.brand.update')
+  @Transactional
+  async update(data: UpdateBrandInput): Promise<Brand> {
+    const brand = await this.brandService.update(data);
+    return this.formatBrandResponse(brand);
+  }
 }

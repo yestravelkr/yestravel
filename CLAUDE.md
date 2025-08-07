@@ -185,6 +185,19 @@ async performTransaction(data: any) {
 }
 ```
 
+**Repository 패턴:**
+```typescript
+// 1. Entity 파일에 Repository 함수 추가
+export const getModuleRepository = (
+  source?: TransactionService | EntityManager
+) => getEntityManager(source).getRepository(ModuleEntity);
+
+// 2. RepositoryProvider에 추가
+get ModuleRepository() {
+  return getModuleRepository(this.transaction);
+}
+```
+
 ## 중요 사항
 
 - **자동 발견**: 새 라우터는 자동으로 로드됩니다 (수동 등록 불필요)
@@ -194,6 +207,7 @@ async performTransaction(data: any) {
 - **환경**: API 시작 전에 항상 `yarn generateEnv` 실행
 - **포트**: tRPC 서버는 3000 포트에서 실행
 - **데이터베이스**: Docker를 통한 PostgreSQL, TypeORM 마이그레이션으로 관리
+- **Repository**: 새 Entity 생성 시 반드시 Repository 함수와 RepositoryProvider 등록 필요
 
 ## 실제 구현 예시
 
