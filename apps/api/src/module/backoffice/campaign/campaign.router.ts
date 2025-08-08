@@ -4,13 +4,19 @@ import { BackofficeAuthorizedContext } from '@src/module/backoffice/auth/backoff
 import { Ctx } from 'nestjs-trpc';
 import { BaseTrpcRouter } from '@src/module/trpc/baseTrpcRouter';
 import { z } from 'zod';
-import { 
+import {
   createCampaignInputSchema,
   updateCampaignInputSchema,
   findCampaignByIdInputSchema,
   deleteCampaignInputSchema,
   campaignSchema
-} from '@src/module/backoffice/campaign/campaign.schema';
+} from './campaign.schema';
+import type {
+  CreateCampaignInput,
+  UpdateCampaignInput,
+  FindCampaignByIdInput,
+  DeleteCampaignInput,
+} from './campaign.type';
 
 @Router({ alias: 'backofficeCampaign' })
 export class CampaignRouter extends BaseTrpcRouter {
@@ -30,7 +36,7 @@ export class CampaignRouter extends BaseTrpcRouter {
   })
   async findById(
     @Ctx() ctx: BackofficeAuthorizedContext,
-    @Input() input: z.infer<typeof findCampaignByIdInputSchema>
+    @Input() input: FindCampaignByIdInput
   ) {
     const output = await this.microserviceClient.send('backoffice.campaign.findById', input);
     return campaignSchema.parse(output);
@@ -43,7 +49,7 @@ export class CampaignRouter extends BaseTrpcRouter {
   })
   async create(
     @Ctx() ctx: BackofficeAuthorizedContext,
-    @Input() input: z.infer<typeof createCampaignInputSchema>
+    @Input() input: CreateCampaignInput
   ) {
     const output = await this.microserviceClient.send('backoffice.campaign.create', input);
     return campaignSchema.parse(output);
@@ -56,7 +62,7 @@ export class CampaignRouter extends BaseTrpcRouter {
   })
   async update(
     @Ctx() ctx: BackofficeAuthorizedContext,
-    @Input() input: z.infer<typeof updateCampaignInputSchema>
+    @Input() input: UpdateCampaignInput
   ) {
     const output = await this.microserviceClient.send('backoffice.campaign.update', input);
     return campaignSchema.parse(output);
@@ -69,7 +75,7 @@ export class CampaignRouter extends BaseTrpcRouter {
   })
   async delete(
     @Ctx() ctx: BackofficeAuthorizedContext,
-    @Input() input: z.infer<typeof deleteCampaignInputSchema>
+    @Input() input: DeleteCampaignInput
   ) {
     const output = await this.microserviceClient.send('backoffice.campaign.delete', input);
     return z.object({ success: z.boolean() }).parse(output);

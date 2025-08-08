@@ -10,10 +10,12 @@ import {
   findBrandByIdInputSchema,
   updateBrandInputSchema,
   brandSchema,
-  type RegisterBrandInput,
-  type FindBrandByIdInput,
-  type UpdateBrandInput
-} from '@yestravelkr/api-types';
+} from './brand.schema';
+import type {
+  RegisterBrandInput,
+  FindBrandByIdInput,
+  UpdateBrandInput,
+} from './brand.type';
 
 @Router({ alias: 'backofficeBrand' })
 export class BrandRouter extends BaseTrpcRouter {

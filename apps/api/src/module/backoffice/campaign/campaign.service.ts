@@ -1,11 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { RepositoryProvider } from '@src/module/shared/transaction/repository.provider';
 import { CampaignEntity } from '@src/module/backoffice/domain/campaign.entity';
-import { z } from 'zod';
-import {
-  createCampaignInputSchema,
-  updateCampaignInputSchema,
-} from '@src/module/backoffice/campaign/campaign.schema';
+import type {
+  CreateCampaignInput,
+  UpdateCampaignInput,
+} from './campaign.type';
 
 @Injectable()
 export class CampaignService {
@@ -28,7 +27,7 @@ export class CampaignService {
   }
 
   async create(
-    dto: z.infer<typeof createCampaignInputSchema>
+    dto: CreateCampaignInput
   ): Promise<CampaignEntity> {
     const campaign = this.repositoryProvider.CampaignRepository.create({
       title: dto.title,
@@ -43,7 +42,7 @@ export class CampaignService {
 
   async update(
     id: number,
-    dto: z.infer<typeof updateCampaignInputSchema>
+    dto: UpdateCampaignInput
   ): Promise<CampaignEntity> {
     const campaign = await this.repositoryProvider.CampaignRepository.findOneBy(
       { id }
