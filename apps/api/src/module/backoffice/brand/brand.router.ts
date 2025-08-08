@@ -10,11 +10,11 @@ import {
   findBrandByIdInputSchema,
   updateBrandInputSchema,
   brandSchema,
-} from '@yestravelkr/yestravel-schema';
+} from './brand.schema';
 import type {
   RegisterBrandInput,
   FindBrandByIdInput,
-  UpdateBrandInput
+  UpdateBrandInput,
 } from './brand.type';
 
 @Router({ alias: 'backofficeBrand' })

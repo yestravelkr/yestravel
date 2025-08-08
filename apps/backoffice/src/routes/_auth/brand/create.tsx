@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
-import { type RegisterBrandInput } from '@yestravelkr/yestravel-schema';
+import type { RegisterBrandInput } from '@/types/brand.type';
 import tw from 'tailwind-styled-components';
 
 import { BrandForm } from '@/shared/components';

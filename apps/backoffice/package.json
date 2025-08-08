@@ -23,7 +23,6 @@
     ]
   },
   "dependencies": {
-    "@yestravelkr/yestravel-schema": "*",
     "@hookform/resolvers": "^5.2.1",
     "@tailwindcss/vite": "^4.0.6",
     "@tanstack/react-query": "^5.81.5",

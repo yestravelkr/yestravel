@@ -1,7 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { RepositoryProvider } from '@src/module/shared/transaction/repository.provider';
 import { CampaignEntity } from '@src/module/backoffice/domain/campaign.entity';
-import { z } from 'zod';
 import type {
   CreateCampaignInput,
   UpdateCampaignInput,

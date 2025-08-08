@@ -4,7 +4,7 @@ import {
   BusinessType,
   type RegisterBrandInput,
   type Brand,
-} from '@yestravelkr/yestravel-schema';
+} from '@/types/brand.type';
 import { useForm } from 'react-hook-form';
 import tw from 'tailwind-styled-components';
 

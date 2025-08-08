@@ -6,7 +6,7 @@ import {
   registerBrandInputSchema,
   findBrandByIdInputSchema,
   updateBrandInputSchema,
-} from '@yestravelkr/yestravel-schema';
+} from './brand.schema';
 
 // Inferred types from Zod schemas
 export type BusinessInfo = z.infer<typeof businessInfoSchema>;

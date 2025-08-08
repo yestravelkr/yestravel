@@ -1,12 +1,5 @@
 import { initTRPC } from "@trpc/server";
 import { z } from "zod";
-import {
-  brandSchema,
-  campaignSchema, createCampaignInputSchema, deleteCampaignInputSchema,
-  findBrandByIdInputSchema, findCampaignByIdInputSchema,
-  registerBrandInputSchema,
-  updateBrandInputSchema, updateCampaignInputSchema
-} from "@yestravelkr/yestravel-schema";
 
 const t = initTRPC.create();
 const publicProcedure = t.procedure;
@@ -41,17 +34,171 @@ const appRouter = t.router({
     })).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
   }),
   backofficeBrand: t.router({
-    register: publicProcedure.input(registerBrandInputSchema).output(brandSchema).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
-    findAll: publicProcedure.output(z.array(brandSchema)).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
-    findById: publicProcedure.input(findBrandByIdInputSchema).output(brandSchema.nullable()).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
-    update: publicProcedure.input(updateBrandInputSchema).output(brandSchema).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
+    register: publicProcedure.input(z.object({
+      name: z.string().min(1, 'Brand name is required'),
+      email: z.string().email().nullish(),
+      phoneNumber: z.string().nullish(),
+      businessInfo: z.object({
+        type: z.nativeEnum(BusinessType).nullish(),
+        name: z.string().nullish(),
+        licenseNumber: z.string().nullish(),
+        ceoName: z.string().nullish(),
+      }).nullish(),
+      bankInfo: z.object({
+        name: z.string().nullish(),
+        accountNumber: z.string().nullish(),
+        accountHolder: z.string().nullish(),
+      }).nullish(),
+    })).output(z.object({
+      id: z.number(),
+      name: z.string(),
+      email: z.string().email().nullish(),
+      phoneNumber: z.string().nullish(),
+      businessInfo: z.object({
+        type: z.nativeEnum(BusinessType).nullish(),
+        name: z.string().nullish(),
+        licenseNumber: z.string().nullish(),
+        ceoName: z.string().nullish(),
+      }).nullish(),
+      bankInfo: z.object({
+        name: z.string().nullish(),
+        accountNumber: z.string().nullish(),
+        accountHolder: z.string().nullish(),
+      }).nullish(),
+      createdAt: z.date(),
+    })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    findAll: publicProcedure.output(z.array(z.object({
+      id: z.number(),
+      name: z.string(),
+      email: z.string().email().nullish(),
+      phoneNumber: z.string().nullish(),
+      businessInfo: z.object({
+        type: z.nativeEnum(BusinessType).nullish(),
+        name: z.string().nullish(),
+        licenseNumber: z.string().nullish(),
+        ceoName: z.string().nullish(),
+      }).nullish(),
+      bankInfo: z.object({
+        name: z.string().nullish(),
+        accountNumber: z.string().nullish(),
+        accountHolder: z.string().nullish(),
+      }).nullish(),
+      createdAt: z.date(),
+    }))).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    findById: publicProcedure.input(z.object({
+      id: z.number(),
+    })).output(z.object({
+      id: z.number(),
+      name: z.string(),
+      email: z.string().email().nullish(),
+      phoneNumber: z.string().nullish(),
+      businessInfo: z.object({
+        type: z.nativeEnum(BusinessType).nullish(),
+        name: z.string().nullish(),
+        licenseNumber: z.string().nullish(),
+        ceoName: z.string().nullish(),
+      }).nullish(),
+      bankInfo: z.object({
+        name: z.string().nullish(),
+        accountNumber: z.string().nullish(),
+        accountHolder: z.string().nullish(),
+      }).nullish(),
+      createdAt: z.date(),
+    }).nullable()).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    update: publicProcedure.input(z.object({
+      id: z.number(),
+      name: z.string().min(1, 'Brand name is required').nullish(),
+      email: z.string().email().nullish(),
+      phoneNumber: z.string().nullish(),
+      businessInfo: z.object({
+        type: z.nativeEnum(BusinessType).nullish(),
+        name: z.string().nullish(),
+        licenseNumber: z.string().nullish(),
+        ceoName: z.string().nullish(),
+      }).nullish(),
+      bankInfo: z.object({
+        name: z.string().nullish(),
+        accountNumber: z.string().nullish(),
+        accountHolder: z.string().nullish(),
+      }).nullish(),
+    })).output(z.object({
+      id: z.number(),
+      name: z.string(),
+      email: z.string().email().nullish(),
+      phoneNumber: z.string().nullish(),
+      businessInfo: z.object({
+        type: z.nativeEnum(BusinessType).nullish(),
+        name: z.string().nullish(),
+        licenseNumber: z.string().nullish(),
+        ceoName: z.string().nullish(),
+      }).nullish(),
+      bankInfo: z.object({
+        name: z.string().nullish(),
+        accountNumber: z.string().nullish(),
+        accountHolder: z.string().nullish(),
+      }).nullish(),
+      createdAt: z.date(),
+    })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
   }),
   backofficeCampaign: t.router({
-    findAll: publicProcedure.output(z.array(campaignSchema)).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
-    findById: publicProcedure.input(findCampaignByIdInputSchema).output(campaignSchema).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
-    create: publicProcedure.input(createCampaignInputSchema).output(campaignSchema).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
-    update: publicProcedure.input(updateCampaignInputSchema).output(campaignSchema).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
-    delete: publicProcedure.input(deleteCampaignInputSchema).output(z.object({ success: z.boolean() })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
+    findAll: publicProcedure.output(z.array(z.object({
+      id: z.number(),
+      title: z.string(),
+      startAt: z.date(),
+      endAt: z.date(),
+      description: z.string().nullish(),
+      thumbnail: z.string().nullish(),
+      createdAt: z.date(),
+      updatedAt: z.date(),
+    }))).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    findById: publicProcedure.input(z.object({
+      id: z.number(),
+    })).output(z.object({
+      id: z.number(),
+      title: z.string(),
+      startAt: z.date(),
+      endAt: z.date(),
+      description: z.string().nullish(),
+      thumbnail: z.string().nullish(),
+      createdAt: z.date(),
+      updatedAt: z.date(),
+    })).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    create: publicProcedure.input(z.object({
+      title: z.string().min(1, 'Title is required'),
+      startAt: z.date(),
+      endAt: z.date(),
+      description: z.string().nullish(),
+      thumbnail: z.string().nullish(),
+    })).output(z.object({
+      id: z.number(),
+      title: z.string(),
+      startAt: z.date(),
+      endAt: z.date(),
+      description: z.string().nullish(),
+      thumbnail: z.string().nullish(),
+      createdAt: z.date(),
+      updatedAt: z.date(),
+    })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    update: publicProcedure.input(z.object({
+      id: z.number(),
+      title: z.string().min(1, 'Title is required').nullish(),
+      startAt: z.date().nullish(),
+      endAt: z.date().nullish(),
+      description: z.string().nullish(),
+      thumbnail: z.string().nullish(),
+    })).output(z.object({
+      id: z.number(),
+      title: z.string(),
+      startAt: z.date(),
+      endAt: z.date(),
+      description: z.string().nullish(),
+      thumbnail: z.string().nullish(),
+      createdAt: z.date(),
+      updatedAt: z.date(),
+    })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    delete: publicProcedure.input(z.object({
+      id: z.number(),
+    })).output(z.object({ success: z.boolean() })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
   }),
   sample: t.router({
     getHello: publicProcedure.input(z.object({

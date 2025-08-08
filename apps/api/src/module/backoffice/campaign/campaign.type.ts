@@ -5,7 +5,7 @@ import {
   updateCampaignInputSchema,
   findCampaignByIdInputSchema,
   deleteCampaignInputSchema,
-} from '@yestravelkr/yestravel-schema';
+} from './campaign.schema';
 
 // Inferred types from Zod schemas
 export type Campaign = z.infer<typeof campaignSchema>;
