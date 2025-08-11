@@ -5,6 +5,7 @@ const t = initTRPC.create();
 const publicProcedure = t.procedure;
 
 const appRouter = t.router({
+  backofficeAdmin: t.router({}),
   backofficeAuth: t.router({
     register: publicProcedure.input(z.object({
       email: z.string().email('이메일 형식이 아닙니다.'),
