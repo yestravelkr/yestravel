@@ -9,11 +9,25 @@ import {
   updateAdminInputSchema,
   updateAdminPasswordInputSchema,
   updateAdminPasswordResponseSchema,
+  createAdminInputSchema,
 } from './admin.schema';
-import type { FindAdminByIdInput, UpdateAdminInput, UpdateAdminPasswordInput } from './admin.type';
+import type { FindAdminByIdInput, UpdateAdminInput, UpdateAdminPasswordInput, CreateAdminInput } from './admin.type';
 
 @Router({ alias: 'backofficeAdmin' })
 export class AdminRouter extends BaseTrpcRouter {
+  @UseMiddlewares(BackofficeAuthMiddleware)
+  @Mutation({
+    input: createAdminInputSchema,
+    output: adminDetailSchema,
+  })
+  async create(
+    @Ctx() ctx: BackofficeAuthorizedContext,
+    @Input() input: CreateAdminInput
+  ) {
+    const output = await this.microserviceClient.send('backoffice.admin.create', input);
+    return adminDetailSchema.parse(output);
+  }
+
   @UseMiddlewares(BackofficeAuthMiddleware)
   @Query({
     output: adminListSchema,

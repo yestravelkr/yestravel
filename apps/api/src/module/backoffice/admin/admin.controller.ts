@@ -11,6 +11,7 @@ import type {
   UpdateAdminInput,
   UpdateAdminPasswordInput,
   UpdateAdminPasswordResponse,
+  CreateAdminInput,
 } from './admin.type';
 
 @Controller()
@@ -19,6 +20,13 @@ export class AdminController {
     private readonly adminService: AdminService,
     private readonly transactionService: TransactionService
   ) {}
+
+  @MessagePattern('backoffice.admin.create')
+  @Transactional
+  async create(data: CreateAdminInput): Promise<AdminDetail> {
+    const admin = await this.adminService.create(data);
+    return adminDetailSchema.parse(admin);
+  }
 
   @MessagePattern('backoffice.admin.findAll')
   async findAll(): Promise<AdminList> {

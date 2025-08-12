@@ -1,13 +1,26 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { RepositoryProvider } from '@src/module/shared/transaction/repository.provider';
 import { AdminEntity } from '@src/module/backoffice/domain/admin.entity';
-import type { UpdateAdminInput, UpdateAdminPasswordInput } from './admin.type';
+import type { UpdateAdminInput, UpdateAdminPasswordInput, CreateAdminInput } from './admin.type';
 
 @Injectable()
 export class AdminService {
   constructor(
     private readonly repositoryProvider: RepositoryProvider
   ) {}
+
+  async create(dto: CreateAdminInput): Promise<AdminEntity> {
+    // 이메일 중복 체크
+    const emailExists = await this.repositoryProvider.AdminRepository.exist({ where: { email: dto.email } });
+    if (emailExists) {
+      throw new ConflictException('이미 존재하는 이메일입니다');
+    }
+
+    // DDD 패턴: Entity의 static create 메서드 사용
+    const admin = await AdminEntity.create(dto);
+
+    return this.repositoryProvider.AdminRepository.save(admin);
+  }
 
   async findAll(): Promise<AdminEntity[]> {
     return this.repositoryProvider.AdminRepository.find({
