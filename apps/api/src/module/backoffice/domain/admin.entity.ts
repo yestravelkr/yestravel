@@ -11,6 +11,10 @@ export class AdminEntity extends LoginEntity {
     this.phoneNumber = data.phoneNumber;
     this.role = data.role;
   }
+
+  async updatePassword(newPassword: string): Promise<void> {
+    await this.setPassword(newPassword);
+  }
 }
 
 export const getAdminRepository = (

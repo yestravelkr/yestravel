@@ -3,8 +3,15 @@ import { MessagePattern } from '@nestjs/microservices';
 import { AdminService } from './admin.service';
 import { TransactionService } from '@src/module/shared/transaction/transaction.service';
 import { Transactional } from '@src/module/shared/transaction/transaction.decorator';
-import { adminListSchema, adminDetailSchema } from './admin.schema';
-import type { AdminList, AdminDetail, FindAdminByIdInput, UpdateAdminInput } from './admin.type';
+import { adminListSchema, adminDetailSchema, updateAdminPasswordResponseSchema } from './admin.schema';
+import type { 
+  AdminList, 
+  AdminDetail, 
+  FindAdminByIdInput, 
+  UpdateAdminInput,
+  UpdateAdminPasswordInput,
+  UpdateAdminPasswordResponse,
+} from './admin.type';
 
 @Controller()
 export class AdminController {
@@ -35,5 +42,16 @@ export class AdminController {
   async update(data: UpdateAdminInput): Promise<AdminDetail> {
     const admin = await this.adminService.update(data);
     return adminDetailSchema.parse(admin);
+  }
+
+  @MessagePattern('backoffice.admin.updatePassword')
+  @Transactional
+  async updatePassword(data: UpdateAdminPasswordInput): Promise<UpdateAdminPasswordResponse> {
+    await this.adminService.updatePassword(data);
+    const response = {
+      success: true,
+      message: '비밀번호가 성공적으로 변경되었습니다',
+    };
+    return updateAdminPasswordResponseSchema.parse(response);
   }
 }

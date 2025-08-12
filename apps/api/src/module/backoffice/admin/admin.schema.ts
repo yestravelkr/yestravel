@@ -33,3 +33,15 @@ export const updateAdminInputSchema = z.object({
   phoneNumber: z.string().min(1, '전화번호는 필수입니다'),
   role: z.nativeEnum(RoleType),
 });
+
+// Admin update password input schema
+export const updateAdminPasswordInputSchema = z.object({
+  id: z.number(),
+  newPassword: z.string().min(6, '비밀번호는 최소 6자 이상이어야 합니다'),
+});
+
+// Admin update password response schema
+export const updateAdminPasswordResponseSchema = z.object({
+  success: z.boolean(),
+  message: z.string(),
+});
