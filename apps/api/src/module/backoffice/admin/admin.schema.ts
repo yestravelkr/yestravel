@@ -10,3 +10,18 @@ export const adminListItemSchema = z.object({
 });
 
 export const adminListSchema = z.array(adminListItemSchema);
+
+// Admin detail response schema
+export const adminDetailSchema = z.object({
+  id: z.number(),
+  email: z.string().email(),
+  name: z.string(),
+  phoneNumber: z.string(),
+  role: z.nativeEnum(RoleType),
+  createdAt: z.date(),
+});
+
+// Admin findById input schema
+export const findAdminByIdInputSchema = z.object({
+  id: z.number(),
+});

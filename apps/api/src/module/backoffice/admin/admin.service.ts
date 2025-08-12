@@ -13,4 +13,8 @@ export class AdminService {
       order: { createdAt: 'DESC' },
     });
   }
+
+  async findById(id: number): Promise<AdminEntity | null> {
+    return this.repositoryProvider.AdminRepository.findOneBy({ id });
+  }
 }
