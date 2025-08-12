@@ -11,7 +11,7 @@ export class AdminService {
 
   async create(dto: CreateAdminInput): Promise<AdminEntity> {
     // 이메일 중복 체크
-    const emailExists = await this.repositoryProvider.AdminRepository.exist({ where: { email: dto.email } });
+    const emailExists = await this.repositoryProvider.AdminRepository.exists({ where: { email: dto.email } });
     if (emailExists) {
       throw new ConflictException('이미 존재하는 이메일입니다');
     }
