@@ -241,32 +241,56 @@ export class UserPreferences {
 
 ## 리포지토리 패턴
 
-### 기본 리포지토리 사용법
+### ⚠️ 중요: Repository 접근 규칙
 
+**잘못된 방법 - 직접 TypeORM 주입 사용 금지:**
 ```typescript
+// ❌ 금지된 패턴
+@Module({
+  imports: [TypeOrmModule.forFeature([AdminEntity])], // 사용 금지
+  // ...
+})
+
 @Injectable()
 export class UserService {
   constructor(
-    @InjectRepository(User)
+    @InjectRepository(User) // 사용 금지
     private readonly userRepository: Repository<User>,
+  ) {}
+}
+```
+
+**올바른 방법 - RepositoryProvider만 사용:**
+```typescript
+// ✅ 권장 패턴
+@Module({
+  // imports에 TypeOrmModule.forFeature() 없이
+  providers: [UserService],
+  // ...
+})
+
+@Injectable()
+export class UserService {
+  constructor(
+    private readonly repositoryProvider: RepositoryProvider, // 이것만 사용
   ) {}
 
   async findById(id: string): Promise<User | null> {
-    return this.userRepository.findOne({ where: { id } });
+    return this.repositoryProvider.UserRepository.findOne({ where: { id } });
   }
 
   async create(userData: CreateUserDto): Promise<User> {
-    const user = this.userRepository.create(userData);
-    return this.userRepository.save(user);
+    const user = this.repositoryProvider.UserRepository.create(userData);
+    return this.repositoryProvider.UserRepository.save(user);
   }
 
   async update(id: string, updateData: UpdateUserDto): Promise<User> {
-    await this.userRepository.update(id, updateData);
+    await this.repositoryProvider.UserRepository.update(id, updateData);
     return this.findById(id);
   }
 
   async delete(id: string): Promise<void> {
-    await this.userRepository.delete(id);
+    await this.repositoryProvider.UserRepository.delete(id);
   }
 }
 ```
@@ -326,19 +350,35 @@ export const getBrandRepository = (
 ```typescript
 @Injectable()
 export class BrandService {
-  constructor(private readonly transactionService: TransactionService) {}
+  constructor(
+    private readonly repositoryProvider: RepositoryProvider // RepositoryProvider 사용
+  ) {}
 
   async register(dto: z.infer<typeof registerBrandInputSchema>): Promise<BrandEntity> {
-    // 트랜잭션 컨텍스트와 함께 커스텀 리포지토리 사용
-    const brandRepository = getBrandRepository(this.transactionService);
-    return brandRepository.register(dto);
+    // RepositoryProvider를 통해 리포지토리 접근
+    return this.repositoryProvider.BrandRepository.register(dto);
   }
 
   async findById(id: number): Promise<BrandEntity | null> {
-    // 일반 컨텍스트에서 커스텀 리포지토리 사용
-    const brandRepository = getBrandRepository();
-    return brandRepository.findWithRelations(id);
+    // RepositoryProvider를 통해 커스텀 메서드 사용
+    return this.repositoryProvider.BrandRepository.findWithRelations(id);
   }
+}
+```
+
+**RepositoryProvider에서 커스텀 리포지토리 등록:**
+
+```typescript
+// repository.provider.ts
+@Injectable()
+export class RepositoryProvider {
+  constructor(private readonly transaction?: TransactionService) {}
+
+  get BrandRepository() {
+    return getBrandRepository(this.transaction);
+  }
+  
+  // 다른 리포지토리들도 동일하게 등록
 }
 ```
 

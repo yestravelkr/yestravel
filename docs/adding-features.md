@@ -25,7 +25,8 @@ Claude Code 사용자를 위해 새 기능 추가 시 다음 체크리스트를 
 
 ```
 apps/api/src/module/backoffice/brand/
-├── brand.schema.ts          # Zod 스키마 및 타입 정의 (새로운!)
+├── brand.schema.ts          # Zod 스키마 정의
+├── brand.type.ts            # 타입 정의 (z.infer로 추론)
 ├── brand.router.ts          # tRPC 엔드포인트
 ├── brand.controller.ts      # 메시지 패턴 핸들러
 ├── brand.service.ts         # 비즈니스 로직
@@ -34,8 +35,10 @@ apps/api/src/module/backoffice/brand/
 ```
 
 **중요한 변경사항:**
-- **`module.schema.ts` 파일이 추가**되어 모든 입력/출력 스키마를 중앙 관리
-- 모듈들은 도메인별로 그룹화 (예: `backoffice/`, `shop/`)
+- **`module.schema.ts`와 `module.type.ts` 파일 분리**: 스키마 정의와 타입 추론 분리
+- **모듈들은 도메인별로 그룹화** (예: `backoffice/`, `shop/`)
+- **Controller에서 Zod parse 사용**: 수동 포맷팅 대신 `schema.parse()` 사용
+- **RepositoryProvider 사용**: `TypeOrmModule.forFeature()` 사용 금지
 
 ## 실제 구현 예시: 브랜드 관리 모듈
 
@@ -51,43 +54,62 @@ import { BusinessType } from '@src/module/backoffice/domain/social-media-platfor
 
 // 중첩 객체용 기본 스키마
 export const businessInfoSchema = z.object({
-  type: z.nativeEnum(BusinessType).optional().nullable(),
-  name: z.string().optional().nullable(),
-  licenseNumber: z.string().optional().nullable(),
-  ceoName: z.string().optional().nullable(),
+  type: z.nativeEnum(BusinessType).nullish(),
+  name: z.string().nullish(),
+  licenseNumber: z.string().nullish(),
+  ceoName: z.string().nullish(),
 });
 
 export const bankInfoSchema = z.object({
-  name: z.string().optional().nullable(),
-  accountNumber: z.string().optional().nullable(),
-  accountHolder: z.string().optional().nullable(),
+  name: z.string().nullish(),
+  accountNumber: z.string().nullish(),
+  accountHolder: z.string().nullish(),
 });
 
 // 메인 브랜드 스키마
 export const brandSchema = z.object({
   id: z.number(),
   name: z.string(),
-  email: z.string().email().optional().nullable(),
-  phoneNumber: z.string().optional().nullable(),
-  businessInfo: businessInfoSchema.optional().nullable(),
-  bankInfo: bankInfoSchema.optional().nullable(),
+  email: z.string().email().nullish(),
+  phoneNumber: z.string().nullish(),
+  businessInfo: businessInfoSchema.nullish(),
+  bankInfo: bankInfoSchema.nullish(),
   createdAt: z.date(),
 });
 
 // 입력 스키마
 export const registerBrandInputSchema = z.object({
   name: z.string().min(1, 'Brand name is required'),
-  email: z.string().email().optional(),
-  phoneNumber: z.string().optional(),
-  businessInfo: businessInfoSchema.optional(),
-  bankInfo: bankInfoSchema.optional(),
+  email: z.string().email().nullish(),
+  phoneNumber: z.string().nullish(),
+  businessInfo: businessInfoSchema.nullish(),
+  bankInfo: bankInfoSchema.nullish(),
 });
 
 export const findBrandByIdInputSchema = z.object({
   id: z.number(),
 });
+```
 
-// 타입은 사용하는 곳에서 z.infer로 추론 - export type 정의하지 않음!
+### 2-1단계: 타입 정의 (`brand.type.ts`)
+
+**스키마에서 타입 추론:**
+
+```typescript
+import { z } from 'zod';
+import {
+  businessInfoSchema,
+  bankInfoSchema,
+  brandSchema,
+  registerBrandInputSchema,
+  findBrandByIdInputSchema,
+} from './brand.schema';
+
+export type BusinessInfo = z.infer<typeof businessInfoSchema>;
+export type BankInfo = z.infer<typeof bankInfoSchema>;
+export type Brand = z.infer<typeof brandSchema>;
+export type RegisterBrandInput = z.infer<typeof registerBrandInputSchema>;
+export type FindBrandByIdInput = z.infer<typeof findBrandByIdInputSchema>;
 ```
 
 ### 3단계: tRPC 라우터 구현 (`brand.router.ts`)
@@ -105,7 +127,11 @@ import {
   registerBrandInputSchema,
   findBrandByIdInputSchema,
   brandSchema
-} from '@src/module/backoffice/brand/brand.schema';
+} from './brand.schema';
+import type {
+  RegisterBrandInput,
+  FindBrandByIdInput,
+} from './brand.type';
 
 @Router({ alias: 'backofficeBrand' })  // 도메인 prefix 사용
 export class BrandRouter extends BaseTrpcRouter {
@@ -116,7 +142,7 @@ export class BrandRouter extends BaseTrpcRouter {
   })
   async register(
     @Ctx() ctx: BackofficeAuthorizedContext,
-    @Input() input: z.infer<typeof registerBrandInputSchema>  // z.infer 사용
+    @Input() input: RegisterBrandInput  // type 파일에서 import
   ) {
     const output = await this.microserviceClient.send('backoffice.brand.register', input);
     return brandSchema.parse(output); // 응답 검증
@@ -138,7 +164,7 @@ export class BrandRouter extends BaseTrpcRouter {
   })
   async findById(
     @Ctx() ctx: BackofficeAuthorizedContext,
-    @Input() input: z.infer<typeof findBrandByIdInputSchema>
+    @Input() input: FindBrandByIdInput
   ) {
     const output = await this.microserviceClient.send('backoffice.brand.findById', input);
     return brandSchema.nullable().parse(output);
@@ -148,21 +174,23 @@ export class BrandRouter extends BaseTrpcRouter {
 
 ### 4단계: NestJS 컨트롤러 구현 (`brand.controller.ts`)
 
-**응답 포맷팅과 트랜잭션을 포함한 실제 컨트롤러:**
+**Zod parse를 통한 응답 검증과 트랜잭션을 포함한 실제 컨트롤러:**
 
 ```typescript
 import { Controller } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
-import { BrandService } from '@src/module/backoffice/brand/brand.service';
+import { BrandService } from './brand.service';
 import { TransactionService } from '@src/module/shared/transaction/transaction.service';
 import { Transactional } from '@src/module/shared/transaction/transaction.decorator';
-import { BrandEntity } from '@src/module/backoffice/domain/brand.entity';
-import { z } from 'zod';
 import { 
-  registerBrandInputSchema,
-  findBrandByIdInputSchema,
-  brandSchema
-} from '@src/module/backoffice/brand/brand.schema';
+  brandSchema,
+  z.array(brandSchema) as brandListSchema
+} from './brand.schema';
+import type {
+  Brand,
+  RegisterBrandInput,
+  FindBrandByIdInput,
+} from './brand.type';
 
 @Controller()
 export class BrandController {
@@ -171,90 +199,90 @@ export class BrandController {
     private readonly transactionService: TransactionService
   ) {}
 
-  // TypeORM 메타데이터 제거를 위한 응답 포맷팅 - 중요!
-  private formatBrandResponse(brand: BrandEntity): z.infer<typeof brandSchema> {
-    return {
-      id: brand.id,
-      name: brand.name,
-      email: brand.email,
-      phoneNumber: brand.phoneNumber,
-      businessInfo: brand.businessInfo ? {
-        type: brand.businessInfo.type,
-        name: brand.businessInfo.name,
-        licenseNumber: brand.businessInfo.licenseNumber,
-        ceoName: brand.businessInfo.ceoName
-      } : null,
-      bankInfo: brand.bankInfo ? {
-        name: brand.bankInfo.name,
-        accountNumber: brand.bankInfo.accountNumber,
-        accountHolder: brand.bankInfo.accountHolder
-      } : null,
-      createdAt: brand.createdAt,
-    };
-  }
-
   @MessagePattern('backoffice.brand.register')
   @Transactional  // 데이터베이스 트랜잭션
-  async register(data: z.infer<typeof registerBrandInputSchema>): Promise<z.infer<typeof brandSchema>> {
+  async register(data: RegisterBrandInput): Promise<Brand> {
     const brand = await this.brandService.register(data);
-    return this.formatBrandResponse(brand);
+    return brandSchema.parse(brand); // Zod로 응답 검증 및 포맷팅
   }
   
   @MessagePattern('backoffice.brand.findAll')
-  async findAll(): Promise<Array<z.infer<typeof brandSchema>>> {
+  async findAll(): Promise<Brand[]> {
     const brands = await this.brandService.findAll();
-    return brands.map(brand => this.formatBrandResponse(brand));
+    return brandListSchema.parse(brands); // 배열도 Zod로 파싱
   }
   
   @MessagePattern('backoffice.brand.findById')
-  async findById(data: z.infer<typeof findBrandByIdInputSchema>): Promise<z.infer<typeof brandSchema> | null> {
+  async findById(data: FindBrandByIdInput): Promise<Brand | null> {
     const brand = await this.brandService.findById(data.id);
     
     if (!brand) {
       return null;
     }
     
-    return this.formatBrandResponse(brand);
+    return brandSchema.parse(brand);
   }
 }
 ```
 
 ### 5단계: 서비스 계층 구현 (`brand.service.ts`)
 
-**HttpException을 사용한 적절한 에러 처리:**
+**RepositoryProvider를 사용한 서비스 구현:**
 
 ```typescript
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { TransactionService } from '@src/module/shared/transaction/transaction.service';
-import { BrandEntity, getBrandRepository } from '@src/module/backoffice/domain/brand.entity';
-import { z } from 'zod';
-import { registerBrandInputSchema } from '@src/module/backoffice/brand/brand.schema';
+import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
+import { RepositoryProvider } from '@src/module/shared/transaction/repository.provider';
+import { BrandEntity } from '@src/module/backoffice/domain/brand.entity';
+import type {
+  RegisterBrandInput,
+  UpdateBrandInput,
+} from './brand.type';
 
 @Injectable()
 export class BrandService {
-  constructor(private readonly transactionService: TransactionService) {}
+  constructor(
+    private readonly repositoryProvider: RepositoryProvider
+  ) {}
 
-  async register(dto: z.infer<typeof registerBrandInputSchema>): Promise<BrandEntity> {
-    const brandRepository = getBrandRepository(this.transactionService);
-    return brandRepository.register(dto);
+  async register(dto: RegisterBrandInput): Promise<BrandEntity> {
+    // 중복 체크
+    const existingBrand = await this.repositoryProvider.BrandRepository.findOneBy({ name: dto.name });
+    
+    if (existingBrand) {
+      throw new ConflictException('Brand with this name already exists');
+    }
+    
+    return this.repositoryProvider.BrandRepository.register(dto);
   }
 
   async findAll(): Promise<BrandEntity[]> {
-    const brandRepository = getBrandRepository();
-    return brandRepository.find({
-      relations: ['businessInfo', 'bankInfo'],
+    return this.repositoryProvider.BrandRepository.find({
+      order: { createdAt: 'DESC' }  // Soft delete는 자동 처리됨
     });
   }
 
   async findById(id: number): Promise<BrandEntity | null> {
-    const brandRepository = getBrandRepository();
-    const brand = await brandRepository.findOne({
-      where: { id },
-      relations: ['businessInfo', 'bankInfo'],
-    });
+    return this.repositoryProvider.BrandRepository.findOneBy({ id });
+  }
+  
+  async update(dto: UpdateBrandInput): Promise<BrandEntity> {
+    const { id, ...updateData } = dto;
     
-    // null 반환 - 컨트롤러에서 처리
-    return brand;
+    // 존재 확인
+    const existingBrand = await this.repositoryProvider.BrandRepository.findOneBy({ id });
+    if (!existingBrand) {
+      throw new NotFoundException('Brand not found');
+    }
+    
+    // 이름 중복 체크
+    if (updateData.name !== existingBrand.name) {
+      const brandWithSameName = await this.repositoryProvider.BrandRepository.findOneBy({ name: updateData.name });
+      if (brandWithSameName) {
+        throw new ConflictException('Brand with this name already exists');
+      }
+    }
+    
+    return this.repositoryProvider.BrandRepository.updateBrand(id, updateData);
   }
 }
 ```
@@ -593,44 +621,52 @@ describe('YourModule (e2e)', () => {
 
 ## 핵심 패턴 및 원칙
 
-### 스키마 중심 설계 (`module.schema.ts`)
-- **모든 입력/출력 스키마를 중앙 관리**
-- **z.infer 타입 추론 사용** - export type 정의하지 않음
-- **중첩 객체는 별도 스키마로분리**
+### 스키마 중심 설계
+- **`module.schema.ts`**: 모든 Zod 스키마 정의
+- **`module.type.ts`**: z.infer로 타입 추론
+- **nullish() 사용**: optional().nullable() 대신 nullish() 통일
 - **런타임 검증과 타입 안전성 보장**
 
 ### 응답 포맷팅 패턴
-- **TypeORM 메타데이터 제거를 위한 formatResponse 메서드**
-- **중첩 엔티티 처리 (businessInfo, bankInfo)**
+- **Controller에서 Zod parse 사용**: `schema.parse(result)`
+- **수동 포맷팅 금지**: formatResponse 메서드 사용하지 않음
+- **TypeORM 메타데이터 자동 제거**
 - **null 안전성 보장**
 
 ### 모듈 조직 패턴
 - **계층적 모듈 구조** (BackofficeModule → BrandModule)
 - **도메인별 그룹화** (backoffice/, shop/)
 - **관심사 분리 및 명확한 책임**
+- **TypeOrmModule.forFeature() 사용 금지**
+
+### Repository 접근 패턴
+- **RepositoryProvider만 사용**: `constructor(private readonly repositoryProvider: RepositoryProvider)`
+- **직접 Repository 주입 금지**: `@InjectRepository()` 사용하지 않음
+- **Soft Delete 자동 처리**: `where: { deletedAt: null }` 조건 불필요
 
 ### 에러 처리 패턴
 - **서비스 계층**: NestJS HttpException 사용
-  - `NotFoundException`, `UnauthorizedException`, `BadRequestException`
+  - `NotFoundException`, `ConflictException`, `BadRequestException`
 - **자동 변환**: HttpException → tRPC Error
 - **Repository 패턴**: findOneBy 사용 후 에러 처리
 
 ### 트랜잭션 패턴
 - **`@Transactional` 데코레이터 사용**
-- **TransactionService 의존성 주입**
+- **TransactionService 의존성 주입 불필요** (RepositoryProvider가 처리)
 - **커스텀 Repository에서 트랜잭션 컨텍스트 활용**
 
 ## Claude Code를 위한 중요 사항
 
-1. **🎯 스키마 중심**: `module.schema.ts`에서 모든 스키마 정의, z.infer 사용
-2. **🔄 응답 포맷팅**: TypeORM 메타데이터 제거를 위한 formatResponse 메서드 필수
-3. **🏗️ 계층적 모듈**: BackofficeModule → 개별 모듈 구조 사용
-4. **⚠️ 에러 처리**: 서비스에서 HttpException, 자동 tRPC 변환
-5. **💾 트랜잭션**: 데이터 변경 시 `@Transactional` 데코레이터 사용
-6. **🔐 인증**: UseMiddlewares로 BackofficeAuthMiddleware 적용
-7. **📨 메시지 패턴**: `domain.module.method` 규칙 (예: backoffice.brand.register)
-8. **🧪 테스트**: 단위, 통합, E2E 테스트 작성
-9. **🔍 자동 발견**: 라우터 자동 로드, 수동 등록 불필요
+1. **🎯 스키마/타입 분리**: `module.schema.ts`는 스키마, `module.type.ts`는 타입 추론
+2. **🔄 Zod Parse 사용**: Controller에서 `schema.parse(result)`, formatResponse 금지
+3. **🏗️ RepositoryProvider**: `TypeOrmModule.forFeature()` 금지, RepositoryProvider만 사용
+4. **⚠️ Soft Delete**: `where: { deletedAt: null }` 조건 불필요, 자동 처리됨
+5. **🎨 nullish() 통일**: optional().nullable() 대신 nullish() 사용
+6. **💾 트랜잭션**: 데이터 변경 시 `@Transactional` 데코레이터 사용
+7. **🔐 인증**: UseMiddlewares로 BackofficeAuthMiddleware 적용
+8. **📨 메시지 패턴**: `domain.module.method` 규칙 (예: backoffice.admin.findAll)
+9. **🧪 테스트**: 단위, 통합, E2E 테스트 작성
+10. **🔍 자동 발견**: 라우터 자동 로드, 수동 등록 불필요
 
 ## 실행 및 테스트
 
