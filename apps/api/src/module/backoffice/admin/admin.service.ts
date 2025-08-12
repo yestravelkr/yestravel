@@ -8,5 +8,9 @@ export class AdminService {
     private readonly repositoryProvider: RepositoryProvider
   ) {}
 
-  // TODO: Implement admin management business logic
+  async findAll(): Promise<AdminEntity[]> {
+    return this.repositoryProvider.AdminRepository.find({
+      order: { createdAt: 'DESC' },
+    });
+  }
 }
