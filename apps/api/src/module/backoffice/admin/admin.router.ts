@@ -40,14 +40,14 @@ export class AdminRouter extends BaseTrpcRouter {
   @UseMiddlewares(BackofficeAuthMiddleware)
   @Query({
     input: findAdminByIdInputSchema,
-    output: adminDetailSchema.nullable(),
+    output: adminDetailSchema,
   })
   async findById(
     @Ctx() ctx: BackofficeAuthorizedContext,
     @Input() input: FindAdminByIdInput
   ) {
     const output = await this.microserviceClient.send('backoffice.admin.findById', input);
-    return adminDetailSchema.nullable().parse(output);
+    return adminDetailSchema.parse(output);
   }
 
   @UseMiddlewares(BackofficeAuthMiddleware)

@@ -35,13 +35,8 @@ export class AdminController {
   }
 
   @MessagePattern('backoffice.admin.findById')
-  async findById(data: FindAdminByIdInput): Promise<AdminDetail | null> {
+  async findById(data: FindAdminByIdInput): Promise<AdminDetail> {
     const admin = await this.adminService.findById(data.id);
-    
-    if (!admin) {
-      return null;
-    }
-    
     return adminDetailSchema.parse(admin);
   }
 

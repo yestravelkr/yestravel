@@ -28,8 +28,11 @@ export class AdminService {
     });
   }
 
-  async findById(id: number): Promise<AdminEntity | null> {
-    return this.repositoryProvider.AdminRepository.findOneBy({ id });
+  async findById(id: number): Promise<AdminEntity> {
+    return this.repositoryProvider.AdminRepository.findOneByOrFail({ id })
+      .catch(() => {
+        throw new NotFoundException('관리자를 찾을 수 없습니다');
+      });
   }
 
   async update(dto: UpdateAdminInput): Promise<AdminEntity> {
