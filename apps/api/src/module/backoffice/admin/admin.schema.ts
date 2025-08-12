@@ -25,3 +25,11 @@ export const adminDetailSchema = z.object({
 export const findAdminByIdInputSchema = z.object({
   id: z.number(),
 });
+
+// Admin update input schema
+export const updateAdminInputSchema = z.object({
+  id: z.number(),
+  name: z.string().min(1, '이름은 필수입니다'),
+  phoneNumber: z.string().min(1, '전화번호는 필수입니다'),
+  role: z.nativeEnum(RoleType),
+});

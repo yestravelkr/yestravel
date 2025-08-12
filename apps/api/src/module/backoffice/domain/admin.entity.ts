@@ -5,7 +5,13 @@ import { getEntityManager } from '@src/database/datasources';
 import { RoleType } from '@src/module/backoffice/domain/role.enum';
 
 @Entity('admin')
-export class AdminEntity extends LoginEntity {}
+export class AdminEntity extends LoginEntity {
+  update(data: { name: string; phoneNumber: string; role: RoleType }): void {
+    this.name = data.name;
+    this.phoneNumber = data.phoneNumber;
+    this.role = data.role;
+  }
+}
 
 export const getAdminRepository = (
   source?: TransactionService | EntityManager

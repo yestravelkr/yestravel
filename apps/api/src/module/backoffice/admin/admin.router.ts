@@ -2,8 +2,8 @@ import { Router, Query, UseMiddlewares, Mutation, Input, Ctx } from 'nestjs-trpc
 import { BackofficeAuthMiddleware } from '@src/module/backoffice/auth/backoffice.auth.middleware';
 import { BackofficeAuthorizedContext } from '@src/module/backoffice/auth/backoffice.auth.middleware';
 import { BaseTrpcRouter } from '@src/module/trpc/baseTrpcRouter';
-import { adminListSchema, adminDetailSchema, findAdminByIdInputSchema } from './admin.schema';
-import type { FindAdminByIdInput } from './admin.type';
+import { adminListSchema, adminDetailSchema, findAdminByIdInputSchema, updateAdminInputSchema } from './admin.schema';
+import type { FindAdminByIdInput, UpdateAdminInput } from './admin.type';
 
 @Router({ alias: 'backofficeAdmin' })
 export class AdminRouter extends BaseTrpcRouter {
@@ -27,5 +27,18 @@ export class AdminRouter extends BaseTrpcRouter {
   ) {
     const output = await this.microserviceClient.send('backoffice.admin.findById', input);
     return adminDetailSchema.nullable().parse(output);
+  }
+
+  @UseMiddlewares(BackofficeAuthMiddleware)
+  @Mutation({
+    input: updateAdminInputSchema,
+    output: adminDetailSchema,
+  })
+  async update(
+    @Ctx() ctx: BackofficeAuthorizedContext,
+    @Input() input: UpdateAdminInput
+  ) {
+    const output = await this.microserviceClient.send('backoffice.admin.update', input);
+    return adminDetailSchema.parse(output);
   }
 }

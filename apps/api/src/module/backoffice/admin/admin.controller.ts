@@ -4,7 +4,7 @@ import { AdminService } from './admin.service';
 import { TransactionService } from '@src/module/shared/transaction/transaction.service';
 import { Transactional } from '@src/module/shared/transaction/transaction.decorator';
 import { adminListSchema, adminDetailSchema } from './admin.schema';
-import type { AdminList, AdminDetail, FindAdminByIdInput } from './admin.type';
+import type { AdminList, AdminDetail, FindAdminByIdInput, UpdateAdminInput } from './admin.type';
 
 @Controller()
 export class AdminController {
@@ -27,6 +27,13 @@ export class AdminController {
       return null;
     }
     
+    return adminDetailSchema.parse(admin);
+  }
+
+  @MessagePattern('backoffice.admin.update')
+  @Transactional
+  async update(data: UpdateAdminInput): Promise<AdminDetail> {
+    const admin = await this.adminService.update(data);
     return adminDetailSchema.parse(admin);
   }
 }
