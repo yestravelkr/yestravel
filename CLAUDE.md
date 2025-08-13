@@ -53,7 +53,8 @@ module/
 ├── module.controller.ts  # 메시지 핸들러 (@MessagePattern)
 ├── module.service.ts     # 비즈니스 로직
 ├── module.module.ts      # NestJS 모듈 설정
-├── module.schema.ts      # Zod 스키마 정의 (타입은 z.infer로 추론)
+├── module.schema.ts      # Zod 스키마 정의
+├── module.type.ts        # 타입 정의 (z.infer로 추론)
 └── module.middleware.ts  # 인증 (선택사항)
 ```
 
@@ -66,7 +67,8 @@ brand/
 ├── brand.controller.ts   # 메시지 핸들러 (@MessagePattern)
 ├── brand.service.ts      # 비즈니스 로직
 ├── brand.module.ts       # NestJS 모듈
-└── brand.schema.ts       # Zod 스키마 및 타입
+├── brand.schema.ts       # Zod 스키마 정의
+└── brand.type.ts         # 타입 정의 (z.infer로 추론)
 ```
 
 ## 필수 패턴
@@ -93,27 +95,63 @@ export const createModuleInputSchema = z.object({
   email: z.string().email().nullish(), // Input도 nullish() 사용
 });
 
+// Update 스키마 - Create 스키마를 extends하여 일관성 유지
+export const updateModuleInputSchema = createModuleInputSchema.extend({
+  id: z.number(),
+});
+
 // 타입 추론
 export type Module = z.infer<typeof moduleSchema>;
 export type CreateModuleInput = z.infer<typeof createModuleInputSchema>;
+export type UpdateModuleInput = z.infer<typeof updateModuleInputSchema>;
+```
+
+**strictNullChecks와 Nullish 타입:**
+- `tsconfig.json`에서 `strictNullChecks: true` 설정으로 엄격한 null/undefined 체크
+- `Nullish<T>` 타입 유틸리티로 Zod의 `nullish()`와 엔티티 타입 일치
+- 엔티티의 nullable 필드는 `Nullish<T>` 타입 사용
+
+```typescript
+// src/types/nullish.type.ts
+export type Nullish<T> = T | null | undefined;
+
+// Entity에서 사용
+@Column({ type: 'varchar', nullable: true })
+email: Nullish<string>;
 ```
 
 **API에서 타입 사용:**
 ```typescript
 // apps/api/src/module/module.schema.ts
-export {
-  moduleSchema,
-  createModuleInputSchema,
-  type Module,
-  type CreateModuleInput,
-} from '@yestravelkr/api-types';
+import { z } from 'zod';
+
+export const moduleSchema = z.object({
+  id: z.number(),
+  name: z.string(),
+  email: z.string().email(),
+  createdAt: z.date(),
+});
+
+export const createModuleInputSchema = z.object({
+  name: z.string().min(1),
+  email: z.string().email(),
+});
+
+// apps/api/src/module/module.type.ts
+import { z } from 'zod';
+import { moduleSchema, createModuleInputSchema } from './module.schema';
+
+export type Module = z.infer<typeof moduleSchema>;
+export type CreateModuleInput = z.infer<typeof createModuleInputSchema>;
 
 // apps/api/src/module/module.controller.ts
-import type { Module, CreateModuleInput } from './module.schema';
+import type { Module, CreateModuleInput } from './module.type';
+import { moduleSchema } from './module.schema';
 
 @MessagePattern('module.create')
 async create(data: CreateModuleInput): Promise<Module> {
-  // 구현
+  const result = await this.moduleService.create(data);
+  return moduleSchema.parse(result);
 }
 ```
 
@@ -151,18 +189,15 @@ export class ModuleRouter extends BaseTrpcRouter {
 export class ModuleController {
   @MessagePattern('moduleName.create')
   @Transactional
-  async create(data: z.infer<typeof createModuleInputSchema>): Promise<z.infer<typeof moduleSchema>> {
+  async create(data: CreateModuleInput): Promise<Module> {
     const result = await this.moduleService.create(data);
-    return this.formatResponse(result);
+    return moduleSchema.parse(result); // Zod로 응답 검증 및 포맷팅
   }
   
-  private formatResponse(entity: ModuleEntity): z.infer<typeof moduleSchema> {
-    return {
-      id: entity.id,
-      name: entity.name,
-      email: entity.email,
-      createdAt: entity.createdAt,
-    };
+  @MessagePattern('moduleName.findAll')
+  async findAll(): Promise<ModuleList> {
+    const results = await this.moduleService.findAll();
+    return moduleListSchema.parse(results); // 배열도 Zod로 파싱
   }
 }
 ```
@@ -196,25 +231,52 @@ export const getModuleRepository = (
 get ModuleRepository() {
   return getModuleRepository(this.transaction);
 }
+
+// ❌ 잘못된 방법 - TypeOrmModule.forFeature() 사용
+@Module({
+  imports: [TypeOrmModule.forFeature([AdminEntity])],
+  // ...
+})
+
+// ✅ 올바른 방법 - RepositoryProvider만 사용
+@Module({
+  // imports에 TypeOrmModule.forFeature() 없이
+  providers: [AdminService, AdminRouter],
+  // ...
+})
+export class AdminModule {}
+
+// Service에서 RepositoryProvider를 통해서만 접근
+constructor(private readonly repositoryProvider: RepositoryProvider) {}
+// this.repositoryProvider.AdminRepository.find()
 ```
 
 ## 중요 사항
 
 - **자동 발견**: 새 라우터는 자동으로 로드됩니다 (수동 등록 불필요)
 - **타입 안전성**: 모든 입력/출력 검증에 Zod 스키마 사용
-- **스키마 패턴**: 타입은 `z.infer<typeof schemaName>`으로 추론, 미리 정의하지 않음
-- **모듈 구조**: BackofficeModule로 그룹화된 하위 모듈들 (Brand, Auth 등)
+- **스키마 패턴**: 스키마는 `.schema.ts`에 정의, 타입은 `.type.ts`에서 `z.infer`로 추론
+- **응답 포맷팅**: Controller에서 수동 포맷팅 대신 `schema.parse()` 사용
+- **모듈 구조**: BackofficeModule로 그룹화된 하위 모듈들 (Brand, Auth, Admin 등)
 - **환경**: API 시작 전에 항상 `yarn generateEnv` 실행
 - **포트**: tRPC 서버는 3000 포트에서 실행
 - **데이터베이스**: Docker를 통한 PostgreSQL, TypeORM 마이그레이션으로 관리
 - **Repository**: 새 Entity 생성 시 반드시 Repository 함수와 RepositoryProvider 등록 필요
+- **⚠️ Repository 접근 규칙**: 모듈에서 `TypeOrmModule.forFeature()` 사용 금지. 오직 `RepositoryProvider`를 통해서만 Entity Repository에 접근
+- **Soft Delete**: TypeORM의 soft delete가 기본 적용되어 있어 `where: { deletedAt: null }` 조건 불필요
 
 ## 실제 구현 예시
 
 **Brand 모듈**: 브랜드 파트너 관리
 - **Router**: `@Router({ alias: 'backofficeBrand' })`
-- **Endpoints**: `register`, `findAll`, `findById`
+- **Endpoints**: `register`, `findAll`, `findById`, `update`
 - **Schema**: 중첩 객체 (businessInfo, bankInfo) 포함
+- **인증**: BackofficeAuthMiddleware 적용
+
+**Admin 모듈**: 관리자 계정 관리
+- **Router**: `@Router({ alias: 'backofficeAdmin' })`
+- **Endpoints**: `findAll` (리스트 조회)
+- **Schema**: adminListItemSchema (id, email, name, role)
 - **인증**: BackofficeAuthMiddleware 적용
 
 ## 백오피스 프론트엔드 패턴
@@ -315,17 +377,24 @@ EOF
 **Zod 스키마 작성 규칙:**
 - **nullish() 통일 사용**: `optional().nullable()` 대신 모든 곳에서 `nullish()` 사용
 - **null/undefined 구분 안함**: API 통신에서 null과 undefined를 구분하지 않음
-- **Input/Output 동일**: Input과 Output 스키마 모두 `nullish()` 사용
+- **Update 스키마 패턴**: `updateSchema = createSchema.extend({ id: z.number() })`로 일관성 유지
+- **PUT 방식 업데이트**: Update API는 모든 필드를 요구하는 PUT 방식으로 동작
 - **중앙 집중식 관리**: 모든 스키마는 `packages/api-types`에서 정의
 - **타입 추론**: 직접 타입 정의 대신 `z.infer<typeof schema>` 사용
+- **strictNullChecks**: TypeScript 설정에서 `strictNullChecks: true`로 엄격한 타입 체크
 
 **스키마 패턴:**
 ```typescript
-// ✅ 좋은 예 - Input/Output 모두 nullish() 사용
+// ✅ 좋은 예 - Create/Update 스키마 패턴
 export const createUserInputSchema = z.object({
   name: z.string().min(1),
   email: z.string().email().nullish(),
   profileData: userProfileSchema.nullish(),
+});
+
+// Update 스키마는 Create를 extends하여 일관성 유지
+export const updateUserInputSchema = createUserInputSchema.extend({
+  id: z.number(),
 });
 
 export const userSchema = z.object({
@@ -336,11 +405,11 @@ export const userSchema = z.object({
   createdAt: z.date(),
 });
 
-// ❌ 나쁜 예 - optional()이나 nullable() 따로 사용
-export const userSchema = z.object({
+// ❌ 나쁜 예 - 별도로 정의하거나 optional() 사용
+export const updateUserInputSchema = z.object({
   id: z.number(),
-  email: z.string().email().optional().nullable(),
-  profile: userProfileSchema.optional(),
+  name: z.string().min(1).optional(), // 비일관적
+  email: z.string().email().optional().nullable(), // 비표준
 });
 ```
 
