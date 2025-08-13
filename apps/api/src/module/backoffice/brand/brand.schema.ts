@@ -45,11 +45,6 @@ export const findBrandByIdInputSchema = z.object({
   id: z.number(),
 });
 
-export const updateBrandInputSchema = z.object({
+export const updateBrandInputSchema = registerBrandInputSchema.extend({
   id: z.number(),
-  name: z.string().min(1, 'Brand name is required').nullish(),
-  email: z.string().email().nullish(),
-  phoneNumber: z.string().nullish(),
-  businessInfo: businessInfoSchema.nullish(),
-  bankInfo: bankInfoSchema.nullish(),
 });

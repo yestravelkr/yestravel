@@ -45,23 +45,32 @@ module/
 ```typescript
 import { z } from 'zod';
 
-// 입력 스키마
+// 입력 스키마 - nullish() 사용으로 통일
 export const createModuleInputSchema = z.object({
   name: z.string().min(1),
-  email: z.string().email().optional(),
+  email: z.string().email().nullish(),
+});
+
+// 업데이트 스키마 - Create 스키마를 extends하여 일관성 유지
+export const updateModuleInputSchema = createModuleInputSchema.extend({
+  id: z.number(),
 });
 
 // 출력 스키마  
 export const moduleSchema = z.object({
   id: z.number(),
   name: z.string(),
-  email: z.string().optional().nullable(),
+  email: z.string().email().nullish(),
   createdAt: z.date(),
 });
 
 // 타입은 사용하는 곳에서 z.infer로 추론
 // export type 정의하지 않음
 ```
+
+**TypeScript 설정:**
+- `strictNullChecks: true` - 엄격한 null/undefined 체크
+- `Nullish<T>` 타입 유틸리티로 엔티티와 Zod 스키마 타입 일치
 
 ### 라우터 구현 (`module.router.ts`)
 

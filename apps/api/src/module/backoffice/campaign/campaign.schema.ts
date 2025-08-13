@@ -21,13 +21,8 @@ export const createCampaignInputSchema = z.object({
   thumbnail: z.string().nullish(),
 });
 
-export const updateCampaignInputSchema = z.object({
+export const updateCampaignInputSchema = createCampaignInputSchema.extend({
   id: z.number(),
-  title: z.string().min(1, 'Title is required').nullish(),
-  startAt: z.date().nullish(),
-  endAt: z.date().nullish(),
-  description: z.string().nullish(),
-  thumbnail: z.string().nullish(),
 });
 
 export const findCampaignByIdInputSchema = z.object({

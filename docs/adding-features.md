@@ -36,6 +36,10 @@ apps/api/src/module/backoffice/brand/
 
 **중요한 변경사항:**
 - **`module.schema.ts`와 `module.type.ts` 파일 분리**: 스키마 정의와 타입 추론 분리
+- **Update 스키마 패턴**: `updateSchema = createSchema.extend({ id: z.number() })`로 일관성 유지
+- **PUT 방식 업데이트**: Update API는 모든 필드를 요구하는 PUT 방식으로 동작
+- **strictNullChecks**: TypeScript 설정에서 `strictNullChecks: true`로 엄격한 타입 체크
+- **Nullish 타입 사용**: 엔티티의 nullable 필드는 `Nullish<T>` 타입 사용
 - **모듈들은 도메인별로 그룹화** (예: `backoffice/`, `shop/`)
 - **Controller에서 Zod parse 사용**: 수동 포맷팅 대신 `schema.parse()` 사용
 - **RepositoryProvider 사용**: `TypeOrmModule.forFeature()` 사용 금지
@@ -86,6 +90,11 @@ export const registerBrandInputSchema = z.object({
   bankInfo: bankInfoSchema.nullish(),
 });
 
+// 업데이트 스키마 - Create 스키마를 extends하여 일관성 유지
+export const updateBrandInputSchema = registerBrandInputSchema.extend({
+  id: z.number(),
+});
+
 export const findBrandByIdInputSchema = z.object({
   id: z.number(),
 });
@@ -109,6 +118,7 @@ export type BusinessInfo = z.infer<typeof businessInfoSchema>;
 export type BankInfo = z.infer<typeof bankInfoSchema>;
 export type Brand = z.infer<typeof brandSchema>;
 export type RegisterBrandInput = z.infer<typeof registerBrandInputSchema>;
+export type UpdateBrandInput = z.infer<typeof updateBrandInputSchema>;
 export type FindBrandByIdInput = z.infer<typeof findBrandByIdInputSchema>;
 ```
 
@@ -405,6 +415,7 @@ export class YourModuleRouter extends BaseTrpcRouter {
 ```typescript
 // entities/your-entity.entity.ts
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Nullish } from '@src/types/nullish.type';
 
 @Entity('your_entities')
 export class YourEntity {
@@ -413,6 +424,9 @@ export class YourEntity {
 
   @Column()
   name: string;
+
+  @Column({ type: 'varchar', nullable: true })
+  email: Nullish<string>;  // nullable 필드는 Nullish<T> 타입 사용
 
   @CreateDateColumn()
   createdAt: Date;
