@@ -3,7 +3,7 @@ FROM node:22.16 AS builder
 
 WORKDIR /app
 # Copy monorepo dependencies
-COPY package.json yarn.lock ./
+COPY package.json yarn.lock node_modules ./
 COPY apps/api/package.json ./apps/api/
 
 # Github Action 에서 caching된 node_modules를 사용하기 위해 install하지 않음
