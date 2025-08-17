@@ -7,7 +7,7 @@ COPY package.json yarn.lock node_modules ./
 COPY apps/api/package.json ./apps/api/
 
 # Github Action 에서 caching된 node_modules를 사용하기 위해 install하지 않음
-# RUN yarn install --frozen-lockfile
+RUN yarn install --frozen-lockfile
 
 # Copy API source code
 COPY apps/api ./apps/api
