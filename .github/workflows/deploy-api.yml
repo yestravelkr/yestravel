@@ -100,7 +100,7 @@ jobs:
         env:
           DOCKER_RUN_FILE: ${{ steps.vars.outputs.TAG_NAME }}-YestravelAPI-Dockerrun.aws.json
         run: |
-          sed -e "s/<TAG>/${{ steps.vars.outputs.TAG_NAME }}/" Dockerrun.aws.json > $DOCKER_RUN_FILE
+          sed -e "s/<TAG>/${{ steps.vars.outputs.TAG_NAME }}/" ./apps/api/Dockerrun.aws.json > $DOCKER_RUN_FILE
           aws s3 cp $DOCKER_RUN_FILE s3://$S3BUCKET/$DOCKER_RUN_FILE
 
       - name: Create Elastic Beanstalk version
