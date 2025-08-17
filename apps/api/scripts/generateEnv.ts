@@ -8,10 +8,10 @@ async function generateEnv() {
   let secretId = '';
   switch (stage) {
     case 'development':
-      secretId = 'dev-secret';
+      secretId = '';
       break;
     case 'production':
-      secretId = 'prod-secret';
+      secretId = '';
       break;
   }
   if (!secretId) {
