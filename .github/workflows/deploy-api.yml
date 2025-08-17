@@ -58,12 +58,12 @@ jobs:
             ${{ runner.os }}-
 
       - name: Install Dependencies
+        working-directory: apps/api
         run: yarn install
 
       - name: Build Service
-        run: |
-          cd apps/api
-          yarn build
+        working-directory: apps/api
+        run: yarn build
 
       - name: Login to Amazon ECR
         id: login-ecr
@@ -77,7 +77,7 @@ jobs:
             echo "::set-output name=STAGE::staging"
             echo "::set-output name=ELB_ENV_NAME::yestravel-api-none"
 
-          elif [[ "${GITHUB_REF}" == "refs/heads/main" ]]; then
+          else
             echo "::set-output name=TAG_NAME::$(git rev-parse --short HEAD)"
             echo "::set-output name=STAGE::develop"
             echo "::set-output name=ELB_ENV_NAME::yestravel-api-development"
@@ -90,6 +90,9 @@ jobs:
           API_SECRET_ACCESS_KEY: ${{ secrets.API_SECRET_ACCESS_KEY }}
         run: |
           echo "Building Docker Image with TAG_NAME: ${{ steps.vars.outputs.TAG_NAME }}"
+          echo $ECR_REGISTRY
+          echo $ECR_REPOSITORY
+          echo ${{ steps.vars.outputs.TAG_NAME }}
           docker build -f apps/api/Dockerfile --platform linux/amd64 -t $ECR_REGISTRY/$ECR_REPOSITORY:${{ steps.vars.outputs.TAG_NAME }} . --build-arg AWS_ACCESS_KEY_ID=$API_ACCESS_KEY_ID --build-arg AWS_SECRET_ACCESS_KEY=$API_SECRET_ACCESS_KEY
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:${{ steps.vars.outputs.TAG_NAME }}
 
