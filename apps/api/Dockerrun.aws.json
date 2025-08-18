@@ -1,0 +1,13 @@
+{
+  "AWSEBDockerrunVersion": "1",
+  "Image": {
+    "Name": "715590725747.dkr.ecr.ap-northeast-2.amazonaws.com/yestravel/yestravel-api:<TAG>"
+  },
+  "Ports": [
+    {
+      "ContainerPort": 3000,
+      "HostPort": 80
+    }
+  ],
+  "Logging": "/usr/local/logs"
+}

@@ -10,9 +10,12 @@ module.exports = {
       username: process.env.POSTGRES_DB_USERNAME,
       password: process.env.POSTGRES_DB_PASSWORD,
       database: process.env.POSTGRES_DB_NAME,
-      migrationsRun: false,
+      migrationsRun: true,
       entities: ['dist/src/module/**/*.entity.js'],
       migrations: ['dist/src/database/migration/*.js'],
+      ssl: {
+        rejectUnauthorized: false
+      }
     },
   },
   auth: {

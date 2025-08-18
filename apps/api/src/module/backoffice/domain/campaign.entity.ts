@@ -2,6 +2,7 @@ import { Column, Entity, EntityManager } from 'typeorm';
 import { BaseEntity } from '@src/module/backoffice/domain/base.entity';
 import { TransactionService } from '@src/module/shared/transaction/transaction.service';
 import { getEntityManager } from '@src/database/datasources';
+import { Nullish } from '@src/types/nullish.type';
 
 @Entity('campaign')
 export class CampaignEntity extends BaseEntity {
@@ -24,13 +25,13 @@ export class CampaignEntity extends BaseEntity {
     type: 'text',
     nullable: true,
   })
-  description: string;
+  description: Nullish<string>;
 
   @Column({
     type: 'varchar',
     nullable: true,
   })
-  thumbnail: string;
+  thumbnail: Nullish<string>;
 }
 
 export const getCampaignRepository = (

@@ -36,6 +36,10 @@ apps/api/src/module/backoffice/brand/
 
 **중요한 변경사항:**
 - **`module.schema.ts`와 `module.type.ts` 파일 분리**: 스키마 정의와 타입 추론 분리
+- **Update 스키마 패턴**: `updateSchema = createSchema.extend({ id: z.number() })`로 일관성 유지
+- **PUT 방식 업데이트**: Update API는 모든 필드를 요구하는 PUT 방식으로 동작
+- **strictNullChecks**: TypeScript 설정에서 `strictNullChecks: true`로 엄격한 타입 체크
+- **Nullish 타입 사용**: 엔티티의 nullable 필드는 `Nullish<T>` 타입 사용
 - **모듈들은 도메인별로 그룹화** (예: `backoffice/`, `shop/`)
 - **Controller에서 Zod parse 사용**: 수동 포맷팅 대신 `schema.parse()` 사용
 - **RepositoryProvider 사용**: `TypeOrmModule.forFeature()` 사용 금지
@@ -86,6 +90,11 @@ export const registerBrandInputSchema = z.object({
   bankInfo: bankInfoSchema.nullish(),
 });
 
+// 업데이트 스키마 - Create 스키마를 extends하여 일관성 유지
+export const updateBrandInputSchema = registerBrandInputSchema.extend({
+  id: z.number(),
+});
+
 export const findBrandByIdInputSchema = z.object({
   id: z.number(),
 });
@@ -109,6 +118,7 @@ export type BusinessInfo = z.infer<typeof businessInfoSchema>;
 export type BankInfo = z.infer<typeof bankInfoSchema>;
 export type Brand = z.infer<typeof brandSchema>;
 export type RegisterBrandInput = z.infer<typeof registerBrandInputSchema>;
+export type UpdateBrandInput = z.infer<typeof updateBrandInputSchema>;
 export type FindBrandByIdInput = z.infer<typeof findBrandByIdInputSchema>;
 ```
 
@@ -123,7 +133,7 @@ import { BackofficeAuthorizedContext } from '@src/module/backoffice/auth/backoff
 import { Ctx } from 'nestjs-trpc';
 import { BaseTrpcRouter } from '@src/module/trpc/baseTrpcRouter';
 import { z } from 'zod';
-import { 
+import {
   registerBrandInputSchema,
   findBrandByIdInputSchema,
   brandSchema
@@ -147,7 +157,7 @@ export class BrandRouter extends BaseTrpcRouter {
     const output = await this.microserviceClient.send('backoffice.brand.register', input);
     return brandSchema.parse(output); // 응답 검증
   }
-  
+
   @UseMiddlewares(BackofficeAuthMiddleware)
   @Query({
     output: z.array(brandSchema),  // 배열 응답
@@ -156,7 +166,7 @@ export class BrandRouter extends BaseTrpcRouter {
     const output = await this.microserviceClient.send('backoffice.brand.findAll', {});
     return z.array(brandSchema).parse(output);
   }
-  
+
   @UseMiddlewares(BackofficeAuthMiddleware)
   @Query({
     input: findBrandByIdInputSchema,
@@ -182,7 +192,7 @@ import { MessagePattern } from '@nestjs/microservices';
 import { BrandService } from './brand.service';
 import { TransactionService } from '@src/module/shared/transaction/transaction.service';
 import { Transactional } from '@src/module/shared/transaction/transaction.decorator';
-import { 
+import {
   brandSchema,
   z.array(brandSchema) as brandListSchema
 } from './brand.schema';
@@ -205,21 +215,21 @@ export class BrandController {
     const brand = await this.brandService.register(data);
     return brandSchema.parse(brand); // Zod로 응답 검증 및 포맷팅
   }
-  
+
   @MessagePattern('backoffice.brand.findAll')
   async findAll(): Promise<Brand[]> {
     const brands = await this.brandService.findAll();
     return brandListSchema.parse(brands); // 배열도 Zod로 파싱
   }
-  
+
   @MessagePattern('backoffice.brand.findById')
   async findById(data: FindBrandByIdInput): Promise<Brand | null> {
     const brand = await this.brandService.findById(data.id);
-    
+
     if (!brand) {
       return null;
     }
-    
+
     return brandSchema.parse(brand);
   }
 }
@@ -247,11 +257,11 @@ export class BrandService {
   async register(dto: RegisterBrandInput): Promise<BrandEntity> {
     // 중복 체크
     const existingBrand = await this.repositoryProvider.BrandRepository.findOneBy({ name: dto.name });
-    
+
     if (existingBrand) {
       throw new ConflictException('Brand with this name already exists');
     }
-    
+
     return this.repositoryProvider.BrandRepository.register(dto);
   }
 
@@ -264,16 +274,16 @@ export class BrandService {
   async findById(id: number): Promise<BrandEntity | null> {
     return this.repositoryProvider.BrandRepository.findOneBy({ id });
   }
-  
+
   async update(dto: UpdateBrandInput): Promise<BrandEntity> {
     const { id, ...updateData } = dto;
-    
+
     // 존재 확인
     const existingBrand = await this.repositoryProvider.BrandRepository.findOneBy({ id });
     if (!existingBrand) {
       throw new NotFoundException('Brand not found');
     }
-    
+
     // 이름 중복 체크
     if (updateData.name !== existingBrand.name) {
       const brandWithSameName = await this.repositoryProvider.BrandRepository.findOneBy({ name: updateData.name });
@@ -281,7 +291,7 @@ export class BrandService {
         throw new ConflictException('Brand with this name already exists');
       }
     }
-    
+
     return this.repositoryProvider.BrandRepository.updateBrand(id, updateData);
   }
 }
@@ -311,15 +321,15 @@ export const getBrandRepository = (
     brand.name = dto.name;
     brand.email = dto.email;
     brand.phoneNumber = dto.phoneNumber;
-    
+
     if (dto.businessInfo) {
       brand.businessInfo = dto.businessInfo as any;
     }
-    
+
     if (dto.bankInfo) {
       brand.bankInfo = dto.bankInfo as any;
     }
-    
+
     return this.save(brand);
   },
 });
@@ -391,8 +401,8 @@ export class YourModuleRouter extends BaseTrpcRouter {
   @Query({ output: z.object({}) })
   async protectedEndpoint(@Ctx() ctx: BackofficeAuthorizedContext) {
     // ctx.admin을 통해 인증된 사용자에 접근
-    return this.microserviceClient.send('yourModule.protectedAction', { 
-      userId: ctx.admin.id 
+    return this.microserviceClient.send('yourModule.protectedAction', {
+      userId: ctx.admin.id
     });
   }
 }
@@ -405,6 +415,7 @@ export class YourModuleRouter extends BaseTrpcRouter {
 ```typescript
 // entities/your-entity.entity.ts
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Nullish } from '@src/types/nullish.type';
 
 @Entity('your_entities')
 export class YourEntity {
@@ -413,6 +424,9 @@ export class YourEntity {
 
   @Column()
   name: string;
+
+  @Column({ type: 'varchar', nullable: true })
+  email: Nullish<string>;  // nullable 필드는 Nullish<T> 타입 사용
 
   @CreateDateColumn()
   createdAt: Date;
@@ -520,7 +534,7 @@ async getMany(pagination: { page: number; limit: number }) {
     skip: (pagination.page - 1) * pagination.limit,
     take: pagination.limit,
   });
-  
+
   return {
     items,
     total,

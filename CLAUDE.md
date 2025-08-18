@@ -95,9 +95,29 @@ export const createModuleInputSchema = z.object({
   email: z.string().email().nullish(), // Input도 nullish() 사용
 });
 
+// Update 스키마 - Create 스키마를 extends하여 일관성 유지
+export const updateModuleInputSchema = createModuleInputSchema.extend({
+  id: z.number(),
+});
+
 // 타입 추론
 export type Module = z.infer<typeof moduleSchema>;
 export type CreateModuleInput = z.infer<typeof createModuleInputSchema>;
+export type UpdateModuleInput = z.infer<typeof updateModuleInputSchema>;
+```
+
+**strictNullChecks와 Nullish 타입:**
+- `tsconfig.json`에서 `strictNullChecks: true` 설정으로 엄격한 null/undefined 체크
+- `Nullish<T>` 타입 유틸리티로 Zod의 `nullish()`와 엔티티 타입 일치
+- 엔티티의 nullable 필드는 `Nullish<T>` 타입 사용
+
+```typescript
+// src/types/nullish.type.ts
+export type Nullish<T> = T | null | undefined;
+
+// Entity에서 사용
+@Column({ type: 'varchar', nullable: true })
+email: Nullish<string>;
 ```
 
 **API에서 타입 사용:**
@@ -357,17 +377,24 @@ EOF
 **Zod 스키마 작성 규칙:**
 - **nullish() 통일 사용**: `optional().nullable()` 대신 모든 곳에서 `nullish()` 사용
 - **null/undefined 구분 안함**: API 통신에서 null과 undefined를 구분하지 않음
-- **Input/Output 동일**: Input과 Output 스키마 모두 `nullish()` 사용
+- **Update 스키마 패턴**: `updateSchema = createSchema.extend({ id: z.number() })`로 일관성 유지
+- **PUT 방식 업데이트**: Update API는 모든 필드를 요구하는 PUT 방식으로 동작
 - **중앙 집중식 관리**: 모든 스키마는 `packages/api-types`에서 정의
 - **타입 추론**: 직접 타입 정의 대신 `z.infer<typeof schema>` 사용
+- **strictNullChecks**: TypeScript 설정에서 `strictNullChecks: true`로 엄격한 타입 체크
 
 **스키마 패턴:**
 ```typescript
-// ✅ 좋은 예 - Input/Output 모두 nullish() 사용
+// ✅ 좋은 예 - Create/Update 스키마 패턴
 export const createUserInputSchema = z.object({
   name: z.string().min(1),
   email: z.string().email().nullish(),
   profileData: userProfileSchema.nullish(),
+});
+
+// Update 스키마는 Create를 extends하여 일관성 유지
+export const updateUserInputSchema = createUserInputSchema.extend({
+  id: z.number(),
 });
 
 export const userSchema = z.object({
@@ -378,11 +405,11 @@ export const userSchema = z.object({
   createdAt: z.date(),
 });
 
-// ❌ 나쁜 예 - optional()이나 nullable() 따로 사용
-export const userSchema = z.object({
+// ❌ 나쁜 예 - 별도로 정의하거나 optional() 사용
+export const updateUserInputSchema = z.object({
   id: z.number(),
-  email: z.string().email().optional().nullable(),
-  profile: userProfileSchema.optional(),
+  name: z.string().min(1).optional(), // 비일관적
+  email: z.string().email().optional().nullable(), // 비표준
 });
 ```
 
