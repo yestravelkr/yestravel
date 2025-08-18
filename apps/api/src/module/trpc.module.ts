@@ -1,10 +1,11 @@
 import {Global, Module} from "@nestjs/common";
 import {TRPCModule} from "nestjs-trpc";
 import {MicroserviceClient} from "@src/module/trpc/microserviceClient";
-import {BackofficeAuthRouter} from "@src/module/backoffice/auth/backoffice.auth.router";
 import {AutoRouterModule} from "@src/module/trpc/routerModule";
 import {TRPCAppContext} from "@src/module/trpc/trpcAppContext";
-import {BackofficeAuthMiddleware} from "@src/module/backoffice/auth/backoffice.auth.middleware";
+import {AppController} from "@src/app.controller";
+import {AppService} from "@src/app.service";
+import { ConfigProvider } from '@src/config';
 
 @Global()
 @Module({
@@ -20,7 +21,7 @@ class TrpcModuleExport {
   imports: [
     TrpcModuleExport,
     TRPCModule.forRoot({
-      autoSchemaFile: '../../packages/api-types/src',
+      autoSchemaFile: ConfigProvider.stage === 'localdev' ? '../../packages/api-types/src' : undefined,
       context: TRPCAppContext,
     }),
     AutoRouterModule.forRoot({
@@ -28,8 +29,12 @@ class TrpcModuleExport {
       pattern: '../**/*.{router,middleware}.{ts,js}',
     }),
   ],
+  controllers: [
+    AppController,
+  ],
   providers: [
-    TRPCAppContext
+    TRPCAppContext,
+    AppService
   ],
 })
 export class TrpcModule {

@@ -1,0 +1,132 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+
+env:
+  ECR_REPOSITORY: yestravel/yestravel-api
+  S3BUCKET: elasticbeanstalk-ap-northeast-2-715590725747
+  APP_NAME: yestravel-api
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [22.16]
+    outputs:
+      TAG_NAME: ${{ steps.vars.outputs.TAG_NAME }}
+      STAGE: ${{ steps.vars.outputs.STAGE }}
+      ELB_ENV_NAME: ${{ steps.vars.outputs.ELB_ENV_NAME }}
+
+    steps:
+      - name: Checkout the current branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+
+      - name: Get yarn cache directory path
+        id: yarn-cache-dir-path
+        run: echo "::set-output name=dir::$(yarn cache dir)"
+
+      - uses: actions/cache@v3
+        id: yarn-cache # use this to check for `cache-hit` (`steps.yarn-cache.outputs.cache-hit != 'true'`)
+        with:
+          path: |
+            ${{ steps.yarn-cache-dir-path.outputs.dir }}
+            node_modules
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+            ${{ runner.os }}-
+
+      - name: Install Dependencies
+        working-directory: apps/api
+        run: yarn install
+
+      - name: Build Service
+        working-directory: apps/api
+        run: yarn build
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Set Environment Vars
+        id: vars
+        run: |
+          if [[ "${GITHUB_REF}" =~ ^refs/tags/ ]]; then
+            echo "::set-output name=TAG_NAME::${GITHUB_REF#refs/tags/}"
+            echo "::set-output name=STAGE::staging"
+            echo "::set-output name=ELB_ENV_NAME::yestravel-api-none"
+
+          else
+            echo "::set-output name=TAG_NAME::$(git rev-parse --short HEAD)"
+            echo "::set-output name=STAGE::develop"
+            echo "::set-output name=ELB_ENV_NAME::yestravel-api-develop"
+          fi
+
+      - name: Build and push Docker Image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          API_ACCESS_KEY_ID: ${{ secrets.API_ACCESS_KEY_ID }}
+          API_SECRET_ACCESS_KEY: ${{ secrets.API_SECRET_ACCESS_KEY }}
+        run: |
+          echo "Building Docker Image with TAG_NAME: ${{ steps.vars.outputs.TAG_NAME }}"
+          echo $ECR_REGISTRY
+          echo $ECR_REPOSITORY
+          echo ${{ steps.vars.outputs.TAG_NAME }}
+          docker build -f apps/api/Dockerfile --platform linux/amd64 -t $ECR_REGISTRY/$ECR_REPOSITORY:${{ steps.vars.outputs.TAG_NAME }} . --build-arg AWS_ACCESS_KEY_ID=$API_ACCESS_KEY_ID --build-arg AWS_SECRET_ACCESS_KEY=$API_SECRET_ACCESS_KEY
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:${{ steps.vars.outputs.TAG_NAME }}
+
+      - name: Upload Dockerrun.aws.json
+        env:
+          DOCKER_RUN_FILE: ${{ steps.vars.outputs.TAG_NAME }}-YestravelAPI-Dockerrun.aws.json
+        run: |
+          sed -e "s/<TAG>/${{ steps.vars.outputs.TAG_NAME }}/" ./apps/api/Dockerrun.aws.json > $DOCKER_RUN_FILE
+          aws s3 cp $DOCKER_RUN_FILE s3://$S3BUCKET/$DOCKER_RUN_FILE
+
+      - name: Create Elastic Beanstalk version
+        env:
+          DOCKER_RUN_FILE: ${{ steps.vars.outputs.TAG_NAME }}-YestravelAPI-Dockerrun.aws.json
+        run: |
+          echo "${{ steps.vars.outputs.TAG_NAME }}-YestravelAPI-Dockerrun.aws.json"
+          aws elasticbeanstalk create-application-version --region ap-northeast-2 --application-name $APP_NAME --version-label ${{ steps.vars.outputs.TAG_NAME }} --source-bundle S3Bucket="$S3BUCKET",S3Key="$DOCKER_RUN_FILE"
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    if: ${{ needs.build.outputs.STAGE == 'develop' }}
+    steps:
+      - name: Checkout the current branch
+        uses: actions/checkout@v2
+
+      - name: Commit Hash
+        id: commit
+        uses: pr-mpt/actions-commit-hash@v2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+
+      - name: Deploy Environment
+        run: aws elasticbeanstalk update-environment --region ap-northeast-2 --application-name $APP_NAME --environment-name ${{ needs.build.outputs.ELB_ENV_NAME }} --version-label ${{ needs.build.outputs.TAG_NAME }}

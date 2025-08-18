@@ -5,7 +5,7 @@ import { AdminRouter } from './admin.router';
 
 @Module({
   controllers: [AdminController],
-  providers: [AdminService, AdminRouter],
+  providers: [AdminService],
   exports: [AdminService],
 })
 export class AdminModule {}

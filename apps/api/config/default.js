@@ -13,6 +13,9 @@ module.exports = {
       migrationsRun: false,
       entities: ['dist/src/module/**/*.entity.js'],
       migrations: ['dist/src/database/migration/*.js'],
+      ssl: {
+        rejectUnauthorized: false
+      }
     },
   },
   auth: {

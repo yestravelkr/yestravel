@@ -5,7 +5,58 @@ const t = initTRPC.create();
 const publicProcedure = t.procedure;
 
 const appRouter = t.router({
-  backofficeAdmin: t.router({}),
+  backofficeAdmin: t.router({
+    create: publicProcedure.input(z.object({
+      email: z.string().email('올바른 이메일 형식이 아닙니다'),
+      password: z.string().min(6, '비밀번호는 최소 6자 이상이어야 합니다'),
+      name: z.string().min(1, '이름은 필수입니다'),
+      phoneNumber: z.string().min(1, '전화번호는 필수입니다'),
+      role: z.nativeEnum(RoleType),
+    })).output(z.object({
+      id: z.number(),
+      email: z.string().email(),
+      name: z.string(),
+      phoneNumber: z.string(),
+      role: z.nativeEnum(RoleType),
+      createdAt: z.date(),
+    })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    findAll: publicProcedure.output(z.array(z.object({
+      id: z.number(),
+      email: z.string().email(),
+      name: z.string(),
+      role: z.nativeEnum(RoleType),
+    }))).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    findById: publicProcedure.input(z.object({
+      id: z.number(),
+    })).output(z.object({
+      id: z.number(),
+      email: z.string().email(),
+      name: z.string(),
+      phoneNumber: z.string(),
+      role: z.nativeEnum(RoleType),
+      createdAt: z.date(),
+    })).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    update: publicProcedure.input(z.object({
+      id: z.number(),
+      name: z.string().min(1, '이름은 필수입니다'),
+      phoneNumber: z.string().min(1, '전화번호는 필수입니다'),
+      role: z.nativeEnum(RoleType),
+    })).output(z.object({
+      id: z.number(),
+      email: z.string().email(),
+      name: z.string(),
+      phoneNumber: z.string(),
+      role: z.nativeEnum(RoleType),
+      createdAt: z.date(),
+    })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    updatePassword: publicProcedure.input(z.object({
+      id: z.number(),
+      newPassword: z.string().min(6, '비밀번호는 최소 6자 이상이어야 합니다'),
+    })).output(z.object({
+      success: z.boolean(),
+      message: z.string(),
+    })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
+  }),
   backofficeAuth: t.router({
     register: publicProcedure.input(z.object({
       email: z.string().email('이메일 형식이 아닙니다.'),
@@ -107,8 +158,7 @@ const appRouter = t.router({
       createdAt: z.date(),
     }).nullable()).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
     update: publicProcedure.input(z.object({
-      id: z.number(),
-      name: z.string().min(1, 'Brand name is required').nullish(),
+      name: z.string().min(1, 'Brand name is required'),
       email: z.string().email().nullish(),
       phoneNumber: z.string().nullish(),
       businessInfo: z.object({
@@ -122,6 +172,8 @@ const appRouter = t.router({
         accountNumber: z.string().nullish(),
         accountHolder: z.string().nullish(),
       }).nullish(),
+    }).extend({
+      id: z.number(),
     })).output(z.object({
       id: z.number(),
       name: z.string(),
@@ -181,12 +233,13 @@ const appRouter = t.router({
       updatedAt: z.date(),
     })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
     update: publicProcedure.input(z.object({
-      id: z.number(),
-      title: z.string().min(1, 'Title is required').nullish(),
-      startAt: z.date().nullish(),
-      endAt: z.date().nullish(),
+      title: z.string().min(1, 'Title is required'),
+      startAt: z.date(),
+      endAt: z.date(),
       description: z.string().nullish(),
       thumbnail: z.string().nullish(),
+    }).extend({
+      id: z.number(),
     })).output(z.object({
       id: z.number(),
       title: z.string(),
