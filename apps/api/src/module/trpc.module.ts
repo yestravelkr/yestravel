@@ -5,6 +5,7 @@ import {AutoRouterModule} from "@src/module/trpc/routerModule";
 import {TRPCAppContext} from "@src/module/trpc/trpcAppContext";
 import {AppController} from "@src/app.controller";
 import {AppService} from "@src/app.service";
+import { ConfigProvider } from '@src/config';
 
 @Global()
 @Module({
@@ -20,7 +21,7 @@ class TrpcModuleExport {
   imports: [
     TrpcModuleExport,
     TRPCModule.forRoot({
-      autoSchemaFile: '../../packages/api-types/src',
+      autoSchemaFile: ConfigProvider.stage === 'localdev' ? '../../packages/api-types/src' : undefined,
       context: TRPCAppContext,
     }),
     AutoRouterModule.forRoot({
