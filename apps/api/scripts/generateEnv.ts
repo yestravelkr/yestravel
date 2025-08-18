@@ -8,7 +8,7 @@ async function generateEnv() {
   let secretId = '';
   switch (stage) {
     case 'development':
-      secretId = '';
+      secretId = 'yestravel/development';
       break;
     case 'production':
       secretId = '';
