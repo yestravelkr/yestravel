@@ -11,7 +11,7 @@ async function generateEnv() {
       secretId = 'yestravel/development';
       break;
     case 'production':
-      secretId = '';
+      secretId = 'yestravel/production';
       break;
   }
   if (!secretId) {
