@@ -53,13 +53,8 @@ export class BrandController {
   }
 
   @MessagePattern('backoffice.brand.findById')
-  async findById(data: FindBrandByIdInput): Promise<Brand | null> {
+  async findById(data: FindBrandByIdInput): Promise<Brand> {
     const brand = await this.brandService.findById(data.id);
-
-    if (!brand) {
-      return null;
-    }
-
     return this.formatBrandResponse(brand);
   }
 

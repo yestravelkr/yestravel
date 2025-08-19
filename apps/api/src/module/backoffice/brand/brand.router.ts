@@ -45,14 +45,14 @@ export class BrandRouter extends BaseTrpcRouter {
   @UseMiddlewares(BackofficeAuthMiddleware)
   @Query({
     input: findBrandByIdInputSchema,
-    output: brandSchema.nullable(),
+    output: brandSchema,
   })
   async findById(
     @Ctx() ctx: BackofficeAuthorizedContext,
     @Input() input: FindBrandByIdInput
   ) {
     const output = await this.microserviceClient.send('backoffice.brand.findById', input);
-    return brandSchema.nullable().parse(output);
+    return brandSchema.parse(output);
   }
 
   @UseMiddlewares(BackofficeAuthMiddleware)
