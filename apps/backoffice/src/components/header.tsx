@@ -3,7 +3,7 @@ import tw from 'tailwind-styled-components';
 import { useAuthStore } from '@/store';
 
 export function Header() {
-  const { admin } = useAuthStore();
+  const { user } = useAuthStore();
 
   return (
     <HeaderContainer>
@@ -16,9 +16,9 @@ export function Header() {
         <RightSection>
           <UserInfo>
             <UserAvatar>
-              {admin?.email?.charAt(0).toUpperCase() || 'A'}
+              {user?.email?.charAt(0).toUpperCase() || 'A'}
             </UserAvatar>
-            <UserName>{admin?.email || 'Admin'}</UserName>
+            <UserName>{user?.email || 'Admin'}</UserName>
           </UserInfo>
         </RightSection>
       </HeaderContent>
