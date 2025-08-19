@@ -1,11 +1,13 @@
 import { Column } from 'typeorm';
-import { BusinessType } from '@src/module/backoffice/domain/social-media-platform.enum';
+
+// Business type as string literal union
+type BusinessType = 'CORPORATION' | 'SOLE_PROPRIETOR' | 'INDIVIDUAL';
 
 export class BusinessInfoEntity {
   @Column({
     name: 'business_type',
     type: 'enum',
-    enum: BusinessType,
+    enum: ['CORPORATION', 'SOLE_PROPRIETOR', 'INDIVIDUAL'],
     nullable: true,
   })
   type?: BusinessType;

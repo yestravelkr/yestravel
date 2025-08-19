@@ -78,7 +78,7 @@ const appRouter = t.router({
       email: z.string().email().nullish(),
       phoneNumber: z.string().nullish(),
       businessInfo: z.object({
-        type: z.enum(['CORPORATION', 'SOLE_PROPRIETOR', 'INDIVIDUAL']).nullish(),
+        type: z.enum(['CORPORATION', 'SOLE_PROPRIETOR', 'INDIVIDUAL'] as const).nullish(),
         name: z.string().nullish(),
         licenseNumber: z.string().nullish(),
         ceoName: z.string().nullish(),
@@ -94,7 +94,7 @@ const appRouter = t.router({
       email: z.string().email().nullish(),
       phoneNumber: z.string().nullish(),
       businessInfo: z.object({
-        type: z.enum(['CORPORATION', 'SOLE_PROPRIETOR', 'INDIVIDUAL']).nullish(),
+        type: z.enum(['CORPORATION', 'SOLE_PROPRIETOR', 'INDIVIDUAL'] as const).nullish(),
         name: z.string().nullish(),
         licenseNumber: z.string().nullish(),
         ceoName: z.string().nullish(),
@@ -112,7 +112,7 @@ const appRouter = t.router({
       email: z.string().email().nullish(),
       phoneNumber: z.string().nullish(),
       businessInfo: z.object({
-        type: z.enum(['CORPORATION', 'SOLE_PROPRIETOR', 'INDIVIDUAL']).nullish(),
+        type: z.enum(['CORPORATION', 'SOLE_PROPRIETOR', 'INDIVIDUAL'] as const).nullish(),
         name: z.string().nullish(),
         licenseNumber: z.string().nullish(),
         ceoName: z.string().nullish(),
@@ -132,7 +132,7 @@ const appRouter = t.router({
       email: z.string().email().nullish(),
       phoneNumber: z.string().nullish(),
       businessInfo: z.object({
-        type: z.enum(['CORPORATION', 'SOLE_PROPRIETOR', 'INDIVIDUAL']).nullish(),
+        type: z.enum(['CORPORATION', 'SOLE_PROPRIETOR', 'INDIVIDUAL'] as const).nullish(),
         name: z.string().nullish(),
         licenseNumber: z.string().nullish(),
         ceoName: z.string().nullish(),
@@ -149,7 +149,7 @@ const appRouter = t.router({
       email: z.string().email().nullish(),
       phoneNumber: z.string().nullish(),
       businessInfo: z.object({
-        type: z.enum(['CORPORATION', 'SOLE_PROPRIETOR', 'INDIVIDUAL']).nullish(),
+        type: z.enum(['CORPORATION', 'SOLE_PROPRIETOR', 'INDIVIDUAL'] as const).nullish(),
         name: z.string().nullish(),
         licenseNumber: z.string().nullish(),
         ceoName: z.string().nullish(),
@@ -167,7 +167,7 @@ const appRouter = t.router({
       email: z.string().email().nullish(),
       phoneNumber: z.string().nullish(),
       businessInfo: z.object({
-        type: z.enum(['CORPORATION', 'SOLE_PROPRIETOR', 'INDIVIDUAL']).nullish(),
+        type: z.enum(['CORPORATION', 'SOLE_PROPRIETOR', 'INDIVIDUAL'] as const).nullish(),
         name: z.string().nullish(),
         licenseNumber: z.string().nullish(),
         ceoName: z.string().nullish(),
@@ -186,12 +186,7 @@ const appRouter = t.router({
       password: z.string().min(8, '비밀번호는 최소 8자 이상이어야 합니다.'),
       name: z.string().min(1, '이름은 필수입니다.'),
       phoneNumber: z.string().min(1, '전화번호는 필수입니다.'),
-      role: z.enum([
-        'ADMIN_SUPER',
-        'ADMIN_STAFF',
-        'PARTNER_SUPER',
-        'PARTNER_STAFF',
-      ]),
+      role: z.enum(['ADMIN_SUPER', 'ADMIN_STAFF', 'PARTNER_SUPER', 'PARTNER_STAFF'] as const),
     })).output(z.object({
       message: z.string(),
     })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
@@ -214,20 +209,20 @@ const appRouter = t.router({
       password: z.string().min(6, '비밀번호는 최소 6자 이상이어야 합니다'),
       name: z.string().min(1, '이름은 필수입니다'),
       phoneNumber: z.string().min(1, '전화번호는 필수입니다'),
-      role: z.enum(['ADMIN_SUPER', 'ADMIN_STAFF', 'PARTNER_SUPER', 'PARTNER_STAFF']),
+      role: z.enum(['ADMIN_SUPER', 'ADMIN_STAFF', 'PARTNER_SUPER', 'PARTNER_STAFF'] as const),
     })).output(z.object({
       id: z.number(),
       email: z.string().email(),
       name: z.string(),
       phoneNumber: z.string(),
-      role: z.enum(['ADMIN_SUPER', 'ADMIN_STAFF', 'PARTNER_SUPER', 'PARTNER_STAFF']),
+      role: z.enum(['ADMIN_SUPER', 'ADMIN_STAFF', 'PARTNER_SUPER', 'PARTNER_STAFF'] as const),
       createdAt: z.date(),
     })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
     findAll: publicProcedure.output(z.array(z.object({
       id: z.number(),
       email: z.string().email(),
       name: z.string(),
-      role: z.enum(['ADMIN_SUPER', 'ADMIN_STAFF', 'PARTNER_SUPER', 'PARTNER_STAFF']),
+      role: z.enum(['ADMIN_SUPER', 'ADMIN_STAFF', 'PARTNER_SUPER', 'PARTNER_STAFF'] as const),
     }))).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
     findById: publicProcedure.input(z.object({
       id: z.number(),
@@ -236,20 +231,20 @@ const appRouter = t.router({
       email: z.string().email(),
       name: z.string(),
       phoneNumber: z.string(),
-      role: z.enum(['ADMIN_SUPER', 'ADMIN_STAFF', 'PARTNER_SUPER', 'PARTNER_STAFF']),
+      role: z.enum(['ADMIN_SUPER', 'ADMIN_STAFF', 'PARTNER_SUPER', 'PARTNER_STAFF'] as const),
       createdAt: z.date(),
     })).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
     update: publicProcedure.input(z.object({
       id: z.number(),
       name: z.string().min(1, '이름은 필수입니다'),
       phoneNumber: z.string().min(1, '전화번호는 필수입니다'),
-      role: z.enum(['ADMIN_SUPER', 'ADMIN_STAFF', 'PARTNER_SUPER', 'PARTNER_STAFF']),
+      role: z.enum(['ADMIN_SUPER', 'ADMIN_STAFF', 'PARTNER_SUPER', 'PARTNER_STAFF'] as const),
     })).output(z.object({
       id: z.number(),
       email: z.string().email(),
       name: z.string(),
       phoneNumber: z.string(),
-      role: z.enum(['ADMIN_SUPER', 'ADMIN_STAFF', 'PARTNER_SUPER', 'PARTNER_STAFF']),
+      role: z.enum(['ADMIN_SUPER', 'ADMIN_STAFF', 'PARTNER_SUPER', 'PARTNER_STAFF'] as const),
       createdAt: z.date(),
     })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
     updatePassword: publicProcedure.input(z.object({

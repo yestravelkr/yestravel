@@ -2,7 +2,9 @@ import { LoginEntity } from '@src/module/backoffice/domain/login-entity';
 import { Entity, EntityManager } from 'typeorm';
 import { TransactionService } from '@src/module/shared/transaction/transaction.service';
 import { getEntityManager } from '@src/database/datasources';
-import { RoleType } from '@src/module/backoffice/domain/role.enum';
+
+// Role type as string literal union (inherited from LoginEntity)
+type RoleType = 'ADMIN_SUPER' | 'ADMIN_STAFF' | 'PARTNER_SUPER' | 'PARTNER_STAFF';
 
 @Entity('admin')
 export class AdminEntity extends LoginEntity {
