@@ -7,6 +7,10 @@ import {
   UseMiddlewares,
 } from 'nestjs-trpc';
 import { z } from 'zod';
+
+// Common role enum
+const ROLE_ENUM = ['ADMIN_SUPER', 'ADMIN_STAFF', 'PARTNER_SUPER', 'PARTNER_STAFF'] as const;
+const roleEnum = z.enum(ROLE_ENUM);
 import { BaseTrpcRouter } from '@src/module/trpc/baseTrpcRouter';
 import {
   BackofficeAuthMiddleware,
@@ -21,12 +25,7 @@ export class BackofficeAuthRouter extends BaseTrpcRouter {
       password: z.string().min(8, '비밀번호는 최소 8자 이상이어야 합니다.'),
       name: z.string().min(1, '이름은 필수입니다.'),
       phoneNumber: z.string().min(1, '전화번호는 필수입니다.'),
-      role: z.enum([
-        'ADMIN_SUPER',
-        'ADMIN_STAFF',
-        'PARTNER_SUPER',
-        'PARTNER_STAFF',
-      ]),
+      role: roleEnum,
     }),
     output: z.object({
       message: z.string(),
