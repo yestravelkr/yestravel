@@ -1,7 +1,9 @@
 import { Column, DeleteDateColumn } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { RoleType } from '@src/module/backoffice/domain/role.enum';
 import { BaseEntity } from '@src/module/backoffice/domain/base.entity';
+
+// Role type as string literal union
+type RoleType = 'ADMIN_SUPER' | 'ADMIN_STAFF' | 'PARTNER_SUPER' | 'PARTNER_STAFF';
 
 export class LoginEntity extends BaseEntity {
   @Column({ unique: true, length: 50, type: 'varchar' })
@@ -18,7 +20,7 @@ export class LoginEntity extends BaseEntity {
 
   @Column({
     type: 'enum',
-    enum: RoleType,
+    enum: ['ADMIN_SUPER', 'ADMIN_STAFF', 'PARTNER_SUPER', 'PARTNER_STAFF'],
   })
   role: RoleType;
 

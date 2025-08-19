@@ -133,7 +133,7 @@ import { BackofficeAuthorizedContext } from '@src/module/backoffice/auth/backoff
 import { Ctx } from 'nestjs-trpc';
 import { BaseTrpcRouter } from '@src/module/trpc/baseTrpcRouter';
 import { z } from 'zod';
-import { 
+import {
   registerBrandInputSchema,
   findBrandByIdInputSchema,
   brandSchema
@@ -157,7 +157,7 @@ export class BrandRouter extends BaseTrpcRouter {
     const output = await this.microserviceClient.send('backoffice.brand.register', input);
     return brandSchema.parse(output); // 응답 검증
   }
-  
+
   @UseMiddlewares(BackofficeAuthMiddleware)
   @Query({
     output: z.array(brandSchema),  // 배열 응답
@@ -166,7 +166,7 @@ export class BrandRouter extends BaseTrpcRouter {
     const output = await this.microserviceClient.send('backoffice.brand.findAll', {});
     return z.array(brandSchema).parse(output);
   }
-  
+
   @UseMiddlewares(BackofficeAuthMiddleware)
   @Query({
     input: findBrandByIdInputSchema,
@@ -192,7 +192,7 @@ import { MessagePattern } from '@nestjs/microservices';
 import { BrandService } from './brand.service';
 import { TransactionService } from '@src/module/shared/transaction/transaction.service';
 import { Transactional } from '@src/module/shared/transaction/transaction.decorator';
-import { 
+import {
   brandSchema,
   z.array(brandSchema) as brandListSchema
 } from './brand.schema';
@@ -215,21 +215,21 @@ export class BrandController {
     const brand = await this.brandService.register(data);
     return brandSchema.parse(brand); // Zod로 응답 검증 및 포맷팅
   }
-  
+
   @MessagePattern('backoffice.brand.findAll')
   async findAll(): Promise<Brand[]> {
     const brands = await this.brandService.findAll();
     return brandListSchema.parse(brands); // 배열도 Zod로 파싱
   }
-  
+
   @MessagePattern('backoffice.brand.findById')
   async findById(data: FindBrandByIdInput): Promise<Brand | null> {
     const brand = await this.brandService.findById(data.id);
-    
+
     if (!brand) {
       return null;
     }
-    
+
     return brandSchema.parse(brand);
   }
 }
@@ -257,11 +257,11 @@ export class BrandService {
   async register(dto: RegisterBrandInput): Promise<BrandEntity> {
     // 중복 체크
     const existingBrand = await this.repositoryProvider.BrandRepository.findOneBy({ name: dto.name });
-    
+
     if (existingBrand) {
       throw new ConflictException('Brand with this name already exists');
     }
-    
+
     return this.repositoryProvider.BrandRepository.register(dto);
   }
 
@@ -274,16 +274,16 @@ export class BrandService {
   async findById(id: number): Promise<BrandEntity | null> {
     return this.repositoryProvider.BrandRepository.findOneBy({ id });
   }
-  
+
   async update(dto: UpdateBrandInput): Promise<BrandEntity> {
     const { id, ...updateData } = dto;
-    
+
     // 존재 확인
     const existingBrand = await this.repositoryProvider.BrandRepository.findOneBy({ id });
     if (!existingBrand) {
       throw new NotFoundException('Brand not found');
     }
-    
+
     // 이름 중복 체크
     if (updateData.name !== existingBrand.name) {
       const brandWithSameName = await this.repositoryProvider.BrandRepository.findOneBy({ name: updateData.name });
@@ -291,7 +291,7 @@ export class BrandService {
         throw new ConflictException('Brand with this name already exists');
       }
     }
-    
+
     return this.repositoryProvider.BrandRepository.updateBrand(id, updateData);
   }
 }
@@ -321,15 +321,15 @@ export const getBrandRepository = (
     brand.name = dto.name;
     brand.email = dto.email;
     brand.phoneNumber = dto.phoneNumber;
-    
+
     if (dto.businessInfo) {
       brand.businessInfo = dto.businessInfo as any;
     }
-    
+
     if (dto.bankInfo) {
       brand.bankInfo = dto.bankInfo as any;
     }
-    
+
     return this.save(brand);
   },
 });
@@ -401,8 +401,8 @@ export class YourModuleRouter extends BaseTrpcRouter {
   @Query({ output: z.object({}) })
   async protectedEndpoint(@Ctx() ctx: BackofficeAuthorizedContext) {
     // ctx.admin을 통해 인증된 사용자에 접근
-    return this.microserviceClient.send('yourModule.protectedAction', { 
-      userId: ctx.admin.id 
+    return this.microserviceClient.send('yourModule.protectedAction', {
+      userId: ctx.admin.id
     });
   }
 }
@@ -534,7 +534,7 @@ async getMany(pagination: { page: number; limit: number }) {
     skip: (pagination.page - 1) * pagination.limit,
     take: pagination.limit,
   });
-  
+
   return {
     items,
     total,

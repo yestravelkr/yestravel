@@ -1,15 +1,12 @@
 import { z } from 'zod';
 
-// Enum for BusinessType
-export enum BusinessType {
-  CORPORATION = 'CORPORATION', // 법인 사업자
-  SOLE_PROPRIETOR = 'SOLE_PROPRIETOR', // 간이 사업자
-  INDIVIDUAL = 'INDIVIDUAL', // 개인 사업자
-}
+// Common business type enum for all schemas
+const BUSINESS_TYPE_ENUM = ['CORPORATION', 'SOLE_PROPRIETOR', 'INDIVIDUAL'] as const;
+const businessTypeEnum = z.enum(BUSINESS_TYPE_ENUM);
 
 // Base schemas for nested objects
 export const businessInfoSchema = z.object({
-  type: z.nativeEnum(BusinessType).nullish(),
+  type: businessTypeEnum.nullish(),
   name: z.string().nullish(),
   licenseNumber: z.string().nullish(),
   ceoName: z.string().nullish(),

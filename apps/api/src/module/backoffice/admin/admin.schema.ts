@@ -1,12 +1,15 @@
 import { z } from 'zod';
-import { RoleType } from '@src/module/backoffice/domain/role.enum';
+
+// Common role enum for all schemas
+const ROLE_ENUM = ['ADMIN_SUPER', 'ADMIN_STAFF', 'PARTNER_SUPER', 'PARTNER_STAFF'] as const;
+const roleEnum = z.enum(ROLE_ENUM);
 
 // Admin list response schema
 export const adminListItemSchema = z.object({
   id: z.number(),
   email: z.string().email(),
   name: z.string(),
-  role: z.nativeEnum(RoleType),
+  role: roleEnum,
 });
 
 export const adminListSchema = z.array(adminListItemSchema);
@@ -17,7 +20,7 @@ export const adminDetailSchema = z.object({
   email: z.string().email(),
   name: z.string(),
   phoneNumber: z.string(),
-  role: z.nativeEnum(RoleType),
+  role: roleEnum,
   createdAt: z.date(),
 });
 
@@ -31,7 +34,7 @@ export const updateAdminInputSchema = z.object({
   id: z.number(),
   name: z.string().min(1, '이름은 필수입니다'),
   phoneNumber: z.string().min(1, '전화번호는 필수입니다'),
-  role: z.nativeEnum(RoleType),
+  role: roleEnum,
 });
 
 // Admin update password input schema
@@ -52,5 +55,5 @@ export const createAdminInputSchema = z.object({
   password: z.string().min(6, '비밀번호는 최소 6자 이상이어야 합니다'),
   name: z.string().min(1, '이름은 필수입니다'),
   phoneNumber: z.string().min(1, '전화번호는 필수입니다'),
-  role: z.nativeEnum(RoleType),
+  role: roleEnum,
 });

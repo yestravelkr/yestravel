@@ -1,14 +1,16 @@
 import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
 import { BaseEntity } from '@src/module/backoffice/domain/base.entity';
-import { SocialMediaPlatform } from '@src/module/backoffice/domain/social-media-platform.enum';
 import { InfluencerEntity } from '@src/module/backoffice/domain/influencer.entity';
+
+// Social media platform as string literal union
+type SocialMediaPlatform = 'INSTAGRAM' | 'TIKTOK' | 'YOUTUBE' | 'FACEBOOK' | 'TWITTER' | 'OTHER';
 
 @Entity('social_media')
 export class SocialMediaEntity extends BaseEntity {
   @Column({
     type: 'enum',
-    enum: SocialMediaPlatform,
-    default: SocialMediaPlatform.INSTAGRAM,
+    enum: ['INSTAGRAM', 'TIKTOK', 'YOUTUBE', 'FACEBOOK', 'TWITTER', 'OTHER'],
+    default: 'INSTAGRAM',
   })
   platform: SocialMediaPlatform;
 
