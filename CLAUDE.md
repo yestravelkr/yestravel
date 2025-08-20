@@ -166,19 +166,32 @@ const { data: modules } = trpc.module.findAll.useQuery();
 
 **새 라우터:**
 ```typescript
+import { z } from 'zod';
+
+// Router에서 필요한 상수만 별도 정의 (필요한 경우)
+const ROLE_ENUM = ['ADMIN_SUPER', 'ADMIN_STAFF', 'PARTNER_SUPER', 'PARTNER_STAFF'] as const;
+const roleEnum = z.enum(ROLE_ENUM);
+
 @Router({ alias: 'moduleName' })
 export class ModuleRouter extends BaseTrpcRouter {
   @UseMiddlewares(BackofficeAuthMiddleware)
   @Mutation({ 
-    input: createModuleInputSchema, 
-    output: moduleSchema 
+    input: z.object({
+      name: z.string().min(1, '이름은 필수입니다'),
+      email: z.string().email('이메일 형식이 아닙니다'),
+      role: roleEnum, // 필요한 경우에만 사용
+    }),
+    output: z.object({
+      id: z.number(),
+      message: z.string(),
+    })
   })
   async create(
     @Ctx() ctx: BackofficeAuthorizedContext,
-    @Input() input: z.infer<typeof createModuleInputSchema>
+    @Input() input: { name: string; email: string; role?: string }
   ) {
     const output = await this.microserviceClient.send('moduleName.create', input);
-    return moduleSchema.parse(output);
+    return output; // Controller에서 이미 검증됨
   }
 }
 ```
@@ -256,6 +269,7 @@ constructor(private readonly repositoryProvider: RepositoryProvider) {}
 - **자동 발견**: 새 라우터는 자동으로 로드됩니다 (수동 등록 불필요)
 - **타입 안전성**: 모든 입력/출력 검증에 Zod 스키마 사용
 - **스키마 패턴**: 스키마는 `.schema.ts`에 정의, 타입은 `.type.ts`에서 `z.infer`로 추론
+- **⚠️ Router 스키마 규칙**: Router 파일에서는 외부 스키마 import 금지. `z.object()`, `z.enum()` 등을 직접 사용하여 인라인으로 스키마 정의
 - **응답 포맷팅**: Controller에서 수동 포맷팅 대신 `schema.parse()` 사용
 - **모듈 구조**: BackofficeModule로 그룹화된 하위 모듈들 (Brand, Auth, Admin 등)
 - **환경**: API 시작 전에 항상 `yarn generateEnv` 실행
