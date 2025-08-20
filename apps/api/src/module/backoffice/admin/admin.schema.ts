@@ -7,6 +7,20 @@ export const roleEnum = z.enum(ROLE_ENUM);
 // Role type for use in entities
 export type RoleType = typeof ROLE_ENUM[number];
 
+// Common product type enum for all schemas
+export const PRODUCT_TYPE_ENUM = ['HOTEL', 'E-TICKET', 'DELIVERY'] as const;
+export const productTypeEnum = z.enum(PRODUCT_TYPE_ENUM);
+
+// Product type for use in entities
+export type ProductType = typeof PRODUCT_TYPE_ENUM[number];
+
+// Common business type enum for all schemas
+export const BUSINESS_TYPE_ENUM = ['CORPORATION', 'SOLE_PROPRIETOR', 'INDIVIDUAL'] as const;
+export const businessTypeEnum = z.enum(BUSINESS_TYPE_ENUM);
+
+// Business type for use in entities
+export type BusinessType = typeof BUSINESS_TYPE_ENUM[number];
+
 // Admin list response schema
 export const adminListItemSchema = z.object({
   id: z.number(),
