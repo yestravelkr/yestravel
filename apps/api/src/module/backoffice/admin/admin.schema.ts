@@ -1,8 +1,11 @@
 import { z } from 'zod';
 
 // Common role enum for all schemas
-const ROLE_ENUM = ['ADMIN_SUPER', 'ADMIN_STAFF', 'PARTNER_SUPER', 'PARTNER_STAFF'] as const;
-const roleEnum = z.enum(ROLE_ENUM);
+export const ROLE_ENUM = ['ADMIN_SUPER', 'ADMIN_STAFF', 'PARTNER_SUPER', 'PARTNER_STAFF'] as const;
+export const roleEnum = z.enum(ROLE_ENUM);
+
+// Role type for use in entities
+export type RoleType = typeof ROLE_ENUM[number];
 
 // Admin list response schema
 export const adminListItemSchema = z.object({
