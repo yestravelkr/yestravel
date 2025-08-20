@@ -1,14 +1,14 @@
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import tw from 'tailwind-styled-components';
+
+import { FormField, Input, Select } from '@/shared/components';
 import {
   registerBrandInputSchema,
   BusinessType,
   type RegisterBrandInput,
   type Brand,
 } from '@/types/brand.type';
-import { useForm } from 'react-hook-form';
-import tw from 'tailwind-styled-components';
-
-import { FormField, Input, Select } from '@/shared/components';
 
 // 필드별 조회/수정 전환 컴포넌트
 interface FieldWrapperProps {
@@ -207,7 +207,7 @@ export function BrandForm({
                   )?.label
                 }
                 isEditMode={isEditMode}
-                error={errors.businessInfo?.type?.message}
+                error={(errors.businessInfo?.type as any)?.message}
               >
                 <Select
                   {...register('businessInfo.type')}

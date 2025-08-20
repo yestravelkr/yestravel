@@ -1,6 +1,6 @@
 import { httpLink, TRPCClientError } from '@trpc/client';
 import { createTRPCReact } from '@trpc/react-query';
-import type { AppRouter } from '@yestravelkr/api-types/src/server';
+import type { AppRouter } from '@yestravelkr/api-types';
 
 import { useAuthStore } from '../../store/authStore';
 

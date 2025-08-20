@@ -143,7 +143,7 @@ const appRouter = t.router({
         accountHolder: z.string().nullish(),
       }).nullish(),
       createdAt: z.date(),
-    }).nullable()).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    })).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
     update: publicProcedure.input(z.object({
       name: z.string().min(1, 'Brand name is required'),
       email: z.string().email().nullish(),

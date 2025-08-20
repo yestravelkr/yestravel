@@ -29,18 +29,15 @@ export class BrandService {
     });
   }
 
-  async findById(id: number): Promise<BrandEntity | null> {
-    return this.repositoryProvider.BrandRepository.findOneBy({ id });
+  async findById(id: number): Promise<BrandEntity> {
+    return this.repositoryProvider.BrandRepository.findOneByOrFail({ id });
   }
 
   async update(dto: UpdateBrandInput): Promise<BrandEntity> {
     const { id, ...updateData } = dto;
 
-    // Check if brand exists
-    const existingBrand = await this.repositoryProvider.BrandRepository.findOneBy({ id });
-    if (!existingBrand) {
-      throw new NotFoundException('Brand not found');
-    }
+    // Check if brand exists (will throw if not found)
+    const existingBrand = await this.repositoryProvider.BrandRepository.findOneByOrFail({ id });
 
     // Check for name conflict if name is being updated
     if (updateData.name !== existingBrand.name) {
