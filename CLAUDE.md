@@ -279,6 +279,40 @@ constructor(private readonly repositoryProvider: RepositoryProvider) {}
 - **⚠️ Repository 접근 규칙**: 모듈에서 `TypeOrmModule.forFeature()` 사용 금지. 오직 `RepositoryProvider`를 통해서만 Entity Repository에 접근
 - **Soft Delete**: TypeORM의 soft delete가 기본 적용되어 있어 `where: { deletedAt: null }` 조건 불필요
 
+## Enum 네이밍 규칙
+
+**Enum 정의 패턴:**
+```typescript
+// 1. Enum 값 배열 정의 (as const 필수)
+export const ROLE_ENUM_VALUE = ['ADMIN_SUPER', 'ADMIN_STAFF', 'PARTNER_SUPER', 'PARTNER_STAFF'] as const;
+
+// 2. Enum 타입 정의 (EnumType suffix 사용)
+export type RoleEnumType = typeof ROLE_ENUM_VALUE[number];
+
+// 3. Enum 객체 정의 (Record 형태, tree-shaking 지원)
+export const RoleEnum: EnumType<RoleEnumType> = {
+  ADMIN_SUPER: 'ADMIN_SUPER',
+  ADMIN_STAFF: 'ADMIN_STAFF',
+  PARTNER_SUPER: 'PARTNER_SUPER',
+  PARTNER_STAFF: 'PARTNER_STAFF'
+};
+
+// 4. Zod 스키마 정의
+export const roleEnumSchema = z.enum(ROLE_ENUM_VALUE);
+```
+
+**네이밍 규칙:**
+- **값 배열**: `{NAME}_ENUM_VALUE` - 대문자 스네이크 케이스 + `_ENUM_VALUE` suffix
+- **타입**: `{Name}EnumType` - 파스칼 케이스 + `EnumType` suffix
+- **객체**: `{Name}Enum` - 파스칼 케이스 + `Enum` suffix
+- **스키마**: `{name}EnumSchema` - 카멜 케이스 + `EnumSchema` suffix
+
+**사용 목적:**
+- `ENUM_VALUE`: Zod 스키마 생성 및 타입 추론에 사용
+- `EnumType`: TypeScript 타입 정의에 사용
+- `Enum`: 코드에서 실제 값 참조 시 사용 (예: `RoleEnum.ADMIN_SUPER`)
+- `enumSchema`: 입력값 검증 및 API 스키마 정의에 사용
+
 ## 실제 구현 예시
 
 **Brand 모듈**: 브랜드 파트너 관리
