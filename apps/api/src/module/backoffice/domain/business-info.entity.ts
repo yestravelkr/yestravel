@@ -1,16 +1,14 @@
 import { Column } from 'typeorm';
-
-// Business type as string literal union
-type BusinessType = 'CORPORATION' | 'SOLE_PROPRIETOR' | 'INDIVIDUAL';
+import { BusinessTypeEnumType, BUSINESS_TYPE_ENUM_VALUE } from '@src/module/backoffice/admin/admin.schema';
 
 export class BusinessInfoEntity {
   @Column({
     name: 'business_type',
     type: 'enum',
-    enum: ['CORPORATION', 'SOLE_PROPRIETOR', 'INDIVIDUAL'],
+    enum: BUSINESS_TYPE_ENUM_VALUE,
     nullable: true,
   })
-  type?: BusinessType;
+  type?: BusinessTypeEnumType;
 
   @Column({
     name: 'name',

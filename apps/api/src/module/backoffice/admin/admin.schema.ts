@@ -1,15 +1,49 @@
 import { z } from 'zod';
+import {EnumType} from "@src/types/utility.type";
+
+
 
 // Common role enum for all schemas
-const ROLE_ENUM = ['ADMIN_SUPER', 'ADMIN_STAFF', 'PARTNER_SUPER', 'PARTNER_STAFF'] as const;
-const roleEnum = z.enum(ROLE_ENUM);
+export const ROLE_ENUM_VALUE = ['ADMIN_SUPER', 'ADMIN_STAFF', 'PARTNER_SUPER', 'PARTNER_STAFF'] as const;
+// Role type for use in entities
+export type RoleEnumType = typeof ROLE_ENUM_VALUE[number];
+export const RoleEnum: EnumType<RoleEnumType> = {
+  ADMIN_SUPER: 'ADMIN_SUPER',
+  ADMIN_STAFF: "ADMIN_STAFF",
+  PARTNER_SUPER: "PARTNER_SUPER",
+  PARTNER_STAFF: "PARTNER_STAFF"
+}
+export const roleEnumSchema = z.enum(ROLE_ENUM_VALUE);
+
+
+// Common product type enum for all schemas
+export const PRODUCT_TYPE_ENUM_VALUE = ['HOTEL', 'E-TICKET', 'DELIVERY'] as const;
+// Product type for use in entities
+export type ProductTypeEnumType = typeof PRODUCT_TYPE_ENUM_VALUE[number];
+export const ProductTypeEnum: EnumType<ProductTypeEnumType> = {
+  HOTEL: 'HOTEL',
+  'E-TICKET': 'E-TICKET',
+  DELIVERY: 'DELIVERY'
+};
+export const productTypeEnumSchema = z.enum(PRODUCT_TYPE_ENUM_VALUE);
+
+// Common business type enum for all schemas
+export const BUSINESS_TYPE_ENUM_VALUE = ['CORPORATION', 'SOLE_PROPRIETOR', 'INDIVIDUAL'] as const;
+// Business type for use in entities
+export type BusinessTypeEnumType = typeof BUSINESS_TYPE_ENUM_VALUE[number];
+export const BusinessTypeEnum: EnumType<BusinessTypeEnumType> = {
+  CORPORATION: 'CORPORATION',
+  SOLE_PROPRIETOR: 'SOLE_PROPRIETOR',
+  INDIVIDUAL: 'INDIVIDUAL'
+};
+export const businessTypeEnumSchema = z.enum(BUSINESS_TYPE_ENUM_VALUE);
 
 // Admin list response schema
 export const adminListItemSchema = z.object({
   id: z.number(),
   email: z.string().email(),
   name: z.string(),
-  role: roleEnum,
+  role: roleEnumSchema,
 });
 
 export const adminListSchema = z.array(adminListItemSchema);
@@ -20,7 +54,7 @@ export const adminDetailSchema = z.object({
   email: z.string().email(),
   name: z.string(),
   phoneNumber: z.string(),
-  role: roleEnum,
+  role: roleEnumSchema,
   createdAt: z.date(),
 });
 
@@ -34,7 +68,7 @@ export const updateAdminInputSchema = z.object({
   id: z.number(),
   name: z.string().min(1, '이름은 필수입니다'),
   phoneNumber: z.string().min(1, '전화번호는 필수입니다'),
-  role: roleEnum,
+  role: roleEnumSchema,
 });
 
 // Admin update password input schema
@@ -55,5 +89,5 @@ export const createAdminInputSchema = z.object({
   password: z.string().min(6, '비밀번호는 최소 6자 이상이어야 합니다'),
   name: z.string().min(1, '이름은 필수입니다'),
   phoneNumber: z.string().min(1, '전화번호는 필수입니다'),
-  role: roleEnum,
+  role: roleEnumSchema,
 });

@@ -2,7 +2,7 @@ import { Column, DeleteDateColumn } from 'typeorm';
 import { BaseEntity } from '@src/module/backoffice/domain/base.entity';
 import { BusinessInfoEntity } from '@src/module/backoffice/domain/business-info.entity';
 import { BankEntity } from '@src/module/backoffice/domain/bank.entity';
-import { Nullish } from '@src/types/nullish.type';
+import { Nullish } from '@src/types/utility.type';
 
 export abstract class PartnerEntity extends BaseEntity {
   @Column({ length: 100, type: 'varchar' })

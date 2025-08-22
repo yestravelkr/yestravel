@@ -166,19 +166,32 @@ const { data: modules } = trpc.module.findAll.useQuery();
 
 **새 라우터:**
 ```typescript
+import { z } from 'zod';
+
+// Router에서 필요한 상수만 별도 정의 (필요한 경우)
+const ROLE_ENUM = ['ADMIN_SUPER', 'ADMIN_STAFF', 'PARTNER_SUPER', 'PARTNER_STAFF'] as const;
+const roleEnum = z.enum(ROLE_ENUM);
+
 @Router({ alias: 'moduleName' })
 export class ModuleRouter extends BaseTrpcRouter {
   @UseMiddlewares(BackofficeAuthMiddleware)
   @Mutation({ 
-    input: createModuleInputSchema, 
-    output: moduleSchema 
+    input: z.object({
+      name: z.string().min(1, '이름은 필수입니다'),
+      email: z.string().email('이메일 형식이 아닙니다'),
+      role: roleEnum, // 필요한 경우에만 사용
+    }),
+    output: z.object({
+      id: z.number(),
+      message: z.string(),
+    })
   })
   async create(
     @Ctx() ctx: BackofficeAuthorizedContext,
-    @Input() input: z.infer<typeof createModuleInputSchema>
+    @Input() input: { name: string; email: string; role?: string }
   ) {
     const output = await this.microserviceClient.send('moduleName.create', input);
-    return moduleSchema.parse(output);
+    return output; // Controller에서 이미 검증됨
   }
 }
 ```
@@ -256,6 +269,7 @@ constructor(private readonly repositoryProvider: RepositoryProvider) {}
 - **자동 발견**: 새 라우터는 자동으로 로드됩니다 (수동 등록 불필요)
 - **타입 안전성**: 모든 입력/출력 검증에 Zod 스키마 사용
 - **스키마 패턴**: 스키마는 `.schema.ts`에 정의, 타입은 `.type.ts`에서 `z.infer`로 추론
+- **⚠️ Router 스키마 규칙**: Router 파일에서는 외부 스키마 import 금지. `z.object()`, `z.enum()` 등을 직접 사용하여 인라인으로 스키마 정의
 - **응답 포맷팅**: Controller에서 수동 포맷팅 대신 `schema.parse()` 사용
 - **모듈 구조**: BackofficeModule로 그룹화된 하위 모듈들 (Brand, Auth, Admin 등)
 - **환경**: API 시작 전에 항상 `yarn generateEnv` 실행
@@ -264,6 +278,40 @@ constructor(private readonly repositoryProvider: RepositoryProvider) {}
 - **Repository**: 새 Entity 생성 시 반드시 Repository 함수와 RepositoryProvider 등록 필요
 - **⚠️ Repository 접근 규칙**: 모듈에서 `TypeOrmModule.forFeature()` 사용 금지. 오직 `RepositoryProvider`를 통해서만 Entity Repository에 접근
 - **Soft Delete**: TypeORM의 soft delete가 기본 적용되어 있어 `where: { deletedAt: null }` 조건 불필요
+
+## Enum 네이밍 규칙
+
+**Enum 정의 패턴:**
+```typescript
+// 1. Enum 값 배열 정의 (as const 필수)
+export const ROLE_ENUM_VALUE = ['ADMIN_SUPER', 'ADMIN_STAFF', 'PARTNER_SUPER', 'PARTNER_STAFF'] as const;
+
+// 2. Enum 타입 정의 (EnumType suffix 사용)
+export type RoleEnumType = typeof ROLE_ENUM_VALUE[number];
+
+// 3. Enum 객체 정의 (Record 형태, tree-shaking 지원)
+export const RoleEnum: EnumType<RoleEnumType> = {
+  ADMIN_SUPER: 'ADMIN_SUPER',
+  ADMIN_STAFF: 'ADMIN_STAFF',
+  PARTNER_SUPER: 'PARTNER_SUPER',
+  PARTNER_STAFF: 'PARTNER_STAFF'
+};
+
+// 4. Zod 스키마 정의
+export const roleEnumSchema = z.enum(ROLE_ENUM_VALUE);
+```
+
+**네이밍 규칙:**
+- **값 배열**: `{NAME}_ENUM_VALUE` - 대문자 스네이크 케이스 + `_ENUM_VALUE` suffix
+- **타입**: `{Name}EnumType` - 파스칼 케이스 + `EnumType` suffix
+- **객체**: `{Name}Enum` - 파스칼 케이스 + `Enum` suffix
+- **스키마**: `{name}EnumSchema` - 카멜 케이스 + `EnumSchema` suffix
+
+**사용 목적:**
+- `ENUM_VALUE`: Zod 스키마 생성 및 타입 추론에 사용
+- `EnumType`: TypeScript 타입 정의에 사용
+- `Enum`: 코드에서 실제 값 참조 시 사용 (예: `RoleEnum.ADMIN_SUPER`)
+- `enumSchema`: 입력값 검증 및 API 스키마 정의에 사용
 
 ## 실제 구현 예시
 
