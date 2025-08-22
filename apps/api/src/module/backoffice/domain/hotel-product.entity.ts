@@ -1,13 +1,13 @@
 import { Entity, Column, ChildEntity } from 'typeorm';
 import { ProductEntity } from '@src/module/backoffice/domain/product.entity';
-import { ProductTypeEnumType } from '@src/module/backoffice/admin/admin.schema';
+import { ProductTypeEnumType, ProductTypeEnum } from '@src/module/backoffice/admin/admin.schema';
 
 @Entity('hotel_product')
-@ChildEntity('HOTEL')
+@ChildEntity(ProductTypeEnum.HOTEL)
 export class HotelProductEntity extends ProductEntity {
   constructor() {
     super();
-    this.type = 'HOTEL';
+    this.type = ProductTypeEnum.HOTEL;
   }
 
   @Column({ name: 'hotel_name' })
