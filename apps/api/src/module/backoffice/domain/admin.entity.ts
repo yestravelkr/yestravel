@@ -2,11 +2,11 @@ import { LoginEntity } from '@src/module/backoffice/domain/login-entity';
 import { Entity, EntityManager } from 'typeorm';
 import { TransactionService } from '@src/module/shared/transaction/transaction.service';
 import { getEntityManager } from '@src/database/datasources';
-import { RoleType } from '@src/module/backoffice/admin/admin.schema';
+import { RoleEnumType } from '@src/module/backoffice/admin/admin.schema';
 
 @Entity('admin')
 export class AdminEntity extends LoginEntity {
-  update(data: { name: string; phoneNumber: string; role: RoleType }): void {
+  update(data: { name: string; phoneNumber: string; role: RoleEnumType }): void {
     this.name = data.name;
     this.phoneNumber = data.phoneNumber;
     this.role = data.role;
@@ -21,7 +21,7 @@ export class AdminEntity extends LoginEntity {
     password: string; 
     name: string; 
     phoneNumber: string; 
-    role: RoleType;
+    role: RoleEnumType;
   }): Promise<AdminEntity> {
     const admin = new AdminEntity();
     admin.email = data.email;
@@ -50,7 +50,7 @@ export const getAdminRepository = (
         admin.email = email;
         admin.name = name;
         admin.phoneNumber = phoneNumber;
-        admin.role = role as RoleType;
+        admin.role = role as RoleEnumType;
         await admin.setPassword(password);
         return this.save(admin);
       },

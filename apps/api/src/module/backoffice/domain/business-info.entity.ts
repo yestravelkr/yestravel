@@ -1,14 +1,14 @@
 import { Column } from 'typeorm';
-import { BusinessType, BUSINESS_TYPE_ENUM } from '@src/module/backoffice/admin/admin.schema';
+import { BusinessTypeEnumType, BUSINESS_TYPE_ENUM_VALUE } from '@src/module/backoffice/admin/admin.schema';
 
 export class BusinessInfoEntity {
   @Column({
     name: 'business_type',
     type: 'enum',
-    enum: BUSINESS_TYPE_ENUM,
+    enum: BUSINESS_TYPE_ENUM_VALUE,
     nullable: true,
   })
-  type?: BusinessType;
+  type?: BusinessTypeEnumType;
 
   @Column({
     name: 'name',

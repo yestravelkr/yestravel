@@ -2,7 +2,7 @@ import { Column, Entity, EntityManager } from 'typeorm';
 import { BaseEntity } from '@src/module/backoffice/domain/base.entity';
 import { TransactionService } from '@src/module/shared/transaction/transaction.service';
 import { getEntityManager } from '@src/database/datasources';
-import { Nullish } from '@src/types/nullish.type';
+import { Nullish } from '@src/types/utility.type';
 
 @Entity('campaign')
 export class CampaignEntity extends BaseEntity {
