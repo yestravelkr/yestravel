@@ -43,7 +43,7 @@ export class migration1751989078653 implements MigrationInterface {
                                "bank_info_name"               character varying(50),
                                "bank_info_account_number"     character varying(50),
                                "bank_info_account_holder"     character varying(50),
-                               CONSTRAINT "PK_73fd8b0db969c62d5c2584b8099" PRIMARY KEY ("id", "business_info_id", "bank_info_id")
+                               CONSTRAINT "PK_73fd8b0db969c62d5c2584b8099" PRIMARY KEY ("id")
                              )`);
     await queryRunner.query(
       `CREATE TYPE "public"."influencer_manager_role_enum" AS ENUM('ADMIN_SUPER', 'ADMIN_STAFF', 'PARTNER_SUPER', 'PARTNER_STAFF')`
@@ -107,14 +107,14 @@ export class migration1751989078653 implements MigrationInterface {
                                "bank_info_name"               character varying(50),
                                "bank_info_account_number"     character varying(50),
                                "bank_info_account_holder"     character varying(50),
-                               CONSTRAINT "PK_aa495c07058d38c5016be4d08cf" PRIMARY KEY ("id", "business_info_id", "bank_info_id")
+                               CONSTRAINT "PK_aa495c07058d38c5016be4d08cf" PRIMARY KEY ("id")
                              )`);
     await queryRunner.query(`ALTER TABLE "social_media"
-      ADD CONSTRAINT "FK_ea6dc2616fad0899969c2bb486c" FOREIGN KEY ("influencer_id", "influencer_id", "influencer_id") REFERENCES "influencer" ("id", "business_info_id", "bank_info_id") ON DELETE CASCADE ON UPDATE NO ACTION`);
+      ADD CONSTRAINT "FK_ea6dc2616fad0899969c2bb486c" FOREIGN KEY ("influencer_id") REFERENCES "influencer" ("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
     await queryRunner.query(`ALTER TABLE "influencer_manager"
-      ADD CONSTRAINT "FK_2bd5e99fcf1e4d59782f83a9ba8" FOREIGN KEY ("influencer_id", "influencer_id", "influencer_id") REFERENCES "influencer" ("id", "business_info_id", "bank_info_id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
+      ADD CONSTRAINT "FK_2bd5e99fcf1e4d59782f83a9ba8" FOREIGN KEY ("influencer_id") REFERENCES "influencer" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
     await queryRunner.query(`ALTER TABLE "brand_manager"
-      ADD CONSTRAINT "FK_e10a6d9b9352ee4aa562a137565" FOREIGN KEY ("brand_id", "brand_id", "brand_id") REFERENCES "brand" ("id", "business_info_id", "bank_info_id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
+      ADD CONSTRAINT "FK_e10a6d9b9352ee4aa562a137565" FOREIGN KEY ("brand_id") REFERENCES "brand" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
