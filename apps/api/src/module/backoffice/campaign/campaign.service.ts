@@ -1,10 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { RepositoryProvider } from '@src/module/shared/transaction/repository.provider';
 import { CampaignEntity } from '@src/module/backoffice/domain/campaign.entity';
-import type {
-  CreateCampaignInput,
-  UpdateCampaignInput,
-} from './campaign.type';
+import type { CreateCampaignInput, UpdateCampaignInput } from './campaign.type';
 
 @Injectable()
 export class CampaignService {
@@ -17,18 +14,18 @@ export class CampaignService {
   }
 
   async findById(id: number): Promise<CampaignEntity> {
-    const campaign = await this.repositoryProvider.CampaignRepository.findOneBy({ id });
-    
+    const campaign = await this.repositoryProvider.CampaignRepository.findOneBy(
+      { id }
+    );
+
     if (!campaign) {
       throw new NotFoundException('Campaign not found');
     }
-    
+
     return campaign;
   }
 
-  async create(
-    dto: CreateCampaignInput
-  ): Promise<CampaignEntity> {
+  async create(dto: CreateCampaignInput): Promise<CampaignEntity> {
     const campaign = this.repositoryProvider.CampaignRepository.create({
       title: dto.title,
       startAt: dto.startAt,
@@ -40,10 +37,7 @@ export class CampaignService {
     return this.repositoryProvider.CampaignRepository.save(campaign);
   }
 
-  async update(
-    id: number,
-    dto: UpdateCampaignInput
-  ): Promise<CampaignEntity> {
+  async update(id: number, dto: UpdateCampaignInput): Promise<CampaignEntity> {
     const campaign = await this.repositoryProvider.CampaignRepository.findOneBy(
       { id }
     );
@@ -62,11 +56,12 @@ export class CampaignService {
   }
 
   async delete(id: number): Promise<void> {
-    const campaign = await this.repositoryProvider.CampaignRepository.findOneByOrFail(
-      { id }
-    ).catch(() => {
-      throw new NotFoundException('Campaign not found');
-    });
+    const campaign =
+      await this.repositoryProvider.CampaignRepository.findOneByOrFail({
+        id,
+      }).catch(() => {
+        throw new NotFoundException('Campaign not found');
+      });
 
     await this.repositoryProvider.CampaignRepository.softRemove(campaign);
   }

@@ -6,7 +6,11 @@ import { RoleEnumType } from '@src/module/backoffice/admin/admin.schema';
 
 @Entity('admin')
 export class AdminEntity extends LoginEntity {
-  update(data: { name: string; phoneNumber: string; role: RoleEnumType }): void {
+  update(data: {
+    name: string;
+    phoneNumber: string;
+    role: RoleEnumType;
+  }): void {
     this.name = data.name;
     this.phoneNumber = data.phoneNumber;
     this.role = data.role;
@@ -16,11 +20,11 @@ export class AdminEntity extends LoginEntity {
     await this.setPassword(newPassword);
   }
 
-  static async create(data: { 
-    email: string; 
-    password: string; 
-    name: string; 
-    phoneNumber: string; 
+  static async create(data: {
+    email: string;
+    password: string;
+    name: string;
+    phoneNumber: string;
     role: RoleEnumType;
   }): Promise<AdminEntity> {
     const admin = new AdminEntity();

@@ -2,13 +2,17 @@ import { z } from 'zod';
 import { EnumType } from '@src/types/utility.type';
 
 // Common business type enum for all schemas
-export const BUSINESS_TYPE_ENUM_VALUE = ['CORPORATION', 'SOLE_PROPRIETOR', 'INDIVIDUAL'] as const;
+export const BUSINESS_TYPE_ENUM_VALUE = [
+  'CORPORATION',
+  'SOLE_PROPRIETOR',
+  'INDIVIDUAL',
+] as const;
 // Business type for use in entities
-export type BusinessTypeEnumType = typeof BUSINESS_TYPE_ENUM_VALUE[number];
+export type BusinessTypeEnumType = (typeof BUSINESS_TYPE_ENUM_VALUE)[number];
 export const BusinessTypeEnum: EnumType<BusinessTypeEnumType> = {
   CORPORATION: 'CORPORATION',
   SOLE_PROPRIETOR: 'SOLE_PROPRIETOR',
-  INDIVIDUAL: 'INDIVIDUAL'
+  INDIVIDUAL: 'INDIVIDUAL',
 };
 export const businessTypeEnumSchema = z.enum(BUSINESS_TYPE_ENUM_VALUE);
 

@@ -1,8 +1,15 @@
-import {Ctx, Input, Mutation, Query, Router, UseMiddlewares} from 'nestjs-trpc';
+import {
+  Ctx,
+  Input,
+  Mutation,
+  Query,
+  Router,
+  UseMiddlewares,
+} from 'nestjs-trpc';
 import { BaseTrpcRouter } from '@src/module/trpc/baseTrpcRouter';
 import {
   BackofficeAuthMiddleware,
-  BackofficeAuthorizedContext
+  BackofficeAuthorizedContext,
 } from '@src/module/backoffice/auth/backoffice.auth.middleware';
 import { z } from 'zod';
 import {
@@ -19,7 +26,6 @@ import type {
 
 @Router({ alias: 'backofficeBrand' })
 export class BrandRouter extends BaseTrpcRouter {
-
   @UseMiddlewares(BackofficeAuthMiddleware)
   @Mutation({
     input: registerBrandInputSchema,
@@ -29,7 +35,10 @@ export class BrandRouter extends BaseTrpcRouter {
     @Ctx() ctx: BackofficeAuthorizedContext,
     @Input() input: RegisterBrandInput
   ) {
-    const output = await this.microserviceClient.send('backoffice.brand.register', input);
+    const output = await this.microserviceClient.send(
+      'backoffice.brand.register',
+      input
+    );
     return brandSchema.parse(output);
   }
 
@@ -38,7 +47,10 @@ export class BrandRouter extends BaseTrpcRouter {
     output: z.array(brandSchema),
   })
   async findAll(@Ctx() ctx: BackofficeAuthorizedContext) {
-    const output = await this.microserviceClient.send('backoffice.brand.findAll', {});
+    const output = await this.microserviceClient.send(
+      'backoffice.brand.findAll',
+      {}
+    );
     return z.array(brandSchema).parse(output);
   }
 
@@ -51,7 +63,10 @@ export class BrandRouter extends BaseTrpcRouter {
     @Ctx() ctx: BackofficeAuthorizedContext,
     @Input() input: FindBrandByIdInput
   ) {
-    const output = await this.microserviceClient.send('backoffice.brand.findById', input);
+    const output = await this.microserviceClient.send(
+      'backoffice.brand.findById',
+      input
+    );
     return brandSchema.parse(output);
   }
 
@@ -64,7 +79,10 @@ export class BrandRouter extends BaseTrpcRouter {
     @Ctx() ctx: BackofficeAuthorizedContext,
     @Input() input: UpdateBrandInput
   ) {
-    const output = await this.microserviceClient.send('backoffice.brand.update', input);
+    const output = await this.microserviceClient.send(
+      'backoffice.brand.update',
+      input
+    );
     return brandSchema.parse(output);
   }
 }

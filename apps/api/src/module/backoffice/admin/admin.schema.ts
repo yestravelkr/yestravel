@@ -1,40 +1,50 @@
 import { z } from 'zod';
-import {EnumType} from "@src/types/utility.type";
-
-
+import { EnumType } from '@src/types/utility.type';
 
 // Common role enum for all schemas
-export const ROLE_ENUM_VALUE = ['ADMIN_SUPER', 'ADMIN_STAFF', 'PARTNER_SUPER', 'PARTNER_STAFF'] as const;
+export const ROLE_ENUM_VALUE = [
+  'ADMIN_SUPER',
+  'ADMIN_STAFF',
+  'PARTNER_SUPER',
+  'PARTNER_STAFF',
+] as const;
 // Role type for use in entities
-export type RoleEnumType = typeof ROLE_ENUM_VALUE[number];
+export type RoleEnumType = (typeof ROLE_ENUM_VALUE)[number];
 export const RoleEnum: EnumType<RoleEnumType> = {
   ADMIN_SUPER: 'ADMIN_SUPER',
-  ADMIN_STAFF: "ADMIN_STAFF",
-  PARTNER_SUPER: "PARTNER_SUPER",
-  PARTNER_STAFF: "PARTNER_STAFF"
-}
+  ADMIN_STAFF: 'ADMIN_STAFF',
+  PARTNER_SUPER: 'PARTNER_SUPER',
+  PARTNER_STAFF: 'PARTNER_STAFF',
+};
 export const roleEnumSchema = z.enum(ROLE_ENUM_VALUE);
 
-
 // Common product type enum for all schemas
-export const PRODUCT_TYPE_ENUM_VALUE = ['HOTEL', 'E-TICKET', 'DELIVERY'] as const;
+export const PRODUCT_TYPE_ENUM_VALUE = [
+  'HOTEL',
+  'E-TICKET',
+  'DELIVERY',
+] as const;
 // Product type for use in entities
-export type ProductTypeEnumType = typeof PRODUCT_TYPE_ENUM_VALUE[number];
+export type ProductTypeEnumType = (typeof PRODUCT_TYPE_ENUM_VALUE)[number];
 export const ProductTypeEnum: EnumType<ProductTypeEnumType> = {
   HOTEL: 'HOTEL',
   'E-TICKET': 'E-TICKET',
-  DELIVERY: 'DELIVERY'
+  DELIVERY: 'DELIVERY',
 };
 export const productTypeEnumSchema = z.enum(PRODUCT_TYPE_ENUM_VALUE);
 
 // Common business type enum for all schemas
-export const BUSINESS_TYPE_ENUM_VALUE = ['CORPORATION', 'SOLE_PROPRIETOR', 'INDIVIDUAL'] as const;
+export const BUSINESS_TYPE_ENUM_VALUE = [
+  'CORPORATION',
+  'SOLE_PROPRIETOR',
+  'INDIVIDUAL',
+] as const;
 // Business type for use in entities
-export type BusinessTypeEnumType = typeof BUSINESS_TYPE_ENUM_VALUE[number];
+export type BusinessTypeEnumType = (typeof BUSINESS_TYPE_ENUM_VALUE)[number];
 export const BusinessTypeEnum: EnumType<BusinessTypeEnumType> = {
   CORPORATION: 'CORPORATION',
   SOLE_PROPRIETOR: 'SOLE_PROPRIETOR',
-  INDIVIDUAL: 'INDIVIDUAL'
+  INDIVIDUAL: 'INDIVIDUAL',
 };
 export const businessTypeEnumSchema = z.enum(BUSINESS_TYPE_ENUM_VALUE);
 

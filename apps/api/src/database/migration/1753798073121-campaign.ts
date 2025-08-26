@@ -170,11 +170,9 @@ export class campaign1753798073121 implements MigrationInterface {
     await queryRunner.query(
       `ALTER TABLE "brand" ADD "bank_info_updated_at" TIMESTAMP NOT NULL DEFAULT now()`
     );
-    
+
     // Brand Primary Key 재설정
-    await queryRunner.query(
-      `ALTER TABLE "brand" DROP CONSTRAINT "PK_brand"`
-    );
+    await queryRunner.query(`ALTER TABLE "brand" DROP CONSTRAINT "PK_brand"`);
     await queryRunner.query(
       `ALTER TABLE "brand" ADD CONSTRAINT "PK_brand_composite" PRIMARY KEY ("id", "business_info_id", "bank_info_id")`
     );
@@ -198,7 +196,7 @@ export class campaign1753798073121 implements MigrationInterface {
     await queryRunner.query(
       `ALTER TABLE "influencer" ADD "bank_info_updated_at" TIMESTAMP NOT NULL DEFAULT now()`
     );
-    
+
     // Influencer Primary Key 재설정
     await queryRunner.query(
       `ALTER TABLE "influencer" DROP CONSTRAINT "PK_influencer"`

@@ -1,17 +1,25 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { RepositoryProvider } from '@src/module/shared/transaction/repository.provider';
 import { AdminEntity } from '@src/module/backoffice/domain/admin.entity';
-import type { UpdateAdminInput, UpdateAdminPasswordInput, CreateAdminInput } from './admin.type';
+import type {
+  UpdateAdminInput,
+  UpdateAdminPasswordInput,
+  CreateAdminInput,
+} from './admin.type';
 
 @Injectable()
 export class AdminService {
-  constructor(
-    private readonly repositoryProvider: RepositoryProvider
-  ) {}
+  constructor(private readonly repositoryProvider: RepositoryProvider) {}
 
   async create(dto: CreateAdminInput): Promise<AdminEntity> {
     // 이메일 중복 체크
-    const emailExists = await this.repositoryProvider.AdminRepository.exist({ where: { email: dto.email } });
+    const emailExists = await this.repositoryProvider.AdminRepository.exist({
+      where: { email: dto.email },
+    });
     if (emailExists) {
       throw new ConflictException('이미 존재하는 이메일입니다');
     }
@@ -29,17 +37,19 @@ export class AdminService {
   }
 
   async findById(id: number): Promise<AdminEntity> {
-    return this.repositoryProvider.AdminRepository.findOneByOrFail({ id })
-      .catch(() => {
-        throw new NotFoundException('관리자를 찾을 수 없습니다');
-      });
+    return this.repositoryProvider.AdminRepository.findOneByOrFail({
+      id,
+    }).catch(() => {
+      throw new NotFoundException('관리자를 찾을 수 없습니다');
+    });
   }
 
   async update(dto: UpdateAdminInput): Promise<AdminEntity> {
     const { id, ...updateData } = dto;
 
     // 존재 확인
-    const existingAdmin = await this.repositoryProvider.AdminRepository.findOneBy({ id });
+    const existingAdmin =
+      await this.repositoryProvider.AdminRepository.findOneBy({ id });
     if (!existingAdmin) {
       throw new NotFoundException('관리자를 찾을 수 없습니다');
     }
@@ -55,7 +65,8 @@ export class AdminService {
     const { id, newPassword } = dto;
 
     // 존재 확인
-    const existingAdmin = await this.repositoryProvider.AdminRepository.findOneBy({ id });
+    const existingAdmin =
+      await this.repositoryProvider.AdminRepository.findOneBy({ id });
     if (!existingAdmin) {
       throw new NotFoundException('관리자를 찾을 수 없습니다');
     }

@@ -1,6 +1,6 @@
 import { Entity, Column, ChildEntity } from 'typeorm';
 import { ProductEntity } from '@src/module/backoffice/domain/product.entity';
-import { ProductTypeEnumType, ProductTypeEnum } from '@src/module/backoffice/admin/admin.schema';
+import { ProductTypeEnum } from '@src/module/backoffice/admin/admin.schema';
 
 @Entity('hotel_product')
 @ChildEntity(ProductTypeEnum.HOTEL)

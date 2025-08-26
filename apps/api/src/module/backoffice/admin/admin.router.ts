@@ -1,17 +1,29 @@
-import { Router, Query, UseMiddlewares, Mutation, Input, Ctx } from 'nestjs-trpc';
+import {
+  Router,
+  Query,
+  UseMiddlewares,
+  Mutation,
+  Input,
+  Ctx,
+} from 'nestjs-trpc';
 import { BackofficeAuthMiddleware } from '@src/module/backoffice/auth/backoffice.auth.middleware';
 import { BackofficeAuthorizedContext } from '@src/module/backoffice/auth/backoffice.auth.middleware';
 import { BaseTrpcRouter } from '@src/module/trpc/baseTrpcRouter';
-import { 
-  adminListSchema, 
-  adminDetailSchema, 
-  findAdminByIdInputSchema, 
+import {
+  adminListSchema,
+  adminDetailSchema,
+  findAdminByIdInputSchema,
   updateAdminInputSchema,
   updateAdminPasswordInputSchema,
   updateAdminPasswordResponseSchema,
   createAdminInputSchema,
 } from './admin.schema';
-import type { FindAdminByIdInput, UpdateAdminInput, UpdateAdminPasswordInput, CreateAdminInput } from './admin.type';
+import type {
+  FindAdminByIdInput,
+  UpdateAdminInput,
+  UpdateAdminPasswordInput,
+  CreateAdminInput,
+} from './admin.type';
 
 @Router({ alias: 'backofficeAdmin' })
 export class AdminRouter extends BaseTrpcRouter {
@@ -24,7 +36,10 @@ export class AdminRouter extends BaseTrpcRouter {
     @Ctx() ctx: BackofficeAuthorizedContext,
     @Input() input: CreateAdminInput
   ) {
-    const output = await this.microserviceClient.send('backoffice.admin.create', input);
+    const output = await this.microserviceClient.send(
+      'backoffice.admin.create',
+      input
+    );
     return adminDetailSchema.parse(output);
   }
 
@@ -33,7 +48,10 @@ export class AdminRouter extends BaseTrpcRouter {
     output: adminListSchema,
   })
   async findAll(@Ctx() ctx: BackofficeAuthorizedContext) {
-    const output = await this.microserviceClient.send('backoffice.admin.findAll', {});
+    const output = await this.microserviceClient.send(
+      'backoffice.admin.findAll',
+      {}
+    );
     return adminListSchema.parse(output);
   }
 
@@ -46,7 +64,10 @@ export class AdminRouter extends BaseTrpcRouter {
     @Ctx() ctx: BackofficeAuthorizedContext,
     @Input() input: FindAdminByIdInput
   ) {
-    const output = await this.microserviceClient.send('backoffice.admin.findById', input);
+    const output = await this.microserviceClient.send(
+      'backoffice.admin.findById',
+      input
+    );
     return adminDetailSchema.parse(output);
   }
 
@@ -59,7 +80,10 @@ export class AdminRouter extends BaseTrpcRouter {
     @Ctx() ctx: BackofficeAuthorizedContext,
     @Input() input: UpdateAdminInput
   ) {
-    const output = await this.microserviceClient.send('backoffice.admin.update', input);
+    const output = await this.microserviceClient.send(
+      'backoffice.admin.update',
+      input
+    );
     return adminDetailSchema.parse(output);
   }
 
@@ -72,7 +96,10 @@ export class AdminRouter extends BaseTrpcRouter {
     @Ctx() ctx: BackofficeAuthorizedContext,
     @Input() input: UpdateAdminPasswordInput
   ) {
-    const output = await this.microserviceClient.send('backoffice.admin.updatePassword', input);
+    const output = await this.microserviceClient.send(
+      'backoffice.admin.updatePassword',
+      input
+    );
     return updateAdminPasswordResponseSchema.parse(output);
   }
 }

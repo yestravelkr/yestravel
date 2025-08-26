@@ -24,17 +24,21 @@ export class BrandController {
       name: brand.name,
       email: brand.email,
       phoneNumber: brand.phoneNumber,
-      businessInfo: brand.businessInfo ? {
-        type: brand.businessInfo.type,
-        name: brand.businessInfo.name,
-        licenseNumber: brand.businessInfo.licenseNumber,
-        ceoName: brand.businessInfo.ceoName
-      } : null,
-      bankInfo: brand.bankInfo ? {
-        name: brand.bankInfo.name,
-        accountNumber: brand.bankInfo.accountNumber,
-        accountHolder: brand.bankInfo.accountHolder
-      } : null,
+      businessInfo: brand.businessInfo
+        ? {
+            type: brand.businessInfo.type,
+            name: brand.businessInfo.name,
+            licenseNumber: brand.businessInfo.licenseNumber,
+            ceoName: brand.businessInfo.ceoName,
+          }
+        : null,
+      bankInfo: brand.bankInfo
+        ? {
+            name: brand.bankInfo.name,
+            accountNumber: brand.bankInfo.accountNumber,
+            accountHolder: brand.bankInfo.accountHolder,
+          }
+        : null,
       createdAt: brand.createdAt,
     };
   }

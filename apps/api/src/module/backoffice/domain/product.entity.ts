@@ -7,7 +7,10 @@ import {
 } from 'typeorm';
 import { CampaignEntity } from '@src/module/backoffice/domain/campaign.entity';
 import { BaseEntity } from '@src/module/backoffice/domain/base.entity';
-import { ProductTypeEnumType, PRODUCT_TYPE_ENUM_VALUE } from '@src/module/backoffice/admin/admin.schema';
+import {
+  ProductTypeEnumType,
+  PRODUCT_TYPE_ENUM_VALUE,
+} from '@src/module/backoffice/admin/admin.schema';
 
 @Entity('product')
 @TableInheritance({ column: { type: 'varchar', name: 'type' } })
