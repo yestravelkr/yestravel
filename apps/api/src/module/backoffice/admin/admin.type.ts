@@ -15,6 +15,10 @@ export type AdminList = z.infer<typeof adminListSchema>;
 export type AdminDetail = z.infer<typeof adminDetailSchema>;
 export type FindAdminByIdInput = z.infer<typeof findAdminByIdInputSchema>;
 export type UpdateAdminInput = z.infer<typeof updateAdminInputSchema>;
-export type UpdateAdminPasswordInput = z.infer<typeof updateAdminPasswordInputSchema>;
-export type UpdateAdminPasswordResponse = z.infer<typeof updateAdminPasswordResponseSchema>;
+export type UpdateAdminPasswordInput = z.infer<
+  typeof updateAdminPasswordInputSchema
+>;
+export type UpdateAdminPasswordResponse = z.infer<
+  typeof updateAdminPasswordResponseSchema
+>;
 export type CreateAdminInput = z.infer<typeof createAdminInputSchema>;

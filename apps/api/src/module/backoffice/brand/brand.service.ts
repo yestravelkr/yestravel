@@ -1,20 +1,18 @@
-import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
+import { Injectable, ConflictException } from '@nestjs/common';
 import { RepositoryProvider } from '@src/module/shared/transaction/repository.provider';
 import { BrandEntity } from '@src/module/backoffice/domain/brand.entity';
-import type {
-  RegisterBrandInput,
-  UpdateBrandInput,
-} from './brand.type';
+import type { RegisterBrandInput, UpdateBrandInput } from './brand.type';
 
 @Injectable()
 export class BrandService {
-  constructor(
-    private readonly repositoryProvider: RepositoryProvider
-  ) {}
+  constructor(private readonly repositoryProvider: RepositoryProvider) {}
 
   async register(dto: RegisterBrandInput): Promise<BrandEntity> {
     // Check if brand with the same name already exists
-    const existingBrand = await this.repositoryProvider.BrandRepository.findOneBy({ name: dto.name });
+    const existingBrand =
+      await this.repositoryProvider.BrandRepository.findOneBy({
+        name: dto.name,
+      });
 
     if (existingBrand) {
       throw new ConflictException('Brand with this name already exists');
@@ -25,7 +23,7 @@ export class BrandService {
 
   async findAll(): Promise<BrandEntity[]> {
     return this.repositoryProvider.BrandRepository.find({
-      order: { createdAt: 'DESC' }
+      order: { createdAt: 'DESC' },
     });
   }
 
@@ -37,11 +35,15 @@ export class BrandService {
     const { id, ...updateData } = dto;
 
     // Check if brand exists (will throw if not found)
-    const existingBrand = await this.repositoryProvider.BrandRepository.findOneByOrFail({ id });
+    const existingBrand =
+      await this.repositoryProvider.BrandRepository.findOneByOrFail({ id });
 
     // Check for name conflict if name is being updated
     if (updateData.name !== existingBrand.name) {
-      const brandWithSameName = await this.repositoryProvider.BrandRepository.findOneBy({ name: updateData.name });
+      const brandWithSameName =
+        await this.repositoryProvider.BrandRepository.findOneBy({
+          name: updateData.name,
+        });
       if (brandWithSameName) {
         throw new ConflictException('Brand with this name already exists');
       }

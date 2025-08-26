@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import {SharedEventBus} from "@src/module/trpc/eventBus";
-import {transformToTRPCError} from "@src/utils/trpc-error-transformer";
+import { SharedEventBus } from '@src/module/trpc/eventBus';
+import { transformToTRPCError } from '@src/utils/trpc-error-transformer';
 
 @Injectable()
 export class MicroserviceClient {

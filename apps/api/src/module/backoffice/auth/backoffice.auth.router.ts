@@ -14,7 +14,12 @@ import {
 } from '@src/module/backoffice/auth/backoffice.auth.middleware';
 
 // Common role enum - Router에서는 인라인으로 정의 (외부 import 금지)
-const ROLE_ENUM_VALUE = ['ADMIN_SUPER', 'ADMIN_STAFF', 'PARTNER_SUPER', 'PARTNER_STAFF'] as const;
+const ROLE_ENUM_VALUE = [
+  'ADMIN_SUPER',
+  'ADMIN_STAFF',
+  'PARTNER_SUPER',
+  'PARTNER_STAFF',
+] as const;
 const roleEnumSchema = z.enum(ROLE_ENUM_VALUE);
 
 @Router({ alias: 'backofficeAuth' })
