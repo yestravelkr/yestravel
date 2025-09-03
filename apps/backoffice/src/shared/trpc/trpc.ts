@@ -4,20 +4,19 @@ import type { AppRouter } from '@yestravelkr/api-types';
 
 import { useAuthStore } from '../../store/authStore';
 
+const API_BASEURL = import.meta.env.VITE_API_BASEURL || 'http://localhost:3000';
+
 // Token refresh function
 const refreshAccessToken = async (): Promise<string | null> => {
   try {
-    const response = await fetch(
-      'http://localhost:3000/trpc/backofficeAuth.refresh',
-      {
-        method: 'POST',
-        credentials: 'include', // 쿠키 포함
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({}),
+    const response = await fetch(`${API_BASEURL}/trpc/backofficeAuth.refresh`, {
+      method: 'POST',
+      credentials: 'include', // 쿠키 포함
+      headers: {
+        'Content-Type': 'application/json',
       },
-    );
+      body: JSON.stringify({}),
+    });
 
     if (!response.ok) {
       throw new Error('Token refresh failed');
@@ -46,7 +45,7 @@ export const trpc = createTRPCReact<AppRouter>();
 export const trpcClient = trpc.createClient({
   links: [
     httpLink({
-      url: 'http://localhost:3000/trpc',
+      url: `${API_BASEURL}/trpc`,
       async fetch(url, options) {
         const makeRequest = async (
           token?: string | null,
