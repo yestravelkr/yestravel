@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 import tw from 'tailwind-styled-components';
 
 import { ROLE_VALUES, ROLE_LABELS } from '@/constants/role';

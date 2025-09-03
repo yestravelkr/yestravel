@@ -1,4 +1,5 @@
 import { createFileRoute, Outlet } from '@tanstack/react-router';
+import { Toaster } from 'sonner';
 import tw from 'tailwind-styled-components';
 
 import { Header, Navigation } from '@/components';
@@ -19,6 +20,7 @@ function RouteComponent() {
           <Outlet />
         </MainContent>
       </ContentWrapper>
+      <Toaster position="top-right" />
     </Container>
   );
 }
