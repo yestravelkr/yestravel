@@ -3,11 +3,15 @@ import { MessagePattern } from '@nestjs/microservices';
 import { AdminService } from './admin.service';
 import { TransactionService } from '@src/module/shared/transaction/transaction.service';
 import { Transactional } from '@src/module/shared/transaction/transaction.decorator';
-import { adminListSchema, adminDetailSchema, updateAdminPasswordResponseSchema } from './admin.schema';
-import type { 
-  AdminList, 
-  AdminDetail, 
-  FindAdminByIdInput, 
+import {
+  adminListSchema,
+  adminDetailSchema,
+  updateAdminPasswordResponseSchema,
+} from './admin.schema';
+import type {
+  AdminList,
+  AdminDetail,
+  FindAdminByIdInput,
   UpdateAdminInput,
   UpdateAdminPasswordInput,
   UpdateAdminPasswordResponse,
@@ -49,7 +53,9 @@ export class AdminController {
 
   @MessagePattern('backoffice.admin.updatePassword')
   @Transactional
-  async updatePassword(data: UpdateAdminPasswordInput): Promise<UpdateAdminPasswordResponse> {
+  async updatePassword(
+    data: UpdateAdminPasswordInput
+  ): Promise<UpdateAdminPasswordResponse> {
     await this.adminService.updatePassword(data);
     const response = {
       success: true,

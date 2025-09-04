@@ -1,4 +1,4 @@
-import {Router, Query, UseMiddlewares, Mutation, Input} from 'nestjs-trpc';
+import { Router, Query, UseMiddlewares, Mutation, Input } from 'nestjs-trpc';
 import { BackofficeAuthMiddleware } from '@src/module/backoffice/auth/backoffice.auth.middleware';
 import { BackofficeAuthorizedContext } from '@src/module/backoffice/auth/backoffice.auth.middleware';
 import { Ctx } from 'nestjs-trpc';
@@ -9,7 +9,7 @@ import {
   updateCampaignInputSchema,
   findCampaignByIdInputSchema,
   deleteCampaignInputSchema,
-  campaignSchema
+  campaignSchema,
 } from './campaign.schema';
 import type {
   CreateCampaignInput,
@@ -25,10 +25,13 @@ export class CampaignRouter extends BaseTrpcRouter {
     output: z.array(campaignSchema),
   })
   async findAll(@Ctx() ctx: BackofficeAuthorizedContext) {
-    const output = await this.microserviceClient.send('backoffice.campaign.findAll', {});
+    const output = await this.microserviceClient.send(
+      'backoffice.campaign.findAll',
+      {}
+    );
     return z.array(campaignSchema).parse(output);
   }
-  
+
   @UseMiddlewares(BackofficeAuthMiddleware)
   @Query({
     input: findCampaignByIdInputSchema,
@@ -38,7 +41,10 @@ export class CampaignRouter extends BaseTrpcRouter {
     @Ctx() ctx: BackofficeAuthorizedContext,
     @Input() input: FindCampaignByIdInput
   ) {
-    const output = await this.microserviceClient.send('backoffice.campaign.findById', input);
+    const output = await this.microserviceClient.send(
+      'backoffice.campaign.findById',
+      input
+    );
     return campaignSchema.parse(output);
   }
 
@@ -51,7 +57,10 @@ export class CampaignRouter extends BaseTrpcRouter {
     @Ctx() ctx: BackofficeAuthorizedContext,
     @Input() input: CreateCampaignInput
   ) {
-    const output = await this.microserviceClient.send('backoffice.campaign.create', input);
+    const output = await this.microserviceClient.send(
+      'backoffice.campaign.create',
+      input
+    );
     return campaignSchema.parse(output);
   }
 
@@ -64,7 +73,10 @@ export class CampaignRouter extends BaseTrpcRouter {
     @Ctx() ctx: BackofficeAuthorizedContext,
     @Input() input: UpdateCampaignInput
   ) {
-    const output = await this.microserviceClient.send('backoffice.campaign.update', input);
+    const output = await this.microserviceClient.send(
+      'backoffice.campaign.update',
+      input
+    );
     return campaignSchema.parse(output);
   }
 
@@ -77,7 +89,10 @@ export class CampaignRouter extends BaseTrpcRouter {
     @Ctx() ctx: BackofficeAuthorizedContext,
     @Input() input: DeleteCampaignInput
   ) {
-    const output = await this.microserviceClient.send('backoffice.campaign.delete', input);
+    const output = await this.microserviceClient.send(
+      'backoffice.campaign.delete',
+      input
+    );
     return z.object({ success: z.boolean() }).parse(output);
   }
 }

@@ -37,7 +37,7 @@ export class CampaignController {
     const campaigns = await this.campaignService.findAll();
     return campaigns.map(campaign => this.formatCampaignResponse(campaign));
   }
-  
+
   @MessagePattern('backoffice.campaign.findById')
   async findById(data: FindCampaignByIdInput): Promise<Campaign> {
     const campaign = await this.campaignService.findById(data.id);

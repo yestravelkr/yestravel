@@ -1,5 +1,8 @@
 import { Column } from 'typeorm';
-import { BusinessTypeEnumType, BUSINESS_TYPE_ENUM_VALUE } from '@src/module/backoffice/admin/admin.schema';
+import {
+  BusinessTypeEnumType,
+  BUSINESS_TYPE_ENUM_VALUE,
+} from '@src/module/backoffice/admin/admin.schema';
 
 export class BusinessInfoEntity {
   @Column({

@@ -7,19 +7,19 @@ import { PostgresConnectionOptions } from 'typeorm/driver/postgres/PostgresConne
 type JwtConfigType = {
   secret: string;
   expiresIn: string;
-}
+};
 
 type AppJwtConfigType = {
   access: JwtConfigType;
   refresh: JwtConfigType;
-}
+};
 
 type CorsConfigType = {
   origin: boolean | string | string[];
   credentials: boolean;
   methods?: string[];
   allowedHeaders?: string[];
-}
+};
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export const ConfigProvider = {
@@ -38,8 +38,8 @@ export const ConfigProvider = {
     jwt: {
       backoffice: config.get<AppJwtConfigType>('auth.jwt.backoffice'),
       store: config.get<AppJwtConfigType>('auth.jwt.store'),
-      influencer: config.get<AppJwtConfigType>('auth.jwt.influencer')
-    }
+      influencer: config.get<AppJwtConfigType>('auth.jwt.influencer'),
+    },
   },
-  cors: config.get<CorsConfigType>('cors')
+  cors: config.get<CorsConfigType>('cors'),
 } as const;

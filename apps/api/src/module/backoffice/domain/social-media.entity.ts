@@ -3,7 +3,13 @@ import { BaseEntity } from '@src/module/backoffice/domain/base.entity';
 import { InfluencerEntity } from '@src/module/backoffice/domain/influencer.entity';
 
 // Social media platform as string literal union
-type SocialMediaPlatform = 'INSTAGRAM' | 'TIKTOK' | 'YOUTUBE' | 'FACEBOOK' | 'TWITTER' | 'OTHER';
+type SocialMediaPlatform =
+  | 'INSTAGRAM'
+  | 'TIKTOK'
+  | 'YOUTUBE'
+  | 'FACEBOOK'
+  | 'TWITTER'
+  | 'OTHER';
 
 @Entity('social_media')
 export class SocialMediaEntity extends BaseEntity {
