@@ -21,6 +21,15 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
+    title: '관리',
+    items: [
+      {
+        title: '관리자 계정',
+        url: '/admin',
+      },
+    ],
+  },
+  {
     title: '페이지',
     items: [
       {
