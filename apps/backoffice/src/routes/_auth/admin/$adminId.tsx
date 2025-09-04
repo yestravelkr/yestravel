@@ -119,7 +119,7 @@ function AdminDetailPage() {
                 <Input
                   type="text"
                   value={formData.name}
-                  onChange={(e) =>
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                     setFormData({ ...formData, name: e.target.value })
                   }
                 />
@@ -134,7 +134,7 @@ function AdminDetailPage() {
                 <Input
                   type="text"
                   value={formData.phoneNumber}
-                  onChange={(e) =>
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                     setFormData({ ...formData, phoneNumber: e.target.value })
                   }
                 />
@@ -148,7 +148,7 @@ function AdminDetailPage() {
               {isEditing ? (
                 <Select
                   value={formData.role}
-                  onChange={(e) =>
+                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
                     setFormData({ ...formData, role: e.target.value })
                   }
                 >
@@ -221,7 +221,9 @@ function AdminDetailPage() {
                 type="password"
                 placeholder="최소 6자 이상"
                 value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setNewPassword(e.target.value)
+                }
               />
             </ModalBody>
             <ModalFooter>
