@@ -53,11 +53,30 @@ module.exports = {
     }
   },
   cors: {
-    origin: [
-      // TODO: 프로덕션 도메인들 (실제 배포 시 수정 필요)
-      'https://admin.yestravel.kr',
-      'https://backoffice.yestravel.kr',
-    ],
+    origin: (origin, callback) => {
+      // 허용할 특정 도메인 목록
+      const allowedOrigins = [
+        'https://admin.yestravel.kr',
+        'https://backoffice.yestravel.kr',
+        'https://yestravel.kr',
+        'https://www.yestravel.kr',
+      ];
+      
+      // *.yestravel.co.kr 패턴 매칭 (모든 서브도메인 허용)
+      const productionPattern = /^https:\/\/[a-zA-Z0-9-]+\.yestravel\.co\.kr$/;
+      
+      // origin이 없는 경우 (같은 origin 요청)
+      if (!origin) {
+        return callback(null, true);
+      }
+      
+      // 허용 목록에 있거나 production 패턴과 일치하는 경우
+      if (allowedOrigins.includes(origin) || productionPattern.test(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true,
   }
 };
