@@ -275,6 +275,7 @@ constructor(private readonly repositoryProvider: RepositoryProvider) {}
 - **환경**: API 시작 전에 항상 `yarn generateEnv` 실행
 - **포트**: tRPC 서버는 3000 포트에서 실행
 - **데이터베이스**: Docker를 통한 PostgreSQL, TypeORM 마이그레이션으로 관리
+- **⚠️ Entity 생성 위치**: 모든 Entity는 `apps/api/src/module/backoffice/domain/` 경로에 생성해야 함
 - **Repository**: 새 Entity 생성 시 반드시 Repository 함수와 RepositoryProvider 등록 필요
 - **⚠️ Repository 접근 규칙**: 모듈에서 `TypeOrmModule.forFeature()` 사용 금지. 오직 `RepositoryProvider`를 통해서만 Entity Repository에 접근
 - **Soft Delete**: TypeORM의 soft delete가 기본 적용되어 있어 `where: { deletedAt: null }` 조건 불필요
