@@ -3,6 +3,7 @@ import { TransactionService } from '@src/module/shared/transaction/transaction.s
 import { getAdminRepository } from '@src/module/backoffice/domain/admin.entity';
 import { getBrandRepository } from '@src/module/backoffice/domain/brand.entity';
 import { getCampaignRepository } from '@src/module/backoffice/domain/campaign.entity';
+import { getCategoryRepository } from '@src/module/backoffice/domain/category.entity';
 
 @Injectable()
 export class RepositoryProvider {
@@ -18,5 +19,9 @@ export class RepositoryProvider {
 
   get CampaignRepository() {
     return getCampaignRepository(this.transaction);
+  }
+
+  get CategoryRepository() {
+    return getCategoryRepository(this.transaction);
   }
 }
