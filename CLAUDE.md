@@ -396,6 +396,37 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 - `STYLE`: 코드 스타일 변경 (포맷팅, 세미콜론 누락 등)
 - `REFACTOR`: 코드 리팩토링
 - `DOCS`: 문서 수정
+- `FIX`: 버그 수정
+- `TEST`: 테스트 코드 추가 또는 수정
+
+**커밋 분리 전략:**
+변경사항은 논리적이고 순차적으로 분리하여 커밋:
+1. **의존성/패키지 변경**: package.json, yarn.lock 등
+2. **설정 변경**: config 파일, 환경 변수 설정 등
+3. **핵심 로직 구현**: 비즈니스 로직, 서비스, 컨트롤러 등
+4. **라우터/API 엔드포인트**: Router, Controller 연결
+5. **UI/프론트엔드**: 화면 구성, 컴포넌트 추가
+6. **테스트**: 테스트 코드 추가
+7. **문서화**: README, CLAUDE.md 등 문서 업데이트
+
+**예시 - 기능 추가 시 커밋 순서:**
+```bash
+# 1. 패키지 추가
+git add package.json yarn.lock
+git commit -m "CHORE: S3 업로드 관련 패키지 추가"
+
+# 2. 설정 추가
+git add config/default.js src/config.ts
+git commit -m "CHORE: AWS S3 설정 추가"
+
+# 3. 서비스 구현
+git add src/module/shared/aws/*
+git commit -m "FEAT: S3 파일 업로드 서비스 구현"
+
+# 4. API 엔드포인트 추가
+git add src/module/upload/*
+git commit -m "FEAT: 파일 업로드 API 엔드포인트 추가"
+```
 
 **예시:**
 ```bash
@@ -419,6 +450,8 @@ EOF
 - 명확하고 구체적인 변경 내용 기술
 - 여러 변경사항은 리스트로 정리
 - pre-commit hook이 자동으로 lint와 prettier 적용
+- 관련성 있는 파일들끼리만 묶어서 커밋
+- 각 커밋은 독립적으로 빌드 가능해야 함
 
 ## 타입 작성 가이드
 
