@@ -16,6 +16,7 @@ interface GeneratePresignedUrlParams {
   fileType: string; // MIME type
   path: string; // 업로드 경로
   expiresIn?: number; // 만료 시간 (초)
+  publicRead?: boolean; // public 읽기 권한 허용 여부
 }
 
 @Injectable()
@@ -69,6 +70,8 @@ export class S3Service {
         Bucket: this.bucket,
         Key: key,
         ContentType: fileType,
+        // Public 읽기 권한 설정
+        ACL: 'public-read'
       });
 
       const uploadUrl = await getSignedUrl(this.s3Client, command, {

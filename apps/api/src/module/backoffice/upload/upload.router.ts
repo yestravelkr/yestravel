@@ -7,6 +7,9 @@ import {
   UseMiddlewares,
 } from 'nestjs-trpc';
 import { Injectable } from '@nestjs/common';
+import {
+  BackofficeAuthMiddleware,
+} from '@src/module/backoffice/auth/backoffice.auth.middleware';
 import { S3Service } from '@src/module/shared/aws/s3.service';
 import { ConfigProvider } from '@src/config';
 
@@ -15,6 +18,7 @@ import { ConfigProvider } from '@src/config';
 export class UploadRouter {
   constructor(private readonly s3Service: S3Service) {}
 
+  @UseMiddlewares(BackofficeAuthMiddleware)
   @Mutation({
     input: z.object({
       fileName: z.string().min(1, '파일명은 필수입니다'),
