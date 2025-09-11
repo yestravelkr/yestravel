@@ -21,22 +21,22 @@ interface GeneratePresignedUrlParams {
 @Injectable()
 export class S3Service {
   private s3Client: S3Client;
-  private bucket: string;
-  private region: string;
+  private readonly bucket: string;
+  private readonly region: string;
 
   constructor() {
-    this.region = ConfigProvider.aws?.region || 'ap-northeast-2';
-    this.bucket = ConfigProvider.aws?.s3?.bucket || '';
-
-    if (!this.bucket) {
-      throw new Error('S3 bucket name is not configured');
+    if (!ConfigProvider.aws) {
+      throw new Error('AWS configuration is not defined');
     }
+
+    this.region = ConfigProvider.aws.region;
+    this.bucket = ConfigProvider.aws.s3.bucket;
 
     this.s3Client = new S3Client({
       region: this.region,
       credentials: {
-        accessKeyId: ConfigProvider.aws?.accessKeyId || '',
-        secretAccessKey: ConfigProvider.aws?.secretAccessKey || '',
+        accessKeyId: ConfigProvider.aws.accessKeyId,
+        secretAccessKey: ConfigProvider.aws.secretAccessKey,
       },
     });
   }
@@ -45,9 +45,6 @@ export class S3Service {
     params: GeneratePresignedUrlParams
   ): Promise<PresignedUrlResult> {
     const { fileName, fileType, path, expiresIn = 300 } = params;
-
-    // 파일 타입 검증
-    this.validateFileType(fileType);
 
     // 파일명 검증 및 확장자 추출
     const extension = this.extractExtension(fileName);
@@ -88,30 +85,6 @@ export class S3Service {
       };
     } catch (error) {
       throw new Error(`Failed to generate presigned URL: ${error.message}`);
-    }
-  }
-
-  private validateFileType(mimeType: string): void {
-    const allowedTypes = [
-      // 이미지
-      'image/jpeg',
-      'image/jpg',
-      'image/png',
-      'image/gif',
-      'image/webp',
-      'image/svg+xml',
-      // 문서
-      'application/pdf',
-      'text/plain',
-      'text/csv',
-      'application/msword',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      'application/vnd.ms-excel',
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    ];
-
-    if (!allowedTypes.includes(mimeType)) {
-      throw new BadRequestException(`File type ${mimeType} is not allowed`);
     }
   }
 
