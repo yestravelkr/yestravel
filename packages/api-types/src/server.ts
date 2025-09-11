@@ -11,6 +11,19 @@ const appRouter = t.router({
     })).output(z.string()).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
     getSample: publicProcedure.output(z.string()).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
   }),
+  backofficeUpload: t.router({
+    generatePresignedUrl: publicProcedure.input(z.object({
+      fileName: z.string().min(1, '파일명은 필수입니다'),
+      fileType: z.string().min(1, '파일 타입은 필수입니다'),
+      path: z.string().default('uploads'),
+      expiresIn: z.number().min(60).max(3600).default(300),
+    })).output(z.object({
+      uploadUrl: z.string(),
+      fileUrl: z.string(),
+      fileKey: z.string(),
+      fileName: z.string(),
+    })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
+  }),
   backofficeCampaign: t.router({
     findAll: publicProcedure.output(z.array(z.object({
       id: z.number(),
