@@ -25,8 +25,6 @@ export class UploadRouter {
     output: z.object({
       uploadUrl: z.string(),
       fileUrl: z.string(),
-      fileKey: z.string(),
-      fileName: z.string(),
     }),
   })
   async generatePresignedUrl(
@@ -38,12 +36,9 @@ export class UploadRouter {
       expiresIn: number;
     }
   ) {
-    
-    const backofficeParams = {
+    return await this.s3Service.generatePresignedUrl({
       ...input,
-      path: `${ConfigProvider.stage}/backoffice//${input.path}`,
-    };
-
-    return await this.s3Service.generatePresignedUrl(backofficeParams);
+      path: `${ConfigProvider.stage}/backoffice/${input.path}`,
+    });
   }
 }

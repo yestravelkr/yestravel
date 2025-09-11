@@ -20,8 +20,6 @@ const appRouter = t.router({
     })).output(z.object({
       uploadUrl: z.string(),
       fileUrl: z.string(),
-      fileKey: z.string(),
-      fileName: z.string(),
     })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
   }),
   backofficeCampaign: t.router({
