@@ -36,4 +36,12 @@ export class BusinessInfoEntity {
     nullable: true,
   })
   ceoName?: string;
+
+  @Column({
+    name: 'license_file_url',
+    type: 'varchar',
+    length: 1024,
+    nullable: true,
+  })
+  licenseFileUrl?: string;
 }
