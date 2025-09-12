@@ -78,5 +78,13 @@ module.exports = {
       }
     },
     credentials: true,
-  }
+  },
+  aws: {
+    region: 'ap-northeast-2',
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    s3: {
+      bucket: 'yestravel-assets',
+    },
+  },
 };

@@ -6,11 +6,13 @@ import { TRPCAppContext } from '@src/module/trpc/trpcAppContext';
 import { AppController } from '@src/app.controller';
 import { AppService } from '@src/app.service';
 import { ConfigProvider } from '@src/config';
+import { AwsModule } from '@src/module/shared/aws/aws.module';
 
 @Global()
 @Module({
+  imports: [AwsModule],
   providers: [MicroserviceClient],
-  exports: [MicroserviceClient],
+  exports: [MicroserviceClient, AwsModule],
 })
 class TrpcModuleExport {}
 

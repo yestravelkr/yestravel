@@ -21,6 +21,15 @@ type CorsConfigType = {
   allowedHeaders?: string[];
 };
 
+type AwsConfigType = {
+  region: string;
+  accessKeyId: string;
+  secretAccessKey: string;
+  s3: {
+    bucket: string;
+  };
+};
+
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export const ConfigProvider = {
   stage: config.get<string>('stage'),
@@ -42,4 +51,5 @@ export const ConfigProvider = {
     },
   },
   cors: config.get<CorsConfigType>('cors'),
+  aws: config.has('aws') ? config.get<AwsConfigType>('aws') : undefined,
 } as const;
