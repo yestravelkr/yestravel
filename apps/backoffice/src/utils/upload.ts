@@ -1,6 +1,8 @@
 import axios from 'axios';
 
-import { trpc } from '@/shared/trpc';
+import { useAuthStore } from '@/store/authStore';
+
+const API_BASEURL = import.meta.env.VITE_API_BASEURL || 'http://localhost:3000';
 
 export interface UploadOptions {
   path?: string;
@@ -18,15 +20,31 @@ export async function uploadFile(
   options: UploadOptions = {},
 ): Promise<string> {
   const { path = 'uploads' } = options;
+  const token = useAuthStore.getState().accessToken;
 
-  // 1. presigned URL 생성
-  const { uploadUrl, fileUrl } =
-    await trpc.backofficeUpload.generatePresignedUrl.mutate({
+  // 1. presigned URL 생성 - axios로 API 호출
+  const { data } = await axios.post(
+    `${API_BASEURL}/trpc/backofficeUpload.generatePresignedUrl`,
+    {
       fileName: file.name,
       fileType: file.type,
       path,
       expiresIn: 300,
-    });
+    },
+    {
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+      withCredentials: true,
+    },
+  );
+
+  const { uploadUrl, fileUrl } = data.result?.data || {};
+
+  if (!uploadUrl || !fileUrl) {
+    throw new Error('Invalid response from server');
+  }
 
   // 2. S3에 파일 업로드
   await axios.put(uploadUrl, file, {
