@@ -2,7 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import tw from 'tailwind-styled-components';
 
-import { FormField, Input, Select } from '@/shared/components';
+import { FormField, Input, Select, FileUpload } from '@/shared/components';
 import {
   registerBrandInputSchema,
   BusinessType,
@@ -70,6 +70,8 @@ export function BrandForm({
     handleSubmit,
     formState: { errors },
     reset,
+    watch,
+    setValue,
   } = useForm<RegisterBrandInput>({
     resolver: zodResolver(registerBrandInputSchema),
     defaultValues: data
@@ -82,6 +84,7 @@ export function BrandForm({
             name: data.businessInfo?.name || '',
             licenseNumber: data.businessInfo?.licenseNumber || '',
             ceoName: data.businessInfo?.ceoName || '',
+            licenseFileUrl: data.businessInfo?.licenseFileUrl || '',
           },
           bankInfo: {
             name: data.bankInfo?.name || '',
@@ -91,6 +94,8 @@ export function BrandForm({
         }
       : undefined,
   });
+
+  const licenseFileUrl = watch('businessInfo.licenseFileUrl');
 
   const businessTypeOptions = [
     { value: BusinessType.INDIVIDUAL, label: '개인 사업자' },
@@ -253,6 +258,26 @@ export function BrandForm({
                   {...register('businessInfo.ceoName')}
                   placeholder="대표자명을 입력하세요"
                   error={!!errors.businessInfo?.ceoName}
+                />
+              </FieldWrapper>
+
+              <FieldWrapper
+                label="사업자등록증 사본"
+                value={
+                  data?.businessInfo?.licenseFileUrl ? '업로드됨' : undefined
+                }
+                isEditMode={isEditMode}
+                error={errors.businessInfo?.licenseFileUrl?.message}
+              >
+                <FileUpload
+                  value={licenseFileUrl}
+                  onChange={(url) =>
+                    setValue('businessInfo.licenseFileUrl', url)
+                  }
+                  placeholder="사업자등록증 사본을 업로드하세요"
+                  accept="image/*"
+                  uploadPath="business-license"
+                  error={!!errors.businessInfo?.licenseFileUrl}
                 />
               </FieldWrapper>
             </FormGrid>
