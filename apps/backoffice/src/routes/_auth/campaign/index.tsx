@@ -3,22 +3,22 @@ import tw from 'tailwind-styled-components';
 
 import { MajorPageLayout } from '@/components/layout';
 
-export const Route = createFileRoute('/_auth/product/')({
-  component: ProductPage,
+export const Route = createFileRoute('/_auth/campaign/')({
+  component: CampaignPage,
 });
 
-function ProductPage() {
+function CampaignPage() {
   return (
     <MajorPageLayout
-      title="품목 관리"
-      description="상품 품목을 관리할 수 있습니다."
+      title="캠페인 관리"
+      description="마케팅 캠페인을 관리할 수 있습니다."
     >
       <CardContent>
         <EmptyState>
-          <EmptyIcon>📦</EmptyIcon>
-          <EmptyTitle>품목 관리 페이지</EmptyTitle>
+          <EmptyIcon>🎯</EmptyIcon>
+          <EmptyTitle>캠페인 관리 페이지</EmptyTitle>
           <EmptyDescription>
-            품목 관련 기능이 구현될 예정입니다.
+            캠페인 관련 기능이 구현될 예정입니다.
           </EmptyDescription>
         </EmptyState>
       </CardContent>
