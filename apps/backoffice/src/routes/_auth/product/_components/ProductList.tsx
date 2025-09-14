@@ -11,7 +11,7 @@ export function ProductList() {
 
   // TODO: 실제 product API 연결 시 주석 해제
   // const [products] = trpc.backofficeProduct.findAll.useSuspenseQuery();
-  const products = []; // 임시 빈 배열
+  const products: any[] = []; // 임시 빈 배열
 
   const columns = [
     {
