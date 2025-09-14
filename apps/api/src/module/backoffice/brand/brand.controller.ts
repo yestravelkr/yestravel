@@ -30,6 +30,7 @@ export class BrandController {
             name: brand.businessInfo.name,
             licenseNumber: brand.businessInfo.licenseNumber,
             ceoName: brand.businessInfo.ceoName,
+            licenseFileUrl: brand.businessInfo.licenseFileUrl,
           }
         : null,
       bankInfo: brand.bankInfo

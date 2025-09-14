@@ -22,6 +22,7 @@ export const businessInfoSchema = z.object({
   name: z.string().nullish(),
   licenseNumber: z.string().nullish(),
   ceoName: z.string().nullish(),
+  licenseFileUrl: z.string().nullish(),
 });
 
 export const bankInfoSchema = z.object({

@@ -97,6 +97,7 @@ const appRouter = t.router({
         name: z.string().nullish(),
         licenseNumber: z.string().nullish(),
         ceoName: z.string().nullish(),
+        licenseFileUrl: z.string().nullish(),
       }).nullish(),
       bankInfo: z.object({
         name: z.string().nullish(),
@@ -117,6 +118,7 @@ const appRouter = t.router({
         name: z.string().nullish(),
         licenseNumber: z.string().nullish(),
         ceoName: z.string().nullish(),
+        licenseFileUrl: z.string().nullish(),
       }).nullish(),
       bankInfo: z.object({
         name: z.string().nullish(),
@@ -139,6 +141,7 @@ const appRouter = t.router({
         name: z.string().nullish(),
         licenseNumber: z.string().nullish(),
         ceoName: z.string().nullish(),
+        licenseFileUrl: z.string().nullish(),
       }).nullish(),
       bankInfo: z.object({
         name: z.string().nullish(),
@@ -163,6 +166,7 @@ const appRouter = t.router({
         name: z.string().nullish(),
         licenseNumber: z.string().nullish(),
         ceoName: z.string().nullish(),
+        licenseFileUrl: z.string().nullish(),
       }).nullish(),
       bankInfo: z.object({
         name: z.string().nullish(),
@@ -184,6 +188,7 @@ const appRouter = t.router({
         name: z.string().nullish(),
         licenseNumber: z.string().nullish(),
         ceoName: z.string().nullish(),
+        licenseFileUrl: z.string().nullish(),
       }).nullish(),
       bankInfo: z.object({
         name: z.string().nullish(),
@@ -206,6 +211,7 @@ const appRouter = t.router({
         name: z.string().nullish(),
         licenseNumber: z.string().nullish(),
         ceoName: z.string().nullish(),
+        licenseFileUrl: z.string().nullish(),
       }).nullish(),
       bankInfo: z.object({
         name: z.string().nullish(),

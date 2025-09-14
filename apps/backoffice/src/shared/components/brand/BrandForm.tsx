@@ -2,47 +2,15 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import tw from 'tailwind-styled-components';
 
-import { FormField, Input, Select } from '@/shared/components';
+import { LicenseFileField } from './LicenseFileField';
+
+import { FormField, Input, Select, FieldWrapper } from '@/shared/components';
 import {
   registerBrandInputSchema,
   BusinessType,
   type RegisterBrandInput,
   type Brand,
 } from '@/types/brand.type';
-
-// 필드별 조회/수정 전환 컴포넌트
-interface FieldWrapperProps {
-  label: string;
-  value?: string | null;
-  isEditMode: boolean;
-  children: React.ReactNode;
-  required?: boolean;
-  error?: string;
-}
-
-function FieldWrapper({
-  label,
-  value,
-  isEditMode,
-  children,
-  required,
-  error,
-}: FieldWrapperProps) {
-  if (isEditMode) {
-    return (
-      <FormField label={label} error={error} required={required}>
-        {children}
-      </FormField>
-    );
-  }
-
-  return (
-    <InfoItem>
-      <InfoLabel>{label}</InfoLabel>
-      <InfoValue>{value || '-'}</InfoValue>
-    </InfoItem>
-  );
-}
 
 interface BrandFormProps {
   data?: Brand;
@@ -70,6 +38,8 @@ export function BrandForm({
     handleSubmit,
     formState: { errors },
     reset,
+    watch,
+    setValue,
   } = useForm<RegisterBrandInput>({
     resolver: zodResolver(registerBrandInputSchema),
     defaultValues: data
@@ -82,6 +52,7 @@ export function BrandForm({
             name: data.businessInfo?.name || '',
             licenseNumber: data.businessInfo?.licenseNumber || '',
             ceoName: data.businessInfo?.ceoName || '',
+            licenseFileUrl: data.businessInfo?.licenseFileUrl || '',
           },
           bankInfo: {
             name: data.bankInfo?.name || '',
@@ -91,6 +62,8 @@ export function BrandForm({
         }
       : undefined,
   });
+
+  const licenseFileUrl = watch('businessInfo.licenseFileUrl');
 
   const businessTypeOptions = [
     { value: BusinessType.INDIVIDUAL, label: '개인 사업자' },
@@ -255,6 +228,17 @@ export function BrandForm({
                   error={!!errors.businessInfo?.ceoName}
                 />
               </FieldWrapper>
+
+              <LicenseFileField
+                isEditMode={isEditMode}
+                licenseFileUrl={
+                  isEditMode
+                    ? licenseFileUrl
+                    : data?.businessInfo?.licenseFileUrl
+                }
+                error={errors.businessInfo?.licenseFileUrl?.message}
+                onChange={(url) => setValue('businessInfo.licenseFileUrl', url)}
+              />
             </FormGrid>
           </Section>
 
@@ -419,19 +403,4 @@ const EditButton = tw.button`
   hover:bg-blue-700
   transition-colors
   font-medium
-`;
-
-const InfoItem = tw.div`
-  space-y-1
-`;
-
-const InfoLabel = tw.dt`
-  text-sm
-  font-medium
-  text-gray-500
-`;
-
-const InfoValue = tw.dd`
-  text-sm
-  text-gray-900
 `;
