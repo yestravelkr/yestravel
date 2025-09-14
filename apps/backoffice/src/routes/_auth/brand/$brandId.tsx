@@ -1,5 +1,4 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
-import type { RegisterBrandInput } from '@/types/brand.type';
 import { useState } from 'react';
 import tw from 'tailwind-styled-components';
 
@@ -7,6 +6,7 @@ import { BrandForm } from '@/shared/components';
 import { Toast, ToastsContainer } from '@/shared/components/toast/Toast';
 import { useToast } from '@/shared/hooks';
 import { trpc } from '@/shared/trpc';
+import type { RegisterBrandInput } from '@/types/brand.type';
 
 export const Route = createFileRoute('/_auth/brand/$brandId')({
   component: BrandDetailPage,
@@ -26,9 +26,13 @@ function BrandDetailPage() {
     id: parseInt(brandId),
   });
 
-  // 수정 API가 구현되면 업데이트 mutation 사용
-  // const updateMutation = trpc.backofficeBrand.update.useMutation();
-  const [isUpdating, setIsUpdating] = useState(false);
+  const utils = trpc.useUtils();
+  const updateMutation = trpc.backofficeBrand.update.useMutation({
+    onSuccess: () => {
+      // 데이터 재조회
+      utils.backofficeBrand.findById.invalidate({ id: parseInt(brandId) });
+    },
+  });
 
   const handleEditClick = () => {
     setIsEditMode(true);
@@ -39,27 +43,17 @@ function BrandDetailPage() {
   };
 
   const handleSubmit = async (data: RegisterBrandInput) => {
-    setIsUpdating(true);
     try {
-      // TODO: 실제 업데이트 API가 구현되면 변경
-      // await updateMutation.mutateAsync(data);
-
-      // 현재는 수정 API가 없으므로 시뮬레이션
-      console.log('브랜드 수정 데이터:', data);
-
-      // 시뮬레이션: 1초 대기
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await updateMutation.mutateAsync({
+        id: parseInt(brandId),
+        ...data,
+      });
 
       success('브랜드 정보가 성공적으로 수정되었습니다.');
       setIsEditMode(false);
-
-      // 실제 API 구현 시에는 데이터 재조회 필요
-      // queryClient.invalidateQueries(['backofficeBrand.findById', brandId]);
     } catch (err) {
       console.error('브랜드 수정 실패:', err);
       error('브랜드 수정에 실패했습니다. 다시 시도해주세요.');
-    } finally {
-      setIsUpdating(false);
     }
   };
 
@@ -93,7 +87,7 @@ function BrandDetailPage() {
           data={brand}
           isEditMode={isEditMode}
           onSubmit={handleSubmit}
-          isSubmitting={isUpdating}
+          isSubmitting={updateMutation.isPending}
           submitButtonText="저장"
           showCancelButton={true}
           onCancel={handleCancelEdit}
