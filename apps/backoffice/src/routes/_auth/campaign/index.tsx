@@ -1,24 +1,24 @@
 import { createFileRoute } from '@tanstack/react-router';
 import tw from 'tailwind-styled-components';
 
-export const Route = createFileRoute('/_auth/product/')({
-  component: ProductPage,
+export const Route = createFileRoute('/_auth/campaign/')({
+  component: CampaignPage,
 });
 
-function ProductPage() {
+function CampaignPage() {
   return (
     <Container>
       <Header>
-        <Title>품목 관리</Title>
-        <Description>상품 품목을 관리할 수 있습니다.</Description>
+        <Title>캠페인 관리</Title>
+        <Description>마케팅 캠페인을 관리할 수 있습니다.</Description>
       </Header>
 
       <Content>
         <EmptyState>
-          <EmptyIcon>📦</EmptyIcon>
-          <EmptyTitle>품목 관리 페이지</EmptyTitle>
+          <EmptyIcon>🎯</EmptyIcon>
+          <EmptyTitle>캠페인 관리 페이지</EmptyTitle>
           <EmptyDescription>
-            품목 관련 기능이 구현될 예정입니다.
+            캠페인 관련 기능이 구현될 예정입니다.
           </EmptyDescription>
         </EmptyState>
       </Content>
