@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import tw from 'tailwind-styled-components';
 
 import { InboxIcon } from '@/components/icons';
+import { MajorPageLayout } from '@/components/layout';
 import { ROLE_VALUES, ROLE_LABELS } from '@/constants/role';
 import { Table, EmptyState, TableSkeleton } from '@/shared/components';
 import { trpc } from '@/shared/trpc';
@@ -68,49 +69,31 @@ function AdminListPage() {
   };
 
   return (
-    <Container>
-      <Header>
-        <Title>관리자 계정 관리</Title>
+    <MajorPageLayout
+      title="관리자 계정 관리"
+      headerActions={
         <CreateButton to="/admin/create">새 관리자 추가</CreateButton>
-      </Header>
-
-      <Content>
-        {isLoading ? (
-          <TableSkeleton columns={4} rows={5} />
-        ) : admins && admins.length > 0 ? (
-          <Table columns={columns} data={admins} onRowClick={handleRowClick} />
-        ) : (
-          <EmptyState
-            icon={<InboxIcon />}
-            title="등록된 관리자가 없습니다"
-            description="새로운 관리자를 추가하여 권한을 관리하세요."
-            action={
-              <CreateButton to="/admin/create">첫 관리자 추가하기</CreateButton>
-            }
-          />
-        )}
-      </Content>
-    </Container>
+      }
+    >
+      {isLoading ? (
+        <TableSkeleton columns={4} rows={5} />
+      ) : admins && admins.length > 0 ? (
+        <Table columns={columns} data={admins} onRowClick={handleRowClick} />
+      ) : (
+        <EmptyState
+          icon={<InboxIcon />}
+          title="등록된 관리자가 없습니다"
+          description="새로운 관리자를 추가하여 권한을 관리하세요."
+          action={
+            <CreateButton to="/admin/create">첫 관리자 추가하기</CreateButton>
+          }
+        />
+      )}
+    </MajorPageLayout>
   );
 }
 
-const Container = tw.div`
-  p-6
-`;
-
-const Header = tw.div`
-  flex
-  justify-between
-  items-center
-  mb-6
-`;
-
-const Title = tw.h1`
-  text-2xl
-  font-bold
-  text-gray-900
-`;
-
+// 새 관리자 추가 버튼 - 파란색 배경의 액션 버튼
 const CreateButton = tw(Link)`
   px-4
   py-2
@@ -121,8 +104,6 @@ const CreateButton = tw(Link)`
   transition-colors
   font-medium
 `;
-
-const Content = tw.div``;
 
 const AdminName = tw.div`
   font-medium
