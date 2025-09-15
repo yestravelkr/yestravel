@@ -112,8 +112,8 @@ export type UpdateModuleInput = z.infer<typeof updateModuleInputSchema>;
 - 엔티티의 nullable 필드는 `Nullish<T>` 타입 사용
 
 ```typescript
-// src/types/nullish.type.ts
-export type Nullish<T> = T | null | undefined;
+// ⚠️ Nullish 타입 올바른 import 경로
+import { Nullish } from '@src/types/utility.type';
 
 // Entity에서 사용
 @Column({ type: 'varchar', nullable: true })
