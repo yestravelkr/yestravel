@@ -327,6 +327,12 @@ export const roleEnumSchema = z.enum(ROLE_ENUM_VALUE);
 - **Schema**: adminListItemSchema (id, email, name, role)
 - **인증**: BackofficeAuthMiddleware 적용
 
+**Product 모듈**: 품목 관리 (TODO: API 구현 필요)
+- **Router**: `@Router({ alias: 'backofficeProduct' })` (예정)
+- **Endpoints**: `findAll`, `create`, `update`, `delete` (예정)
+- **Schema**: 품목명, 브랜드, 연동여부, 재고관리 여부 (예정)
+- **인증**: BackofficeAuthMiddleware 적용 예정
+
 ## 백오피스 프론트엔드 패턴
 
 **기술 스택:**
@@ -341,16 +347,28 @@ export const roleEnumSchema = z.enum(ROLE_ENUM_VALUE);
 apps/backoffice/src/
 ├── components/
 │   ├── auth/           # 인증 관련 컴포넌트
+│   ├── form/           # 공통 폼 컴포넌트 (FieldWrapper 등)
 │   ├── icons/          # SVG 아이콘 컴포넌트
+│   ├── layout/         # 레이아웃 컴포넌트 (MajorPageLayout)
 │   ├── navigation/     # 네비게이션 컴포넌트
 │   └── ui/             # 공통 UI 컴포넌트
 ├── routes/             # 파일 기반 라우팅
 │   ├── _auth/          # 인증된 사용자 레이아웃
+│   │   ├── admin/      # 관리자 관리
+│   │   │   └── _components/  # AdminList 컴포넌트
+│   │   ├── brand/      # 브랜드 관리
+│   │   │   └── _components/  # BrandList 컴포넌트
+│   │   ├── campaign/   # 캠페인 관리
+│   │   └── product/    # 품목 관리
+│   │       └── _components/  # ProductList 컴포넌트
 │   └── login.tsx       # 로그인 페이지
 ├── shared/             # 공통 유틸리티
+│   ├── components/     # 공통 컴포넌트 (Table, EmptyState 등)
 │   └── trpc/           # tRPC 클라이언트 설정
-└── store/              # Zustand 스토어
-    └── authStore.ts    # 인증 상태 관리
+├── store/              # Zustand 스토어
+│   └── authStore.ts    # 인증 상태 관리
+└── utils/              # 유틸리티 함수
+    └── upload.ts       # 파일 업로드 유틸리티
 ```
 
 **스타일링 패턴:**
@@ -369,6 +387,32 @@ const Container = tw.div`
 - SVG 아이콘 사용 (폰트 이모지 대신)
 - 그룹별로 구분된 메뉴 구조
 - 액티브 상태 스타일링 지원
+
+**컴포넌트 패턴:**
+- **MajorPageLayout**: 주요 페이지의 공통 레이아웃 (제목, 설명, 헤더 액션)
+- **Suspense + useSuspenseQuery**: React 18 Suspense 패턴으로 로딩 상태 관리
+- **List 컴포넌트 분리**: 각 페이지의 테이블 로직을 별도 컴포넌트로 분리
+- **EmptyState**: 데이터가 없을 때의 일관된 UI 패턴
+
+**Suspense 패턴:**
+```typescript
+// 페이지 컴포넌트 (index.tsx)
+function ProductPage() {
+  return (
+    <MajorPageLayout title="품목 관리" headerActions={<CreateButton />}>
+      <Suspense fallback={<TableSkeleton columns={4} rows={5} />}>
+        <ProductList />
+      </Suspense>
+    </MajorPageLayout>
+  );
+}
+
+// List 컴포넌트 (_components/ProductList.tsx)
+export function ProductList() {
+  const [products] = trpc.backofficeProduct.findAll.useSuspenseQuery();
+  // 테이블 및 EmptyState 로직
+}
+```
 
 **디자인 가이드라인:**
 - 포스타입/인스타그램 스타일의 미니멀한 UI
@@ -512,3 +556,17 @@ packages/api-types/src/
 - **⚠️ 코드 포맷팅 규칙**: apps/api 폴더의 코드를 수정한 후에는 **반드시 `cd apps/api && yarn lint` 실행**하여 코드 스타일을 통일시켜야 함
 
 특정 주제에 대한 자세한 정보는 `/docs` 폴더의 해당 문서 파일을 참조하세요.
+
+## 중요 개발 지침
+
+**⚠️ 지속적인 문서 업데이트 필수:**
+- 새로운 기능 구현, 컴포넌트 추가, 아키텍처 변경 시 **반드시** CLAUDE.md와 관련 docs 업데이트
+- 특히 백오피스 프론트엔드 패턴, 컴포넌트 구조, API 모듈 추가 시 문서화 필수
+- 작업 완료 후가 아닌 **작업 중간중간마다** 문서 업데이트하여 최신 상태 유지
+- 예시: 새 페이지 추가 → 즉시 폴더 구조 및 컴포넌트 패턴 섹션 업데이트
+
+**문서 업데이트 타이밍:**
+1. **새 모듈/페이지 추가 시**: 폴더 구조, 실제 구현 예시 섹션 업데이트
+2. **컴포넌트 패턴 변경 시**: 백오피스 프론트엔드 패턴 섹션 업데이트  
+3. **API 엔드포인트 추가 시**: 실제 구현 예시에 새 모듈 정보 추가
+4. **아키텍처 변경 시**: 해당 섹션 즉시 업데이트

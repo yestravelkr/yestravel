@@ -19,7 +19,9 @@ apps/backoffice/
 ├── src/
 │   ├── components/          # 재사용 가능한 UI 컴포넌트
 │   │   ├── auth/           # 인증 관련 컴포넌트
+│   │   ├── form/           # 공통 폼 컴포넌트 (FieldWrapper 등)
 │   │   ├── icons/          # SVG 아이콘 컴포넌트
+│   │   ├── layout/         # 레이아웃 컴포넌트 (MajorPageLayout)
 │   │   ├── navigation/     # 네비게이션 컴포넌트
 │   │   ├── ui/             # 공통 UI 컴포넌트
 │   │   ├── header.tsx
@@ -27,6 +29,17 @@ apps/backoffice/
 │   ├── routes/             # 페이지 컴포넌트 및 라우팅
 │   │   ├── __root.tsx      # 루트 레이아웃
 │   │   ├── _auth/          # 보호된 라우트
+│   │   │   ├── admin/      # 관리자 관리
+│   │   │   │   ├── _components/  # AdminList 컴포넌트
+│   │   │   │   └── index.tsx
+│   │   │   ├── brand/      # 브랜드 관리
+│   │   │   │   ├── _components/  # BrandList 컴포넌트
+│   │   │   │   └── index.tsx
+│   │   │   ├── campaign/   # 캠페인 관리
+│   │   │   │   └── index.tsx
+│   │   │   ├── product/    # 품목 관리
+│   │   │   │   ├── _components/  # ProductList 컴포넌트
+│   │   │   │   └── index.tsx
 │   │   │   ├── route.tsx   # 인증된 사용자 레이아웃
 │   │   │   └── index.tsx
 │   │   ├── login.tsx
@@ -35,8 +48,11 @@ apps/backoffice/
 │   │   ├── authStore.ts
 │   │   └── index.ts
 │   ├── shared/             # 공유 유틸리티
+│   │   ├── components/     # 공통 컴포넌트 (Table, EmptyState 등)
 │   │   ├── routes/         # 라우트 유틸리티
 │   │   └── trpc/           # tRPC 클라이언트 설정
+│   ├── utils/              # 유틸리티 함수
+│   │   └── upload.ts       # 파일 업로드 유틸리티
 │   ├── assets/             # 정적 에셋
 │   ├── App.tsx             # 메인 앱 컴포넌트
 │   └── main.tsx            # 진입점
@@ -277,6 +293,108 @@ function UserForm({ onSubmit }: { onSubmit: (data: UserFormData) => void }) {
 ```
 
 ## 컴포넌트 패턴
+
+### MajorPageLayout 컴포넌트
+
+주요 페이지의 공통 레이아웃을 제공하는 컴포넌트입니다.
+
+```typescript
+// components/layout/MajorPageLayout.tsx
+interface MajorPageLayoutProps {
+  title: string;
+  description?: string;
+  children?: React.ReactNode;
+  headerActions?: React.ReactNode;
+}
+
+export function MajorPageLayout({
+  title,
+  description,
+  children,
+  headerActions,
+}: MajorPageLayoutProps) {
+  return (
+    <Container>
+      <Header $hasActions={!!headerActions}>
+        <HeaderContent>
+          <Title>{title}</Title>
+          {description && <Description>{description}</Description>}
+        </HeaderContent>
+        {headerActions && <HeaderActions>{headerActions}</HeaderActions>}
+      </Header>
+      <Content>{children}</Content>
+    </Container>
+  );
+}
+```
+
+### Suspense 패턴
+
+React 18의 Suspense를 활용한 데이터 로딩 패턴입니다.
+
+```typescript
+// 페이지 컴포넌트 (index.tsx)
+function ProductPage() {
+  return (
+    <MajorPageLayout 
+      title="품목 관리" 
+      headerActions={<CreateButton to="/product/create">새 품목 등록</CreateButton>}
+    >
+      <Suspense fallback={<TableSkeleton columns={4} rows={5} />}>
+        <ProductList />
+      </Suspense>
+    </MajorPageLayout>
+  );
+}
+
+// List 컴포넌트 (_components/ProductList.tsx)
+export function ProductList() {
+  const [products] = trpc.backofficeProduct.findAll.useSuspenseQuery();
+  
+  if (products && products.length > 0) {
+    return <Table columns={columns} data={products} onRowClick={handleRowClick} />;
+  }
+
+  return (
+    <EmptyState
+      icon={<InboxIcon />}
+      title="등록된 품목이 없습니다"
+      description="새로운 품목을 등록하여 관리를 시작하세요."
+      action={<CreateButton to="/product/create">첫 품목 등록하기</CreateButton>}
+    />
+  );
+}
+```
+
+### 파일 업로드 유틸리티
+
+Promise 기반의 파일 업로드 함수입니다.
+
+```typescript
+// utils/upload.ts
+interface UploadOptions {
+  path?: string;
+}
+
+export async function uploadFile(file: File, options: UploadOptions = {}): Promise<string> {
+  const { path = 'uploads' } = options;
+  const token = useAuthStore.getState().accessToken;
+  
+  // presigned URL 생성
+  const { data } = await axios.post(
+    `${API_BASEURL}/trpc/backofficeUpload.generatePresignedUrl`,
+    { fileName: file.name, fileType: file.type, path, expiresIn: 300 },
+    { headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` } }
+  );
+  
+  const { uploadUrl, fileUrl } = data.result.data;
+  
+  // S3에 파일 업로드
+  await axios.put(uploadUrl, file, { headers: { 'Content-Type': file.type } });
+  
+  return fileUrl;
+}
+```
 
 ### 재사용 가능한 버튼 컴포넌트
 
