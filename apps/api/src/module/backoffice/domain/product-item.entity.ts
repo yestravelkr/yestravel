@@ -19,6 +19,10 @@ export class ProductItemEntity extends BaseEntity {
   @Column('text', { nullable: true })
   description: Nullish<string>;
 
+  // 상세페이지 내용 (HTML 태그 포함 에디터 콘텐츠)
+  @Column('text', { nullable: true })
+  detailContent: Nullish<string>;
+
   // 브랜드 (브랜드 id로 연결)
   @Column({ name: 'brand_id', type: 'integer' })
   brandId: number;
