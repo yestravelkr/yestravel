@@ -1,11 +1,11 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
-import type { RegisterBrandInput } from '@/types/brand.type';
 import tw from 'tailwind-styled-components';
 
 import { BrandForm } from '@/shared/components';
 import { Toast, ToastsContainer } from '@/shared/components/toast/Toast';
 import { useToast } from '@/shared/hooks';
 import { trpc } from '@/shared/trpc';
+import type { RegisterBrandInput } from '@/types/brand.type';
 
 export const Route = createFileRoute('/_auth/brand/create')({
   component: BrandCreatePage,

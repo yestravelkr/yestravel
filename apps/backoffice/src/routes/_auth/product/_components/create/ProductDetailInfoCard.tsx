@@ -1,10 +1,11 @@
-import { FormRow, Input, Label } from './styled';
+import { FormRow, Label } from './styled';
 
 import {
   FormCard,
   FormField,
   FormSection,
 } from '@/shared/components/form/FormLayout';
+import { Input } from '@/shared/components/form/Input';
 
 export function ProductDetailInfoCard() {
   return (

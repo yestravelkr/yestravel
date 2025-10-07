@@ -1,9 +1,7 @@
 import {
   FieldHint,
   FileUploadCard,
-  Input,
   Label,
-  Textarea,
   ThumbnailActions,
   ThumbnailCard,
   ThumbnailGrid,
@@ -16,6 +14,8 @@ import {
   FormField,
   FormSection,
 } from '@/shared/components/form/FormLayout';
+import { Input } from '@/shared/components/form/Input';
+import { Textarea } from '@/shared/components/form/Textarea';
 import { FileUpload } from '@/shared/components/ui/FileUpload';
 
 interface BasicInfoCardProps {
