@@ -34,10 +34,10 @@ export const FormTitle = tw.h2`
   text-lg
   font-semibold
   text-gray-900
+  mb-2
 `;
 
 export const FormDescription = tw.p`
-  mt-2
   text-sm
   text-gray-600
   mb-6
