@@ -3,7 +3,6 @@ import tw from 'tailwind-styled-components';
 
 export const FormContainer = tw.div`
   w-full
-  max-w-6xl
   mx-auto
 `;
 
@@ -12,10 +11,11 @@ export const Form = tw.form`
 `;
 
 export const FormColumns = tw.div`
-  grid
-  grid-cols-1
+  flex
+  max-w-6xl
+  justify-center
+  mx-auto
   gap-6
-  lg:grid-cols-5
 `;
 
 export const LeftColumn = tw.div`
