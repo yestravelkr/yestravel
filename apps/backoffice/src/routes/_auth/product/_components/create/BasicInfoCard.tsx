@@ -1,13 +1,4 @@
-import {
-  FieldHint,
-  FileUploadCard,
-  Label,
-  ThumbnailActions,
-  ThumbnailCard,
-  ThumbnailGrid,
-  ThumbnailPreview,
-  ThumbnailRemoveButton,
-} from './styled';
+import { FieldHint, FileUploadCard, Label, ThumbnailGrid } from './styled';
 
 import {
   FormCard,
@@ -38,22 +29,20 @@ export function BasicInfoCard({
         <FormField>
           <Label>상품 썸네일</Label>
           <ThumbnailGrid>
-            {thumbnails.map((thumbnail, index) => (
-              <ThumbnailCard key={thumbnail}>
-                <ThumbnailPreview
-                  src={thumbnail}
-                  alt={`상품 썸네일 ${index + 1}`}
+            {thumbnails.map((thumbnail) => (
+              <FileUploadCard>
+                <FileUpload
+                  key={thumbnail}
+                  value={thumbnail}
+                  onChange={(url) => {
+                    if (!url) {
+                      onRemoveThumbnail(thumbnail);
+                    }
+                  }}
+                  accept="image/*"
+                  uploadPath="product/thumbnail"
                 />
-                <ThumbnailActions>
-                  <span>{`썸네일 ${index + 1}`}</span>
-                  <ThumbnailRemoveButton
-                    type="button"
-                    onClick={() => onRemoveThumbnail(thumbnail)}
-                  >
-                    삭제
-                  </ThumbnailRemoveButton>
-                </ThumbnailActions>
-              </ThumbnailCard>
+              </FileUploadCard>
             ))}
             <FileUploadCard>
               <FileUpload
@@ -65,9 +54,6 @@ export function BasicInfoCard({
                 accept="image/*"
                 uploadPath="product/thumbnail"
               />
-              <FieldHint>
-                썸네일 이미지는 최소 1장, 10MB 이하로 업로드하세요.
-              </FieldHint>
             </FileUploadCard>
           </ThumbnailGrid>
         </FormField>

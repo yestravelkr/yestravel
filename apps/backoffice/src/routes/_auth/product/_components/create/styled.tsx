@@ -65,55 +65,15 @@ export const FieldHint = tw.p`
 `;
 
 export const ThumbnailGrid = tw.div`
-  grid
-  grid-cols-1
-  gap-4
-  sm:grid-cols-2
-`;
-
-export const ThumbnailCard = tw.div`
-  rounded-lg
-  border
-  border-gray-200
-  bg-white
-  shadow-sm
-  overflow-hidden
-`;
-
-export const ThumbnailPreview = tw.img`
-  w-full
-  h-40
-  object-cover
-  bg-gray-100
-`;
-
-export const ThumbnailActions = tw.div`
   flex
-  items-center
-  justify-between
-  px-4
-  py-2
-  text-sm
-  text-gray-700
+  gap-4
+  overflow-x-auto
 `;
 
 export const FileUploadCard = tw.div`
   flex
   flex-col
   gap-2
-`;
-
-export const ThumbnailRemoveButton = tw.button`
-  px-3
-  py-1
-  text-xs
-  text-red-600
-  hover:text-red-800
-  border
-  border-red-200
-  hover:border-red-300
-  rounded
-  transition-colors
 `;
 
 export const FormActions = tw.div`
