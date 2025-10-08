@@ -62,7 +62,6 @@ export function BasicInfoCard({
                   if (!url) return;
                   onAddThumbnail(url);
                 }}
-                placeholder="썸네일 업로드"
                 accept="image/*"
                 uploadPath="product/thumbnail"
               />

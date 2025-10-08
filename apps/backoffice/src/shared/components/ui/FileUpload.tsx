@@ -6,7 +6,6 @@ import { uploadFile } from '@/utils/upload';
 interface FileUploadProps {
   value?: string | null;
   onChange: (url: string | null) => void;
-  placeholder?: string;
   error?: boolean;
   disabled?: boolean;
   accept?: string;
@@ -14,10 +13,37 @@ interface FileUploadProps {
   uploadPath?: string;
 }
 
+function UploadEmptyState() {
+  return (
+    <EmptyState>
+      <UploadIcon>
+        <svg
+          width="50"
+          height="50"
+          viewBox="0 0 50 50"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <g clipPath="url(#clip0_26_5245)">
+            <path
+              d="M22.9167 41.6667V27.0833H8.33333C7.18274 27.0833 6.25 26.1506 6.25 25C6.25 23.8494 7.18274 22.9167 8.33333 22.9167H22.9167V8.33333C22.9167 7.18274 23.8494 6.25 25 6.25C26.1506 6.25 27.0833 7.18274 27.0833 8.33333V22.9167H41.6667C42.8173 22.9167 43.75 23.8494 43.75 25C43.75 26.1506 42.8173 27.0833 41.6667 27.0833H27.0833V41.6667C27.0833 42.8173 26.1506 43.75 25 43.75C23.8494 43.75 22.9167 42.8173 22.9167 41.6667Z"
+              fill="#9E9E9E"
+            />
+          </g>
+          <defs>
+            <clipPath id="clip0_26_5245">
+              <rect width="50" height="50" fill="white" />
+            </clipPath>
+          </defs>
+        </svg>
+      </UploadIcon>
+    </EmptyState>
+  );
+}
+
 export function FileUpload({
   value,
   onChange,
-  placeholder = '파일을 선택하세요',
   error = false,
   disabled = false,
   accept = 'image/*',
@@ -81,23 +107,36 @@ export function FileUpload({
 
       <UploadArea $error={error} onClick={handleButtonClick}>
         {value ? (
-          <FileInfo>
-            <FilePreview>
-              <img src={value} alt="업로드된 파일" />
-            </FilePreview>
-            <FileDetails>
-              <FileName>파일이 업로드되었습니다</FileName>
-              <RemoveButton
-                type="button"
-                onClick={(e: React.MouseEvent) => {
-                  e.stopPropagation();
-                  handleRemoveFile();
-                }}
+          <FilePreview>
+            <PreviewImage src={value} alt="업로드된 파일" />
+            <RemoveButton
+              type="button"
+              onClick={(e: React.MouseEvent) => {
+                e.stopPropagation();
+                handleRemoveFile();
+              }}
+            >
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 20 20"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
               >
-                삭제
-              </RemoveButton>
-            </FileDetails>
-          </FileInfo>
+                <g clipPath="url(#clip0_357_2453)">
+                  <path
+                    d="M15.2442 3.57757C15.5697 3.25214 16.0972 3.25214 16.4226 3.57757C16.7481 3.90301 16.7481 4.43052 16.4226 4.75596L11.1785 10.0001L16.4226 15.2442C16.7481 15.5697 16.7481 16.0972 16.4226 16.4226C16.0972 16.7481 15.5697 16.7481 15.2442 16.4226L10.0001 11.1785L4.75596 16.4226C4.43052 16.7481 3.90301 16.7481 3.57757 16.4226C3.25214 16.0972 3.25214 15.5697 3.57757 15.2442L8.82171 10.0001L3.57757 4.75596C3.25214 4.43052 3.25214 3.90301 3.57757 3.57757C3.90301 3.25214 4.43052 3.25214 4.75596 3.57757L10.0001 8.82171L15.2442 3.57757Z"
+                    fill="white"
+                  />
+                </g>
+                <defs>
+                  <clipPath id="clip0_357_2453">
+                    <rect width="20" height="20" fill="white" />
+                  </clipPath>
+                </defs>
+              </svg>
+            </RemoveButton>
+          </FilePreview>
         ) : (
           <UploadPrompt>
             {isUploading ? (
@@ -106,11 +145,7 @@ export function FileUpload({
                 <span>업로드 중...</span>
               </UploadingState>
             ) : (
-              <EmptyState>
-                <UploadIcon>📁</UploadIcon>
-                <UploadText>{placeholder}</UploadText>
-                <UploadHint>클릭하여 파일 선택</UploadHint>
-              </EmptyState>
+              <UploadEmptyState />
             )}
           </UploadPrompt>
         )}
@@ -130,65 +165,64 @@ const HiddenInput = tw.input`
 `;
 
 const UploadArea = tw.div<{ $error: boolean }>`
-  border-2
-  border-dashed
-  rounded-lg
+  relative
+  w-[130px]
+  h-[130px]
+  border
+  rounded-xl
   cursor-pointer
   transition-colors
+  flex
+  items-start
+  justify-start
+  p-3
   ${({ $error }) =>
     $error
       ? 'border-red-300 bg-red-50'
-      : 'border-gray-300 hover:border-gray-400 bg-gray-50 hover:bg-gray-100'}
-`;
-
-const FileInfo = tw.div`
-  p-4
-  flex
-  items-center
-  gap-4
+      : 'border-[rgb(228,228,231)] bg-[rgb(244,244,245)] hover:bg-gray-200'}
 `;
 
 const FilePreview = tw.div`
-  w-16
-  h-16
-  rounded-lg
+  absolute
+  inset-0
+  w-[130px]
+  h-[130px]
   overflow-hidden
-  bg-gray-100
-  flex-shrink-0
+  rounded-xl
+  group
 `;
 
-const FileDetails = tw.div`
-  flex-1
-  flex
-  items-center
-  justify-between
-`;
-
-const FileName = tw.span`
-  text-sm
-  text-gray-700
-  font-medium
+const PreviewImage = tw.img`
+  w-full
+  h-full
+  object-cover
 `;
 
 const RemoveButton = tw.button`
-  px-3
-  py-1
-  text-xs
-  text-red-600
-  hover:text-red-800
-  border
-  border-red-200
-  hover:border-red-300
-  rounded
-  transition-colors
+  absolute
+  top-2
+  right-2
+  flex
+  w-8
+  h-8
+  p-0
+  justify-center
+  items-center
+  shrink-0
+  rounded-2xl
+  bg-black/20
+  backdrop-blur-md
+  cursor-pointer
+  transition-opacity
 `;
 
 const UploadPrompt = tw.div`
-  p-8
+  w-full
+  h-full
   flex
   flex-col
-  items-center
-  justify-center
+  items-start
+  justify-start
 `;
 
 const UploadingState = tw.div`
@@ -210,26 +244,21 @@ const Spinner = tw.div`
 `;
 
 const EmptyState = tw.div`
+  w-full
+  h-full
   flex
   flex-col
   items-center
-  gap-2
+  justify-center
+  gap-1
 `;
 
 const UploadIcon = tw.div`
-  text-3xl
-  mb-2
-`;
-
-const UploadText = tw.span`
-  text-sm
-  font-medium
-  text-gray-700
-`;
-
-const UploadHint = tw.span`
-  text-xs
-  text-gray-500
+  w-[50px]
+  h-[50px]
+  flex
+  items-center
+  justify-center
 `;
 
 const ErrorMessage = tw.div`
