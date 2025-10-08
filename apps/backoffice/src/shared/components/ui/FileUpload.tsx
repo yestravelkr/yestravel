@@ -13,34 +13,6 @@ interface FileUploadProps {
   uploadPath?: string;
 }
 
-function UploadEmptyState() {
-  return (
-    <EmptyState>
-      <UploadIcon>
-        <svg
-          width="50"
-          height="50"
-          viewBox="0 0 50 50"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <g clipPath="url(#clip0_26_5245)">
-            <path
-              d="M22.9167 41.6667V27.0833H8.33333C7.18274 27.0833 6.25 26.1506 6.25 25C6.25 23.8494 7.18274 22.9167 8.33333 22.9167H22.9167V8.33333C22.9167 7.18274 23.8494 6.25 25 6.25C26.1506 6.25 27.0833 7.18274 27.0833 8.33333V22.9167H41.6667C42.8173 22.9167 43.75 23.8494 43.75 25C43.75 26.1506 42.8173 27.0833 41.6667 27.0833H27.0833V41.6667C27.0833 42.8173 26.1506 43.75 25 43.75C23.8494 43.75 22.9167 42.8173 22.9167 41.6667Z"
-              fill="#9E9E9E"
-            />
-          </g>
-          <defs>
-            <clipPath id="clip0_26_5245">
-              <rect width="50" height="50" fill="white" />
-            </clipPath>
-          </defs>
-        </svg>
-      </UploadIcon>
-    </EmptyState>
-  );
-}
-
 export function FileUpload({
   value,
   onChange,
@@ -107,44 +79,15 @@ export function FileUpload({
 
       <UploadArea $error={error} onClick={handleButtonClick}>
         {value ? (
-          <FilePreview>
-            <PreviewImage src={value} alt="업로드된 파일" />
-            <RemoveButton
-              type="button"
-              onClick={(e: React.MouseEvent) => {
-                e.stopPropagation();
-                handleRemoveFile();
-              }}
-            >
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 20 20"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <g clipPath="url(#clip0_357_2453)">
-                  <path
-                    d="M15.2442 3.57757C15.5697 3.25214 16.0972 3.25214 16.4226 3.57757C16.7481 3.90301 16.7481 4.43052 16.4226 4.75596L11.1785 10.0001L16.4226 15.2442C16.7481 15.5697 16.7481 16.0972 16.4226 16.4226C16.0972 16.7481 15.5697 16.7481 15.2442 16.4226L10.0001 11.1785L4.75596 16.4226C4.43052 16.7481 3.90301 16.7481 3.57757 16.4226C3.25214 16.0972 3.25214 15.5697 3.57757 15.2442L8.82171 10.0001L3.57757 4.75596C3.25214 4.43052 3.25214 3.90301 3.57757 3.57757C3.90301 3.25214 4.43052 3.25214 4.75596 3.57757L10.0001 8.82171L15.2442 3.57757Z"
-                    fill="white"
-                  />
-                </g>
-                <defs>
-                  <clipPath id="clip0_357_2453">
-                    <rect width="20" height="20" fill="white" />
-                  </clipPath>
-                </defs>
-              </svg>
-            </RemoveButton>
-          </FilePreview>
+          // 파일이 업로드된 경우: 미리보기와 삭제 버튼 표시
+          <UploadedFilePreview imageUrl={value} onRemove={handleRemoveFile} />
         ) : (
           <UploadPrompt>
             {isUploading ? (
-              <UploadingState>
-                <Spinner />
-                <span>업로드 중...</span>
-              </UploadingState>
+              // 업로드 진행 중: 로딩 스피너 표시
+              <UploadingStateView />
             ) : (
+              // 업로드 전: + 아이콘 표시
               <UploadEmptyState />
             )}
           </UploadPrompt>
@@ -153,6 +96,87 @@ export function FileUpload({
 
       {uploadError && <ErrorMessage>{uploadError}</ErrorMessage>}
     </Container>
+  );
+}
+
+// 빈 상태: 파일이 업로드되지 않은 초기 상태
+function UploadEmptyState() {
+  return (
+    <EmptyState>
+      <UploadIcon>
+        <svg
+          width="50"
+          height="50"
+          viewBox="0 0 50 50"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <g clipPath="url(#clip0_26_5245)">
+            <path
+              d="M22.9167 41.6667V27.0833H8.33333C7.18274 27.0833 6.25 26.1506 6.25 25C6.25 23.8494 7.18274 22.9167 8.33333 22.9167H22.9167V8.33333C22.9167 7.18274 23.8494 6.25 25 6.25C26.1506 6.25 27.0833 7.18274 27.0833 8.33333V22.9167H41.6667C42.8173 22.9167 43.75 23.8494 43.75 25C43.75 26.1506 42.8173 27.0833 41.6667 27.0833H27.0833V41.6667C27.0833 42.8173 26.1506 43.75 25 43.75C23.8494 43.75 22.9167 42.8173 22.9167 41.6667Z"
+              fill="#9E9E9E"
+            />
+          </g>
+          <defs>
+            <clipPath id="clip0_26_5245">
+              <rect width="50" height="50" fill="white" />
+            </clipPath>
+          </defs>
+        </svg>
+      </UploadIcon>
+    </EmptyState>
+  );
+}
+
+// 업로딩 상태: 파일이 서버에 업로드 중인 상태
+function UploadingStateView() {
+  return (
+    <UploadingState>
+      <Spinner />
+      <span>업로드 중...</span>
+    </UploadingState>
+  );
+}
+
+// 업로드 완료 상태: 파일 업로드가 완료되어 미리보기와 삭제 버튼이 표시되는 상태
+function UploadedFilePreview({
+  imageUrl,
+  onRemove,
+}: {
+  imageUrl: string;
+  onRemove: () => void;
+}) {
+  return (
+    <FilePreview>
+      <PreviewImage src={imageUrl} alt="업로드된 파일" />
+      <RemoveButton
+        type="button"
+        onClick={(e: React.MouseEvent) => {
+          e.stopPropagation();
+          onRemove();
+        }}
+      >
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 20 20"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <g clipPath="url(#clip0_357_2453)">
+            <path
+              d="M15.2442 3.57757C15.5697 3.25214 16.0972 3.25214 16.4226 3.57757C16.7481 3.90301 16.7481 4.43052 16.4226 4.75596L11.1785 10.0001L16.4226 15.2442C16.7481 15.5697 16.7481 16.0972 16.4226 16.4226C16.0972 16.7481 15.5697 16.7481 15.2442 16.4226L10.0001 11.1785L4.75596 16.4226C4.43052 16.7481 3.90301 16.7481 3.57757 16.4226C3.25214 16.0972 3.25214 15.5697 3.57757 15.2442L8.82171 10.0001L3.57757 4.75596C3.25214 4.43052 3.25214 3.90301 3.57757 3.57757C3.90301 3.25214 4.43052 3.25214 4.75596 3.57757L10.0001 8.82171L15.2442 3.57757Z"
+              fill="white"
+            />
+          </g>
+          <defs>
+            <clipPath id="clip0_357_2453">
+              <rect width="20" height="20" fill="white" />
+            </clipPath>
+          </defs>
+        </svg>
+      </RemoveButton>
+    </FilePreview>
   );
 }
 
