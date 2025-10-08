@@ -9,10 +9,7 @@ import { Input } from '@/shared/components/form/Input';
 
 export function ProductDetailInfoCard() {
   return (
-    <FormCard
-      title="상세 정보"
-      description="숙박 인원과 이용 정보를 입력하세요."
-    >
+    <FormCard title="상세 정보">
       <FormSection>
         <FormRow>
           <FormField>

@@ -21,10 +21,7 @@ export function BasicInfoCard({
   onRemoveThumbnail,
 }: BasicInfoCardProps) {
   return (
-    <FormCard
-      title="기본 정보"
-      description="채널 노출에 필요한 기본 속성을 입력하세요."
-    >
+    <FormCard title="기본 정보">
       <FormSection>
         <FormField>
           <Label>상품 썸네일</Label>

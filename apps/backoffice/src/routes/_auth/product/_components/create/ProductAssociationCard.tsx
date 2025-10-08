@@ -8,10 +8,7 @@ import {
 
 export function ProductAssociationCard() {
   return (
-    <FormCard
-      title="상품 구분"
-      description="연결할 브랜드와 제휴 호텔을 선택하세요."
-    >
+    <FormCard title="상품 구분">
       <FormSection>
         <FormField>
           <Label htmlFor="brand">브랜드</Label>
