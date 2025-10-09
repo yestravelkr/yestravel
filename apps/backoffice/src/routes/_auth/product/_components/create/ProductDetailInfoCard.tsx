@@ -19,7 +19,8 @@ export function ProductDetailInfoCard() {
               name="baseCapacity"
               type="number"
               min={1}
-              placeholder="예) 2"
+              placeholder="0"
+              postfix={'명'}
             />
           </FormField>
           <FormField>
@@ -29,7 +30,8 @@ export function ProductDetailInfoCard() {
               name="maxCapacity"
               type="number"
               min={1}
-              placeholder="예) 4"
+              placeholder="0"
+              postfix={'명'}
             />
           </FormField>
         </FormRow>
