@@ -1,1 +1,5 @@
 @import "tailwindcss";
+
+.ql-container {
+  min-height: 670px;
+}

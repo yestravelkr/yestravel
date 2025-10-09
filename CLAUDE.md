@@ -497,6 +497,108 @@ EOF
 - pre-commit hook이 자동으로 lint와 prettier 적용
 - 관련성 있는 파일들끼리만 묶어서 커밋
 - 각 커밋은 독립적으로 빌드 가능해야 함
+- **⚠️ Claude Code에서 커밋 지시 시**: 파일들은 이미 add되어 있다고 가정하고, commit 메시지만 작성해서 바로 commit 수행 (git add 단계 생략)
+
+## Pull Request 작성 규칙
+
+**템플릿 준수:**
+- `.github/pull_request_template.md` 템플릿을 따라 PR 작성
+- 각 섹션의 목적에 맞게 명확하게 작성
+
+**작성 가이드라인:**
+
+**1. 설명 섹션:**
+- **최대 4~6문장**으로 간결하게 요약
+- PR이 해결하는 문제와 접근 방식을 명확하게 설명
+- 불필요한 세부사항은 생략하고 핵심만 전달
+
+**2. 목표 섹션:**
+- **최대 2문장**으로 간결하게 작성
+- 이 PR의 핵심 목표만 명시
+- 여러 목표가 있어도 가장 중요한 1~2개만 선택
+
+**3. 변경사항 섹션:**
+- 변경사항이 많을 경우 **가독성을 최우선**으로 고려
+- 적절한 포맷 활용:
+  - **Code block**: 파일 구조나 코드 스니펫 표시
+  - **Mermaid 다이어그램**: 플로우, 아키텍처, 관계도 시각화
+  - **테이블**: 많은 항목을 구조화하여 표시
+  - **계층 구조**: 중첩 리스트로 관련 항목 그룹화
+
+**예시 - Code Block 활용:**
+```markdown
+## 변경사항
+
+### API 엔드포인트 추가
+```typescript
+// backofficeProduct.findAll
+// backofficeProduct.create
+// backofficeProduct.update
+```
+
+### 프론트엔드 페이지 구조
+```
+routes/_auth/product/
+├── index.tsx              # 품목 리스트
+├── create.tsx             # 품목 생성
+└── _components/
+    └── ProductList.tsx    # 리스트 컴포넌트
+```
+```
+
+**예시 - Mermaid 다이어그램 활용:**
+```markdown
+## 변경사항
+
+### 인증 플로우 개선
+```mermaid
+graph LR
+    A[로그인 요청] --> B[JWT 검증]
+    B --> C{유효한가?}
+    C -->|Yes| D[인증 완료]
+    C -->|No| E[에러 반환]
+```
+```
+
+**예시 - 테이블 활용:**
+```markdown
+## 변경사항
+
+| 모듈 | 추가된 엔드포인트 | 기능 |
+|------|------------------|------|
+| Product | findAll | 품목 리스트 조회 |
+| Product | create | 품목 생성 |
+| Product | update | 품목 수정 |
+| Category | findAll | 카테고리 조회 |
+```
+
+**예시 - 계층 구조 활용:**
+```markdown
+## 변경사항
+
+- **백엔드 (API)**
+  - Product 모듈 추가
+    - Router, Controller, Service 구현
+    - Repository 패턴 적용
+  - Category 모듈 개선
+    - 계층형 구조 지원
+
+- **프론트엔드 (Backoffice)**
+  - 품목 관리 페이지 구현
+    - 리스트, 생성, 수정 화면
+  - 공통 컴포넌트 추가
+    - TableSkeleton, EmptyState
+```
+
+**주의사항:**
+- 너무 긴 리스트는 가독성을 해침 → 적절히 그룹화하거나 다이어그램 활용
+- 중요한 변경사항만 포함, 사소한 코드 스타일 변경은 생략
+- 코드 리뷰어가 이해하기 쉽도록 맥락 제공
+
+**PR 생성 후 작업:**
+- **⚠️ Claude Code에서 PR 생성 시**: PR 생성 후 자동으로 Chrome에서 PR 페이지를 열어 사용자가 바로 확인할 수 있도록 함
+- macOS: `open -a "Google Chrome" "<PR_URL>"`
+- 사용자 경험 개선을 위해 PR 생성과 동시에 브라우저에서 열기
 
 ## 타입 작성 가이드
 
