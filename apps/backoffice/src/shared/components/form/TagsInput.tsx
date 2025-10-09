@@ -57,8 +57,8 @@ export function TagsInput({
       return;
     }
 
-    // Enter 또는 콤마(,)로 태그 확정
-    if (e.key === 'Enter' || e.key === ',') {
+    // Enter 로 태그 확정
+    if (e.key === 'Enter') {
       e.preventDefault();
       const inputEl = e.currentTarget;
       const trimmedValue = inputEl.value.trim();
