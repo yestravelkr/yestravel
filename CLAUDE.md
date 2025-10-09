@@ -421,6 +421,53 @@ export function ProductList() {
 - 충분한 여백과 명확한 타이포그래피
 - 호버 효과와 트랜지션 애니메이션
 
+**신규 컴포넌트 작성 규칙:**
+- **⚠️ 필수**: 모든 신규 컴포넌트는 **주석**과 **Usage 예시**를 반드시 포함해야 함
+- 컴포넌트 파일 상단에 JSDoc 형식의 주석으로 목적과 사용법 설명
+- Props 인터페이스에도 각 속성에 대한 설명 추가
+- 복잡한 컴포넌트는 파일 내부에 Usage 예시 주석 포함
+
+**예시:**
+```typescript
+/**
+ * FileUpload - 파일 업로드 컴포넌트
+ *
+ * 이미지 파일을 업로드하고 미리보기를 제공하는 컴포넌트입니다.
+ * 드래그 앤 드롭, 파일 크기 제한, 업로드 진행 상태를 지원합니다.
+ *
+ * @example
+ * ```tsx
+ * <FileUpload
+ *   value={imageUrl}
+ *   onChange={(url) => setImageUrl(url)}
+ *   accept="image/*"
+ *   maxSize={5 * 1024 * 1024} // 5MB
+ *   uploadPath="products"
+ * />
+ * ```
+ */
+export interface FileUploadProps {
+  /** 업로드된 파일의 URL */
+  value?: string | null;
+  /** 파일 업로드 완료 시 호출되는 콜백 */
+  onChange: (url: string | null) => void;
+  /** 에러 상태 표시 여부 */
+  error?: boolean;
+  /** 비활성화 상태 */
+  disabled?: boolean;
+  /** 허용되는 파일 타입 (예: "image/*", ".pdf") */
+  accept?: string;
+  /** 최대 파일 크기 (bytes) */
+  maxSize?: number;
+  /** 업로드 경로 */
+  uploadPath?: string;
+}
+
+export function FileUpload({ ... }: FileUploadProps) {
+  // 구현...
+}
+```
+
 ## Git 커밋 규칙
 
 **커밋 메시지 형식:**
