@@ -16,6 +16,7 @@ export const FormColumns = tw.div`
   justify-center
   mx-auto
   gap-6
+  mb-16
 `;
 
 export const LeftColumn = tw.div`
@@ -77,12 +78,16 @@ export const FileUploadCard = tw.div`
 `;
 
 export const FormActions = tw.div`
+  sticky
+  bottom-0
+  -m-6
   flex
   justify-end
   space-x-3
-  pt-6
+  p-6
   border-t
   border-gray-200
+  bg-white
 `;
 
 export const CancelButton = tw(Link)`
