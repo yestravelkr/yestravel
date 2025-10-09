@@ -1,5 +1,6 @@
 import { FormRow, Label } from './styled';
 
+import { TagsInput } from '@/shared/components';
 import {
   FormCard,
   FormField,
@@ -47,15 +48,11 @@ export function ProductDetailInfoCard() {
         </FormRow>
         <FormField>
           <Label htmlFor="bed-config">침대 구성</Label>
-          <Input
-            id="bed-config"
-            name="bedConfig"
-            placeholder="예) 퀸베드 1개, 싱글베드 1개"
-          />
+          <TagsInput placeholder="예) 퀸베드 1개, 싱글베드 1개" />
         </FormField>
         <FormField>
           <Label htmlFor="tags">태그</Label>
-          <Input id="tags" name="tags" placeholder="예) 바다 전망, 조식 포함" />
+          <TagsInput placeholder="예) 바다 전망, 조식 포함" />
         </FormField>
       </FormSection>
     </FormCard>
