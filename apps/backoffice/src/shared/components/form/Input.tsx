@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { InputHTMLAttributes, forwardRef } from 'react';
 import tw from 'tailwind-styled-components';
 
@@ -24,10 +25,27 @@ import tw from 'tailwind-styled-components';
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   /** 에러 상태 표시 여부 */
   error?: boolean;
-  /** 입력 필드 앞에 표시할 텍스트 (예: "https://") */
-  prefix?: string;
-  /** 입력 필드 뒤에 표시할 텍스트 (예: "원 이상") */
-  postfix?: string;
+  /** 입력 필드 앞에 표시할 ReactNode (예: "https://", 아이콘 등) */
+  prefix?: ReactNode;
+  /** 입력 필드 뒤에 표시할 ReactNode (예: "원 이상", 버튼 등) */
+  postfix?: ReactNode;
+}
+
+/**
+ * ReactNode를 정규화하여 렌더링 가능한 값만 반환
+ * - null/undefined/boolean은 필터링
+ * - 문자열은 trim 후 빈 문자열이면 null 반환
+ * - 그 외 ReactNode는 그대로 반환
+ */
+function normalizeAffix(affix: ReactNode): ReactNode {
+  if (affix == null || typeof affix === 'boolean') {
+    return null;
+  }
+  if (typeof affix === 'string') {
+    const trimmed = affix.trim();
+    return trimmed === '' ? null : trimmed;
+  }
+  return affix;
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
@@ -37,15 +55,14 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       return <input ref={ref} type={type} {...props} />;
     }
 
-    // prefix/postfix trim 처리
-    const trimmedPrefix = prefix?.trim();
-    const trimmedPostfix = postfix?.trim();
+    const prefixContent = normalizeAffix(prefix);
+    const postfixContent = normalizeAffix(postfix);
 
     return (
       <InputWrapper className={className} $error={error}>
-        {trimmedPrefix && <Affix>{trimmedPrefix}</Affix>}
+        {prefixContent && <Affix>{prefixContent}</Affix>}
         <StyledInput ref={ref} type={type} {...props} />
-        {trimmedPostfix && <Affix>{trimmedPostfix}</Affix>}
+        {postfixContent && <Affix>{postfixContent}</Affix>}
       </InputWrapper>
     );
   },
@@ -53,7 +70,6 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
 
 Input.displayName = 'Input';
 
-// 래퍼 내부에서 사용하는 input - border는 wrapper에서 처리
 const StyledInput = tw.input`
   flex-1
   outline-none
@@ -61,7 +77,6 @@ const StyledInput = tw.input`
   placeholder:text-gray-400
 `;
 
-// prefix/postfix 래퍼 - 포커스 스타일을 관리
 const InputWrapper = tw.div<{ $error?: boolean }>`
   flex
   items-center
@@ -75,7 +90,6 @@ const InputWrapper = tw.div<{ $error?: boolean }>`
   ${(p) => (p.$error ? 'focus-within:ring-red-500' : 'focus-within:ring-blue-500')}
 `;
 
-// 명
 const Affix = tw.div`
   flex
   items-center
