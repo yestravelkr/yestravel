@@ -22,7 +22,8 @@ import tw from 'tailwind-styled-components';
  * <Input error type="email" />
  * ```
  */
-interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
+interface InputProps
+  extends Omit<InputHTMLAttributes<HTMLInputElement>, 'prefix'> {
   /** 에러 상태 표시 여부 */
   error?: boolean;
   /** 입력 필드 앞에 표시할 ReactNode (예: "https://", 아이콘 등) */

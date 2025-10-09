@@ -7,12 +7,12 @@ module.exports = {
         'cd apps/backoffice && yarn lint -- --fix',
     ],
     'packages/**/*.{ts,tsx,js,jsx}': (filenames) => {
-        // 변경된 파일이 속한 패키지만 lint 실행 (api-types 제외)
+        // 변경된 파일이 속한 패키지만 lint 실행 (api-types, min-design-system 제외)
         const packages = [...new Set(
             filenames.map(filename => {
                 const match = filename.match(/packages\/([^\/]+)/);
                 return match ? match[1] : null;
-            }).filter(Boolean).filter(pkg => pkg !== 'api-types')
+            }).filter(Boolean).filter(pkg => pkg !== 'api-types' && pkg !== 'min-design-system')
         )];
 
         return packages.map(pkg => `yarn workspace ${pkg} run lint:fix`);

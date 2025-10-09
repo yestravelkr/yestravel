@@ -1,0 +1,198 @@
+:root{
+    /* Collection: base color */
+
+    /* Mode: Mode 1 */
+    --gray-0: rgba(255,255,255,1.00);
+    --gray-50: rgba(250,250,250,1.00);
+    --gray-100: rgba(244,244,245,1.00);
+    --gray-200: rgba(228,228,231,1.00);
+    --gray-300: rgba(212,212,216,1.00);
+    --gray-400: rgba(158,158,158,1.00);
+    --gray-500: rgba(113,113,122,1.00);
+    --gray-600: rgba(82,82,91,1.00);
+    --gray-700: rgba(63,63,70,1.00);
+    --gray-800: rgba(39,39,42,1.00);
+    --gray-900: rgba(24,24,27,1.00);
+    --gray-950: rgba(9,9,11,1.00);
+    --gray-1000: rgba(0,0,0,1.00);
+    --red-50: rgba(252,241,241,1.00);
+    --red-100: rgba(250,229,229,1.00);
+    --red-200: rgba(247,206,206,1.00);
+    --red-300: rgba(245,165,165,1.00);
+    --red-400: rgba(240,110,110,1.00);
+    --red-500: rgba(235,61,61,1.00);
+    --red-600: rgba(216,26,26,1.00);
+    --red-700: rgba(182,20,20,1.00);
+    --red-800: rgba(151,24,24,1.00);
+    --red-900: rgba(127,27,27,1.00);
+    --red-950: rgba(70,10,10,1.00);
+    --yellow-50: rgba(254,252,234,1.00);
+    --yellow-100: rgba(253,249,200,1.00);
+    --yellow-200: rgba(252,241,148,1.00);
+    --yellow-300: rgba(251,225,82,1.00);
+    --yellow-400: rgba(245,202,15,1.00);
+    --yellow-500: rgba(230,179,19,1.00);
+    --yellow-600: rgba(198,138,11,1.00);
+    --yellow-700: rgba(156,99,15,1.00);
+    --yellow-800: rgba(128,78,19,1.00);
+    --yellow-900: rgba(108,64,24,1.00);
+    --green-50: rgba(239,252,245,1.00);
+    --green-100: rgba(216,249,230,1.00);
+    --green-200: rgba(182,242,210,1.00);
+    --green-300: rgba(134,230,184,1.00);
+    --green-400: rgba(85,209,151,1.00);
+    --green-500: rgba(68,185,130,1.00);
+    --green-600: rgba(53,150,106,1.00);
+    --green-700: rgba(42,120,88,1.00);
+    --green-800: rgba(35,95,71,1.00);
+    --green-900: rgba(30,77,60,1.00);
+    --green-950: rgba(14,43,34,1.00);
+    --blue-50: rgba(240,248,254,1.00);
+    --blue-100: rgba(222,239,252,1.00);
+    --blue-200: rgba(196,227,252,1.00);
+    --blue-300: rgba(154,210,253,1.00);
+    --blue-400: rgba(101,182,253,1.00);
+    --blue-500: rgba(68,154,252,1.00);
+    --blue-600: rgba(45,121,242,1.00);
+    --blue-700: rgba(35,97,221,1.00);
+    --blue-800: rgba(34,79,177,1.00);
+    --blue-900: rgba(35,71,137,1.00);
+    --blue-950: rgba(25,45,82,1.00);
+    --alpha-white-50: rgba(255,255,255,0.05);
+    --alpha-none: rgba(255,255,255,0.00);
+    --alpha-white-200: rgba(255,255,255,0.20);
+    --alpha-white-400: rgba(255,255,255,0.40);
+    --alpha-white-600: rgba(255,255,255,0.60);
+    --alpha-white-800: rgba(255,255,255,0.80);
+    --alpha-white-950: rgba(255,255,255,0.95);
+    --alpha-black-50: rgba(0,0,0,0.05);
+    --alpha-black-200: rgba(0,0,0,0.20);
+    --alpha-black-400: rgba(0,0,0,0.40);
+    --alpha-black-600: rgba(0,0,0,0.60);
+    --alpha-black-800: rgba(0,0,0,0.80);
+    --alpha-black-950: rgba(0,0,0,0.95);
+    --yellow-950: rgba(62,33,11,1.00);
+}
+:root{
+    /* Collection: font */
+
+    /* Mode: default */
+    --dafault: Min Sans VF;
+    --symbol: Min Symbol Round VF;
+
+    /* Mode: square */
+    --dafault: Min Sans Neo VF;
+    --symbol: Min Symbol Square VF;
+
+    /* Mode: mono */
+    --dafault: Roboto Mono;
+    --symbol: Roboto Mono;
+}
+:root{
+    /* Collection: base token */
+
+    /* Mode: default */
+    --size-2000: 60;
+    --size-1600: 48;
+    --size-1200: 36;
+    --size-900: 27;
+    --size-800: 24;
+    --size-700: 21;
+    --size-600: 18;
+    --size-550: 16.5;
+    --size-500: 15;
+    --size-450: 13.5;
+    --size-400: 12;
+    --weight-700: 700;
+    --size-350: 10.5;
+    --weight-600: 600;
+    --size-300: 9;
+    --weight-500: 500;
+    --weight-400: 400;
+    --weight-300: 300;
+    --number-full: 1000;
+    --number-128: 128;
+    --number-96: 96;
+    --number-80: 80;
+    --number-76: 76;
+    --number-68: 68;
+    --number-64: 64;
+    --number-60: 60;
+    --number-52: 52;
+    --number-48: 48;
+    --number-44: 44;
+    --number-40: 40;
+    --number-36: 36;
+    --number-32: 32;
+    --number-28: 28;
+    --number-27: 27;
+    --number-24: 24;
+    --number-23: 23;
+    --number-22: 22;
+    --number-20: 20;
+    --number-18: 18;
+    --number-16: 16;
+    --number-15: 15;
+    --number-14: 14;
+    --number-12: 12;
+    --number-11: 11;
+    --number-10: 10;
+    --number-9: 9;
+    --number-8: 8;
+    --number-6: 6;
+    --number-4: 4;
+    --number-2: 2;
+    --number-0: 0;
+    --line-height-2000: 80;
+    --line-height-1600: 64;
+    --line-height-1200: 48;
+    --line-height-900: 36;
+    --line-height-800: 32;
+    --line-height-700: 28;
+    --line-height-600: 24;
+    --line-height-550: 22;
+    --line-height-500: 20;
+    --line-height-450: 18;
+    --line-height-400: 16;
+    --line-height-350: 14;
+    --line-height-300: 12;
+}
+:root{
+    /* Collection: semantic token */
+
+    /* Mode: Mode 1 */
+    --spacing-0: var(--number-0);
+    --spacing-50: var(--number-2);
+    --spacing-component-md: var(--number-12);
+    --spacing-100: var(--number-4);
+    --spacing-component-sm: var(--number-8);
+    --spacing-150: var(--number-6);
+    --spacing-200: var(--number-8);
+    --spacing-250: var(--number-10);
+    --spacing-300: var(--number-12);
+    --spacing-400: var(--number-16);
+    --spacing-500: var(--number-20);
+    --spacing-800: var(--number-32);
+    --radius-xlarge: var(--number-32);
+    --spacing-1200: var(--number-48);
+    --radius-large: var(--number-20);
+    --spacing-1800: var(--number-64);
+    --spacing-2400: var(--number-96);
+    --spacing-3200: var(--number-128);
+    --radius-medium: var(--number-12);
+    --radius-small: var(--number-8);
+    --radius-xsmall: var(--number-6);
+    --radius-full: var(--number-full);
+    --radius-full-h44: var(--number-22);
+    --radius-full-h36: var(--number-18);
+    --radius-full-h32: var(--number-16);
+    --radius-full-h22: var(--number-11);
+    --radius-full-h20: var(--number-10);
+    --radius-full-h18: var(--number-9);
+    --size-h68: var(--number-68);
+    --size-h60: var(--number-60);
+    --size-h52: var(--number-52);
+    --size-h44: var(--number-44);
+    --size-h36: var(--number-36);
+    --size-h32: var(--number-32);
+}
