@@ -97,7 +97,7 @@ const Affix = tw.div`
   flex-[0_0_auto]
   bg-[var(--bg-field,_white)]
   rounded-xl
-  text-fg-muted
+  text-[var(--fg-muted)]
   text-base
   font-normal
   leading-normal
