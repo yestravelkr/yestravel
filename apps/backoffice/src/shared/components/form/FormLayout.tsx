@@ -10,7 +10,7 @@ const FormCardContainer = tw.div`
   p-6
 `;
 
-interface FormCardProps extends HTMLAttributes<HTMLDivElement> {
+interface FormCardProps extends Omit<HTMLAttributes<HTMLDivElement>, 'title'> {
   title?: ReactNode;
   description?: ReactNode;
 }

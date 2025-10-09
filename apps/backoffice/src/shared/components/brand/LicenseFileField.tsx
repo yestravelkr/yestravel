@@ -21,7 +21,6 @@ export function LicenseFileField({
         <FileUpload
           value={licenseFileUrl}
           onChange={onChange}
-          placeholder="사업자등록증 사본을 업로드하세요"
           accept="image/*"
           uploadPath="business-license"
           error={!!error}
