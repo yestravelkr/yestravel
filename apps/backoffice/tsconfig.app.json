@@ -28,6 +28,9 @@
       "@/*": ["*"],
       "@yestravelkr/min-design-system": [
         "../../../packages/min-design-system/src"
+      ],
+      "@yestravelkr/min-design-system/*": [
+        "../../../packages/min-design-system/src/*"
       ]
     }
   },
