@@ -6,6 +6,6 @@
  */
 
 /**
- * 디자인 토큰 타입 정의
+ * Components
  */
-export const MinDesignSystem = 'this is a MinDesign System';
+export { Button, type ButtonProps } from './button';
