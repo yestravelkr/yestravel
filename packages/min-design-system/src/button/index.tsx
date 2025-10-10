@@ -102,10 +102,10 @@ export function Button({
     full: 'rounded-full',
   };
 
-  const colorStyles = getColorStyles(kind, variant);
+  const colorStyles = getColorStyles(kind, variant, disabled);
   const baseStyles = 'inline-flex justify-center items-center transition-colors';
   const disabledStyles = disabled
-    ? 'opacity-50 cursor-not-allowed'
+    ? 'cursor-not-allowed'
     : 'cursor-pointer';
 
   return (

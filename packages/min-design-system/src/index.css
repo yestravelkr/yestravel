@@ -77,15 +77,15 @@
     /* Collection: font */
 
     /* Mode: default */
-    --dafault: Min Sans VF;
+    --default: Min Sans VF;
     --symbol: Min Symbol Round VF;
 
     /* Mode: square */
-    --dafault: Min Sans Neo VF;
+    --default: Min Sans Neo VF;
     --symbol: Min Symbol Square VF;
 
     /* Mode: mono */
-    --dafault: Roboto Mono;
+    --default: Roboto Mono;
     --symbol: Roboto Mono;
 }
 :root{

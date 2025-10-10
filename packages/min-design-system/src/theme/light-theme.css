@@ -2,7 +2,7 @@
 html {
     /* Collection: semantic color */
 
-    /* Mode: light thema */
+    /* Mode: light theme */
     --fg-neutral: var(--gray-900);
     --bg-layer: var(--gray-0);
     --bg-layer-base: var(--gray-100);
@@ -14,8 +14,8 @@ html {
     --bg-neutral-glass: var(--alpha-black-200);
     --bg-primary: var(--blue-100);
     --bg-primary-solid: var(--blue-500);
-    --bg-secendary: var(--green-100);
-    --bg-secendary-solid: var(--green-500);
+    --bg-secondary: var(--green-100);
+    --bg-secondary-solid: var(--green-500);
     --bg-critical: var(--red-100);
     --bg-critical-solid: var(--red-500);
     --bg-field: var(--gray-0);
@@ -27,7 +27,7 @@ html {
     --stroke-neutral-subtle: var(--gray-100);
     --stroke-neutral-strong: var(--gray-900);
     --stroke-primary: var(--blue-500);
-    --stroke-secendary: var(--green-500);
+    --stroke-secondary: var(--green-500);
     --stroke-critical: var(--red-500);
     --stroke-neutral-overlay: var(--alpha-black-50);
     --fg-muted: var(--gray-500);
@@ -35,7 +35,7 @@ html {
     --fg-on-surface: var(--gray-0);
     --fg-on-surface-subtle: var(--alpha-white-600);
     --fg-primary: var(--blue-500);
-    --fg-secendary: var(--green-500);
+    --fg-secondary: var(--green-500);
     --fg-critical: var(--red-500);
     --fg-placeholder: var(--gray-400);
     --fg-disabled: var(--gray-400);
