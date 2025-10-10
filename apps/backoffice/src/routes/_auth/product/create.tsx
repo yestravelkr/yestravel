@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { Button } from '@yestravelkr/min-design-system/button';
 import { type FormEvent, useState } from 'react';
 
 import { BasicInfoCard } from './_components/create/BasicInfoCard';
@@ -12,7 +13,6 @@ import {
   FormColumns,
   FormContainer,
   LeftColumn,
-  PrimaryButton,
   RightColumn,
   SecondaryButton,
 } from './_components/create/styled';
@@ -73,7 +73,9 @@ function CreateProductPage() {
             <SecondaryButton type="button" onClick={handleCancel}>
               취소
             </SecondaryButton>
-            <PrimaryButton type="submit">품목 등록</PrimaryButton>
+            <Button type="submit" kind="primary" variant="solid" size="large">
+              품목 등록
+            </Button>
           </FormActions>
         </Form>
       </FormContainer>

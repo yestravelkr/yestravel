@@ -1,0 +1,42 @@
+
+html {
+    /* Collection: semantic color */
+
+    /* Mode: light theme */
+    --fg-neutral: var(--gray-900);
+    --bg-layer: var(--gray-0);
+    --bg-layer-base: var(--gray-100);
+    --bg-layer-overlay: var(--alpha-black-400);
+    --bg-neutral: var(--gray-100);
+    --bg-neutral-subtle: var(--gray-0);
+    --bg-neutral-solid: var(--gray-900);
+    --bg-neutral-tint: var(--alpha-black-400);
+    --bg-neutral-glass: var(--alpha-black-200);
+    --bg-primary: var(--blue-100);
+    --bg-primary-solid: var(--blue-500);
+    --bg-secondary: var(--green-100);
+    --bg-secondary-solid: var(--green-500);
+    --bg-critical: var(--red-100);
+    --bg-critical-solid: var(--red-500);
+    --bg-field: var(--gray-0);
+    --bg-field-subtle: var(--gray-100);
+    --bg-readonly: var(--gray-50);
+    --bg-disabled: var(--gray-200);
+    --bg-transparent: var(--alpha-none);
+    --stroke-neutral: var(--gray-200);
+    --stroke-neutral-subtle: var(--gray-100);
+    --stroke-neutral-strong: var(--gray-900);
+    --stroke-primary: var(--blue-500);
+    --stroke-secondary: var(--green-500);
+    --stroke-critical: var(--red-500);
+    --stroke-neutral-overlay: var(--alpha-black-50);
+    --fg-muted: var(--gray-500);
+    --fg-neutral-inverted: var(--gray-0);
+    --fg-on-surface: var(--gray-0);
+    --fg-on-surface-subtle: var(--alpha-white-600);
+    --fg-primary: var(--blue-500);
+    --fg-secondary: var(--green-500);
+    --fg-critical: var(--red-500);
+    --fg-placeholder: var(--gray-400);
+    --fg-disabled: var(--gray-400);
+}
