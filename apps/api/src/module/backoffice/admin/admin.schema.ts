@@ -48,6 +48,22 @@ export const BusinessTypeEnum: EnumType<BusinessTypeEnumType> = {
 };
 export const businessTypeEnumSchema = z.enum(BUSINESS_TYPE_ENUM_VALUE);
 
+// Common delivery fee type enum for all schemas
+export const DELIVERY_FEE_TYPE_ENUM_VALUE = [
+  'PAID',
+  'CONDITIONAL_FREE',
+  'FREE',
+] as const;
+// Delivery fee type for use in entities
+export type DeliveryFeeTypeEnumType =
+  (typeof DELIVERY_FEE_TYPE_ENUM_VALUE)[number];
+export const DeliveryFeeTypeEnum: EnumType<DeliveryFeeTypeEnumType> = {
+  PAID: 'PAID',
+  CONDITIONAL_FREE: 'CONDITIONAL_FREE',
+  FREE: 'FREE',
+};
+export const deliveryFeeTypeEnumSchema = z.enum(DELIVERY_FEE_TYPE_ENUM_VALUE);
+
 // Admin list response schema
 export const adminListItemSchema = z.object({
   id: z.number(),

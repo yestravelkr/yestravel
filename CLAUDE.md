@@ -112,8 +112,8 @@ export type UpdateModuleInput = z.infer<typeof updateModuleInputSchema>;
 - 엔티티의 nullable 필드는 `Nullish<T>` 타입 사용
 
 ```typescript
-// src/types/nullish.type.ts
-export type Nullish<T> = T | null | undefined;
+// ⚠️ Nullish 타입 올바른 import 경로
+import { Nullish } from '@src/types/utility.type';
 
 // Entity에서 사용
 @Column({ type: 'varchar', nullable: true })
@@ -279,6 +279,109 @@ constructor(private readonly repositoryProvider: RepositoryProvider) {}
 - **Repository**: 새 Entity 생성 시 반드시 Repository 함수와 RepositoryProvider 등록 필요
 - **⚠️ Repository 접근 규칙**: 모듈에서 `TypeOrmModule.forFeature()` 사용 금지. 오직 `RepositoryProvider`를 통해서만 Entity Repository에 접근
 - **Soft Delete**: TypeORM의 soft delete가 기본 적용되어 있어 `where: { deletedAt: null }` 조건 불필요
+
+## PostgreSQL Table Inheritance 패턴
+
+**⚠️ 이 프로젝트는 type으로 구분되는 상속 구조에 PostgreSQL 네이티브 INHERITS를 사용합니다.**
+
+### Entity 정의 패턴
+
+**부모 Entity:**
+```typescript
+@Entity('parent_table')
+@TableInheritance({ column: { type: 'varchar', name: 'type' } })
+export class ParentEntity extends BaseEntity {
+  @Column({
+    type: 'enum',
+    enum: TYPE_ENUM_VALUE,
+  })
+  type: TypeEnumType;
+
+  // 공통 필드들...
+}
+```
+
+**자식 Entity:**
+```typescript
+@Entity('child_table')
+@ChildEntity(TypeEnum.CHILD_TYPE)
+export class ChildEntity extends ParentEntity {
+  constructor() {
+    super();
+    this.type = TypeEnum.CHILD_TYPE;
+  }
+
+  // 자식 전용 필드들...
+}
+```
+
+### Migration 패턴
+
+**⚠️ 중요: Migration에서는 PostgreSQL INHERITS를 사용합니다.**
+
+```typescript
+export class CreateTableMigration implements MigrationInterface {
+  public async up(queryRunner: QueryRunner): Promise<void> {
+    // 1. Enum 타입 생성
+    await queryRunner.query(
+      `CREATE TYPE "public"."type_enum" AS ENUM('TYPE1', 'TYPE2')`
+    );
+
+    // 2. 부모 테이블 생성
+    await queryRunner.query(
+      `CREATE TABLE "parent_table" (
+        "id" SERIAL NOT NULL,
+        "type" "public"."type_enum" NOT NULL,
+        "common_field" varchar NOT NULL,
+        CONSTRAINT "PK_parent_table" PRIMARY KEY ("id")
+      )`
+    );
+
+    // 3. 자식 테이블 생성 (INHERITS 사용)
+    await queryRunner.query(
+      `CREATE TABLE "child_table" (
+        "child_specific_field" varchar NOT NULL,
+        CONSTRAINT "PK_child_table" PRIMARY KEY ("id")
+      ) INHERITS ("parent_table")`
+    );
+
+    // 4. 외래키 제약조건
+    // 부모와 자식 테이블 모두에 외래키 제약조건 추가 필요 (PostgreSQL 상속 특성)
+    await queryRunner.query(
+      `ALTER TABLE "parent_table" ADD CONSTRAINT "FK_parent_relation"
+       FOREIGN KEY ("relation_id") REFERENCES "other_table"("id")`
+    );
+
+    await queryRunner.query(
+      `ALTER TABLE "child_table" ADD CONSTRAINT "FK_child_relation"
+       FOREIGN KEY ("relation_id") REFERENCES "other_table"("id")`
+    );
+  }
+
+  public async down(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(`DROP TABLE "child_table"`);
+    await queryRunner.query(`DROP TABLE "parent_table"`);
+    await queryRunner.query(`DROP TYPE "public"."type_enum"`);
+  }
+}
+```
+
+### 주요 특징
+
+**장점:**
+- 테이블이 물리적으로 분리되어 각 타입별 필드 관리 용이
+- nullable 필드 최소화
+- 각 타입별 인덱스 최적화 가능
+- 데이터 양이 많을 때 성능 이점
+
+**주의사항:**
+- 외래키 제약조건은 부모/자식 테이블 모두에 추가 필요
+- 인덱스도 부모/자식 테이블 각각 추가 필요
+- TypeORM의 `@TableInheritance`와 PostgreSQL INHERITS는 다른 개념이지만 함께 사용
+
+**실제 예시:**
+- `product` (부모) → `hotel_product` (자식, HOTEL 타입)
+- `product_template` (부모) → `hotel_template` (자식, HOTEL 타입)
 
 ## Enum 네이밍 규칙
 
