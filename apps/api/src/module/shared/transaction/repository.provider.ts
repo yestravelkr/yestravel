@@ -8,7 +8,6 @@ import { getProductTemplateRepository } from '@src/module/backoffice/domain/prod
 import { getHotelTemplateRepository } from '@src/module/backoffice/domain/hotel-template.entity';
 import { getDeliveryTemplateRepository } from '@src/module/backoffice/domain/delivery-template.entity';
 import { getETicketTemplateRepository } from '@src/module/backoffice/domain/eticket-template.entity';
-import { getDeliveryRepository } from '@src/module/backoffice/domain/delivery.entity';
 
 @Injectable()
 export class RepositoryProvider {
@@ -44,9 +43,5 @@ export class RepositoryProvider {
 
   get ETicketTemplateRepository() {
     return getETicketTemplateRepository(this.transaction);
-  }
-
-  get DeliveryRepository() {
-    return getDeliveryRepository(this.transaction);
   }
 }

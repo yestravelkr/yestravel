@@ -1,11 +1,4 @@
-import {
-  Entity,
-  Column,
-  ChildEntity,
-  EntityManager,
-  ManyToOne,
-  JoinColumn,
-} from 'typeorm';
+import { Entity, Column, ChildEntity, EntityManager } from 'typeorm';
 import { ProductTemplateEntity } from '@src/module/backoffice/domain/product-template.entity';
 import { DeliveryEntity } from '@src/module/backoffice/domain/delivery.entity';
 import { ProductTypeEnum } from '@src/module/backoffice/admin/admin.schema';
@@ -40,12 +33,8 @@ export class DeliveryTemplateEntity extends ProductTemplateEntity {
   // @OneToMany(() => ProductOptionEntity, option => option.deliveryTemplate)
   // options: ProductOptionEntity[];
 
-  // 배송 정책 연결
-  @Column({ name: 'delivery_id', type: 'integer' })
-  deliveryId: number;
-
-  @ManyToOne(() => DeliveryEntity, { eager: true })
-  @JoinColumn({ name: 'delivery_id' })
+  // 배송 정책 (임베디드 컬럼)
+  @Column(() => DeliveryEntity, { prefix: 'delivery' })
   delivery: DeliveryEntity;
 
   // 교환 및 반품 안내

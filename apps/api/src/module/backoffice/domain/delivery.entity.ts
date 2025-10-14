@@ -1,7 +1,4 @@
-import { Entity, Column, EntityManager } from 'typeorm';
-import { BaseEntity } from '@src/module/backoffice/domain/base.entity';
-import { TransactionService } from '@src/module/shared/transaction/transaction.service';
-import { getEntityManager } from '@src/database/datasources';
+import { Column } from 'typeorm';
 import {
   DeliveryFeeTypeEnumType,
   DELIVERY_FEE_TYPE_ENUM_VALUE,
@@ -9,13 +6,12 @@ import {
 } from '@src/module/backoffice/admin/admin.schema';
 
 /**
- * 배송 정책 Entity
+ * 배송 정책 임베디드 엔티티
  * - 배송비 관련 정보와 계산 로직을 캡슐화
  * - DDD 패턴으로 비즈니스 로직 포함
- * - 여러 상품 템플릿이 공유 가능
+ * - 임베디드 컬럼으로 사용되어 조인 없이 사용 가능
  */
-@Entity('delivery')
-export class DeliveryEntity extends BaseEntity {
+export class DeliveryEntity {
   // 배송비 설정 (유료 | 조건부 무료 | 무료)
   @Column({
     name: 'delivery_fee_type',
@@ -182,7 +178,3 @@ export interface DeliveryAddress {
   street?: string; // 상세 주소
   zipCode?: string; // 우편번호
 }
-
-export const getDeliveryRepository = (
-  source?: TransactionService | EntityManager
-) => getEntityManager(source).getRepository(DeliveryEntity);
