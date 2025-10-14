@@ -1,11 +1,14 @@
-import { Entity, Column, ChildEntity, EntityManager } from 'typeorm';
-import { ProductTemplateEntity } from '@src/module/backoffice/domain/product-template.entity';
 import {
-  ProductTypeEnum,
-  DeliveryFeeTypeEnumType,
-  DELIVERY_FEE_TYPE_ENUM_VALUE,
-} from '@src/module/backoffice/admin/admin.schema';
-import { Nullish } from '@src/types/utility.type';
+  Entity,
+  Column,
+  ChildEntity,
+  EntityManager,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
+import { ProductTemplateEntity } from '@src/module/backoffice/domain/product-template.entity';
+import { DeliveryEntity } from '@src/module/backoffice/domain/delivery.entity';
+import { ProductTypeEnum } from '@src/module/backoffice/admin/admin.schema';
 import { TransactionService } from '@src/module/shared/transaction/transaction.service';
 import { getEntityManager } from '@src/database/datasources';
 
@@ -37,49 +40,21 @@ export class DeliveryTemplateEntity extends ProductTemplateEntity {
   // @OneToMany(() => ProductOptionEntity, option => option.deliveryTemplate)
   // options: ProductOptionEntity[];
 
-  // 배송비 설정 (유료 | 조건부 무료 | 무료)
-  @Column({
-    name: 'delivery_fee_type',
-    type: 'enum',
-    enum: DELIVERY_FEE_TYPE_ENUM_VALUE,
-  })
-  deliveryFeeType: DeliveryFeeTypeEnumType;
+  // 배송 정책 연결
+  @Column({ name: 'delivery_id', type: 'integer' })
+  deliveryId: number;
 
-  // 배송 가능 지역 (도서산간, 제주 체크박스)
-  @Column('text', { array: true, nullable: true })
-  deliveryRestrictedAreas: Nullish<string[]>;
-
-  // 배송비
-  @Column({ name: 'delivery_fee', type: 'integer', nullable: true })
-  deliveryFee: Nullish<number>;
-
-  // 무료 배송 조건 (금액)
-  @Column({ name: 'free_delivery_min_amount', type: 'integer', nullable: true })
-  freeDeliveryMinAmount: Nullish<number>;
-
-  // 반품 배송비
-  @Column({ name: 'return_delivery_fee', type: 'integer', nullable: true })
-  returnDeliveryFee: Nullish<number>;
-
-  // 교환 배송비
-  @Column({ name: 'exchange_delivery_fee', type: 'integer', nullable: true })
-  exchangeDeliveryFee: Nullish<number>;
-
-  // 도서산간 추가 배송비
-  @Column({ name: 'remote_area_extra_fee', type: 'integer', nullable: true })
-  remoteAreaExtraFee: Nullish<number>;
-
-  // 제주도 추가 배송비
-  @Column({ name: 'jeju_extra_fee', type: 'integer', nullable: true })
-  jejuExtraFee: Nullish<number>;
+  @ManyToOne(() => DeliveryEntity, { eager: true })
+  @JoinColumn({ name: 'delivery_id' })
+  delivery: DeliveryEntity;
 
   // 교환 및 반품 안내
-  @Column('text', { nullable: true })
-  exchangeReturnInfo: Nullish<string>;
+  @Column('text', { default: '' })
+  exchangeReturnInfo: string;
 
   // 상품 정보 제공 고시
-  @Column('text', { nullable: true })
-  productInfoNotice: Nullish<string>;
+  @Column('text', { default: '' })
+  productInfoNotice: string;
 }
 
 export const getDeliveryTemplateRepository = (
