@@ -16,7 +16,7 @@ import { getEntityManager } from '@src/database/datasources';
 
 /**
  * 계층형 카테고리 엔티티
- * 
+ *
  * 예시 구조:
  * [여행상품 카테고리]
  * - 여행상품 (id: 1, code: 'TRAVEL', productType: 'TRAVEL_PRODUCT', parentId: null, level: 0)
@@ -24,13 +24,13 @@ import { getEntityManager } from '@src/database/datasources';
  *   │   ├── 제주도 (id: 3, code: 'JEJU', productType: 'TRAVEL_PRODUCT', parentId: 2, level: 2)
  *   │   └── 부산 (id: 4, code: 'BUSAN', productType: 'TRAVEL_PRODUCT', parentId: 2, level: 2)
  *   └── 해외여행 (id: 5, code: 'OVERSEAS_TRAVEL', productType: 'TRAVEL_PRODUCT', parentId: 1, level: 1)
- * 
+ *
  * [배송상품 카테고리]
  * - 배송상품 (id: 6, code: 'DELIVERY', productType: 'DELIVERY_PRODUCT', parentId: null, level: 0)
  *   ├── 식품 (id: 7, code: 'FOOD', productType: 'DELIVERY_PRODUCT', parentId: 6, level: 1)
  *   └── 생활용품 (id: 8, code: 'DAILY_GOODS', productType: 'DELIVERY_PRODUCT', parentId: 6, level: 1)
- * 
- * [e-ticket상품 카테고리] 
+ *
+ * [e-ticket상품 카테고리]
  * - e-ticket상품 (id: 9, code: 'ETICKET', productType: 'ETICKET_PRODUCT', parentId: null, level: 0)
  */
 @Entity('categories')
