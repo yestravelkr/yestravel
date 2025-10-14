@@ -10,7 +10,6 @@ import { BaseEntity } from '@src/module/backoffice/domain/base.entity';
 import { BrandEntity } from '@src/module/backoffice/domain/brand.entity';
 import { TransactionService } from '@src/module/shared/transaction/transaction.service';
 import { getEntityManager } from '@src/database/datasources';
-import { Nullish } from '@src/types/utility.type';
 import {
   ProductTypeEnumType,
   PRODUCT_TYPE_ENUM_VALUE,
@@ -27,20 +26,20 @@ export class ProductTemplateEntity extends BaseEntity {
   type: ProductTypeEnumType;
 
   // 상품 썸네일 (이미지 url 여러개가능)
-  @Column('text', { array: true, nullable: true })
-  thumbnailUrls: Nullish<string[]>;
+  @Column('jsonb', { default: [] })
+  thumbnailUrls: string[];
 
   // 상품명
   @Column()
   name: string;
 
   // 상품 설명
-  @Column('text', { nullable: true })
-  description: Nullish<string>;
+  @Column('text', { default: '' })
+  description: string;
 
   // 상세페이지 내용 (HTML 태그 포함 에디터 콘텐츠)
-  @Column('text', { nullable: true })
-  detailContent: Nullish<string>;
+  @Column('text', { default: '' })
+  detailContent: string;
 
   // 브랜드 (브랜드 id로 연결)
   @Column({ name: 'brand_id', type: 'integer' })

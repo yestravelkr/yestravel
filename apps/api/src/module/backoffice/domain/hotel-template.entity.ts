@@ -1,7 +1,6 @@
 import { Entity, Column, ChildEntity, EntityManager } from 'typeorm';
 import { ProductTemplateEntity } from '@src/module/backoffice/domain/product-template.entity';
 import { ProductTypeEnum } from '@src/module/backoffice/admin/admin.schema';
-import { Nullish } from '@src/types/utility.type';
 import { TransactionService } from '@src/module/shared/transaction/transaction.service';
 import { getEntityManager } from '@src/database/datasources';
 
@@ -30,12 +29,12 @@ export class HotelTemplateEntity extends ProductTemplateEntity {
   checkOutTime: string;
 
   // 침대구성 (리스트)
-  @Column('text', { array: true, nullable: true })
-  bedTypes: Nullish<string[]>;
+  @Column('jsonb', { default: [] })
+  bedTypes: string[];
 
   // 태그 (리스트)
-  @Column('text', { array: true, nullable: true })
-  tags: Nullish<string[]>;
+  @Column('jsonb', { default: [] })
+  tags: string[];
 
   // TODO: 호텔 엔티티와 연동
   // @Column({ name: 'hotel_id', type: 'integer', nullable: true })
