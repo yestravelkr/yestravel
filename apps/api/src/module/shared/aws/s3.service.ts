@@ -71,7 +71,7 @@ export class S3Service {
         Key: key,
         ContentType: fileType,
         // Public 읽기 권한 설정
-        ACL: 'public-read'
+        ACL: 'public-read',
       });
 
       const uploadUrl = await getSignedUrl(this.s3Client, command, {
