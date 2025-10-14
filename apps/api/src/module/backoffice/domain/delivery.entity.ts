@@ -16,10 +16,6 @@ import {
  */
 @Entity('delivery')
 export class DeliveryEntity extends BaseEntity {
-  // 배송 정책명
-  @Column()
-  name: string;
-
   // 배송비 설정 (유료 | 조건부 무료 | 무료)
   @Column({
     name: 'delivery_fee_type',
@@ -57,7 +53,11 @@ export class DeliveryEntity extends BaseEntity {
   isJejuRestricted: boolean;
 
   // 도서산간 배송 제한 여부
-  @Column({ name: 'is_remote_island_restricted', type: 'boolean', default: false })
+  @Column({
+    name: 'is_remote_island_restricted',
+    type: 'boolean',
+    default: false,
+  })
   isRemoteIslandRestricted: boolean;
 
   /**
@@ -117,7 +117,7 @@ export class DeliveryEntity extends BaseEntity {
    */
   private isJejuArea(address: DeliveryAddress): boolean {
     const jejuKeywords = ['제주', '서귀포'];
-    return jejuKeywords.some((keyword) => address.city?.includes(keyword));
+    return jejuKeywords.some(keyword => address.city?.includes(keyword));
   }
 
   /**
@@ -136,7 +136,7 @@ export class DeliveryEntity extends BaseEntity {
       '영흥',
     ];
     return remoteIslands.some(
-      (area) => address.city?.includes(area) || address.district?.includes(area)
+      area => address.city?.includes(area) || address.district?.includes(area)
     );
   }
 
