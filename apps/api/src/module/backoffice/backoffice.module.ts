@@ -5,17 +5,7 @@ import { CampaignModule } from '@src/module/backoffice/campaign/campaign.module'
 import { AdminModule } from '@src/module/backoffice/admin/admin.module';
 
 @Module({
-  imports: [
-    BackofficeAuthModule,
-    BrandModule,
-    CampaignModule,
-    AdminModule,
-  ],
-  exports: [
-    BackofficeAuthModule,
-    BrandModule,
-    CampaignModule,
-    AdminModule,
-  ],
+  imports: [BackofficeAuthModule, BrandModule, CampaignModule, AdminModule],
+  exports: [BackofficeAuthModule, BrandModule, CampaignModule, AdminModule],
 })
 export class BackofficeModule {}
