@@ -1,9 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { RepositoryProvider } from '@src/module/shared/transaction/repository.provider';
 import type { PaginationQuery } from '@src/module/shared/schema/pagination.schema';
-import { FindOptionsWhere, Between, In, Like } from 'typeorm';
-import { ProductTemplateEntity } from '@src/module/backoffice/domain/product-template.entity';
-import type { ProductTypeEnumType } from '@src/module/backoffice/admin/admin.schema';
 
 interface FindAllProductTemplateQuery extends PaginationQuery {
   type?: string;
@@ -45,8 +42,8 @@ export class ProductTemplateService {
     query: FindAllProductTemplateQuery
   ): Promise<ProductTemplateListResponse> {
     const {
-      page,
-      limit,
+      page = 1,
+      limit = 30,
       orderBy = 'createdAt',
       order = 'DESC',
       type,
@@ -56,68 +53,62 @@ export class ProductTemplateService {
       endDate,
       useStock,
       brandIds,
-      categoryIds,
     } = query;
 
-    // WHERE 조건 구성
-    const where: FindOptionsWhere<ProductTemplateEntity> = {};
+    // QueryBuilder를 사용한 데이터 조회 (PostgreSQL INHERITS 호환)
+    const queryBuilder =
+      this.repositoryProvider.ProductTemplateRepository.createQueryBuilder(
+        'template'
+      )
+        .leftJoinAndSelect('template.brand', 'brand')
+        .select([
+          'template.id',
+          'template.type',
+          'template.thumbnailUrls',
+          'template.name',
+          'template.description',
+          'template.detailContent',
+          'template.brandId',
+          'template.useStock',
+          'template.createdAt',
+          'template.updatedAt',
+          'template.deletedAt',
+          'brand.id',
+          'brand.name',
+        ]);
 
-    // 타입 필터
+    // WHERE 조건 적용
     if (type) {
-      where.type = type as ProductTypeEnumType;
+      queryBuilder.andWhere('template.type = :type', { type });
     }
-
-    // 품목명 검색 (LIKE)
     if (name) {
-      where.name = Like(`%${name}%`);
+      queryBuilder.andWhere('template.name LIKE :name', { name: `%${name}%` });
     }
-
-    // TODO: 카테고리 필터 (카테고리 엔티티 연동 후 구현)
-    // if (categoryIds && categoryIds.length > 0) {
-    //   where.categoryId = In(categoryIds);
-    // }
-
-    // 재고 관리 필터
     if (useStock !== undefined) {
-      where.useStock = useStock;
+      queryBuilder.andWhere('template.useStock = :useStock', { useStock });
     }
-
-    // 브랜드 필터
     if (brandIds && brandIds.length > 0) {
-      where.brandId = In(brandIds);
+      queryBuilder.andWhere('template.brandId IN (:...brandIds)', { brandIds });
     }
-
-    // 날짜 범위 필터
     if (startDate && endDate) {
       const dateField =
-        dateFilterType === 'CREATED_AT' ? 'createdAt' : 'updatedAt';
-      where[dateField] = Between(new Date(startDate), new Date(endDate));
+        dateFilterType === 'CREATED_AT'
+          ? 'template.createdAt'
+          : 'template.updatedAt';
+      queryBuilder.andWhere(`${dateField} BETWEEN :startDate AND :endDate`, {
+        startDate: new Date(startDate),
+        endDate: new Date(endDate),
+      });
     }
 
-    // Repository에서 데이터 조회
-    const [templates, total] =
-      await this.repositoryProvider.ProductTemplateRepository.findAndCount({
-        where,
-        relations: ['brand'],
-        select: {
-          id: true,
-          type: true,
-          thumbnailUrls: true,
-          name: true,
-          description: true,
-          detailContent: true,
-          brandId: true,
-          useStock: true,
-          createdAt: true,
-          updatedAt: true,
-          deletedAt: true,
-        },
-        skip: (page - 1) * limit,
-        take: limit,
-        order: {
-          [orderBy]: order,
-        },
-      });
+    // 정렬 및 페이지네이션
+    queryBuilder
+      .orderBy(`template.${orderBy}`, order)
+      .skip((page - 1) * limit)
+      .take(limit);
+
+    // 데이터 조회
+    const [templates, total] = await queryBuilder.getManyAndCount();
 
     // 총 페이지 수 계산
     const totalPages = Math.ceil(total / limit);
