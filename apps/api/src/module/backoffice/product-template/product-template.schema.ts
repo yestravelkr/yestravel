@@ -58,3 +58,28 @@ export const findAllProductTemplateQuerySchema = z.object({
   // 카테고리 ID 목록
   categoryIds: z.array(z.number().int().positive()).optional(),
 });
+
+// ========================================
+// Response 스키마 (전체 조회 응답)
+// ========================================
+
+// 리스트 아이템 스키마
+export const productTemplateListItemSchema = z.object({
+  id: z.number(),
+  type: z.enum(PRODUCT_TYPE_ENUM_VALUE),
+  name: z.string(),
+  brandName: z.string(),
+  categoryName: z.string(),
+  isIntegrated: z.boolean(),
+  useStock: z.boolean(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+});
+
+// 리스트 응답 스키마 (페이지네이션 포함)
+export const productTemplateListResponseSchema = z.object({
+  templates: z.array(productTemplateListItemSchema),
+  total: z.number(),
+  limit: z.number(),
+  offset: z.number(),
+});
