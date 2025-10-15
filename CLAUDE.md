@@ -270,6 +270,7 @@ constructor(private readonly repositoryProvider: RepositoryProvider) {}
 - **타입 안전성**: 모든 입력/출력 검증에 Zod 스키마 사용
 - **스키마 패턴**: 스키마는 `.schema.ts`에 정의, 타입은 `.type.ts`에서 `z.infer`로 추론
 - **⚠️ Router 스키마 규칙**: Router 파일에서는 외부 스키마 import 금지. `z.object()`, `z.enum()` 등을 직접 사용하여 인라인으로 스키마 정의
+- **⚠️ tRPC 데코레이터 Import 규칙**: Router 파일에서 `@Router`, `@Query`, `@Mutation`, `@Ctx`, `@Input`, `@UseMiddlewares` 등의 데코레이터는 **반드시 `'nestjs-trpc'` 패키지에서 import**. `'@src/module/trpc/trpc.decorator'`와 같은 로컬 경로는 존재하지 않으므로 사용 금지
 - **응답 포맷팅**: Controller에서 수동 포맷팅 대신 `schema.parse()` 사용
 - **모듈 구조**: BackofficeModule로 그룹화된 하위 모듈들 (Brand, Auth, Admin 등)
 - **환경**: API 시작 전에 항상 `yarn generateEnv` 실행
