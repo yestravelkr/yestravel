@@ -42,7 +42,7 @@ export class ProductTemplateRouter extends BaseTrpcRouter {
       .optional()
       .default({}),
     output: z.object({
-      templates: z.array(
+      data: z.array(
         z.object({
           id: z.number(),
           type: z.enum(['HOTEL', 'E-TICKET', 'DELIVERY']),

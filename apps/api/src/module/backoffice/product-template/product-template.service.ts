@@ -27,7 +27,7 @@ interface ProductTemplateListItem {
 }
 
 interface ProductTemplateListResponse {
-  templates: ProductTemplateListItem[];
+  data: ProductTemplateListItem[]; // ✅ 표준 페이지네이션 패턴
   total: number;
   page: number;
   limit: number;
@@ -113,7 +113,7 @@ export class ProductTemplateService {
     );
 
     return {
-      templates: formattedTemplates,
+      data: formattedTemplates,
       total,
       page,
       limit,
