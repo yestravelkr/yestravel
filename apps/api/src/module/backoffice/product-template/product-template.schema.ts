@@ -1,5 +1,9 @@
 import { z } from 'zod';
 import { PRODUCT_TYPE_ENUM_VALUE } from '@src/module/backoffice/admin/admin.schema';
+import {
+  paginationQuerySchema,
+  createPaginatedResponseSchema,
+} from '@src/module/shared/schema/pagination.schema';
 
 // ========================================
 // Enum 정의
@@ -24,40 +28,36 @@ export const DateFilterTypeEnum: Record<
 // Query 스키마 (전체 조회 필터)
 // ========================================
 
-export const findAllProductTemplateQuerySchema = z.object({
-  // 상품 타입 (숙박/배송상품/티켓)
-  type: z.enum(PRODUCT_TYPE_ENUM_VALUE).optional(),
+export const findAllProductTemplateQuerySchema = z
+  .object({
+    // 상품 타입 (숙박/배송상품/티켓)
+    type: z.enum(PRODUCT_TYPE_ENUM_VALUE).optional(),
 
-  // 품목명 검색 (템플릿 이름)
-  name: z.string().optional(),
+    // 품목명 검색 (템플릿 이름)
+    name: z.string().optional(),
 
-  // 날짜 필터 타입 (등록일/수정일)
-  dateFilterType: z.enum(DATE_FILTER_TYPE_ENUM_VALUE).optional(),
+    // 날짜 필터 타입 (등록일/수정일)
+    dateFilterType: z.enum(DATE_FILTER_TYPE_ENUM_VALUE).optional(),
 
-  // 시작일
-  startDate: z.string().datetime().optional(),
+    // 시작일
+    startDate: z.string().datetime().optional(),
 
-  // 종료일
-  endDate: z.string().datetime().optional(),
+    // 종료일
+    endDate: z.string().datetime().optional(),
 
-  // 재고 관리 여부 (미지정 시 전체)
-  useStock: z.boolean().optional(),
+    // 재고 관리 여부 (미지정 시 전체)
+    useStock: z.boolean().optional(),
 
-  // 연동 여부 (미지정 시 전체)
-  isIntegrated: z.boolean().optional(),
+    // 연동 여부 (미지정 시 전체)
+    isIntegrated: z.boolean().optional(),
 
-  // 조회 개수 (페이지네이션)
-  limit: z.number().int().positive().optional(),
+    // 브랜드 ID 목록
+    brandIds: z.array(z.number().int().positive()).optional(),
 
-  // 오프셋 (페이지네이션)
-  offset: z.number().int().min(0).optional(),
-
-  // 브랜드 ID 목록
-  brandIds: z.array(z.number().int().positive()).optional(),
-
-  // 카테고리 ID 목록
-  categoryIds: z.array(z.number().int().positive()).optional(),
-});
+    // 카테고리 ID 목록
+    categoryIds: z.array(z.number().int().positive()).optional(),
+  })
+  .merge(paginationQuerySchema);
 
 // ========================================
 // Response 스키마 (전체 조회 응답)
@@ -76,10 +76,7 @@ export const productTemplateListItemSchema = z.object({
   updatedAt: z.date(),
 });
 
-// 리스트 응답 스키마 (페이지네이션 포함)
-export const productTemplateListResponseSchema = z.object({
-  templates: z.array(productTemplateListItemSchema),
-  total: z.number(),
-  limit: z.number(),
-  offset: z.number(),
-});
+// 리스트 응답 스키마 (제네릭 페이지네이션 사용)
+export const productTemplateListResponseSchema = createPaginatedResponseSchema(
+  productTemplateListItemSchema
+);
