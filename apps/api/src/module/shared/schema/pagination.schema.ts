@@ -12,6 +12,7 @@ export type OrderEnumType = (typeof ORDER_ENUM_VALUE)[number];
 export const paginationQuerySchema = z.object({
   page: z.number().int().min(1).default(1), // 1부터 시작
   limit: z.number().int().positive().default(30), // 기본 30개
+  orderBy: z.string().optional(), // 정렬 대상 필드 (예: 'createdAt', 'updatedAt', 'name')
   order: z.enum(ORDER_ENUM_VALUE).default('DESC'), // 정렬 순서 (기본: 최신순)
 });
 
@@ -21,8 +22,6 @@ export const paginationMetaSchema = z.object({
   page: z.number(), // 현재 페이지
   limit: z.number(), // 페이지당 개수
   totalPages: z.number(), // 전체 페이지 수
-  hasNextPage: z.boolean(), // 다음 페이지 존재 여부
-  hasPrevPage: z.boolean(), // 이전 페이지 존재 여부
 });
 
 // 제네릭 페이지네이션 응답 스키마 생성 함수
