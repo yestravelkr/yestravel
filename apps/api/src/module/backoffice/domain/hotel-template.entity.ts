@@ -1,11 +1,10 @@
-import { Entity, Column, ChildEntity, EntityManager } from 'typeorm';
+import { Entity, Column, EntityManager } from 'typeorm';
 import { ProductTemplateEntity } from '@src/module/backoffice/domain/product-template.entity';
 import { ProductTypeEnum } from '@src/module/backoffice/admin/admin.schema';
 import { TransactionService } from '@src/module/shared/transaction/transaction.service';
 import { getEntityManager } from '@src/database/datasources';
 
 @Entity('hotel_template')
-@ChildEntity(ProductTypeEnum.HOTEL)
 export class HotelTemplateEntity extends ProductTemplateEntity {
   constructor() {
     super();

@@ -281,108 +281,203 @@ constructor(private readonly repositoryProvider: RepositoryProvider) {}
 - **⚠️ Repository 접근 규칙**: 모듈에서 `TypeOrmModule.forFeature()` 사용 금지. 오직 `RepositoryProvider`를 통해서만 Entity Repository에 접근
 - **Soft Delete**: TypeORM의 soft delete가 기본 적용되어 있어 `where: { deletedAt: null }` 조건 불필요
 
-## PostgreSQL Table Inheritance 패턴
+## PostgreSQL INHERITS 패턴
 
-**⚠️ 이 프로젝트는 type으로 구분되는 상속 구조에 PostgreSQL 네이티브 INHERITS를 사용합니다.**
+**⚠️ 이 프로젝트는 PostgreSQL 네이티브 INHERITS를 사용하며, TypeORM의 상속 데코레이터는 사용하지 않습니다.**
+
+### 아키텍처 결정
+
+**PostgreSQL INHERITS (DB 레벨)** + **TypeScript 상속 (코드 레벨)** 조합 사용
+
+- **DB 레벨**: PostgreSQL INHERITS로 테이블 구조 정의
+- **ORM 레벨**: TypeORM의 `@TableInheritance`/`@ChildEntity` 데코레이터 **사용 금지**
+- **코드 레벨**: TypeScript `extends`로 Entity 상속
 
 ### Entity 정의 패턴
 
 **부모 Entity:**
 ```typescript
-@Entity('parent_table')
-@TableInheritance({ column: { type: 'varchar', name: 'type' } })
-export class ParentEntity extends BaseEntity {
+@Entity('product_template')
+export class ProductTemplateEntity extends BaseEntity {
   @Column({
     type: 'enum',
-    enum: TYPE_ENUM_VALUE,
+    enum: PRODUCT_TYPE_ENUM_VALUE,
   })
-  type: TypeEnumType;
+  type: ProductTypeEnumType;
 
   // 공통 필드들...
+  @Column()
+  name: string;
+
+  @Column({ name: 'brand_id' })
+  brandId: number;
 }
 ```
 
 **자식 Entity:**
 ```typescript
-@Entity('child_table')
-@ChildEntity(TypeEnum.CHILD_TYPE)
-export class ChildEntity extends ParentEntity {
+@Entity('hotel_template')
+export class HotelTemplateEntity extends ProductTemplateEntity {
   constructor() {
     super();
-    this.type = TypeEnum.CHILD_TYPE;
+    this.type = ProductTypeEnum.HOTEL;
   }
 
-  // 자식 전용 필드들...
+  // 호텔 전용 필드들...
+  @Column({ name: 'base_capacity', type: 'integer' })
+  baseCapacity: number;
+
+  @Column({ name: 'max_capacity', type: 'integer' })
+  maxCapacity: number;
 }
+```
+
+**⚠️ 금지 사항:**
+```typescript
+// ❌ 사용 금지 - TypeORM 상속 데코레이터
+@TableInheritance({ column: { type: 'varchar', name: 'type' } })
+@ChildEntity(ProductTypeEnum.HOTEL)
+
+// ✅ 올바른 방법 - 데코레이터 없이 일반 상속만 사용
+@Entity('hotel_template')
+export class HotelTemplateEntity extends ProductTemplateEntity {
 ```
 
 ### Migration 패턴
 
-**⚠️ 중요: Migration에서는 PostgreSQL INHERITS를 사용합니다.**
-
 ```typescript
-export class CreateTableMigration implements MigrationInterface {
+export class CreateProductTemplateMigration implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     // 1. Enum 타입 생성
     await queryRunner.query(
-      `CREATE TYPE "public"."type_enum" AS ENUM('TYPE1', 'TYPE2')`
+      `CREATE TYPE "product_type_enum" AS ENUM('HOTEL', 'E-TICKET', 'DELIVERY')`
     );
 
     // 2. 부모 테이블 생성
     await queryRunner.query(
-      `CREATE TABLE "parent_table" (
+      `CREATE TABLE "product_template" (
         "id" SERIAL NOT NULL,
-        "type" "public"."type_enum" NOT NULL,
-        "common_field" varchar NOT NULL,
-        CONSTRAINT "PK_parent_table" PRIMARY KEY ("id")
+        "type" "product_type_enum" NOT NULL,
+        "name" varchar NOT NULL,
+        "brand_id" integer NOT NULL,
+        "use_stock" boolean NOT NULL DEFAULT false,
+        "created_at" TIMESTAMP NOT NULL DEFAULT now(),
+        "updated_at" TIMESTAMP NOT NULL DEFAULT now(),
+        "deleted_at" TIMESTAMP,
+        CONSTRAINT "PK_product_template" PRIMARY KEY ("id")
       )`
     );
 
     // 3. 자식 테이블 생성 (INHERITS 사용)
     await queryRunner.query(
-      `CREATE TABLE "child_table" (
-        "child_specific_field" varchar NOT NULL,
-        CONSTRAINT "PK_child_table" PRIMARY KEY ("id")
-      ) INHERITS ("parent_table")`
+      `CREATE TABLE "hotel_template" (
+        "base_capacity" integer NOT NULL,
+        "max_capacity" integer NOT NULL,
+        "check_in_time" time NOT NULL,
+        "check_out_time" time NOT NULL,
+        CONSTRAINT "PK_hotel_template" PRIMARY KEY ("id")
+      ) INHERITS ("product_template")`
     );
 
-    // 4. 외래키 제약조건
-    // 부모와 자식 테이블 모두에 외래키 제약조건 추가 필요 (PostgreSQL 상속 특성)
+    // 4. 외래키 제약조건 (부모/자식 각각 추가)
     await queryRunner.query(
-      `ALTER TABLE "parent_table" ADD CONSTRAINT "FK_parent_relation"
-       FOREIGN KEY ("relation_id") REFERENCES "other_table"("id")`
+      `ALTER TABLE "product_template" ADD CONSTRAINT "FK_product_template_brand"
+       FOREIGN KEY ("brand_id") REFERENCES "brand"("id")`
     );
 
     await queryRunner.query(
-      `ALTER TABLE "child_table" ADD CONSTRAINT "FK_child_relation"
-       FOREIGN KEY ("relation_id") REFERENCES "other_table"("id")`
+      `ALTER TABLE "hotel_template" ADD CONSTRAINT "FK_hotel_template_brand"
+       FOREIGN KEY ("brand_id") REFERENCES "brand"("id")`
     );
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`DROP TABLE "child_table"`);
-    await queryRunner.query(`DROP TABLE "parent_table"`);
-    await queryRunner.query(`DROP TYPE "public"."type_enum"`);
+    await queryRunner.query(`DROP TABLE "hotel_template"`);
+    await queryRunner.query(`DROP TABLE "product_template"`);
+    await queryRunner.query(`DROP TYPE "product_type_enum"`);
   }
 }
 ```
 
-### 주요 특징
+### Service 조회 패턴
+
+**부모 테이블 조회 (공통 필드만):**
+```typescript
+// ⚠️ QueryBuilder 사용 불가 - TypeORM이 자식 컬럼도 SELECT에 포함시킴
+// ✅ Raw Query 사용 필수
+async findAll(): Promise<ProductTemplateListResponse> {
+  const dataQuery = `
+    SELECT
+      pt.id,
+      pt.type,
+      pt.name,
+      pt.brand_id,
+      pt.use_stock,
+      pt.created_at,
+      pt.updated_at,
+      b.name as brand_name
+    FROM product_template pt
+    LEFT JOIN brand b ON b.id = pt.brand_id AND b.deleted_at IS NULL
+    WHERE pt.deleted_at IS NULL
+    ORDER BY pt.created_at DESC
+    LIMIT $1 OFFSET $2
+  `;
+
+  const result = await this.repositoryProvider.ProductTemplateRepository.query(
+    dataQuery,
+    [limit, offset]
+  );
+
+  return result.map(row => ({
+    id: row.id,
+    type: row.type,
+    name: row.name,
+    brandName: row.brand_name,
+    // ...
+  }));
+}
+```
+
+**자식 테이블 조회 (전체 필드):**
+```typescript
+// ✅ 자식 Repository 사용 - QueryBuilder 가능
+async findHotelDetail(id: number): Promise<HotelTemplate> {
+  const hotel = await this.repositoryProvider.HotelTemplateRepository
+    .createQueryBuilder('hotel')
+    .leftJoinAndSelect('hotel.brand', 'brand')
+    .where('hotel.id = :id', { id })
+    .getOne();
+
+  return hotel;
+}
+```
+
+### 핵심 규칙 요약
+
+**✅ 올바른 방법:**
+1. Migration에서 PostgreSQL INHERITS 사용
+2. Entity에서 TypeScript extends만 사용 (데코레이터 제거)
+3. 부모 테이블 조회 시 Raw Query 사용
+4. 자식 테이블 조회 시 해당 Repository 사용
+
+**❌ 금지 사항:**
+1. `@TableInheritance` 데코레이터 사용
+2. `@ChildEntity` 데코레이터 사용
+3. 부모 Repository에서 QueryBuilder로 `find()`, `findAndCount()` 사용
+
+**이유:**
+- PostgreSQL INHERITS와 TypeORM의 `@TableInheritance`는 서로 다른 개념
+- TypeORM이 자식 컬럼을 SELECT에 포함시키면 "column does not exist" 에러 발생
+- Raw Query로 명시적으로 공통 컬럼만 조회해야 함
 
 **장점:**
-- 테이블이 물리적으로 분리되어 각 타입별 필드 관리 용이
+- PostgreSQL 네이티브 기능 활용 (성능 우수)
+- 각 타입별 독립적인 테이블 관리
 - nullable 필드 최소화
 - 각 타입별 인덱스 최적화 가능
-- 데이터 양이 많을 때 성능 이점
-
-**주의사항:**
-- 외래키 제약조건은 부모/자식 테이블 모두에 추가 필요
-- 인덱스도 부모/자식 테이블 각각 추가 필요
-- TypeORM의 `@TableInheritance`와 PostgreSQL INHERITS는 다른 개념이지만 함께 사용
 
 **실제 예시:**
-- `product` (부모) → `hotel_product` (자식, HOTEL 타입)
-- `product_template` (부모) → `hotel_template` (자식, HOTEL 타입)
+- `product_template` (부모) → `hotel_template`, `delivery_template`, `eticket_template` (자식)
 
 ## Enum 네이밍 규칙
 

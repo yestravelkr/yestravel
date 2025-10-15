@@ -1,4 +1,4 @@
-import { Entity, Column, ChildEntity, EntityManager } from 'typeorm';
+import { Entity, Column, EntityManager } from 'typeorm';
 import { ProductTemplateEntity } from '@src/module/backoffice/domain/product-template.entity';
 import { DeliveryEntity } from '@src/module/backoffice/domain/delivery.entity';
 import { ProductTypeEnum } from '@src/module/backoffice/admin/admin.schema';
@@ -6,7 +6,6 @@ import { TransactionService } from '@src/module/shared/transaction/transaction.s
 import { getEntityManager } from '@src/database/datasources';
 
 @Entity('delivery_template')
-@ChildEntity(ProductTypeEnum.DELIVERY)
 export class DeliveryTemplateEntity extends ProductTemplateEntity {
   constructor() {
     super();
