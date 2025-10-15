@@ -21,10 +21,6 @@ export class DeliveryTemplateEntity extends ProductTemplateEntity {
   // @JoinColumn({ name: 'category_id' })
   // category: CategoryEntity;
 
-  // 재고 사용 여부
-  @Column({ name: 'use_stock', type: 'boolean', default: false })
-  useStock: boolean;
-
   // 옵션 사용 여부
   @Column({ name: 'use_options', type: 'boolean', default: false })
   useOptions: boolean;

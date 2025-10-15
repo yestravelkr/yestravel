@@ -48,6 +48,10 @@ export class ProductTemplateEntity extends BaseEntity {
   @ManyToOne(() => BrandEntity)
   @JoinColumn({ name: 'brand_id' })
   brand: BrandEntity;
+
+  // 재고 사용 여부 (공통)
+  @Column({ name: 'use_stock', type: 'boolean', default: false })
+  useStock: boolean;
 }
 
 export const getProductTemplateRepository = (
