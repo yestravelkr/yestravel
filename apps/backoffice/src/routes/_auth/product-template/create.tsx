@@ -3,9 +3,9 @@ import { Button } from '@yestravelkr/min-design-system/button';
 import { type FormEvent, useState } from 'react';
 
 import { BasicInfoCard } from './_components/create/BasicInfoCard';
-import { ProductAssociationCard } from './_components/create/ProductAssociationCard';
-import { ProductDetailInfoCard } from './_components/create/ProductDetailInfoCard';
-import { ProductDetailPageCard } from './_components/create/ProductDetailPageCard';
+import { ProductTemplateAssociationCard } from './_components/create/ProductTemplateAssociationCard';
+import { ProductTemplateDetailInfoCard } from './_components/create/ProductTemplateDetailInfoCard';
+import { ProductTemplateDetailPageCard } from './_components/create/ProductTemplateDetailPageCard';
 import {
   CancelButton,
   Form,
@@ -19,16 +19,16 @@ import {
 
 import { MajorPageLayout } from '@/components/layout';
 
-export const Route = createFileRoute('/_auth/product/create')({
-  component: CreateProductPage,
+export const Route = createFileRoute('/_auth/product-template/create')({
+  component: CreateProductTemplatePage,
 });
 
-function CreateProductPage() {
+function CreateProductTemplatePage() {
   const navigate = useNavigate();
   const [thumbnails, setThumbnails] = useState<string[]>([]);
 
   const handleCancel = () => {
-    navigate({ to: '/product' });
+    navigate({ to: '/product-template' });
   };
 
   const handleSubmit = (event: FormEvent) => {
@@ -49,7 +49,7 @@ function CreateProductPage() {
     <MajorPageLayout
       title="새 품목 등록"
       description="새로운 품목을 등록하여 관리를 시작하세요."
-      headerActions={<CancelButton to="/product">취소</CancelButton>}
+      headerActions={<CancelButton to="/product-template">취소</CancelButton>}
     >
       <FormContainer>
         <Form onSubmit={handleSubmit}>
@@ -60,12 +60,12 @@ function CreateProductPage() {
                 onAddThumbnail={handleAddThumbnail}
                 onRemoveThumbnail={handleRemoveThumbnail}
               />
-              <ProductAssociationCard />
-              <ProductDetailInfoCard />
+              <ProductTemplateAssociationCard />
+              <ProductTemplateDetailInfoCard />
             </LeftColumn>
 
             <RightColumn>
-              <ProductDetailPageCard />
+              <ProductTemplateDetailPageCard />
             </RightColumn>
           </FormColumns>
 

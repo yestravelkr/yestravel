@@ -16,11 +16,11 @@ export const NAV_GROUPS: NavGroup[] = [
       },
       {
         title: '품목',
-        url: '/product',
+        url: '/product-template',
       },
       {
-        title: '캠페인',
-        url: '/campaign',
+        title: '상품',
+        url: '/product',
       },
     ],
   },

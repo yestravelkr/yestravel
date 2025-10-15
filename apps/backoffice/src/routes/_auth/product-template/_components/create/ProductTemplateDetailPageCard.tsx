@@ -4,7 +4,7 @@ import 'react-quill-new/dist/quill.snow.css';
 
 import { FormCard, FormSection } from '@/shared/components/form/FormLayout';
 
-export function ProductDetailPageCard() {
+export function ProductTemplateDetailPageCard() {
   const [editorValue, setEditorValue] = useState('');
 
   return (
