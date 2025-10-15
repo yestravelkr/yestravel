@@ -1,9 +1,7 @@
 import { z } from 'zod';
 import { MicroserviceClient } from '@src/module/trpc/microserviceClient';
 import { BaseTrpcRouter } from '@src/module/trpc/baseTrpcRouter';
-import { Router, Query } from '@src/module/trpc/trpc.decorator';
-import { Ctx, Input } from '@src/module/trpc/trpc.decorator';
-import { UseMiddlewares } from '@src/module/trpc/trpc.decorator';
+import { Router, Query, Ctx, Input, UseMiddlewares } from 'nestjs-trpc';
 import { BackofficeAuthMiddleware } from '@src/module/backoffice/auth/backoffice.auth.middleware';
 import type { BackofficeAuthorizedContext } from '@src/module/backoffice/auth/backoffice.auth.middleware';
 
