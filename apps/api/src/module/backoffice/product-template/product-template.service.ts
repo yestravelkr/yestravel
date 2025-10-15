@@ -64,15 +64,15 @@ export class ProductTemplateService {
         .select([
           'template.id',
           'template.type',
-          'template.thumbnailUrls',
+          'template.thumbnail_urls',
           'template.name',
           'template.description',
-          'template.detailContent',
-          'template.brandId',
-          'template.useStock',
-          'template.createdAt',
-          'template.updatedAt',
-          'template.deletedAt',
+          'template.detail_content',
+          'template.brand_id',
+          'template.use_stock',
+          'template.created_at',
+          'template.updated_at',
+          'template.deleted_at',
           'brand.id',
           'brand.name',
         ]);
@@ -85,16 +85,18 @@ export class ProductTemplateService {
       queryBuilder.andWhere('template.name LIKE :name', { name: `%${name}%` });
     }
     if (useStock !== undefined) {
-      queryBuilder.andWhere('template.useStock = :useStock', { useStock });
+      queryBuilder.andWhere('template.use_stock = :useStock', { useStock });
     }
     if (brandIds && brandIds.length > 0) {
-      queryBuilder.andWhere('template.brandId IN (:...brandIds)', { brandIds });
+      queryBuilder.andWhere('template.brand_id IN (:...brandIds)', {
+        brandIds,
+      });
     }
     if (startDate && endDate) {
       const dateField =
         dateFilterType === 'CREATED_AT'
-          ? 'template.createdAt'
-          : 'template.updatedAt';
+          ? 'template.created_at'
+          : 'template.updated_at';
       queryBuilder.andWhere(`${dateField} BETWEEN :startDate AND :endDate`, {
         startDate: new Date(startDate),
         endDate: new Date(endDate),
@@ -102,8 +104,14 @@ export class ProductTemplateService {
     }
 
     // 정렬 및 페이지네이션
+    const orderByColumn =
+      orderBy === 'createdAt'
+        ? 'created_at'
+        : orderBy === 'updatedAt'
+          ? 'updated_at'
+          : orderBy;
     queryBuilder
-      .orderBy(`template.${orderBy}`, order)
+      .orderBy(`template.${orderByColumn}`, order)
       .skip((page - 1) * limit)
       .take(limit);
 
