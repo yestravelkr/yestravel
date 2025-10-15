@@ -99,6 +99,19 @@ export class ProductTemplateService {
       await this.repositoryProvider.ProductTemplateRepository.findAndCount({
         where,
         relations: ['brand'],
+        select: {
+          id: true,
+          type: true,
+          thumbnailUrls: true,
+          name: true,
+          description: true,
+          detailContent: true,
+          brandId: true,
+          useStock: true,
+          createdAt: true,
+          updatedAt: true,
+          deletedAt: true,
+        },
         skip: (page - 1) * limit,
         take: limit,
         order: {
