@@ -56,26 +56,11 @@ export class ProductTemplateService {
     } = query;
 
     // QueryBuilder를 사용한 데이터 조회 (PostgreSQL INHERITS 호환)
+    // TypeORM이 자동으로 컬럼 매핑하도록 select 명시하지 않음
     const queryBuilder =
       this.repositoryProvider.ProductTemplateRepository.createQueryBuilder(
         'template'
-      )
-        .leftJoinAndSelect('template.brand', 'brand')
-        .select([
-          'template.id',
-          'template.type',
-          'template.thumbnail_urls',
-          'template.name',
-          'template.description',
-          'template.detail_content',
-          'template.brand_id',
-          'template.use_stock',
-          'template.created_at',
-          'template.updated_at',
-          'template.deleted_at',
-          'brand.id',
-          'brand.name',
-        ]);
+      ).leftJoinAndSelect('template.brand', 'brand');
 
     // WHERE 조건 적용
     if (type) {
@@ -85,18 +70,16 @@ export class ProductTemplateService {
       queryBuilder.andWhere('template.name LIKE :name', { name: `%${name}%` });
     }
     if (useStock !== undefined) {
-      queryBuilder.andWhere('template.use_stock = :useStock', { useStock });
+      queryBuilder.andWhere('template.useStock = :useStock', { useStock });
     }
     if (brandIds && brandIds.length > 0) {
-      queryBuilder.andWhere('template.brand_id IN (:...brandIds)', {
-        brandIds,
-      });
+      queryBuilder.andWhere('template.brandId IN (:...brandIds)', { brandIds });
     }
     if (startDate && endDate) {
       const dateField =
         dateFilterType === 'CREATED_AT'
-          ? 'template.created_at'
-          : 'template.updated_at';
+          ? 'template.createdAt'
+          : 'template.updatedAt';
       queryBuilder.andWhere(`${dateField} BETWEEN :startDate AND :endDate`, {
         startDate: new Date(startDate),
         endDate: new Date(endDate),
@@ -104,14 +87,8 @@ export class ProductTemplateService {
     }
 
     // 정렬 및 페이지네이션
-    const orderByColumn =
-      orderBy === 'createdAt'
-        ? 'created_at'
-        : orderBy === 'updatedAt'
-          ? 'updated_at'
-          : orderBy;
     queryBuilder
-      .orderBy(`template.${orderByColumn}`, order)
+      .orderBy(`template.${orderBy}`, order)
       .skip((page - 1) * limit)
       .take(limit);
 
