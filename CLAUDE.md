@@ -267,11 +267,13 @@ constructor(private readonly repositoryProvider: RepositoryProvider) {}
 ## 중요 사항
 
 - **자동 발견**: 새 라우터는 자동으로 로드됩니다 (수동 등록 불필요)
+- **⚠️ Router 등록 규칙**: Router 파일(`.router.ts`)은 **Module의 providers에 절대 넣지 않음**. AutoRouterModule이 자동으로 발견하고 로드함
 - **타입 안전성**: 모든 입력/출력 검증에 Zod 스키마 사용
 - **스키마 패턴**: 스키마는 `.schema.ts`에 정의, 타입은 `.type.ts`에서 `z.infer`로 추론
 - **⚠️ Router 스키마 규칙**: Router 파일에서는 외부 스키마 import 금지. `z.object()`, `z.enum()` 등을 직접 사용하여 인라인으로 스키마 정의
 - **⚠️ tRPC 데코레이터 Import 규칙**: Router 파일에서 `@Router`, `@Query`, `@Mutation`, `@Ctx`, `@Input`, `@UseMiddlewares` 등의 데코레이터는 **반드시 `'nestjs-trpc'` 패키지에서 import**. `'@src/module/trpc/trpc.decorator'`와 같은 로컬 경로는 존재하지 않으므로 사용 금지
 - **응답 포맷팅**: Controller에서 수동 포맷팅 대신 `schema.parse()` 사용
+- **⚠️ @Transactional 데코레이터 규칙**: `@Transactional` 데코레이터를 사용하는 Controller는 **반드시 constructor에서 `TransactionService`를 주입**받아야 함
 - **모듈 구조**: BackofficeModule로 그룹화된 하위 모듈들 (Brand, Auth, Admin 등)
 - **환경**: API 시작 전에 항상 `yarn generateEnv` 실행
 - **포트**: tRPC 서버는 3000 포트에서 실행
