@@ -17,11 +17,8 @@ export class ProductTemplateController {
   async findAll(
     query: z.infer<typeof findAllProductTemplateQuerySchema>
   ): Promise<z.infer<typeof productTemplateListResponseSchema>> {
-    // Query schema 검증
-    const validatedQuery = findAllProductTemplateQuerySchema.parse(query);
-
     // Service 호출
-    const result = await this.productTemplateService.findAll(validatedQuery);
+    const result = await this.productTemplateService.findAll(query);
 
     // Response schema 검증 및 반환
     return productTemplateListResponseSchema.parse(result);
