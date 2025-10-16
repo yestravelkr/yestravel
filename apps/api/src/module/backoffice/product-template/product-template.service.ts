@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { RepositoryProvider } from '@src/module/shared/transaction/repository.provider';
-import type { PaginationQuery } from '@src/module/shared/schema/pagination.schema';
+import type {
+  PaginationQuery,
+  PaginatedResponse,
+} from '@src/module/shared/schema/pagination.schema';
 
 interface FindAllProductTemplateQuery extends PaginationQuery {
   type?: string;
@@ -18,21 +21,21 @@ interface ProductTemplateListItem {
   id: number;
   type: string;
   name: string;
-  brandName: string;
-  categoryName: string;
+  brand: {
+    id: number;
+    name: string;
+  };
+  category: {
+    id: number;
+    name: string;
+  };
   isIntegrated: boolean;
   useStock: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
 
-interface ProductTemplateListResponse {
-  data: ProductTemplateListItem[]; // ✅ 표준 페이지네이션 패턴
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
-}
+type ProductTemplateListResponse = PaginatedResponse<ProductTemplateListItem>;
 
 @Injectable()
 export class ProductTemplateService {
@@ -103,8 +106,14 @@ export class ProductTemplateService {
         id: template.id,
         type: template.type,
         name: template.name,
-        brandName: template.brand?.name || '',
-        categoryName: '', // TODO: 카테고리 연동 후 구현
+        brand: {
+          id: template.brand?.id || 0,
+          name: template.brand?.name || '',
+        },
+        category: {
+          id: 0, // TODO: 카테고리 연동 후 구현
+          name: '', // TODO: 카테고리 연동 후 구현
+        },
         isIntegrated: false, // TODO: 연동 기능 추가 후 구현
         useStock: template.useStock,
         createdAt: template.createdAt,

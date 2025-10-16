@@ -25,50 +25,50 @@ const appRouter = t.router({
   backofficeProductTemplate: t.router({
     findAll: publicProcedure.input(z
       .object({
-        // 상품 타입
-        type: z.enum(['HOTEL', 'E-TICKET', 'DELIVERY']).optional(),
-        // 품목명 검색
+        // 상품 타입 (숙박/배송상품/티켓)
+        type: z.enum(PRODUCT_TYPE_ENUM_VALUE).optional(),
+
+        // 품목명 검색 (템플릿 이름)
         name: z.string().optional(),
-        // 날짜 필터 타입
-        dateFilterType: z.enum(['CREATED_AT', 'UPDATED_AT']).optional(),
+
+        // 날짜 필터 타입 (등록일/수정일)
+        dateFilterType: z.enum(DATE_FILTER_TYPE_ENUM_VALUE).optional(),
+
         // 시작일
         startDate: z.string().datetime().optional(),
+
         // 종료일
         endDate: z.string().datetime().optional(),
-        // 재고 관리 여부
+
+        // 재고 관리 여부 (미지정 시 전체)
         useStock: z.boolean().optional(),
-        // 연동 여부
+
+        // 연동 여부 (미지정 시 전체)
         isIntegrated: z.boolean().optional(),
+
         // 브랜드 ID 목록
         brandIds: z.array(z.number().int().positive()).optional(),
+
         // 카테고리 ID 목록
         categoryIds: z.array(z.number().int().positive()).optional(),
-        // 페이지네이션
-        page: z.number().int().min(1).default(1),
-        limit: z.number().int().positive().default(30),
-        orderBy: z.string().optional(),
-        order: z.enum(['ASC', 'DESC']).default('DESC'),
       })
-      .optional()
-      .default({})).output(z.object({
-        data: z.array(
-          z.object({
-            id: z.number(),
-            type: z.enum(['HOTEL', 'E-TICKET', 'DELIVERY']),
-            name: z.string(),
-            brandName: z.string(),
-            categoryName: z.string(),
-            isIntegrated: z.boolean(),
-            useStock: z.boolean(),
-            createdAt: z.date(),
-            updatedAt: z.date(),
-          })
-        ),
-        total: z.number(),
-        page: z.number(),
-        limit: z.number(),
-        totalPages: z.number(),
-      })).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
+      .merge(paginationQuerySchema).optional().default({})).output(createPaginatedResponseSchema(z.object({
+        id: z.number(),
+        type: z.enum(PRODUCT_TYPE_ENUM_VALUE),
+        name: z.string(),
+        brand: z.object({
+          id: z.number(),
+          name: z.string(),
+        }),
+        category: z.object({
+          id: z.number(),
+          name: z.string(),
+        }),
+        isIntegrated: z.boolean(),
+        useStock: z.boolean(),
+        createdAt: z.date(),
+        updatedAt: z.date(),
+      }))).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
   }),
   backofficeCampaign: t.router({
     findAll: publicProcedure.output(z.array(z.object({

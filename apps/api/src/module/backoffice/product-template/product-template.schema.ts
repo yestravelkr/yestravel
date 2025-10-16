@@ -68,8 +68,14 @@ export const productTemplateListItemSchema = z.object({
   id: z.number(),
   type: z.enum(PRODUCT_TYPE_ENUM_VALUE),
   name: z.string(),
-  brandName: z.string(),
-  categoryName: z.string(),
+  brand: z.object({
+    id: z.number(),
+    name: z.string(),
+  }),
+  category: z.object({
+    id: z.number(),
+    name: z.string(),
+  }),
   isIntegrated: z.boolean(),
   useStock: z.boolean(),
   createdAt: z.date(),
