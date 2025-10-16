@@ -107,7 +107,7 @@ describe('ProductTemplateService', () => {
         type: 'HOTEL',
         name: '제주 리조트',
         brand: { id: 1, name: '브랜드A' },
-        category: { id: 0, name: '' }, // TODO: 카테고리 연동 후 구현
+        categories: [], // TODO: 카테고리 연동 후 구현
         isIntegrated: false, // TODO: 연동 기능 추가 후 구현
         useStock: true,
         createdAt: mockTemplates[0].createdAt,
@@ -120,7 +120,7 @@ describe('ProductTemplateService', () => {
         type: 'DELIVERY',
         name: '배송 상품',
         brand: { id: 2, name: '브랜드B' },
-        category: { id: 0, name: '' }, // TODO: 카테고리 연동 후 구현
+        categories: [], // TODO: 카테고리 연동 후 구현
         isIntegrated: false, // TODO: 연동 기능 추가 후 구현
         useStock: false,
         createdAt: mockTemplates[1].createdAt,

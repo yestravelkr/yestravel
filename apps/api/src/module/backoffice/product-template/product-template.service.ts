@@ -25,10 +25,10 @@ interface ProductTemplateListItem {
     id: number;
     name: string;
   };
-  category: {
+  categories: Array<{
     id: number;
     name: string;
-  };
+  }>;
   isIntegrated: boolean;
   useStock: boolean;
   createdAt: Date;
@@ -110,10 +110,7 @@ export class ProductTemplateService {
           id: template.brand?.id || 0,
           name: template.brand?.name || '',
         },
-        category: {
-          id: 0, // TODO: 카테고리 연동 후 구현
-          name: '', // TODO: 카테고리 연동 후 구현
-        },
+        categories: [], // TODO: 카테고리 연동 후 구현
         isIntegrated: false, // TODO: 연동 기능 추가 후 구현
         useStock: template.useStock,
         createdAt: template.createdAt,
