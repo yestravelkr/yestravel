@@ -4,6 +4,23 @@ import { z } from "zod";
 const t = initTRPC.create();
 const publicProcedure = t.procedure;
 
+// Pagination helper schemas
+const paginationQuerySchema = z.object({
+  page: z.number().int().min(1).default(1),
+  limit: z.number().int().positive().default(30),
+  orderBy: z.string().optional(),
+  order: z.enum(['ASC', 'DESC']).default('DESC'),
+});
+
+const createPaginatedResponseSchema = <T extends z.ZodTypeAny>(dataSchema: T) =>
+  z.object({
+    data: z.array(dataSchema),
+    total: z.number(),
+    page: z.number(),
+    limit: z.number(),
+    totalPages: z.number(),
+  });
+
 const appRouter = t.router({
   sample: t.router({
     getHello: publicProcedure.input(z.object({
@@ -26,13 +43,13 @@ const appRouter = t.router({
     findAll: publicProcedure.input(z
       .object({
         // 상품 타입 (숙박/배송상품/티켓)
-        type: z.enum(PRODUCT_TYPE_ENUM_VALUE).optional(),
+        type: z.enum(['HOTEL', 'E-TICKET', 'DELIVERY']).optional(),
 
         // 품목명 검색 (템플릿 이름)
         name: z.string().optional(),
 
         // 날짜 필터 타입 (등록일/수정일)
-        dateFilterType: z.enum(DATE_FILTER_TYPE_ENUM_VALUE).optional(),
+        dateFilterType: z.enum(['CREATED_AT', 'UPDATED_AT']).optional(),
 
         // 시작일
         startDate: z.string().datetime().optional(),
@@ -54,7 +71,7 @@ const appRouter = t.router({
       })
       .merge(paginationQuerySchema).optional().default({})).output(createPaginatedResponseSchema(z.object({
         id: z.number(),
-        type: z.enum(PRODUCT_TYPE_ENUM_VALUE),
+        type: z.enum(['HOTEL', 'E-TICKET', 'DELIVERY']),
         name: z.string(),
         brand: z.object({
           id: z.number(),
