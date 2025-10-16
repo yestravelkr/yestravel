@@ -18,20 +18,20 @@ import { getEntityManager } from '@src/database/datasources';
  * 계층형 카테고리 엔티티
  *
  * 예시 구조:
- * [여행상품 카테고리]
- * - 여행상품 (id: 1, code: 'TRAVEL', productType: 'TRAVEL_PRODUCT', parentId: null, level: 0)
- *   ├── 국내여행 (id: 2, code: 'DOMESTIC_TRAVEL', productType: 'TRAVEL_PRODUCT', parentId: 1, level: 1)
- *   │   ├── 제주도 (id: 3, code: 'JEJU', productType: 'TRAVEL_PRODUCT', parentId: 2, level: 2)
- *   │   └── 부산 (id: 4, code: 'BUSAN', productType: 'TRAVEL_PRODUCT', parentId: 2, level: 2)
- *   └── 해외여행 (id: 5, code: 'OVERSEAS_TRAVEL', productType: 'TRAVEL_PRODUCT', parentId: 1, level: 1)
+ * [호텔 카테고리]
+ * - 호텔 (id: 1, name: '호텔', productType: 'HOTEL', parentId: null, level: 0)
+ *   ├── 국내호텔 (id: 2, name: '국내호텔', productType: 'HOTEL', parentId: 1, level: 1)
+ *   │   ├── 제주도 (id: 3, name: '제주도', productType: 'HOTEL', parentId: 2, level: 2)
+ *   │   └── 부산 (id: 4, name: '부산', productType: 'HOTEL', parentId: 2, level: 2)
+ *   └── 해외호텔 (id: 5, name: '해외호텔', productType: 'HOTEL', parentId: 1, level: 1)
  *
  * [배송상품 카테고리]
- * - 배송상품 (id: 6, code: 'DELIVERY', productType: 'DELIVERY_PRODUCT', parentId: null, level: 0)
- *   ├── 식품 (id: 7, code: 'FOOD', productType: 'DELIVERY_PRODUCT', parentId: 6, level: 1)
- *   └── 생활용품 (id: 8, code: 'DAILY_GOODS', productType: 'DELIVERY_PRODUCT', parentId: 6, level: 1)
+ * - 배송상품 (id: 6, name: '배송상품', productType: 'DELIVERY', parentId: null, level: 0)
+ *   ├── 식품 (id: 7, name: '식품', productType: 'DELIVERY', parentId: 6, level: 1)
+ *   └── 생활용품 (id: 8, name: '생활용품', productType: 'DELIVERY', parentId: 6, level: 1)
  *
  * [e-ticket상품 카테고리]
- * - e-ticket상품 (id: 9, code: 'ETICKET', productType: 'ETICKET_PRODUCT', parentId: null, level: 0)
+ * - e-ticket상품 (id: 9, name: 'e-ticket상품', productType: 'E-TICKET', parentId: null, level: 0)
  */
 @Entity('categories')
 export class CategoryEntity {
@@ -43,15 +43,11 @@ export class CategoryEntity {
   @Column({ type: 'int', nullable: true })
   parentId: Nullish<number>;
 
-  /** 카테고리 이름 (예: '여행상품', '국내여행', '제주도') */
+  /** 카테고리 이름 (예: '호텔', '국내호텔', '제주도') */
   @Column({ type: 'varchar', length: 255 })
   name: string;
 
-  /** 카테고리 고유 코드 (예: 'TRAVEL', 'DOMESTIC_TRAVEL', 'JEJU') */
-  @Column({ type: 'varchar', length: 100, unique: true })
-  code: string;
-
-  /** 상품 타입 구분 (PRODUCT_TYPE_ENUM_VALUE: 'TRAVEL_PRODUCT', 'DELIVERY_PRODUCT', 'ETICKET_PRODUCT') */
+  /** 상품 타입 구분 (PRODUCT_TYPE_ENUM_VALUE: 'HOTEL', 'DELIVERY', 'E-TICKET') */
   @Column({ type: 'varchar', length: 50 })
   productType: string;
 
