@@ -50,8 +50,8 @@ export class CategoryService {
    * - productType으로 필터링 가능 (optional)
    * - 계층 구조 유지하여 반환
    */
-  async findAll(input: FindAllCategoriesInput): Promise<CategoryEntity[]> {
-    const { productType } = input;
+  async findAll(input?: FindAllCategoriesInput): Promise<CategoryEntity[]> {
+    const { productType } = input || {};
 
     const queryBuilder =
       this.repositoryProvider.CategoryRepository.createQueryBuilder('category');
