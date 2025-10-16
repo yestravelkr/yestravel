@@ -7,6 +7,15 @@ describe('ProductTemplateService', () => {
   let repositoryProvider: RepositoryProvider;
 
   beforeEach(async () => {
+    const mockQueryBuilder = {
+      leftJoinAndSelect: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
+      orderBy: jest.fn().mockReturnThis(),
+      skip: jest.fn().mockReturnThis(),
+      take: jest.fn().mockReturnThis(),
+      getManyAndCount: jest.fn().mockResolvedValue([[], 0]),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ProductTemplateService,
@@ -14,7 +23,7 @@ describe('ProductTemplateService', () => {
           provide: RepositoryProvider,
           useValue: {
             ProductTemplateRepository: {
-              findAndCount: jest.fn(),
+              createQueryBuilder: jest.fn().mockReturnValue(mockQueryBuilder),
             },
           },
         },
@@ -31,10 +40,9 @@ describe('ProductTemplateService', () => {
 
   describe('findAll', () => {
     it('should return empty array when no templates exist', async () => {
-      // Arrange: Mock repository to return empty result
-      jest
-        .spyOn(repositoryProvider.ProductTemplateRepository, 'findAndCount')
-        .mockResolvedValue([[], 0]);
+      // Arrange: Mock QueryBuilder to return empty result
+      const mockQueryBuilder = repositoryProvider.ProductTemplateRepository.createQueryBuilder() as any;
+      mockQueryBuilder.getManyAndCount.mockResolvedValue([[], 0]);
 
       // Act: Call service method
       const result = await service.findAll({
@@ -45,7 +53,7 @@ describe('ProductTemplateService', () => {
 
       // Assert: Check result structure
       expect(result).toEqual({
-        templates: [],
+        data: [],
         total: 0,
         page: 1,
         limit: 30,
@@ -76,9 +84,8 @@ describe('ProductTemplateService', () => {
         },
       ];
 
-      jest
-        .spyOn(repositoryProvider.ProductTemplateRepository, 'findAndCount')
-        .mockResolvedValue([mockTemplates as any, 2]);
+      const mockQueryBuilder = repositoryProvider.ProductTemplateRepository.createQueryBuilder() as any;
+      mockQueryBuilder.getManyAndCount.mockResolvedValue([mockTemplates, 2]);
 
       // Act: Call service method
       const result = await service.findAll({
@@ -92,29 +99,29 @@ describe('ProductTemplateService', () => {
       expect(result.page).toBe(1);
       expect(result.limit).toBe(30);
       expect(result.totalPages).toBe(1);
-      expect(result.templates).toHaveLength(2);
+      expect(result.data).toHaveLength(2);
 
       // Check first template formatting
-      expect(result.templates[0]).toEqual({
+      expect(result.data[0]).toEqual({
         id: 1,
         type: 'HOTEL',
         name: '제주 리조트',
-        brandName: '브랜드A',
-        categoryName: '', // TODO
-        isIntegrated: false, // TODO
+        brand: { id: 1, name: '브랜드A' },
+        category: { id: 0, name: '' }, // TODO: 카테고리 연동 후 구현
+        isIntegrated: false, // TODO: 연동 기능 추가 후 구현
         useStock: true,
         createdAt: mockTemplates[0].createdAt,
         updatedAt: mockTemplates[0].updatedAt,
       });
 
       // Check second template formatting
-      expect(result.templates[1]).toEqual({
+      expect(result.data[1]).toEqual({
         id: 2,
         type: 'DELIVERY',
         name: '배송 상품',
-        brandName: '브랜드B',
-        categoryName: '', // TODO
-        isIntegrated: false, // TODO
+        brand: { id: 2, name: '브랜드B' },
+        category: { id: 0, name: '' }, // TODO: 카테고리 연동 후 구현
+        isIntegrated: false, // TODO: 연동 기능 추가 후 구현
         useStock: false,
         createdAt: mockTemplates[1].createdAt,
         updatedAt: mockTemplates[1].updatedAt,
@@ -123,9 +130,8 @@ describe('ProductTemplateService', () => {
 
     it('should calculate correct pagination when multiple pages exist', async () => {
       // Arrange: Mock 100 templates with limit 30
-      jest
-        .spyOn(repositoryProvider.ProductTemplateRepository, 'findAndCount')
-        .mockResolvedValue([[], 100]);
+      const mockQueryBuilder = repositoryProvider.ProductTemplateRepository.createQueryBuilder() as any;
+      mockQueryBuilder.getManyAndCount.mockResolvedValue([[], 100]);
 
       // Act: Call service method for page 2
       const result = await service.findAll({
@@ -141,11 +147,11 @@ describe('ProductTemplateService', () => {
       expect(result.totalPages).toBe(4); // ceil(100 / 30) = 4
     });
 
-    it('should pass correct skip and take to repository', async () => {
-      // Arrange: Spy on findAndCount
-      const findAndCountSpy = jest
-        .spyOn(repositoryProvider.ProductTemplateRepository, 'findAndCount')
-        .mockResolvedValue([[], 0]);
+    it('should pass correct skip and take to QueryBuilder', async () => {
+      // Arrange: Spy on QueryBuilder methods
+      const mockQueryBuilder = repositoryProvider.ProductTemplateRepository.createQueryBuilder() as any;
+      const skipSpy = jest.spyOn(mockQueryBuilder, 'skip');
+      const takeSpy = jest.spyOn(mockQueryBuilder, 'take');
 
       // Act: Call service with page 3, limit 20
       await service.findAll({
@@ -154,13 +160,9 @@ describe('ProductTemplateService', () => {
         order: 'DESC',
       });
 
-      // Assert: Check repository called with correct skip and take
-      expect(findAndCountSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          skip: 40, // (page 3 - 1) * limit 20 = 40
-          take: 20,
-        })
-      );
+      // Assert: Check QueryBuilder called with correct skip and take
+      expect(skipSpy).toHaveBeenCalledWith(40); // (page 3 - 1) * limit 20 = 40
+      expect(takeSpy).toHaveBeenCalledWith(20);
     });
   });
 });
