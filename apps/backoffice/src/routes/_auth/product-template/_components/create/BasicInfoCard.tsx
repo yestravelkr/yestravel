@@ -1,4 +1,4 @@
-import { FieldHint, FileUploadCard, Label, ThumbnailGrid } from './styled';
+import { FileUploadCard, Label, ThumbnailGrid } from './styled';
 
 import {
   FormCard,

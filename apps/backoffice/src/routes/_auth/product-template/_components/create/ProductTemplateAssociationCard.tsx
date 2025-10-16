@@ -6,7 +6,7 @@ import {
   FormSection,
 } from '@/shared/components/form/FormLayout';
 
-export function ProductAssociationCard() {
+export function ProductTemplateAssociationCard() {
   return (
     <FormCard title="상품 구분">
       <FormSection>

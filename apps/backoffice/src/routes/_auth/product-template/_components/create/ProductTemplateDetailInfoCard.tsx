@@ -8,7 +8,7 @@ import {
 } from '@/shared/components/form/FormLayout';
 import { Input } from '@/shared/components/form/Input';
 
-export function ProductDetailInfoCard() {
+export function ProductTemplateDetailInfoCard() {
   return (
     <FormCard title="상세 정보">
       <FormSection>
