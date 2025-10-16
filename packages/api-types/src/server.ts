@@ -90,21 +90,19 @@ const appRouter = t.router({
       createdAt: z.date(),
       updatedAt: z.date(),
     })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
-    findAll: publicProcedure.input(z
-      .object({
-        productType: z.enum(PRODUCT_TYPE_ENUM_VALUE).optional(),
+    findAll: publicProcedure.input(z.object({
+      productType: z.enum(PRODUCT_TYPE_ENUM_VALUE).optional(),
+    })).output(z.array(
+      z.object({
+        id: z.number(),
+        name: z.string(),
+        productType: z.string(),
+        parentId: z.number().nullish(),
+        level: z.number(),
+        createdAt: z.date(),
+        updatedAt: z.date(),
       })
-      .optional()).output(z.array(
-        z.object({
-          id: z.number(),
-          name: z.string(),
-          productType: z.string(),
-          parentId: z.number().nullish(),
-          level: z.number(),
-          createdAt: z.date(),
-          updatedAt: z.date(),
-        })
-      )).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
+    )).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
   }),
   backofficeCampaign: t.router({
     findAll: publicProcedure.output(z.array(z.object({
