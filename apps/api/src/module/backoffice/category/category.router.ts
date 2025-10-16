@@ -50,9 +50,11 @@ export class CategoryRouter extends BaseTrpcRouter {
 
   @UseMiddlewares(BackofficeAuthMiddleware)
   @Query({
-    input: z.object({
-      productType: z.enum(PRODUCT_TYPE_ENUM_VALUE).nullish(),
-    }),
+    input: z
+      .object({
+        productType: z.enum(PRODUCT_TYPE_ENUM_VALUE).optional(),
+      })
+      .optional(),
     output: z.array(
       z.object({
         id: z.number(),
@@ -67,11 +69,11 @@ export class CategoryRouter extends BaseTrpcRouter {
   })
   async findAll(
     @Ctx() ctx: BackofficeAuthorizedContext,
-    @Input() input: FindAllCategoriesInput
+    @Input() input?: FindAllCategoriesInput
   ) {
     const output = await this.microserviceClient.send(
       'backoffice.category.findAll',
-      input
+      input || {}
     );
     return output;
   }

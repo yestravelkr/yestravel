@@ -24,5 +24,5 @@ export const categoryListSchema = z.array(categorySchema);
 
 // Find all categories input schema (with optional productType filter)
 export const findAllCategoriesInputSchema = z.object({
-  productType: productTypeEnumSchema.nullish(),
+  productType: productTypeEnumSchema.optional(),
 });

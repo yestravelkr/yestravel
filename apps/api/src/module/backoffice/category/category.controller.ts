@@ -26,7 +26,7 @@ export class CategoryController {
   }
 
   @MessagePattern('backoffice.category.findAll')
-  async findAll(data: FindAllCategoriesInput): Promise<CategoryList> {
+  async findAll(data?: FindAllCategoriesInput): Promise<CategoryList> {
     const categories = await this.categoryService.findAll(data);
     return categoryListSchema.parse(categories);
   }

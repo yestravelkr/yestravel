@@ -176,7 +176,7 @@ describe('CategoryService', () => {
 
       mockQueryBuilder.getMany.mockResolvedValue(mockCategories);
 
-      const result = await service.findAll({ productType: null });
+      const result = await service.findAll();
 
       expect(mockCategoryRepository.createQueryBuilder).toHaveBeenCalledWith(
         'category'
