@@ -10,13 +10,11 @@ import {
 import { BackofficeAuthMiddleware } from '@src/module/backoffice/auth/backoffice.auth.middleware';
 import { BackofficeAuthorizedContext } from '@src/module/backoffice/auth/backoffice.auth.middleware';
 import { BaseTrpcRouter } from '@src/module/trpc/baseTrpcRouter';
+import { PRODUCT_TYPE_ENUM_VALUE } from '@src/module/backoffice/admin/admin.schema';
 import type {
   CreateCategoryInput,
   FindAllCategoriesInput,
 } from './category.type';
-
-// Router에서는 z.object()로 직접 정의
-const PRODUCT_TYPE_ENUM_VALUE = ['HOTEL', 'E-TICKET', 'DELIVERY'] as const;
 
 @Router({ alias: 'backofficeCategory' })
 export class CategoryRouter extends BaseTrpcRouter {
