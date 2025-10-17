@@ -37,3 +37,8 @@ export const createPaginatedResponseSchema = <T extends z.ZodTypeAny>(
 // 페이지네이션 타입
 export type PaginationQuery = z.infer<typeof paginationQuerySchema>;
 export type PaginationMeta = z.infer<typeof paginationMetaSchema>;
+
+// 제네릭 페이지네이션 응답 타입
+export interface PaginatedResponse<T> extends PaginationMeta {
+  data: T[];
+}

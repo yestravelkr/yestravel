@@ -1,5 +1,11 @@
 import { initTRPC } from "@trpc/server";
 import { z } from "zod";
+import {
+  createPaginatedResponseSchema,
+  DATE_FILTER_TYPE_ENUM_VALUE,
+  paginationQuerySchema,
+  PRODUCT_TYPE_ENUM_VALUE,
+} from './types';
 
 const t = initTRPC.create();
 const publicProcedure = t.procedure;
@@ -21,6 +27,54 @@ const appRouter = t.router({
       uploadUrl: z.string(),
       fileUrl: z.string(),
     })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
+  }),
+  backofficeProductTemplate: t.router({
+    findAll: publicProcedure.input(z
+      .object({
+        // 상품 타입 (숙박/배송상품/티켓)
+        type: z.enum(PRODUCT_TYPE_ENUM_VALUE).optional(),
+
+        // 품목명 검색 (템플릿 이름)
+        name: z.string().optional(),
+
+        // 날짜 필터 타입 (등록일/수정일)
+        dateFilterType: z.enum(DATE_FILTER_TYPE_ENUM_VALUE).optional(),
+
+        // 시작일
+        startDate: z.string().datetime().optional(),
+
+        // 종료일
+        endDate: z.string().datetime().optional(),
+
+        // 재고 관리 여부 (미지정 시 전체)
+        useStock: z.boolean().optional(),
+
+        // 연동 여부 (미지정 시 전체)
+        isIntegrated: z.boolean().optional(),
+
+        // 브랜드 ID 목록
+        brandIds: z.array(z.number().int().positive()).optional(),
+
+        // 카테고리 ID 목록
+        categoryIds: z.array(z.number().int().positive()).optional(),
+      })
+      .merge(paginationQuerySchema).optional().default({})).output(createPaginatedResponseSchema(z.object({
+        id: z.number(),
+        type: z.enum(PRODUCT_TYPE_ENUM_VALUE),
+        name: z.string(),
+        brand: z.object({
+          id: z.number(),
+          name: z.string(),
+        }),
+        categories: z.array(z.object({
+          id: z.number(),
+          name: z.string(),
+        })),
+        isIntegrated: z.boolean(),
+        useStock: z.boolean(),
+        createdAt: z.date(),
+        updatedAt: z.date(),
+      }))).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
   }),
   backofficeCampaign: t.router({
     findAll: publicProcedure.output(z.array(z.object({

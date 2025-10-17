@@ -1,11 +1,4 @@
-import {
-  Entity,
-  Column,
-  ManyToOne,
-  JoinColumn,
-  EntityManager,
-  TableInheritance,
-} from 'typeorm';
+import { Entity, Column, ManyToOne, JoinColumn, EntityManager } from 'typeorm';
 import { BaseEntity } from '@src/module/backoffice/domain/base.entity';
 import { BrandEntity } from '@src/module/backoffice/domain/brand.entity';
 import { TransactionService } from '@src/module/shared/transaction/transaction.service';
@@ -16,7 +9,6 @@ import {
 } from '@src/module/backoffice/admin/admin.schema';
 
 @Entity('product_template')
-@TableInheritance({ column: { type: 'varchar', name: 'type' } })
 export class ProductTemplateEntity extends BaseEntity {
   // 상품 타입 (구분자)
   @Column({
@@ -48,6 +40,10 @@ export class ProductTemplateEntity extends BaseEntity {
   @ManyToOne(() => BrandEntity)
   @JoinColumn({ name: 'brand_id' })
   brand: BrandEntity;
+
+  // 재고 사용 여부 (공통)
+  @Column({ name: 'use_stock', type: 'boolean', default: false })
+  useStock: boolean;
 }
 
 export const getProductTemplateRepository = (
