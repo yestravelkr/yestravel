@@ -79,7 +79,7 @@ const appRouter = t.router({
   backofficeCategory: t.router({
     create: publicProcedure.input(z.object({
       name: z.string().min(1, '카테고리 이름은 필수입니다'),
-      productType: z.enum(['HOTEL', 'E-TICKET', 'DELIVERY'] as const),
+      productType: z.enum(PRODUCT_TYPE_ENUM_VALUE),
       parentId: z.number().nullish(),
     })).output(z.object({
       id: z.number(),
