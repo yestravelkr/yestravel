@@ -53,14 +53,27 @@ function CreateProductPage() {
     setThumbnails((prev) => prev.filter((item) => item !== target));
   };
 
+  const handleImportProduct = () => {
+    console.log('품목 불러오기');
+  };
+
   return (
     <MajorPageLayout
       title="새 상품 등록"
       description="새로운 상품을 등록하여 판매를 시작하세요."
       headerActions={
-        <Button kind="neutral" variant="outline" onClick={handleCancel}>
-          취소
-        </Button>
+        <>
+          <Button
+            kind="neutral"
+            variant="outline"
+            onClick={handleImportProduct}
+          >
+            품목 불러오기
+          </Button>
+          <Button kind="neutral" variant="outline" onClick={handleCancel}>
+            취소
+          </Button>
+        </>
       }
     >
       <FormContainer>
