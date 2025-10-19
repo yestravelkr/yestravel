@@ -5,7 +5,8 @@
  * 상품 등록 버튼을 통해 새로운 상품을 추가할 수 있습니다.
  */
 
-import { createFileRoute, Link } from '@tanstack/react-router';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { Button } from '@yestravelkr/min-design-system';
 import tw from 'tailwind-styled-components';
 
 import { MajorPageLayout } from '@/components/layout';
@@ -15,12 +16,21 @@ export const Route = createFileRoute('/_auth/product/')({
 });
 
 function ProductPage() {
+  const navigate = useNavigate();
+
   return (
     <MajorPageLayout
       title="상품 관리"
       description="등록된 상품을 조회하고 관리할 수 있습니다."
       headerActions={
-        <CreateButton to="/product/create">새 상품 등록</CreateButton>
+        <Button
+          kind="primary"
+          variant="solid"
+          size="medium"
+          onClick={() => navigate({ to: '/product/create' })}
+        >
+          새 상품 등록
+        </Button>
       }
     >
       <CardContent>
@@ -30,24 +40,19 @@ function ProductPage() {
           <EmptyDescription>
             새 상품을 등록하여 판매를 시작하세요.
           </EmptyDescription>
-          <ActionButton to="/product/create">상품 등록하기</ActionButton>
+          <Button
+            kind="primary"
+            variant="solid"
+            size="large"
+            onClick={() => navigate({ to: '/product/create' })}
+          >
+            상품 등록하기
+          </Button>
         </EmptyState>
       </CardContent>
     </MajorPageLayout>
   );
 }
-
-// 새 상품 등록 버튼 - 파란색 배경의 액션 버튼
-const CreateButton = tw(Link)`
-  px-4
-  py-2
-  bg-blue-600
-  text-white
-  rounded-lg
-  hover:bg-blue-700
-  transition-colors
-  font-medium
-`;
 
 // 카드형 콘텐츠 영역 - 흰색 배경, 그림자, 테두리
 const CardContent = tw.div`
@@ -87,19 +92,6 @@ const EmptyTitle = tw.h2`
 const EmptyDescription = tw.p`
   text-gray-600
   mb-6
-`;
-
-// 액션 버튼 - 빈 상태에서 보여주는 주요 액션 버튼
-const ActionButton = tw(Link)`
-  px-6
-  py-3
-  bg-blue-600
-  text-white
-  rounded-lg
-  hover:bg-blue-700
-  transition-colors
-  font-medium
-  inline-block
 `;
 
 /**

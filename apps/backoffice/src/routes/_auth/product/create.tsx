@@ -9,7 +9,7 @@
  */
 
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { Button } from '@yestravelkr/min-design-system/button';
+import { Button } from '@yestravelkr/min-design-system';
 import { type FormEvent, useState } from 'react';
 
 import { BasicInfoCard } from '../product-template/_components/create/BasicInfoCard';
@@ -17,14 +17,12 @@ import { ProductTemplateAssociationCard } from '../product-template/_components/
 import { ProductTemplateDetailInfoCard } from '../product-template/_components/create/ProductTemplateDetailInfoCard';
 import { ProductTemplateDetailPageCard } from '../product-template/_components/create/ProductTemplateDetailPageCard';
 import {
-  CancelButton,
   Form,
   FormActions,
   FormColumns,
   FormContainer,
   LeftColumn,
   RightColumn,
-  SecondaryButton,
 } from '../product-template/_components/create/styled';
 
 import { MajorPageLayout } from '@/components/layout';
@@ -59,7 +57,11 @@ function CreateProductPage() {
     <MajorPageLayout
       title="새 상품 등록"
       description="새로운 상품을 등록하여 판매를 시작하세요."
-      headerActions={<CancelButton to="/product">취소</CancelButton>}
+      headerActions={
+        <Button kind="neutral" variant="outline" onClick={handleCancel}>
+          취소
+        </Button>
+      }
     >
       <FormContainer>
         <Form onSubmit={handleSubmit}>
@@ -80,9 +82,15 @@ function CreateProductPage() {
           </FormColumns>
 
           <FormActions>
-            <SecondaryButton type="button" onClick={handleCancel}>
+            <Button
+              type="button"
+              kind="neutral"
+              variant="outline"
+              size="large"
+              onClick={handleCancel}
+            >
               취소
-            </SecondaryButton>
+            </Button>
             <Button type="submit" kind="primary" variant="solid" size="large">
               상품 등록
             </Button>
