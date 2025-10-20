@@ -1,3 +1,12 @@
+/**
+ * BasicInfoCard - 기본 정보 입력 카드
+ *
+ * ProductTemplate과 Product 등록 시 공통으로 사용하는 기본 정보를 입력받습니다.
+ * - 썸네일 이미지 (여러 장)
+ * - 상품명/품목명
+ * - 상품 설명
+ */
+
 import { FileUploadCard, Label, ThumbnailGrid } from './styled';
 
 import {
@@ -10,8 +19,11 @@ import { Textarea } from '@/shared/components/form/Textarea';
 import { FileUpload } from '@/shared/components/ui/FileUpload';
 
 interface BasicInfoCardProps {
+  /** 썸네일 이미지 URL 배열 */
   thumbnails: string[];
+  /** 썸네일 추가 콜백 */
   onAddThumbnail: (url: string) => void;
+  /** 썸네일 제거 콜백 */
   onRemoveThumbnail: (url: string) => void;
 }
 
@@ -27,9 +39,8 @@ export function BasicInfoCard({
           <Label>상품 썸네일</Label>
           <ThumbnailGrid>
             {thumbnails.map((thumbnail) => (
-              <FileUploadCard>
+              <FileUploadCard key={thumbnail}>
                 <FileUpload
-                  key={thumbnail}
                   value={thumbnail}
                   onChange={(url) => {
                     if (!url) {
@@ -75,3 +86,13 @@ export function BasicInfoCard({
     </FormCard>
   );
 }
+
+/**
+ * Usage:
+ *
+ * <BasicInfoCard
+ *   thumbnails={thumbnails}
+ *   onAddThumbnail={handleAddThumbnail}
+ *   onRemoveThumbnail={handleRemoveThumbnail}
+ * />
+ */

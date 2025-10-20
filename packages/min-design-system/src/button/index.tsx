@@ -63,16 +63,16 @@ function getColorStyles(
 
   switch (variant) {
     case 'outline':
-      return [`bg-[var(--bg-neutral-subtle)]`, fgColor, `border-[var(--stroke-neutral)]`].join(' ');
+      return ['bg-[var(--bg-neutral-subtle)]', fgColor, 'border-[var(--stroke-neutral)]'].join(' ');
     case 'subtle':
-      return [`bg-[var(--bg-neutral-subtle)]`, fgColor, `border-[var(--stroke-neutral)]`].join(' ');
+      return ['bg-[var(--bg-neutral-subtle)]', fgColor, 'border-[var(--stroke-neutral)]'].join(' ');
     case 'ghost':
-      return [`bg-transparent`, fgColor, `border-transparent`].join(' ');
+      return ['bg-transparent', fgColor, 'border-transparent'].join(' ');
     case 'glass':
-      return [`bg-[var(--bg-neutral-glass)]`, fgColor, `border-[var(--bg-neutral-glass)]`].join(' ');
+      return ['bg-[var(--bg-neutral-glass)]', fgColor, 'border-[var(--bg-neutral-glass)]'].join(' ');
     case 'solid':
     default:
-      return [bgColor, `text-[var(--fg-on-surface)]`, borderColor].join(' ');
+      return [bgColor, 'text-[var(--fg-on-surface)]', borderColor].join(' ');
   }
 }
 
@@ -120,7 +120,7 @@ export function Button({
       data-leading-icon={!!leadingIcon}
       data-trailing-icon={!!trailingIcon}
       disabled={disabled}
-      className={`${baseStyles} ${sizeStyles[size]} ${colorStyles} ${shapeStyles[shape]} ${disabledStyles} ${className}`}
+      className={`${baseStyles} border ${sizeStyles[size]} ${colorStyles} ${shapeStyles[shape]} ${disabledStyles} ${className}`}
       {...props}
     >
       {leadingIcon && (
