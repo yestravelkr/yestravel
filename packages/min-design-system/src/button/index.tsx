@@ -63,7 +63,7 @@ function getColorStyles(
 
   switch (variant) {
     case 'outline':
-      return ['bg-[var(--bg-neutral-subtle)]', fgColor , 'border-[var(--stroke-neutral)]'].join(' ');
+      return ['bg-[var(--bg-neutral-subtle)]', fgColor, 'border-[var(--stroke-neutral)]'].join(' ');
     case 'subtle':
       return ['bg-[var(--bg-neutral-subtle)]', fgColor, 'border-[var(--stroke-neutral)]'].join(' ');
     case 'ghost':
