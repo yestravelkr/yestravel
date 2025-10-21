@@ -72,10 +72,12 @@ export const productTemplateListItemSchema = z.object({
     id: z.number(),
     name: z.string(),
   }),
-  categories: z.array(z.object({
-    id: z.number(),
-    name: z.string(),
-  })),
+  categories: z.array(
+    z.object({
+      id: z.number(),
+      name: z.string(),
+    })
+  ),
   isIntegrated: z.boolean(),
   useStock: z.boolean(),
   createdAt: z.date(),

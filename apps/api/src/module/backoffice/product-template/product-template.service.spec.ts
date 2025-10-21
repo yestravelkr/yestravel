@@ -41,7 +41,8 @@ describe('ProductTemplateService', () => {
   describe('findAll', () => {
     it('should return empty array when no templates exist', async () => {
       // Arrange: Mock QueryBuilder to return empty result
-      const mockQueryBuilder = repositoryProvider.ProductTemplateRepository.createQueryBuilder() as any;
+      const mockQueryBuilder =
+        repositoryProvider.ProductTemplateRepository.createQueryBuilder() as any;
       mockQueryBuilder.getManyAndCount.mockResolvedValue([[], 0]);
 
       // Act: Call service method
@@ -84,7 +85,8 @@ describe('ProductTemplateService', () => {
         },
       ];
 
-      const mockQueryBuilder = repositoryProvider.ProductTemplateRepository.createQueryBuilder() as any;
+      const mockQueryBuilder =
+        repositoryProvider.ProductTemplateRepository.createQueryBuilder() as any;
       mockQueryBuilder.getManyAndCount.mockResolvedValue([mockTemplates, 2]);
 
       // Act: Call service method
@@ -130,7 +132,8 @@ describe('ProductTemplateService', () => {
 
     it('should calculate correct pagination when multiple pages exist', async () => {
       // Arrange: Mock 100 templates with limit 30
-      const mockQueryBuilder = repositoryProvider.ProductTemplateRepository.createQueryBuilder() as any;
+      const mockQueryBuilder =
+        repositoryProvider.ProductTemplateRepository.createQueryBuilder() as any;
       mockQueryBuilder.getManyAndCount.mockResolvedValue([[], 100]);
 
       // Act: Call service method for page 2
@@ -149,7 +152,8 @@ describe('ProductTemplateService', () => {
 
     it('should pass correct skip and take to QueryBuilder', async () => {
       // Arrange: Spy on QueryBuilder methods
-      const mockQueryBuilder = repositoryProvider.ProductTemplateRepository.createQueryBuilder() as any;
+      const mockQueryBuilder =
+        repositoryProvider.ProductTemplateRepository.createQueryBuilder() as any;
       const skipSpy = jest.spyOn(mockQueryBuilder, 'skip');
       const takeSpy = jest.spyOn(mockQueryBuilder, 'take');
 
