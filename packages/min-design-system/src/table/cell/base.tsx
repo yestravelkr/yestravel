@@ -7,7 +7,7 @@ export const TH = tw.th`
   px-2
   py-3
   border-b
-  [border-color:var(--stroke-neutral-subtle)]
+  [border-color:var(--stroke-neutral)]
 `;
 
 export const TDDefault = tw.td`
@@ -17,5 +17,6 @@ export const TDDefault = tw.td`
   px-2
   py-3
   border-b
+  border-r
   [border-color:var(--stroke-neutral-subtle)]
 `;
