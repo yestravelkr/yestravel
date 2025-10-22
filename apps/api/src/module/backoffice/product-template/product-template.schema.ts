@@ -1,5 +1,8 @@
 import { z } from 'zod';
-import { PRODUCT_TYPE_ENUM_VALUE } from '@src/module/backoffice/admin/admin.schema';
+import {
+  PRODUCT_TYPE_ENUM_VALUE,
+  DELIVERY_FEE_TYPE_ENUM_VALUE,
+} from '@src/module/backoffice/admin/admin.schema';
 import {
   paginationQuerySchema,
   createPaginatedResponseSchema,
@@ -88,3 +91,137 @@ export const productTemplateListItemSchema = z.object({
 export const productTemplateListResponseSchema = createPaginatedResponseSchema(
   productTemplateListItemSchema
 );
+
+// ========================================
+// Create Input 스키마
+// ========================================
+
+// 공통 필드 스키마 (모든 타입에서 사용)
+const baseCreateInputSchema = z.object({
+  // 상품명 (필수)
+  name: z.string().min(1, '상품명은 필수입니다'),
+
+  // 브랜드 ID (필수)
+  brandId: z.number().int().positive('브랜드를 선택해주세요'),
+
+  // 썸네일 URL 배열 (선택)
+  thumbnailUrls: z.array(z.string().url()).default([]),
+
+  // 상품 설명 (선택)
+  description: z.string().default(''),
+
+  // 상세페이지 내용 (선택)
+  detailContent: z.string().default(''),
+
+  // 재고 사용 여부 (선택)
+  useStock: z.boolean().default(false),
+});
+
+// Delivery 임베디드 스키마
+const deliveryEmbeddedSchema = z.object({
+  // 배송비 타입 (필수)
+  deliveryFeeType: z.enum(DELIVERY_FEE_TYPE_ENUM_VALUE),
+
+  // 배송비 (선택)
+  deliveryFee: z.number().int().nonnegative().default(0),
+
+  // 무료 배송 최소 금액 (선택)
+  freeDeliveryMinAmount: z.number().int().nonnegative().default(0),
+
+  // 반품 배송비 (선택)
+  returnDeliveryFee: z.number().int().nonnegative().default(0),
+
+  // 교환 배송비 (선택)
+  exchangeDeliveryFee: z.number().int().nonnegative().default(0),
+
+  // 도서산간 추가 배송비 (선택)
+  remoteAreaExtraFee: z.number().int().nonnegative().default(0),
+
+  // 제주도 추가 배송비 (선택)
+  jejuExtraFee: z.number().int().nonnegative().default(0),
+
+  // 제주 배송 제한 여부 (선택)
+  isJejuRestricted: z.boolean().default(false),
+
+  // 도서산간 배송 제한 여부 (선택)
+  isRemoteIslandRestricted: z.boolean().default(false),
+});
+
+// Hotel 생성 스키마
+export const createHotelTemplateInputSchema = baseCreateInputSchema.extend({
+  type: z.literal('HOTEL'),
+
+  // 기준인원 (필수)
+  baseCapacity: z.number().int().positive('기준인원은 1명 이상이어야 합니다'),
+
+  // 최대인원 (필수)
+  maxCapacity: z.number().int().positive('최대인원은 1명 이상이어야 합니다'),
+
+  // 입실 시간 (필수, HH:MM 형식)
+  checkInTime: z
+    .string()
+    .regex(
+      /^([01]\d|2[0-3]):([0-5]\d)$/,
+      '입실 시간은 HH:MM 형식이어야 합니다'
+    ),
+
+  // 퇴실 시간 (필수, HH:MM 형식)
+  checkOutTime: z
+    .string()
+    .regex(
+      /^([01]\d|2[0-3]):([0-5]\d)$/,
+      '퇴실 시간은 HH:MM 형식이어야 합니다'
+    ),
+
+  // 침대 구성 (선택)
+  bedTypes: z.array(z.string()).default([]),
+
+  // 태그 (선택)
+  tags: z.array(z.string()).default([]),
+});
+
+// Delivery 생성 스키마
+export const createDeliveryTemplateInputSchema = baseCreateInputSchema.extend({
+  type: z.literal('DELIVERY'),
+
+  // 옵션 사용 여부 (선택)
+  useOptions: z.boolean().default(false),
+
+  // 배송 정책 (필수, 임베디드)
+  delivery: deliveryEmbeddedSchema,
+
+  // 교환 및 반품 안내 (선택)
+  exchangeReturnInfo: z.string().default(''),
+
+  // 상품 정보 제공 고시 (선택)
+  productInfoNotice: z.string().default(''),
+});
+
+// ETicket 생성 스키마
+export const createETicketTemplateInputSchema = baseCreateInputSchema.extend({
+  type: z.literal('E-TICKET'),
+
+  // 재고 사용 여부 (선택)
+  useStock: z.boolean().default(false),
+
+  // 옵션 사용 여부 (선택)
+  useOptions: z.boolean().default(false),
+});
+
+// 타입별 Discriminated Union 스키마
+export const createProductTemplateInputSchema = z.discriminatedUnion('type', [
+  createHotelTemplateInputSchema,
+  createDeliveryTemplateInputSchema,
+  createETicketTemplateInputSchema,
+]);
+
+// ========================================
+// Create Response 스키마
+// ========================================
+
+export const createProductTemplateResponseSchema = z.object({
+  id: z.number(),
+  type: z.enum(PRODUCT_TYPE_ENUM_VALUE),
+  name: z.string(),
+  message: z.string(),
+});

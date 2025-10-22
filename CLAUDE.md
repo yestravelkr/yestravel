@@ -54,7 +54,7 @@ module/
 ├── module.service.ts     # 비즈니스 로직
 ├── module.module.ts      # NestJS 모듈 설정
 ├── module.schema.ts      # Zod 스키마 정의
-├── module.type.ts        # 타입 정의 (z.infer로 추론)
+├── module.dto.ts         # DTO 타입 정의 (TypeScript interface)
 └── module.middleware.ts  # 인증 (선택사항)
 ```
 
@@ -68,7 +68,46 @@ brand/
 ├── brand.service.ts      # 비즈니스 로직
 ├── brand.module.ts       # NestJS 모듈
 ├── brand.schema.ts       # Zod 스키마 정의
-└── brand.type.ts         # 타입 정의 (z.infer로 추론)
+└── brand.dto.ts          # DTO 타입 정의
+```
+
+**⚠️ DTO 파일 패턴 (필수):**
+- Service에서 사용하는 모든 DTO 타입은 `*.dto.ts` 파일에 정의
+- Service 파일 내에서 interface 직접 정의 **금지**
+- DTO는 TypeScript interface로 정의하여 type import 사용
+- 파일명: `{moduleName}.dto.ts`
+
+```typescript
+// ❌ 잘못된 방법 - Service 파일에 직접 정의
+// module.service.ts
+interface CreateModuleInput {
+  name: string;
+  email: string;
+}
+
+export class ModuleService {
+  async create(input: CreateModuleInput) { ... }
+}
+
+// ✅ 올바른 방법 - DTO 파일로 분리
+// module.dto.ts
+export interface CreateModuleInput {
+  name: string;
+  email: string;
+}
+
+export interface ModuleListResponse {
+  data: Module[];
+  total: number;
+}
+
+// module.service.ts
+import type { CreateModuleInput, ModuleListResponse } from './module.dto';
+
+export class ModuleService {
+  async create(input: CreateModuleInput) { ... }
+  async findAll(): Promise<ModuleListResponse> { ... }
+}
 ```
 
 ## 필수 패턴
