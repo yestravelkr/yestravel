@@ -1,0 +1,37 @@
+:root {
+    /* Font Family */
+    --typo-font-family: 'Min Sans VF', sans-serif;
+
+    /* Display Styles */
+    --typo-display-large: 700 48px / 133.34% var(--typo-font-family);
+    --typo-display-medium: 700 36px / 133.34% var(--typo-font-family);
+    --typo-display-small: 700 30px / 133.34% var(--typo-font-family);
+
+    /* Heading Styles */
+    --typo-heading-large: 700 24px / 133.34% var(--typo-font-family);
+    --typo-heading-medium: 700 21px / 133.34% var(--typo-font-family);
+    --typo-heading-small: 700 18px / 133.34% var(--typo-font-family);
+
+    /* Body Styles */
+    --typo-body-large: 400 18px / 133.34% var(--typo-font-family);
+    --typo-body-large-strong: 500 18px / 133.34% var(--typo-font-family);
+    --typo-body-large-stronger: 600 18px / 133.34% var(--typo-font-family);
+
+    --typo-body-medium: 400 15px / 133.34% var(--typo-font-family);
+    --typo-body-medium-strong: 500 15px / 133.34% var(--typo-font-family);
+    --typo-body-medium-stronger: 600 15px / 133.34% var(--typo-font-family);
+
+    --typo-body-small: 400 13.5px / 133.34% var(--typo-font-family);
+    --typo-body-small-strong: 500 13.5px / 133.34% var(--typo-font-family);
+    --typo-body-small-stronger: 600 13.5px / 133.34% var(--typo-font-family);
+
+    /* Caption Styles */
+    --typo-caption-large: 400 13.5px / 133.34% var(--typo-font-family);
+    --typo-caption-large-strong: 500 13.5px / 133.34% var(--typo-font-family);
+
+    --typo-caption-medium: 400 12px / 133.34% var(--typo-font-family);
+    --typo-caption-medium-strong: 500 12px / 133.34% var(--typo-font-family);
+
+    --typo-caption-small: 400 10.5px / 133.34% var(--typo-font-family);
+    --typo-caption-small-strong: 500 10.5px / 133.34% var(--typo-font-family);
+}
