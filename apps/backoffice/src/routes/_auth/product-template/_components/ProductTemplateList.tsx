@@ -21,8 +21,8 @@ interface ProductTemplate {
   }>;
   isIntegrated: boolean;
   useStock: boolean;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string; // API에서 string으로 반환
+  updatedAt: string; // API에서 string으로 반환
 }
 
 export function ProductTemplateList() {
