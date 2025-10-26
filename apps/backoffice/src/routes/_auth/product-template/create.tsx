@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { Button } from '@yestravelkr/min-design-system/button';
-import { type FormEvent, useState } from 'react';
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
 
 import { BasicInfoCard } from './_components/create/BasicInfoCard';
 import { ProductTemplateAssociationCard } from './_components/create/ProductTemplateAssociationCard';
@@ -26,6 +27,22 @@ export const Route = createFileRoute('/_auth/product-template/create')({
   component: CreateProductTemplatePage,
 });
 
+// React Hook Form용 타입 정의
+interface HotelTemplateFormData {
+  name: string;
+  description: string;
+  brandId: number;
+  baseCapacity: number;
+  maxCapacity: number;
+  checkInTime: string;
+  checkOutTime: string;
+  bedTypes: string[];
+  tags: string[];
+  detailContent: string;
+  useStock: boolean;
+  thumbnailUrls: string[];
+}
+
 function CreateProductTemplatePage() {
   const navigate = useNavigate();
   const { toasts, removeToast, success, error } = useToast();
@@ -33,29 +50,51 @@ function CreateProductTemplatePage() {
 
   const [thumbnails, setThumbnails] = useState<string[]>([]);
 
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    setValue,
+    watch,
+  } = useForm<HotelTemplateFormData>({
+    defaultValues: {
+      name: '',
+      description: '',
+      brandId: 0,
+      baseCapacity: 2,
+      maxCapacity: 4,
+      checkInTime: '15:00',
+      checkOutTime: '11:00',
+      bedTypes: [],
+      tags: [],
+      detailContent: '',
+      useStock: false,
+      thumbnailUrls: [],
+    },
+  });
+
   const handleCancel = () => {
     navigate({ to: '/product-template' });
   };
 
-  const handleSubmit = async (event: FormEvent) => {
-    event.preventDefault();
-
+  const onSubmit = async (formData: HotelTemplateFormData) => {
+    console.log(formData);
     try {
-      // HOTEL 타입 품목 생성 (임의의 데이터)
+      // HOTEL 타입 품목 생성
       await createMutation.mutateAsync({
         type: 'HOTEL',
-        name: '테스트 호텔 상품',
-        brandId: 1, // 임의의 브랜드 ID
-        thumbnailUrls: thumbnails,
-        description: '테스트 설명입니다.',
-        detailContent: '<p>테스트 상세 내용입니다.</p>',
-        useStock: false,
-        baseCapacity: 2,
-        maxCapacity: 4,
-        checkInTime: '15:00',
-        checkOutTime: '11:00',
-        bedTypes: ['퀸베드 1개'],
-        tags: ['바다 전망', '조식 포함'],
+        name: formData.name,
+        brandId: formData.brandId,
+        thumbnailUrls: thumbnails, // 썸네일은 별도 상태로 관리
+        description: formData.description,
+        detailContent: formData.detailContent,
+        useStock: formData.useStock,
+        baseCapacity: formData.baseCapacity,
+        maxCapacity: formData.maxCapacity,
+        checkInTime: formData.checkInTime,
+        checkOutTime: formData.checkOutTime,
+        bedTypes: formData.bedTypes,
+        tags: formData.tags,
       });
 
       success('품목이 성공적으로 등록되었습니다.');
@@ -84,20 +123,28 @@ function CreateProductTemplatePage() {
         headerActions={<CancelButton to="/product-template">취소</CancelButton>}
       >
         <FormContainer>
-          <Form onSubmit={handleSubmit}>
+          <Form onSubmit={handleSubmit(onSubmit)}>
             <FormColumns>
               <LeftColumn>
                 <BasicInfoCard
                   thumbnails={thumbnails}
                   onAddThumbnail={handleAddThumbnail}
                   onRemoveThumbnail={handleRemoveThumbnail}
+                  register={register}
                 />
-                <ProductTemplateAssociationCard />
-                <ProductTemplateDetailInfoCard />
+                <ProductTemplateAssociationCard register={register} />
+                <ProductTemplateDetailInfoCard
+                  register={register}
+                  setValue={setValue}
+                  watch={watch}
+                />
               </LeftColumn>
 
               <RightColumn>
-                <ProductTemplateDetailPageCard />
+                <ProductTemplateDetailPageCard
+                  setValue={setValue}
+                  watch={watch}
+                />
               </RightColumn>
             </FormColumns>
 
@@ -110,9 +157,11 @@ function CreateProductTemplatePage() {
                 kind="primary"
                 variant="solid"
                 size="large"
-                disabled={createMutation.isPending}
+                disabled={createMutation.isPending || isSubmitting}
               >
-                {createMutation.isPending ? '등록 중...' : '품목 등록'}
+                {createMutation.isPending || isSubmitting
+                  ? '등록 중...'
+                  : '품목 등록'}
               </Button>
             </FormActions>
           </Form>

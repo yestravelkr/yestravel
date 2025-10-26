@@ -7,6 +7,8 @@
  * - 상품 설명
  */
 
+import { UseFormRegister } from 'react-hook-form';
+
 import { FileUploadCard, Label, ThumbnailGrid } from './styled';
 
 import {
@@ -25,12 +27,15 @@ interface BasicInfoCardProps {
   onAddThumbnail: (url: string) => void;
   /** 썸네일 제거 콜백 */
   onRemoveThumbnail: (url: string) => void;
+  /** React Hook Form register */
+  register: UseFormRegister<any>;
 }
 
 export function BasicInfoCard({
   thumbnails,
   onAddThumbnail,
   onRemoveThumbnail,
+  register,
 }: BasicInfoCardProps) {
   return (
     <FormCard title="기본 정보">
@@ -69,17 +74,17 @@ export function BasicInfoCard({
           <Label htmlFor="product-name">상품명</Label>
           <Input
             id="product-name"
-            name="productName"
             placeholder="예) 제주 2박 3일 패키지"
+            {...register('name')}
           />
         </FormField>
         <FormField>
           <Label htmlFor="product-description">상품 설명</Label>
           <Textarea
             id="product-description"
-            name="productDescription"
             rows={4}
             placeholder="상품의 특징과 핵심 혜택을 간단히 정리하세요."
+            {...register('description')}
           />
         </FormField>
       </FormSection>
