@@ -39,7 +39,7 @@ export function ProductTemplateList() {
   // 전체 선택/해제
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedIds(productTemplates.map((item) => item.id));
+      setSelectedIds(productTemplates.map((item: ProductTemplate) => item.id));
     } else {
       setSelectedIds([]);
     }
@@ -72,17 +72,19 @@ export function ProductTemplateList() {
             productTemplates.length > 0 &&
             selectedIds.length === productTemplates.length
           }
-          onChange={(e) => handleSelectAll(e.target.checked)}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+            handleSelectAll(e.target.checked)
+          }
         />
       ),
       render: (productTemplate: ProductTemplate) => (
         <Checkbox
           type="checkbox"
           checked={selectedIds.includes(productTemplate.id)}
-          onChange={(e) =>
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
             handleSelectOne(productTemplate.id, e.target.checked)
           }
-          onClick={(e) => e.stopPropagation()}
+          onClick={(e: React.MouseEvent) => e.stopPropagation()}
         />
       ),
       width: '5%',
@@ -162,15 +164,17 @@ export function ProductTemplateList() {
       key: 'actions',
       header: '부가기능',
       render: (productTemplate: ProductTemplate) => (
-        <ActionsContainer onClick={(e) => e.stopPropagation()}>
+        <ActionsContainer
+          onClick={(e: React.MouseEvent) => e.stopPropagation()}
+        >
           <EditButton
             to={`/product-template/${productTemplate.id}/edit`}
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e: React.MouseEvent) => e.stopPropagation()}
           >
             수정
           </EditButton>
           <DeleteButton
-            onClick={(e) => {
+            onClick={(e: React.MouseEvent) => {
               e.stopPropagation();
               handleDelete(productTemplate.id, productTemplate.name);
             }}
