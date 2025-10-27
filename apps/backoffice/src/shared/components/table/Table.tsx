@@ -3,7 +3,7 @@ import tw from 'tailwind-styled-components';
 
 interface Column<T> {
   key: string;
-  header: string;
+  header: string | ReactNode;
   render: (item: T) => ReactNode;
   width?: string;
 }
