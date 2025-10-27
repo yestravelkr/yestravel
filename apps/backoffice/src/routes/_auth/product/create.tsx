@@ -10,7 +10,8 @@
 
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { Button } from '@yestravelkr/min-design-system';
-import { type FormEvent, useState } from 'react';
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
 
 import { BasicInfoCard } from '../product-template/_components/create/BasicInfoCard';
 import { ProductTemplateAssociationCard } from '../product-template/_components/create/ProductTemplateAssociationCard';
@@ -31,18 +32,56 @@ export const Route = createFileRoute('/_auth/product/create')({
   component: CreateProductPage,
 });
 
+// React Hook Form용 타입 정의
+interface ProductFormData {
+  name: string;
+  description: string;
+  brandId: number;
+  baseCapacity: number;
+  maxCapacity: number;
+  checkInTime: string;
+  checkOutTime: string;
+  bedTypes: string[];
+  tags: string[];
+  detailContent: string;
+  useStock: boolean;
+  thumbnailUrls: string[];
+}
+
 function CreateProductPage() {
   const navigate = useNavigate();
   const [thumbnails, setThumbnails] = useState<string[]>([]);
+
+  const {
+    register,
+    handleSubmit,
+    formState: { isSubmitting },
+    setValue,
+    watch,
+  } = useForm<ProductFormData>({
+    defaultValues: {
+      name: '',
+      description: '',
+      brandId: 0,
+      baseCapacity: 2,
+      maxCapacity: 4,
+      checkInTime: '15:00',
+      checkOutTime: '11:00',
+      bedTypes: [],
+      tags: [],
+      detailContent: '',
+      useStock: false,
+      thumbnailUrls: [],
+    },
+  });
 
   const handleCancel = () => {
     navigate({ to: '/product' });
   };
 
-  const handleSubmit = (event: FormEvent) => {
-    event.preventDefault();
+  const onSubmit = async (formData: ProductFormData) => {
     // TODO: 실제 상품 생성 API 연결
-    console.log('상품 생성 처리');
+    console.log('상품 생성 처리', formData);
   };
 
   const handleAddThumbnail = (url: string) => {
@@ -77,20 +116,28 @@ function CreateProductPage() {
       }
     >
       <FormContainer>
-        <Form onSubmit={handleSubmit}>
+        <Form onSubmit={handleSubmit(onSubmit)}>
           <FormColumns>
             <LeftColumn>
               <BasicInfoCard
                 thumbnails={thumbnails}
                 onAddThumbnail={handleAddThumbnail}
                 onRemoveThumbnail={handleRemoveThumbnail}
+                register={register}
               />
-              <ProductTemplateAssociationCard />
-              <ProductTemplateDetailInfoCard />
+              <ProductTemplateAssociationCard register={register} />
+              <ProductTemplateDetailInfoCard
+                register={register}
+                setValue={setValue}
+                watch={watch}
+              />
             </LeftColumn>
 
             <RightColumn>
-              <ProductTemplateDetailPageCard />
+              <ProductTemplateDetailPageCard
+                setValue={setValue}
+                watch={watch}
+              />
             </RightColumn>
           </FormColumns>
 
@@ -104,8 +151,14 @@ function CreateProductPage() {
             >
               취소
             </Button>
-            <Button type="submit" kind="primary" variant="solid" size="large">
-              상품 등록
+            <Button
+              type="submit"
+              kind="primary"
+              variant="solid"
+              size="large"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? '등록 중...' : '상품 등록'}
             </Button>
           </FormActions>
         </Form>
