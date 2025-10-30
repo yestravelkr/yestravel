@@ -5,6 +5,7 @@ import { getBrandRepository } from '@src/module/backoffice/domain/brand.entity';
 import { getCampaignRepository } from '@src/module/backoffice/domain/campaign.entity';
 import { getCategoryRepository } from '@src/module/backoffice/domain/category.entity';
 import { getProductTemplateRepository } from '@src/module/backoffice/domain/product-template.entity';
+import { getProductTemplateCategoryRepository } from '@src/module/backoffice/domain/product-template-category.entity';
 import { getHotelTemplateRepository } from '@src/module/backoffice/domain/hotel-template.entity';
 import { getDeliveryTemplateRepository } from '@src/module/backoffice/domain/delivery-template.entity';
 import { getETicketTemplateRepository } from '@src/module/backoffice/domain/eticket-template.entity';
@@ -31,6 +32,10 @@ export class RepositoryProvider {
 
   get ProductTemplateRepository() {
     return getProductTemplateRepository(this.transaction);
+  }
+
+  get ProductTemplateCategoryRepository() {
+    return getProductTemplateCategoryRepository(this.transaction);
   }
 
   get HotelTemplateRepository() {
