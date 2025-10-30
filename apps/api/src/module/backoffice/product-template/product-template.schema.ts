@@ -104,6 +104,9 @@ const baseCreateInputSchema = z.object({
   // 브랜드 ID (필수)
   brandId: z.number().int().positive('브랜드를 선택해주세요'),
 
+  // 카테고리 ID 배열 (선택)
+  categoryIds: z.array(z.number().int().positive()).default([]),
+
   // 썸네일 URL 배열 (선택)
   thumbnailUrls: z.array(z.string().url()).default([]),
 
@@ -225,3 +228,73 @@ export const createProductTemplateResponseSchema = z.object({
   name: z.string(),
   message: z.string(),
 });
+
+// ========================================
+// FindById 스키마
+// ========================================
+
+// 공통 필드 스키마
+const baseProductTemplateDetailSchema = z.object({
+  id: z.number(),
+  name: z.string(),
+  brandId: z.number(),
+  brand: z.object({
+    id: z.number(),
+    name: z.string(),
+  }),
+  categories: z.array(
+    z.object({
+      id: z.number(),
+      name: z.string(),
+    })
+  ),
+  thumbnailUrls: z.array(z.string()),
+  description: z.string(),
+  detailContent: z.string(),
+  useStock: z.boolean(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+});
+
+// Hotel 상세 스키마
+const hotelTemplateDetailSchema = baseProductTemplateDetailSchema.extend({
+  type: z.literal('HOTEL'),
+  baseCapacity: z.number(),
+  maxCapacity: z.number(),
+  checkInTime: z.string(),
+  checkOutTime: z.string(),
+  bedTypes: z.array(z.string()),
+  tags: z.array(z.string()),
+});
+
+// Delivery 상세 스키마
+const deliveryTemplateDetailSchema = baseProductTemplateDetailSchema.extend({
+  type: z.literal('DELIVERY'),
+  useOptions: z.boolean(),
+  delivery: z.object({
+    deliveryFeeType: z.string(),
+    deliveryFee: z.number(),
+    freeDeliveryMinAmount: z.number(),
+    returnDeliveryFee: z.number(),
+    exchangeDeliveryFee: z.number(),
+    remoteAreaExtraFee: z.number(),
+    jejuExtraFee: z.number(),
+    isJejuRestricted: z.boolean(),
+    isRemoteIslandRestricted: z.boolean(),
+  }),
+  exchangeReturnInfo: z.string(),
+  productInfoNotice: z.string(),
+});
+
+// ETicket 상세 스키마
+const eticketTemplateDetailSchema = baseProductTemplateDetailSchema.extend({
+  type: z.literal('E-TICKET'),
+  useOptions: z.boolean(),
+});
+
+// Discriminated Union 스키마
+export const productTemplateDetailSchema = z.discriminatedUnion('type', [
+  hotelTemplateDetailSchema,
+  deliveryTemplateDetailSchema,
+  eticketTemplateDetailSchema,
+]);

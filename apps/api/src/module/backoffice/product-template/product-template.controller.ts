@@ -6,6 +6,7 @@ import {
   productTemplateListResponseSchema,
   createProductTemplateInputSchema,
   createProductTemplateResponseSchema,
+  productTemplateDetailSchema,
 } from './product-template.schema';
 import { z } from 'zod';
 import { Transactional } from '@src/module/shared/transaction/transaction.decorator';
@@ -27,6 +28,17 @@ export class ProductTemplateController {
 
     // Response schema 검증 및 반환
     return productTemplateListResponseSchema.parse(result);
+  }
+
+  @MessagePattern('backofficeProductTemplate.findById')
+  async findById(data: {
+    id: number;
+  }): Promise<z.infer<typeof productTemplateDetailSchema>> {
+    // Service 호출
+    const result = await this.productTemplateService.findById(data.id);
+
+    // Response schema 검증 및 반환
+    return productTemplateDetailSchema.parse(result);
   }
 
   @MessagePattern('backofficeProductTemplate.create')
