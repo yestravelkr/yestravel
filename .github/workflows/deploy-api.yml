@@ -79,7 +79,7 @@ jobs:
           else
             echo "::set-output name=TAG_NAME::$(git rev-parse --short HEAD)"
             echo "::set-output name=STAGE::develop"
-            echo "::set-output name=ELB_ENV_NAME::yestravel-api-develop"
+            echo "::set-output name=ELB_ENV_NAME::yestravel-api-development "
           fi
 
       - name: Build and push Docker Image
