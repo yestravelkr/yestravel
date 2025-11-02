@@ -1,4 +1,5 @@
 import { useNavigate, Link } from '@tanstack/react-router';
+import { createColumnHelper } from '@tanstack/react-table';
 import tw from 'tailwind-styled-components';
 
 import { InboxIcon } from '@/components/icons';
@@ -10,44 +11,40 @@ export function BrandList() {
   const navigate = useNavigate();
   const [brands] = trpc.backofficeBrand.findAll.useSuspenseQuery();
 
+  const columnHelper = createColumnHelper<Brand>();
+
   const columns = [
-    {
-      key: 'name',
+    columnHelper.accessor('name', {
       header: '브랜드명',
-      render: (brand: Brand) => (
+      cell: (info) => (
         <div>
-          <BrandName>{brand.name}</BrandName>
-          {brand.email && <BrandEmail>{brand.email}</BrandEmail>}
+          <BrandName>{info.getValue()}</BrandName>
+          {info.row.original.email && (
+            <BrandEmail>{info.row.original.email}</BrandEmail>
+          )}
         </div>
       ),
-      width: '30%',
-    },
-    {
-      key: 'businessInfo',
+      size: 300,
+    }),
+    columnHelper.accessor('businessInfo', {
       header: '사업자 정보',
-      render: (brand: Brand) => (
-        <BusinessInfo>{brand.businessInfo?.name || '-'}</BusinessInfo>
-      ),
-      width: '25%',
-    },
-    {
-      key: 'phoneNumber',
+      cell: (info) => <BusinessInfo>{info.getValue()?.name || '-'}</BusinessInfo>,
+      size: 250,
+    }),
+    columnHelper.accessor('phoneNumber', {
       header: '연락처',
-      render: (brand: Brand) => (
-        <PhoneNumber>{brand.phoneNumber || '-'}</PhoneNumber>
-      ),
-      width: '20%',
-    },
-    {
-      key: 'createdAt',
+      cell: (info) => <PhoneNumber>{info.getValue() || '-'}</PhoneNumber>,
+      size: 200,
+    }),
+    columnHelper.accessor('createdAt', {
       header: '등록일',
-      render: (brand: Brand) => (
+      cell: (info) => (
         <CreatedAt>
-          {new Date(brand.createdAt).toLocaleDateString('ko-KR')}
+          {new Date(info.getValue()).toLocaleDateString('ko-KR')}
         </CreatedAt>
       ),
-      width: '25%',
-    },
+      size: 250,
+    }),
   ];
 
   const handleRowClick = (brand: Brand) => {
