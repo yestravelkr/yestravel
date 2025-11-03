@@ -1,4 +1,5 @@
 import { useNavigate, Link } from '@tanstack/react-router';
+import { createColumnHelper, type ColumnDef } from '@tanstack/react-table';
 import { useState } from 'react';
 import tw from 'tailwind-styled-components';
 
@@ -62,10 +63,12 @@ export function ProductTemplateList() {
     }
   };
 
+  const columnHelper = createColumnHelper<ProductTemplate>();
+
   const columns = [
-    {
-      key: 'checkbox',
-      header: (
+    columnHelper.display({
+      id: 'checkbox',
+      header: () => (
         <Checkbox
           type="checkbox"
           checked={
@@ -77,98 +80,87 @@ export function ProductTemplateList() {
           }
         />
       ),
-      render: (productTemplate: ProductTemplate) => (
+      cell: (info) => (
         <Checkbox
           type="checkbox"
-          checked={selectedIds.includes(productTemplate.id)}
+          checked={selectedIds.includes(info.row.original.id)}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-            handleSelectOne(productTemplate.id, e.target.checked)
+            handleSelectOne(info.row.original.id, e.target.checked)
           }
           onClick={(e: React.MouseEvent) => e.stopPropagation()}
         />
       ),
-      width: '5%',
-    },
-    {
-      key: 'name',
+      size: 50,
+    }),
+    columnHelper.accessor('name', {
       header: '품목',
-      render: (productTemplate: ProductTemplate) => (
+      cell: (info) => (
         <div>
-          <ProductTemplateName>{productTemplate.name}</ProductTemplateName>
-          <TypeBadge type={productTemplate.type}>
-            {getTypeLabel(productTemplate.type)}
+          <ProductTemplateName>{info.getValue()}</ProductTemplateName>
+          <TypeBadge type={info.row.original.type}>
+            {getTypeLabel(info.row.original.type)}
           </TypeBadge>
         </div>
       ),
-      width: '25%',
-    },
-    {
-      key: 'brand',
+      size: 250,
+    }),
+    columnHelper.accessor('brand.name', {
       header: '브랜드',
-      render: (productTemplate: ProductTemplate) => (
-        <BrandName>{productTemplate.brand.name}</BrandName>
-      ),
-      width: '15%',
-    },
-    {
-      key: 'categories',
+      cell: (info) => <BrandName>{info.getValue()}</BrandName>,
+      size: 150,
+    }),
+    columnHelper.accessor('categories', {
       header: '카테고리',
-      render: (productTemplate: ProductTemplate) => (
+      cell: (info) => (
         <CategoryList>
-          {productTemplate.categories.length > 0
-            ? productTemplate.categories.map((cat) => cat.name).join(', ')
+          {info.getValue().length > 0
+            ? info.getValue().map((cat) => cat.name).join(', ')
             : '-'}
         </CategoryList>
       ),
-      width: '15%',
-    },
-    {
-      key: 'isIntegrated',
+      size: 150,
+    }),
+    columnHelper.accessor('isIntegrated', {
       header: '연동상태',
-      render: (productTemplate: ProductTemplate) => (
-        <StatusBadge isActive={productTemplate.isIntegrated}>
-          {productTemplate.isIntegrated ? '연동' : '미연동'}
+      cell: (info) => (
+        <StatusBadge isActive={info.getValue()}>
+          {info.getValue() ? '연동' : '미연동'}
         </StatusBadge>
       ),
-      width: '8%',
-    },
-    {
-      key: 'useStock',
+      size: 80,
+    }),
+    columnHelper.accessor('useStock', {
       header: '재고관리',
-      render: (productTemplate: ProductTemplate) => (
-        <StatusValue>{productTemplate.useStock ? 'Y' : 'N'}</StatusValue>
-      ),
-      width: '8%',
-    },
-    {
-      key: 'createdAt',
+      cell: (info) => <StatusValue>{info.getValue() ? 'Y' : 'N'}</StatusValue>,
+      size: 80,
+    }),
+    columnHelper.accessor('createdAt', {
       header: '등록일',
-      render: (productTemplate: ProductTemplate) => (
+      cell: (info) => (
         <DateText>
-          {new Date(productTemplate.createdAt).toLocaleDateString('ko-KR')}
+          {new Date(info.getValue()).toLocaleDateString('ko-KR')}
         </DateText>
       ),
-      width: '10%',
-    },
-    {
-      key: 'updatedAt',
+      size: 100,
+    }),
+    columnHelper.accessor('updatedAt', {
       header: '수정일',
-      render: (productTemplate: ProductTemplate) => (
+      cell: (info) => (
         <DateText>
-          {new Date(productTemplate.updatedAt).toLocaleDateString('ko-KR')}
+          {new Date(info.getValue()).toLocaleDateString('ko-KR')}
         </DateText>
       ),
-      width: '10%',
-    },
-    {
-      key: 'actions',
+      size: 100,
+    }),
+    columnHelper.display({
+      id: 'actions',
       header: '부가기능',
-      render: (productTemplate: ProductTemplate) => (
+      cell: (info) => (
         <ActionsContainer
           onClick={(e: React.MouseEvent) => e.stopPropagation()}
         >
           <EditButton
-            to={`/product-template/${productTemplate.id}/edit`}
+            to={`/product-template/${info.row.original.id}/edit`}
             onClick={(e: React.MouseEvent) => e.stopPropagation()}
           >
             수정
@@ -176,15 +168,15 @@ export function ProductTemplateList() {
           <DeleteButton
             onClick={(e: React.MouseEvent) => {
               e.stopPropagation();
-              handleDelete(productTemplate.id, productTemplate.name);
+              handleDelete(info.row.original.id, info.row.original.name);
             }}
           >
             삭제
           </DeleteButton>
         </ActionsContainer>
       ),
-      width: '14%',
-    },
+      size: 140,
+    }),
   ];
 
   const handleRowClick = (productTemplate: ProductTemplate) => {

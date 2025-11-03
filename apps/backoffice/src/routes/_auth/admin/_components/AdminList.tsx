@@ -1,10 +1,19 @@
 import { useNavigate, Link } from '@tanstack/react-router';
+import { createColumnHelper, type ColumnDef } from '@tanstack/react-table';
 import tw from 'tailwind-styled-components';
 
 import { InboxIcon } from '@/components/icons';
 import { ROLE_VALUES, ROLE_LABELS } from '@/constants/role';
 import { Table, EmptyState } from '@/shared/components';
 import { trpc } from '@/shared/trpc';
+
+// Admin 타입 정의
+interface Admin {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+}
 
 export function AdminList() {
   const navigate = useNavigate();
@@ -25,41 +34,41 @@ export function AdminList() {
     );
   };
 
+  const columnHelper = createColumnHelper<Admin>();
+
   const columns = [
-    {
-      key: 'name',
+    columnHelper.accessor('name', {
       header: '이름',
-      render: (admin: any) => (
+      cell: (info) => (
         <div>
-          <AdminName>{admin.name}</AdminName>
-          <AdminEmail>{admin.email}</AdminEmail>
+          <AdminName>{info.getValue()}</AdminName>
+          <AdminEmail>{info.row.original.email}</AdminEmail>
         </div>
       ),
-      width: '35%',
-    },
-    {
-      key: 'role',
+      size: 350,
+    }),
+    columnHelper.accessor('role', {
       header: '권한',
-      render: (admin: any) => getRoleBadge(admin.role),
-      width: '25%',
-    },
-    {
-      key: 'status',
+      cell: (info) => getRoleBadge(info.getValue()),
+      size: 250,
+    }),
+    columnHelper.display({
+      id: 'status',
       header: '상태',
-      render: () => (
+      cell: () => (
         <StatusBadge className="bg-green-100 text-green-800">활성</StatusBadge>
       ),
-      width: '15%',
-    },
-    {
-      key: 'lastLogin',
+      size: 150,
+    }),
+    columnHelper.display({
+      id: 'lastLogin',
       header: '마지막 로그인',
-      render: () => <LastLogin>-</LastLogin>,
-      width: '25%',
-    },
+      cell: () => <LastLogin>-</LastLogin>,
+      size: 250,
+    }),
   ];
 
-  const handleRowClick = (admin: any) => {
+  const handleRowClick = (admin: Admin) => {
     navigate({ to: `/admin/${admin.id}` });
   };
 
