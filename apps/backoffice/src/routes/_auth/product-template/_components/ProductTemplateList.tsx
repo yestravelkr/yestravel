@@ -1,5 +1,5 @@
 import { useNavigate, Link } from '@tanstack/react-router';
-import { createColumnHelper } from '@tanstack/react-table';
+import { createColumnHelper, type ColumnDef } from '@tanstack/react-table';
 import { useState } from 'react';
 import tw from 'tailwind-styled-components';
 

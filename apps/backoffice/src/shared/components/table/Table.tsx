@@ -15,7 +15,7 @@ import tw from 'tailwind-styled-components';
 
 export interface TableProps<T> {
   /** 테이블 컬럼 정의 */
-  columns: ColumnDef<T, unknown>[];
+  columns: ColumnDef<T, any>[];
   /** 테이블 데이터 */
   data: T[];
   /** 행 클릭 이벤트 핸들러 */
