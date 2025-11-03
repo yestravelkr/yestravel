@@ -40,6 +40,114 @@ export class ProductTemplateRouter extends BaseTrpcRouter {
   }
 
   @UseMiddlewares(BackofficeAuthMiddleware)
+  @Query({
+    input: z.object({
+      id: z.number().int().positive('유효한 ID를 입력해주세요'),
+    }),
+    output: z.discriminatedUnion('type', [
+      // Hotel Detail
+      z.object({
+        type: z.literal('HOTEL'),
+        id: z.number(),
+        name: z.string(),
+        brandId: z.number(),
+        brand: z.object({
+          id: z.number(),
+          name: z.string(),
+        }),
+        categories: z.array(
+          z.object({
+            id: z.number(),
+            name: z.string(),
+          })
+        ),
+        thumbnailUrls: z.array(z.string()),
+        description: z.string(),
+        detailContent: z.string(),
+        useStock: z.boolean(),
+        baseCapacity: z.number(),
+        maxCapacity: z.number(),
+        checkInTime: z.string(),
+        checkOutTime: z.string(),
+        bedTypes: z.array(z.string()),
+        tags: z.array(z.string()),
+        createdAt: z.date(),
+        updatedAt: z.date(),
+      }),
+      // Delivery Detail
+      z.object({
+        type: z.literal('DELIVERY'),
+        id: z.number(),
+        name: z.string(),
+        brandId: z.number(),
+        brand: z.object({
+          id: z.number(),
+          name: z.string(),
+        }),
+        categories: z.array(
+          z.object({
+            id: z.number(),
+            name: z.string(),
+          })
+        ),
+        thumbnailUrls: z.array(z.string()),
+        description: z.string(),
+        detailContent: z.string(),
+        useStock: z.boolean(),
+        useOptions: z.boolean(),
+        delivery: z.object({
+          deliveryFeeType: z.string(),
+          deliveryFee: z.number(),
+          freeDeliveryMinAmount: z.number(),
+          returnDeliveryFee: z.number(),
+          exchangeDeliveryFee: z.number(),
+          remoteAreaExtraFee: z.number(),
+          jejuExtraFee: z.number(),
+          isJejuRestricted: z.boolean(),
+          isRemoteIslandRestricted: z.boolean(),
+        }),
+        exchangeReturnInfo: z.string(),
+        productInfoNotice: z.string(),
+        createdAt: z.date(),
+        updatedAt: z.date(),
+      }),
+      // ETicket Detail
+      z.object({
+        type: z.literal('E-TICKET'),
+        id: z.number(),
+        name: z.string(),
+        brandId: z.number(),
+        brand: z.object({
+          id: z.number(),
+          name: z.string(),
+        }),
+        categories: z.array(
+          z.object({
+            id: z.number(),
+            name: z.string(),
+          })
+        ),
+        thumbnailUrls: z.array(z.string()),
+        description: z.string(),
+        detailContent: z.string(),
+        useStock: z.boolean(),
+        useOptions: z.boolean(),
+        createdAt: z.date(),
+        updatedAt: z.date(),
+      }),
+    ]),
+  })
+  async findById(
+    @Ctx() ctx: BackofficeAuthorizedContext,
+    @Input() input: { id: number }
+  ) {
+    return this.microserviceClient.send(
+      'backofficeProductTemplate.findById',
+      input
+    );
+  }
+
+  @UseMiddlewares(BackofficeAuthMiddleware)
   @Mutation({
     input: z.discriminatedUnion('type', [
       // Hotel Template
@@ -47,6 +155,7 @@ export class ProductTemplateRouter extends BaseTrpcRouter {
         type: z.literal('HOTEL'),
         name: z.string().min(1, '상품명은 필수입니다'),
         brandId: z.number().int().positive('브랜드를 선택해주세요'),
+        categoryIds: z.array(z.number().int().positive()).default([]),
         thumbnailUrls: z.array(z.string().url()).default([]),
         description: z.string().default(''),
         detailContent: z.string().default(''),
@@ -79,6 +188,7 @@ export class ProductTemplateRouter extends BaseTrpcRouter {
         type: z.literal('DELIVERY'),
         name: z.string().min(1, '상품명은 필수입니다'),
         brandId: z.number().int().positive('브랜드를 선택해주세요'),
+        categoryIds: z.array(z.number().int().positive()).default([]),
         thumbnailUrls: z.array(z.string().url()).default([]),
         description: z.string().default(''),
         detailContent: z.string().default(''),
@@ -103,6 +213,7 @@ export class ProductTemplateRouter extends BaseTrpcRouter {
         type: z.literal('E-TICKET'),
         name: z.string().min(1, '상품명은 필수입니다'),
         brandId: z.number().int().positive('브랜드를 선택해주세요'),
+        categoryIds: z.array(z.number().int().positive()).default([]),
         thumbnailUrls: z.array(z.string().url()).default([]),
         description: z.string().default(''),
         detailContent: z.string().default(''),

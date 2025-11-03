@@ -1,6 +1,15 @@
-import { Entity, Column, ManyToOne, JoinColumn, EntityManager } from 'typeorm';
+import {
+  Entity,
+  Column,
+  ManyToOne,
+  ManyToMany,
+  JoinTable,
+  JoinColumn,
+  EntityManager,
+} from 'typeorm';
 import { BaseEntity } from '@src/module/backoffice/domain/base.entity';
 import { BrandEntity } from '@src/module/backoffice/domain/brand.entity';
+import { CategoryEntity } from '@src/module/backoffice/domain/category.entity';
 import { TransactionService } from '@src/module/shared/transaction/transaction.service';
 import { getEntityManager } from '@src/database/datasources';
 import {
@@ -44,6 +53,15 @@ export class ProductTemplateEntity extends BaseEntity {
   // 재고 사용 여부 (공통)
   @Column({ name: 'use_stock', type: 'boolean', default: false })
   useStock: boolean;
+
+  // 카테고리 (Many-to-Many 관계)
+  @ManyToMany(() => CategoryEntity)
+  @JoinTable({
+    name: 'product_template_categories',
+    joinColumn: { name: 'product_template_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'category_id', referencedColumnName: 'id' },
+  })
+  categories: CategoryEntity[];
 }
 
 export const getProductTemplateRepository = (

@@ -8,12 +8,15 @@ import { HotelTemplateEntity } from '@src/module/backoffice/domain/hotel-templat
 import { DeliveryTemplateEntity } from '@src/module/backoffice/domain/delivery-template.entity';
 import { ETicketTemplateEntity } from '@src/module/backoffice/domain/eticket-template.entity';
 import { DeliveryEntity } from '@src/module/backoffice/domain/delivery.entity';
+import { validateCategoriesExist } from '@src/module/backoffice/domain/category.entity';
+import { upsertProductCategory } from '@src/module/backoffice/domain/product-template-category.entity';
 import type {
   FindAllProductTemplateQuery,
   ProductTemplateListItem,
   ProductTemplateListResponse,
   CreateProductTemplateInput,
   CreateProductTemplateResponse,
+  ProductTemplateDetail,
 } from './product-template.dto';
 
 @Injectable()
@@ -106,6 +109,153 @@ export class ProductTemplateService {
     };
   }
 
+  async findById(id: number): Promise<ProductTemplateDetail> {
+    // 1. 먼저 ProductTemplateRepository로 id와 type만 확인 (성능 최적화)
+    const baseTemplate =
+      await this.repositoryProvider.ProductTemplateRepository.findOne({
+        where: { id },
+        select: ['id', 'type'],
+      });
+
+    if (!baseTemplate) {
+      throw new NotFoundException(`상품 템플릿을 찾을 수 없습니다 (ID: ${id})`);
+    }
+
+    // 2. type에 따라 적절한 Repository에서 전체 데이터 조회
+    switch (baseTemplate.type) {
+      case 'HOTEL': {
+        const hotel =
+          await this.repositoryProvider.HotelTemplateRepository.findOneOrFail({
+            where: { id },
+            relations: ['brand', 'categories'],
+          }).catch(() => {
+            throw new NotFoundException(
+              `호텔 템플릿을 찾을 수 없습니다 (ID: ${id})`
+            );
+          });
+
+        return {
+          type: 'HOTEL',
+          id: hotel.id,
+          name: hotel.name,
+          brandId: hotel.brandId,
+          brand: {
+            id: hotel.brand.id,
+            name: hotel.brand.name,
+          },
+          categories: hotel.categories.map(cat => ({
+            id: cat.id,
+            name: cat.name,
+          })),
+          thumbnailUrls: hotel.thumbnailUrls,
+          description: hotel.description,
+          detailContent: hotel.detailContent,
+          useStock: hotel.useStock,
+          baseCapacity: hotel.baseCapacity,
+          maxCapacity: hotel.maxCapacity,
+          checkInTime: hotel.checkInTime,
+          checkOutTime: hotel.checkOutTime,
+          bedTypes: hotel.bedTypes,
+          tags: hotel.tags,
+          createdAt: hotel.createdAt,
+          updatedAt: hotel.updatedAt,
+        };
+      }
+
+      case 'DELIVERY': {
+        const delivery =
+          await this.repositoryProvider.DeliveryTemplateRepository.findOneOrFail(
+            {
+              where: { id },
+              relations: ['brand', 'categories'],
+            }
+          ).catch(() => {
+            throw new NotFoundException(
+              `배송상품 템플릿을 찾을 수 없습니다 (ID: ${id})`
+            );
+          });
+
+        const result: ProductTemplateDetail = {
+          type: 'DELIVERY',
+          id: delivery.id,
+          name: delivery.name,
+          brandId: delivery.brandId,
+          brand: {
+            id: delivery.brand.id,
+            name: delivery.brand.name,
+          },
+          categories: delivery.categories.map(cat => ({
+            id: cat.id,
+            name: cat.name,
+          })),
+          thumbnailUrls: delivery.thumbnailUrls,
+          description: delivery.description,
+          detailContent: delivery.detailContent,
+          useStock: delivery.useStock,
+          useOptions: delivery.useOptions,
+          delivery: {
+            deliveryFeeType: delivery.delivery.deliveryFeeType,
+            deliveryFee: delivery.delivery.deliveryFee,
+            freeDeliveryMinAmount: delivery.delivery.freeDeliveryMinAmount,
+            returnDeliveryFee: delivery.delivery.returnDeliveryFee,
+            exchangeDeliveryFee: delivery.delivery.exchangeDeliveryFee,
+            remoteAreaExtraFee: delivery.delivery.remoteAreaExtraFee,
+            jejuExtraFee: delivery.delivery.jejuExtraFee,
+            isJejuRestricted: delivery.delivery.isJejuRestricted,
+            isRemoteIslandRestricted:
+              delivery.delivery.isRemoteIslandRestricted,
+          },
+          exchangeReturnInfo: delivery.exchangeReturnInfo,
+          productInfoNotice: delivery.productInfoNotice,
+          createdAt: delivery.createdAt,
+          updatedAt: delivery.updatedAt,
+        };
+        return result;
+      }
+
+      case 'E-TICKET': {
+        const eticket =
+          await this.repositoryProvider.ETicketTemplateRepository.findOneOrFail(
+            {
+              where: { id },
+              relations: ['brand', 'categories'],
+            }
+          ).catch(() => {
+            throw new NotFoundException(
+              `E-Ticket 템플릿을 찾을 수 없습니다 (ID: ${id})`
+            );
+          });
+
+        return {
+          type: 'E-TICKET',
+          id: eticket.id,
+          name: eticket.name,
+          brandId: eticket.brandId,
+          brand: {
+            id: eticket.brand.id,
+            name: eticket.brand.name,
+          },
+          categories: eticket.categories.map(cat => ({
+            id: cat.id,
+            name: cat.name,
+          })),
+          thumbnailUrls: eticket.thumbnailUrls,
+          description: eticket.description,
+          detailContent: eticket.detailContent,
+          useStock: eticket.useStock,
+          useOptions: eticket.useOptions,
+          createdAt: eticket.createdAt,
+          updatedAt: eticket.updatedAt,
+        };
+      }
+
+      default:
+        throw new BadRequestException(
+          `지원하지 않는 상품 타입입니다: ${baseTemplate.type}`
+        );
+    }
+  }
+
   async create(
     input: CreateProductTemplateInput
   ): Promise<CreateProductTemplateResponse> {
@@ -120,7 +270,12 @@ export class ProductTemplateService {
       );
     }
 
-    // 2. 타입에 따라 적절한 Entity 생성 및 저장
+    // 2. 카테고리 존재 여부 확인 (categoryIds가 제공된 경우)
+    if (input.categoryIds && input.categoryIds.length > 0) {
+      await validateCategoriesExist(input.categoryIds);
+    }
+
+    // 3. 타입에 따라 적절한 Entity 생성 및 저장
     let savedTemplate:
       | HotelTemplateEntity
       | DeliveryTemplateEntity
@@ -213,6 +368,11 @@ export class ProductTemplateService {
         throw new BadRequestException(
           `지원하지 않는 상품 타입입니다: ${input.type}`
         );
+    }
+
+    // 4. 카테고리 연결 (categoryIds가 제공된 경우)
+    if (input.categoryIds && input.categoryIds.length > 0) {
+      await upsertProductCategory(savedTemplate.id, input.categoryIds);
     }
 
     return {
