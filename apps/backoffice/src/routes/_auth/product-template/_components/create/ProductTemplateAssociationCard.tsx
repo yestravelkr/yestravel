@@ -1,37 +1,37 @@
-import { UseFormRegister } from 'react-hook-form';
+import { useFormContext } from 'react-hook-form';
+import tw from 'tailwind-styled-components';
 
-import { Label, Select } from './styled';
+import { Label } from './styled';
 
+import { BrandSelector } from '@/shared/components/form/BrandSelector';
 import {
   FormCard,
   FormField,
   FormSection,
 } from '@/shared/components/form/FormLayout';
 
-interface ProductTemplateAssociationCardProps {
-  /** React Hook Form register */
-  register: UseFormRegister<any>;
-}
+export function ProductTemplateAssociationCard() {
+  const {
+    formState: { errors },
+  } = useFormContext();
 
-export function ProductTemplateAssociationCard({
-  register,
-}: ProductTemplateAssociationCardProps) {
   return (
     <FormCard title="상품 구분">
       <FormSection>
         <FormField>
           <Label htmlFor="brandId">브랜드</Label>
-          <Select
-            id="brandId"
-            {...register('brandId', { valueAsNumber: true })}
-          >
-            <option value="">브랜드를 선택하세요</option>
-            <option value="1">예시 브랜드 A</option>
-            <option value="2">예시 브랜드 B</option>
-            <option value="3">예시 브랜드 C</option>
-          </Select>
+          <BrandSelector name="brandId" required />
+          {errors?.brandId && (
+            <ErrorMessage>{errors.brandId.message as string}</ErrorMessage>
+          )}
         </FormField>
       </FormSection>
     </FormCard>
   );
 }
+
+const ErrorMessage = tw.p`
+  mt-1
+  text-sm
+  text-red-500
+`;
