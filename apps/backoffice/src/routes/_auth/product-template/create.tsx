@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { Button } from '@yestravelkr/min-design-system/button';
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, FormProvider } from 'react-hook-form';
 
 import { BasicInfoCard } from './_components/create/BasicInfoCard';
 import { ProductTemplateAssociationCard } from './_components/create/ProductTemplateAssociationCard';
@@ -50,13 +50,7 @@ function CreateProductTemplatePage() {
 
   const [thumbnails, setThumbnails] = useState<string[]>([]);
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-    setValue,
-    watch,
-  } = useForm<HotelTemplateFormData>({
+  const methods = useForm<HotelTemplateFormData>({
     defaultValues: {
       name: '',
       description: '',
@@ -72,6 +66,14 @@ function CreateProductTemplatePage() {
       thumbnailUrls: [],
     },
   });
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    setValue,
+    watch,
+  } = methods;
 
   const handleCancel = () => {
     navigate({ to: '/product-template' });
@@ -123,48 +125,50 @@ function CreateProductTemplatePage() {
         headerActions={<CancelButton to="/product-template">취소</CancelButton>}
       >
         <FormContainer>
-          <Form onSubmit={handleSubmit(onSubmit)}>
-            <FormColumns>
-              <LeftColumn>
-                <BasicInfoCard
-                  thumbnails={thumbnails}
-                  onAddThumbnail={handleAddThumbnail}
-                  onRemoveThumbnail={handleRemoveThumbnail}
-                  register={register}
-                />
-                <ProductTemplateAssociationCard register={register} />
-                <ProductTemplateDetailInfoCard
-                  register={register}
-                  setValue={setValue}
-                  watch={watch}
-                />
-              </LeftColumn>
+          <FormProvider {...methods}>
+            <Form onSubmit={handleSubmit(onSubmit)}>
+              <FormColumns>
+                <LeftColumn>
+                  <BasicInfoCard
+                    thumbnails={thumbnails}
+                    onAddThumbnail={handleAddThumbnail}
+                    onRemoveThumbnail={handleRemoveThumbnail}
+                    register={register}
+                  />
+                  <ProductTemplateAssociationCard />
+                  <ProductTemplateDetailInfoCard
+                    register={register}
+                    setValue={setValue}
+                    watch={watch}
+                  />
+                </LeftColumn>
 
-              <RightColumn>
-                <ProductTemplateDetailPageCard
-                  setValue={setValue}
-                  watch={watch}
-                />
-              </RightColumn>
-            </FormColumns>
+                <RightColumn>
+                  <ProductTemplateDetailPageCard
+                    setValue={setValue}
+                    watch={watch}
+                  />
+                </RightColumn>
+              </FormColumns>
 
-            <FormActions>
-              <SecondaryButton type="button" onClick={handleCancel}>
-                취소
-              </SecondaryButton>
-              <Button
-                type="submit"
-                kind="primary"
-                variant="solid"
-                size="large"
-                disabled={createMutation.isPending || isSubmitting}
-              >
-                {createMutation.isPending || isSubmitting
-                  ? '등록 중...'
-                  : '품목 등록'}
-              </Button>
-            </FormActions>
-          </Form>
+              <FormActions>
+                <SecondaryButton type="button" onClick={handleCancel}>
+                  취소
+                </SecondaryButton>
+                <Button
+                  type="submit"
+                  kind="primary"
+                  variant="solid"
+                  size="large"
+                  disabled={createMutation.isPending || isSubmitting}
+                >
+                  {createMutation.isPending || isSubmitting
+                    ? '등록 중...'
+                    : '품목 등록'}
+                </Button>
+              </FormActions>
+            </Form>
+          </FormProvider>
         </FormContainer>
       </MajorPageLayout>
 
