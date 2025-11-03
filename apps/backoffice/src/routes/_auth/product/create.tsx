@@ -11,7 +11,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { Button } from '@yestravelkr/min-design-system';
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, FormProvider } from 'react-hook-form';
 
 import { BasicInfoCard } from '../product-template/_components/create/BasicInfoCard';
 import { ProductTemplateAssociationCard } from '../product-template/_components/create/ProductTemplateAssociationCard';
@@ -52,13 +52,7 @@ function CreateProductPage() {
   const navigate = useNavigate();
   const [thumbnails, setThumbnails] = useState<string[]>([]);
 
-  const {
-    register,
-    handleSubmit,
-    formState: { isSubmitting },
-    setValue,
-    watch,
-  } = useForm<ProductFormData>({
+  const methods = useForm<ProductFormData>({
     defaultValues: {
       name: '',
       description: '',
@@ -74,6 +68,14 @@ function CreateProductPage() {
       thumbnailUrls: [],
     },
   });
+
+  const {
+    register,
+    handleSubmit,
+    formState: { isSubmitting },
+    setValue,
+    watch,
+  } = methods;
 
   const handleCancel = () => {
     navigate({ to: '/product' });
@@ -116,52 +118,54 @@ function CreateProductPage() {
       }
     >
       <FormContainer>
-        <Form onSubmit={handleSubmit(onSubmit)}>
-          <FormColumns>
-            <LeftColumn>
-              <BasicInfoCard
-                thumbnails={thumbnails}
-                onAddThumbnail={handleAddThumbnail}
-                onRemoveThumbnail={handleRemoveThumbnail}
-                register={register}
-              />
-              <ProductTemplateAssociationCard register={register} />
-              <ProductTemplateDetailInfoCard
-                register={register}
-                setValue={setValue}
-                watch={watch}
-              />
-            </LeftColumn>
+        <FormProvider {...methods}>
+          <Form onSubmit={handleSubmit(onSubmit)}>
+            <FormColumns>
+              <LeftColumn>
+                <BasicInfoCard
+                  thumbnails={thumbnails}
+                  onAddThumbnail={handleAddThumbnail}
+                  onRemoveThumbnail={handleRemoveThumbnail}
+                  register={register}
+                />
+                <ProductTemplateAssociationCard />
+                <ProductTemplateDetailInfoCard
+                  register={register}
+                  setValue={setValue}
+                  watch={watch}
+                />
+              </LeftColumn>
 
-            <RightColumn>
-              <ProductTemplateDetailPageCard
-                setValue={setValue}
-                watch={watch}
-              />
-            </RightColumn>
-          </FormColumns>
+              <RightColumn>
+                <ProductTemplateDetailPageCard
+                  setValue={setValue}
+                  watch={watch}
+                />
+              </RightColumn>
+            </FormColumns>
 
-          <FormActions>
-            <Button
-              type="button"
-              kind="neutral"
-              variant="outline"
-              size="large"
-              onClick={handleCancel}
-            >
-              취소
-            </Button>
-            <Button
-              type="submit"
-              kind="primary"
-              variant="solid"
-              size="large"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? '등록 중...' : '상품 등록'}
-            </Button>
-          </FormActions>
-        </Form>
+            <FormActions>
+              <Button
+                type="button"
+                kind="neutral"
+                variant="outline"
+                size="large"
+                onClick={handleCancel}
+              >
+                취소
+              </Button>
+              <Button
+                type="submit"
+                kind="primary"
+                variant="solid"
+                size="large"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? '등록 중...' : '상품 등록'}
+              </Button>
+            </FormActions>
+          </Form>
+        </FormProvider>
       </FormContainer>
     </MajorPageLayout>
   );
