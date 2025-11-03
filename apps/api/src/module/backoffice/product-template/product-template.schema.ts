@@ -298,3 +298,46 @@ export const productTemplateDetailSchema = z.discriminatedUnion('type', [
   deliveryTemplateDetailSchema,
   eticketTemplateDetailSchema,
 ]);
+
+// ========================================
+// Update Input 스키마
+// ========================================
+
+// Hotel 수정 스키마 (id 추가, type은 변경 불가)
+export const updateHotelTemplateInputSchema = createHotelTemplateInputSchema
+  .omit({ type: true })
+  .extend({
+    id: z.number().int().positive('유효한 ID를 입력해주세요'),
+  });
+
+// Delivery 수정 스키마 (id 추가, type은 변경 불가)
+export const updateDeliveryTemplateInputSchema =
+  createDeliveryTemplateInputSchema.omit({ type: true }).extend({
+    id: z.number().int().positive('유효한 ID를 입력해주세요'),
+  });
+
+// ETicket 수정 스키마 (id 추가, type은 변경 불가)
+export const updateETicketTemplateInputSchema = createETicketTemplateInputSchema
+  .omit({ type: true })
+  .extend({
+    id: z.number().int().positive('유효한 ID를 입력해주세요'),
+  });
+
+// ========================================
+// Update Response 스키마
+// ========================================
+
+export const updateProductTemplateResponseSchema = z.object({
+  id: z.number(),
+  name: z.string(),
+  message: z.string(),
+});
+
+// ========================================
+// Delete Response 스키마
+// ========================================
+
+export const deleteProductTemplateResponseSchema = z.object({
+  id: z.number(),
+  message: z.string(),
+});

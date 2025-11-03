@@ -77,7 +77,7 @@ export class AddDeliveryAndEticketTemplates1760425824470
     await queryRunner.query(`DROP TABLE "eticket_template"`);
     await queryRunner.query(`DROP TABLE "delivery_template"`);
 
-    // Enum 값 제거는 PostgreSQL에서 직접 지원하지 않으므로 
+    // Enum 값 제거는 PostgreSQL에서 직접 지원하지 않으므로
     // enum을 재생성해야 함 (복잡하므로 생략, 필요시 수동 처리)
     // 실제 프로덕션에서는 enum 값을 제거하는 대신 사용하지 않는 것을 권장
   }

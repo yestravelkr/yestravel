@@ -142,3 +142,86 @@ export type ProductTemplateDetail =
   | HotelTemplateDetail
   | DeliveryTemplateDetail
   | ETicketTemplateDetail;
+
+// ========================================
+// Update DTO
+// ========================================
+
+// Hotel 수정 Input
+export interface UpdateHotelTemplateInput {
+  id: number;
+  name: string;
+  brandId: number;
+  categoryIds?: number[];
+  thumbnailUrls?: string[];
+  description?: string;
+  detailContent?: string;
+  useStock?: boolean;
+  baseCapacity: number;
+  maxCapacity: number;
+  checkInTime: string;
+  checkOutTime: string;
+  bedTypes?: string[];
+  tags?: string[];
+}
+
+// Delivery 수정 Input
+export interface UpdateDeliveryTemplateInput {
+  id: number;
+  name: string;
+  brandId: number;
+  categoryIds?: number[];
+  thumbnailUrls?: string[];
+  description?: string;
+  detailContent?: string;
+  useStock?: boolean;
+  useOptions?: boolean;
+  delivery: {
+    deliveryFeeType: string;
+    deliveryFee?: number;
+    freeDeliveryMinAmount?: number;
+    returnDeliveryFee?: number;
+    exchangeDeliveryFee?: number;
+    remoteAreaExtraFee?: number;
+    jejuExtraFee?: number;
+    isJejuRestricted?: boolean;
+    isRemoteIslandRestricted?: boolean;
+  };
+  exchangeReturnInfo?: string;
+  productInfoNotice?: string;
+}
+
+// ETicket 수정 Input
+export interface UpdateETicketTemplateInput {
+  id: number;
+  name: string;
+  brandId: number;
+  categoryIds?: number[];
+  thumbnailUrls?: string[];
+  description?: string;
+  detailContent?: string;
+  useStock?: boolean;
+  useOptions?: boolean;
+}
+
+// Update Input Union 타입
+export type UpdateProductTemplateInput =
+  | UpdateHotelTemplateInput
+  | UpdateDeliveryTemplateInput
+  | UpdateETicketTemplateInput;
+
+// Update Response
+export interface UpdateProductTemplateResponse {
+  id: number;
+  name: string;
+  message: string;
+}
+
+// ========================================
+// Delete DTO
+// ========================================
+
+export interface DeleteProductTemplateResponse {
+  id: number;
+  message: string;
+}
