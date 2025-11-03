@@ -70,7 +70,7 @@ function CreateProductTemplatePage() {
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { isSubmitting },
     setValue,
     watch,
   } = methods;
