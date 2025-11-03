@@ -64,9 +64,10 @@ export function BrandSelector({
       {...register(name, {
         valueAsNumber: true,
         required: required ? '브랜드를 선택해주세요.' : false,
+        setValueAs: (value) => (value === '' ? undefined : Number(value)),
       })}
     >
-      <option value="">브랜드를 선택하세요</option>
+      {!required && <option value="">브랜드를 선택하세요</option>}
       {brandList.map((brand) => (
         <option key={brand.id} value={brand.id}>
           {brand.name}(ID: {brand.id})
