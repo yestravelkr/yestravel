@@ -36,7 +36,11 @@ export function BrandSelector({
   } = useFormContext();
 
   // 브랜드 목록 조회
-  const { data: brands, isLoading } = trpc.backofficeBrand.findAll.useQuery();
+  const {
+    data: brands,
+    isLoading,
+    isError,
+  } = trpc.backofficeBrand.findAll.useQuery();
 
   const error = errors[name];
 
@@ -47,6 +51,9 @@ export function BrandSelector({
       </Select>
     );
   }
+
+  // 에러 발생 시 빈 리스트 표시
+  const brandList = isError ? [] : brands || [];
 
   return (
     <Select
@@ -60,7 +67,7 @@ export function BrandSelector({
       })}
     >
       <option value="">브랜드를 선택하세요</option>
-      {brands?.map((brand) => (
+      {brandList.map((brand) => (
         <option key={brand.id} value={brand.id}>
           {brand.name}(ID: {brand.id})
         </option>
