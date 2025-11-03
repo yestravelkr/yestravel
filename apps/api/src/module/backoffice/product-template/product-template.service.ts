@@ -8,6 +8,8 @@ import { HotelTemplateEntity } from '@src/module/backoffice/domain/hotel-templat
 import { DeliveryTemplateEntity } from '@src/module/backoffice/domain/delivery-template.entity';
 import { ETicketTemplateEntity } from '@src/module/backoffice/domain/eticket-template.entity';
 import { DeliveryEntity } from '@src/module/backoffice/domain/delivery.entity';
+import { validateCategoriesExist } from '@src/module/backoffice/domain/category.entity';
+import { upsertProductCategory } from '@src/module/backoffice/domain/product-template-category.entity';
 import type {
   FindAllProductTemplateQuery,
   ProductTemplateListItem,
@@ -108,11 +110,11 @@ export class ProductTemplateService {
   }
 
   async findById(id: number): Promise<ProductTemplateDetail> {
-    // 1. 먼저 ProductTemplateRepository로 type 확인
+    // 1. 먼저 ProductTemplateRepository로 id와 type만 확인 (성능 최적화)
     const baseTemplate =
       await this.repositoryProvider.ProductTemplateRepository.findOne({
         where: { id },
-        relations: ['brand', 'categories'],
+        select: ['id', 'type'],
       });
 
     if (!baseTemplate) {
@@ -123,16 +125,14 @@ export class ProductTemplateService {
     switch (baseTemplate.type) {
       case 'HOTEL': {
         const hotel =
-          await this.repositoryProvider.HotelTemplateRepository.findOne({
+          await this.repositoryProvider.HotelTemplateRepository.findOneOrFail({
             where: { id },
             relations: ['brand', 'categories'],
+          }).catch(() => {
+            throw new NotFoundException(
+              `호텔 템플릿을 찾을 수 없습니다 (ID: ${id})`
+            );
           });
-
-        if (!hotel) {
-          throw new NotFoundException(
-            `호텔 템플릿을 찾을 수 없습니다 (ID: ${id})`
-          );
-        }
 
         return {
           type: 'HOTEL',
@@ -164,16 +164,16 @@ export class ProductTemplateService {
 
       case 'DELIVERY': {
         const delivery =
-          await this.repositoryProvider.DeliveryTemplateRepository.findOne({
-            where: { id },
-            relations: ['brand', 'categories'],
+          await this.repositoryProvider.DeliveryTemplateRepository.findOneOrFail(
+            {
+              where: { id },
+              relations: ['brand', 'categories'],
+            }
+          ).catch(() => {
+            throw new NotFoundException(
+              `배송상품 템플릿을 찾을 수 없습니다 (ID: ${id})`
+            );
           });
-
-        if (!delivery) {
-          throw new NotFoundException(
-            `배송상품 템플릿을 찾을 수 없습니다 (ID: ${id})`
-          );
-        }
 
         const result: ProductTemplateDetail = {
           type: 'DELIVERY',
@@ -215,16 +215,16 @@ export class ProductTemplateService {
 
       case 'E-TICKET': {
         const eticket =
-          await this.repositoryProvider.ETicketTemplateRepository.findOne({
-            where: { id },
-            relations: ['brand', 'categories'],
+          await this.repositoryProvider.ETicketTemplateRepository.findOneOrFail(
+            {
+              where: { id },
+              relations: ['brand', 'categories'],
+            }
+          ).catch(() => {
+            throw new NotFoundException(
+              `E-Ticket 템플릿을 찾을 수 없습니다 (ID: ${id})`
+            );
           });
-
-        if (!eticket) {
-          throw new NotFoundException(
-            `E-Ticket 템플릿을 찾을 수 없습니다 (ID: ${id})`
-          );
-        }
 
         return {
           type: 'E-TICKET',
@@ -272,13 +272,7 @@ export class ProductTemplateService {
 
     // 2. 카테고리 존재 여부 확인 (categoryIds가 제공된 경우)
     if (input.categoryIds && input.categoryIds.length > 0) {
-      const categories = await this.repositoryProvider.CategoryRepository.find({
-        where: input.categoryIds.map(id => ({ id })),
-      });
-
-      if (categories.length !== input.categoryIds.length) {
-        throw new NotFoundException('일부 카테고리를 찾을 수 없습니다');
-      }
+      await validateCategoriesExist(input.categoryIds);
     }
 
     // 3. 타입에 따라 적절한 Entity 생성 및 저장
@@ -378,14 +372,7 @@ export class ProductTemplateService {
 
     // 4. 카테고리 연결 (categoryIds가 제공된 경우)
     if (input.categoryIds && input.categoryIds.length > 0) {
-      const categoryRelations = input.categoryIds.map(categoryId => ({
-        productTemplateId: savedTemplate.id,
-        categoryId,
-      }));
-
-      await this.repositoryProvider.ProductTemplateCategoryRepository.insert(
-        categoryRelations
-      );
+      await upsertProductCategory(savedTemplate.id, input.categoryIds);
     }
 
     return {

@@ -44,3 +44,32 @@ export class ProductTemplateCategoryEntity {
 export const getProductTemplateCategoryRepository = (
   source?: TransactionService | EntityManager
 ) => getEntityManager(source).getRepository(ProductTemplateCategoryEntity);
+
+/**
+ * ProductTemplate의 카테고리 관계를 upsert하는 함수
+ * 기존 관계를 모두 삭제하고 새로운 관계를 생성합니다.
+ *
+ * @param productTemplateId 상품 템플릿 ID
+ * @param categoryIds 연결할 카테고리 ID 배열
+ * @param source TransactionService 또는 EntityManager (선택)
+ */
+export async function upsertProductCategory(
+  productTemplateId: number,
+  categoryIds: number[],
+  source?: TransactionService | EntityManager
+): Promise<void> {
+  const repository = getProductTemplateCategoryRepository(source);
+
+  // 1. 기존 관계 삭제
+  await repository.delete({ productTemplateId });
+
+  // 2. 새로운 관계 생성
+  if (categoryIds.length > 0) {
+    const categoryRelations = categoryIds.map(categoryId => ({
+      productTemplateId,
+      categoryId,
+    }));
+
+    await repository.insert(categoryRelations);
+  }
+}

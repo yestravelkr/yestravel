@@ -9,7 +9,9 @@ import {
   OneToMany,
   JoinColumn,
   EntityManager,
+  In,
 } from 'typeorm';
+import { NotFoundException } from '@nestjs/common';
 import { Nullish } from '@src/types/utility.type';
 import { TransactionService } from '@src/module/shared/transaction/transaction.service';
 import { getEntityManager } from '@src/database/datasources';
@@ -79,3 +81,24 @@ export class CategoryEntity {
 export const getCategoryRepository = (
   source?: TransactionService | EntityManager
 ) => getEntityManager(source).getRepository(CategoryEntity);
+
+/**
+ * 카테고리 존재 여부 검증 함수
+ *
+ * @param categoryIds 검증할 카테고리 ID 배열
+ * @param source TransactionService 또는 EntityManager (선택)
+ * @throws NotFoundException 일부 카테고리를 찾을 수 없는 경우
+ */
+export async function validateCategoriesExist(
+  categoryIds: number[],
+  source?: TransactionService | EntityManager
+): Promise<void> {
+  const repository = getCategoryRepository(source);
+  const categories = await repository.find({
+    where: { id: In(categoryIds) },
+  });
+
+  if (categories.length !== categoryIds.length) {
+    throw new NotFoundException('일부 카테고리를 찾을 수 없습니다');
+  }
+}
