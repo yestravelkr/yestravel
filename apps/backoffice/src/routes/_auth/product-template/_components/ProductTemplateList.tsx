@@ -29,6 +29,7 @@ interface ProductTemplate {
 export function ProductTemplateList() {
   const navigate = useNavigate();
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const utils = trpc.useUtils();
 
   // 품목 템플릿 리스트 조회 (페이지네이션 포함)
   const [data] = trpc.backofficeProductTemplate.findAll.useSuspenseQuery({
@@ -36,6 +37,14 @@ export function ProductTemplateList() {
     limit: 50,
   });
   const productTemplates = data?.data || [];
+
+  // 품목 템플릿 삭제 mutation
+  const deleteMutation = trpc.backofficeProductTemplate.delete.useMutation({
+    onSuccess: () => {
+      // 삭제 성공 시 리스트 갱신
+      utils.backofficeProductTemplate.findAll.invalidate();
+    },
+  });
 
   // 전체 선택/해제
   const handleSelectAll = (checked: boolean) => {
@@ -56,10 +65,15 @@ export function ProductTemplateList() {
   };
 
   // 삭제 처리
-  const handleDelete = (id: number, name: string) => {
+  const handleDelete = async (id: number, name: string) => {
     if (confirm(`"${name}" 품목을 삭제하시겠습니까?`)) {
-      // TODO: 삭제 API 연동
-      console.log('Delete:', id);
+      try {
+        await deleteMutation.mutateAsync({ id });
+        alert('품목이 삭제되었습니다.');
+      } catch (err) {
+        console.error('품목 삭제 실패:', err);
+        alert('품목 삭제에 실패했습니다. 다시 시도해주세요.');
+      }
     }
   };
 
