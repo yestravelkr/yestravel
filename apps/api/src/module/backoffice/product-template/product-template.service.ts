@@ -115,14 +115,14 @@ export class ProductTemplateService {
   async findById(id: number): Promise<ProductTemplateDetail> {
     // 1. 먼저 ProductTemplateRepository로 id와 type만 확인 (성능 최적화)
     const baseTemplate =
-      await this.repositoryProvider.ProductTemplateRepository.findOne({
+      await this.repositoryProvider.ProductTemplateRepository.findOneOrFail({
         where: { id },
         select: ['id', 'type'],
+      }).catch(() => {
+        throw new NotFoundException(
+          `상품 템플릿을 찾을 수 없습니다 (ID: ${id})`
+        );
       });
-
-    if (!baseTemplate) {
-      throw new NotFoundException(`상품 템플릿을 찾을 수 없습니다 (ID: ${id})`);
-    }
 
     // 2. type에 따라 적절한 Repository에서 전체 데이터 조회
     switch (baseTemplate.type) {
@@ -263,15 +263,13 @@ export class ProductTemplateService {
     input: CreateProductTemplateInput
   ): Promise<CreateProductTemplateResponse> {
     // 1. 브랜드 존재 여부 확인
-    const brand = await this.repositoryProvider.BrandRepository.findOne({
+    await this.repositoryProvider.BrandRepository.findOneOrFail({
       where: { id: input.brandId },
-    });
-
-    if (!brand) {
+    }).catch(() => {
       throw new NotFoundException(
         `브랜드를 찾을 수 없습니다 (ID: ${input.brandId})`
       );
-    }
+    });
 
     // 2. 카테고리 존재 여부 확인 (categoryIds가 제공된 경우)
     if (input.categoryIds && input.categoryIds.length > 0) {
@@ -391,27 +389,23 @@ export class ProductTemplateService {
   ): Promise<UpdateProductTemplateResponse> {
     // 1. 기존 템플릿 조회 (타입 확인용)
     const existingTemplate =
-      await this.repositoryProvider.ProductTemplateRepository.findOne({
+      await this.repositoryProvider.ProductTemplateRepository.findOneOrFail({
         where: { id: input.id },
         select: ['id', 'type'],
+      }).catch(() => {
+        throw new NotFoundException(
+          `상품 템플릿을 찾을 수 없습니다 (ID: ${input.id})`
+        );
       });
 
-    if (!existingTemplate) {
-      throw new NotFoundException(
-        `상품 템플릿을 찾을 수 없습니다 (ID: ${input.id})`
-      );
-    }
-
     // 2. 브랜드 존재 여부 확인
-    const brand = await this.repositoryProvider.BrandRepository.findOne({
+    await this.repositoryProvider.BrandRepository.findOneOrFail({
       where: { id: input.brandId },
-    });
-
-    if (!brand) {
+    }).catch(() => {
       throw new NotFoundException(
         `브랜드를 찾을 수 없습니다 (ID: ${input.brandId})`
       );
-    }
+    });
 
     // 3. 카테고리 존재 여부 확인
     if (input.categoryIds && input.categoryIds.length > 0) {
@@ -568,14 +562,14 @@ export class ProductTemplateService {
   async delete(id: number): Promise<DeleteProductTemplateResponse> {
     // 1. 템플릿 존재 여부 확인
     const template =
-      await this.repositoryProvider.ProductTemplateRepository.findOne({
+      await this.repositoryProvider.ProductTemplateRepository.findOneOrFail({
         where: { id },
         select: ['id', 'type', 'name'],
+      }).catch(() => {
+        throw new NotFoundException(
+          `상품 템플릿을 찾을 수 없습니다 (ID: ${id})`
+        );
       });
-
-    if (!template) {
-      throw new NotFoundException(`상품 템플릿을 찾을 수 없습니다 (ID: ${id})`);
-    }
 
     // 2. 타입에 따라 적절한 Repository에서 soft delete
     switch (template.type) {
