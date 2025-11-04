@@ -545,6 +545,38 @@ async findHotelDetail(id: number): Promise<HotelTemplate> {
 **실제 예시:**
 - `product_template` (부모) → `hotel_template`, `delivery_template`, `eticket_template` (자식)
 
+### ⚠️ 중요: PostgreSQL INHERITS 특성
+
+**컬럼 추가/삭제 시 주의사항:**
+
+PostgreSQL INHERITS를 사용하면 부모 테이블에 컬럼을 추가하면 **자식 테이블에 자동으로 상속**됩니다.
+
+```sql
+-- ✅ 올바른 방법 - 부모 테이블에만 추가
+ALTER TABLE "product_template" ADD "deleted_at" TIMESTAMP;
+-- hotel_template, delivery_template, eticket_template에 자동으로 추가됨
+
+-- ❌ 잘못된 방법 - 각 테이블에 개별 추가 (중복)
+ALTER TABLE "product_template" ADD "deleted_at" TIMESTAMP;
+ALTER TABLE "hotel_template" ADD "deleted_at" TIMESTAMP;  -- 불필요
+ALTER TABLE "delivery_template" ADD "deleted_at" TIMESTAMP;  -- 불필요
+```
+
+**Migration 작성 시:**
+- 부모 테이블(`product_template`)에만 컬럼 추가/삭제
+- 자식 테이블들은 자동으로 변경사항 반영
+- 외래키 제약조건은 각 테이블에 개별 추가 필요
+
+**Entity 계층 구조:**
+```
+BaseEntity (id, createdAt, updatedAt)
+  └─ SoftDeleteEntity (deletedAt)
+      └─ ProductTemplateEntity (type, name, brandId, ...)
+          ├─ HotelTemplateEntity (baseCapacity, maxCapacity, ...)
+          ├─ DeliveryTemplateEntity (useOptions, delivery, ...)
+          └─ ETicketTemplateEntity (useOptions)
+```
+
 ## Enum 네이밍 규칙
 
 **Enum 정의 패턴:**
