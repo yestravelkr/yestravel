@@ -367,7 +367,7 @@ export class ProductTemplateService {
 
       default:
         throw new BadRequestException(
-          `지원하지 않는 상품 타입입니다: ${input.type}`
+          `지원하지 않는 상품 타입입니다: ${(input as any).type}`
         );
     }
 
