@@ -15,6 +15,8 @@ import { Input } from './Input';
 export interface TagsInputProps {
   /** 초기 태그 목록 (기본값: []) */
   defaultValues?: string[];
+  /** 제어 컴포넌트로 사용 시 현재 값 */
+  value?: string[];
   /** 태그 목록이 변경될 때 호출되는 선택적 콜백 */
   onChange?: (tags: string[]) => void;
   /** 입력 필드의 placeholder 텍스트 */
@@ -27,29 +29,23 @@ export interface TagsInputProps {
 
 export function TagsInput({
   defaultValues = [],
+  value,
   onChange,
   placeholder = '태그를 입력하고 Enter 또는 콤마(,)를 눌러주세요',
   maxTags,
   disabled = false,
 }: TagsInputProps) {
-  const [tags, setTags] = useState<string[]>(defaultValues);
-  const prevDefaultValuesRef = useRef<string[]>(defaultValues);
+  // value prop이 있으면 제어 컴포넌트, 없으면 비제어 컴포넌트
+  const isControlled = value !== undefined;
+  const [internalTags, setInternalTags] = useState<string[]>(defaultValues);
+  const tags = isControlled ? value : internalTags;
 
-  // defaultValues가 실제로 변경되었을 때만 내부 상태를 갱신
-  useEffect(() => {
-    const normalizedDefaultValues = defaultValues ?? [];
-    const prevDefaultValues = prevDefaultValuesRef.current ?? [];
-
-    if (!areArraysEqual(prevDefaultValues, normalizedDefaultValues)) {
-      setTags(normalizedDefaultValues);
-      prevDefaultValuesRef.current = normalizedDefaultValues;
+  const updateTags = (newTags: string[]) => {
+    if (!isControlled) {
+      setInternalTags(newTags);
     }
-  }, [defaultValues]);
-
-  // tags가 변경될 때마다 onChange 콜백 호출
-  useEffect(() => {
-    onChange?.(tags);
-  }, [tags, onChange]);
+    onChange?.(newTags);
+  };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     // IME 조합 중 Enter 시 마지막 글자 중복 방지
@@ -79,13 +75,13 @@ export function TagsInput({
         return;
       }
 
-      setTags((prev) => [...prev, trimmedValue]);
+      updateTags([...tags, trimmedValue]);
       inputEl.value = '';
     }
   };
 
   const handleRemoveTag = (tagToRemove: string) => {
-    setTags(tags.filter((tag) => tag !== tagToRemove));
+    updateTags(tags.filter((tag) => tag !== tagToRemove));
   };
 
   return (

@@ -76,7 +76,7 @@ export function ProductTemplateDetailInfoCard({
           <Label htmlFor="bedTypes">침대 구성</Label>
           <TagsInput
             placeholder="예) 퀸베드 1개, 싱글베드 1개"
-            defaultValues={bedTypes}
+            value={bedTypes}
             onChange={(value) => setValue('bedTypes', value)}
           />
         </FormField>
@@ -84,7 +84,7 @@ export function ProductTemplateDetailInfoCard({
           <Label htmlFor="tags">태그</Label>
           <TagsInput
             placeholder="예) 바다 전망, 조식 포함"
-            defaultValues={tags}
+            value={tags}
             onChange={(value) => setValue('tags', value)}
           />
         </FormField>
