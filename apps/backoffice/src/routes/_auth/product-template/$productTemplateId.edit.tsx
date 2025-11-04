@@ -56,6 +56,9 @@ function EditProductTemplatePage() {
       id: Number(productTemplateId),
     });
 
+  // 품목 템플릿 수정 mutation
+  const updateMutation = trpc.backofficeProductTemplate.update.useMutation();
+
   const [thumbnails, setThumbnails] = useState<string[]>([]);
 
   const methods = useForm<HotelTemplateFormData>({
@@ -110,32 +113,23 @@ function EditProductTemplatePage() {
   };
 
   const onSubmit = async (formData: HotelTemplateFormData) => {
-    console.log('수정 데이터:', {
-      id: Number(productTemplateId),
-      type: 'HOTEL',
-      name: formData.name,
-      brandId: formData.brandId,
-      thumbnailUrls: thumbnails,
-      description: formData.description,
-      detailContent: formData.detailContent,
-      useStock: formData.useStock,
-      baseCapacity: formData.baseCapacity,
-      maxCapacity: formData.maxCapacity,
-      checkInTime: formData.checkInTime,
-      checkOutTime: formData.checkOutTime,
-      bedTypes: formData.bedTypes,
-      tags: formData.tags,
-    });
-
     try {
-      // TODO: update API 연동 필요
-      // const updateMutation = trpc.backofficeProductTemplate.update.useMutation();
-      // await updateMutation.mutateAsync({
-      //   id: Number(productTemplateId),
-      //   type: 'HOTEL',
-      //   ...formData,
-      //   thumbnailUrls: thumbnails,
-      // });
+      await updateMutation.mutateAsync({
+        id: Number(productTemplateId),
+        name: formData.name,
+        brandId: formData.brandId,
+        categoryIds: [],
+        thumbnailUrls: thumbnails,
+        description: formData.description,
+        detailContent: formData.detailContent,
+        useStock: formData.useStock,
+        baseCapacity: formData.baseCapacity,
+        maxCapacity: formData.maxCapacity,
+        checkInTime: formData.checkInTime,
+        checkOutTime: formData.checkOutTime,
+        bedTypes: formData.bedTypes,
+        tags: formData.tags,
+      });
 
       success('품목이 성공적으로 수정되었습니다.');
       setTimeout(() => {
@@ -228,9 +222,11 @@ function EditProductTemplatePage() {
                   kind="primary"
                   variant="solid"
                   size="large"
-                  disabled={isSubmitting}
+                  disabled={updateMutation.isPending || isSubmitting}
                 >
-                  {isSubmitting ? '수정 중...' : '품목 수정'}
+                  {updateMutation.isPending || isSubmitting
+                    ? '수정 중...'
+                    : '품목 수정'}
                 </Button>
               </FormActions>
             </Form>

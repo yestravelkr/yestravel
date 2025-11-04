@@ -114,7 +114,10 @@ export function ProductTemplateList() {
       cell: (info) => (
         <CategoryList>
           {info.getValue().length > 0
-            ? info.getValue().map((cat) => cat.name).join(', ')
+            ? info
+                .getValue()
+                .map((cat) => cat.name)
+                .join(', ')
             : '-'}
         </CategoryList>
       ),
@@ -179,18 +182,8 @@ export function ProductTemplateList() {
     }),
   ];
 
-  const handleRowClick = (productTemplate: ProductTemplate) => {
-    navigate({ to: `/product-template/${productTemplate.id}` });
-  };
-
   if (productTemplates && productTemplates.length > 0) {
-    return (
-      <Table
-        columns={columns}
-        data={productTemplates}
-        onRowClick={handleRowClick}
-      />
-    );
+    return <Table columns={columns} data={productTemplates} />;
   }
 
   return (

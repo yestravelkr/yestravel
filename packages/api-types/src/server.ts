@@ -1,6 +1,7 @@
 import { initTRPC } from "@trpc/server";
 import { z } from "zod";
 import {PRODUCT_TYPE_ENUM_VALUE,  DATE_FILTER_TYPE_ENUM_VALUE, paginationQuerySchema, createPaginatedResponseSchema} from './types';
+import { normalizeTime } from './utils';
 
 const t = initTRPC.create();
 const publicProcedure = t.procedure;
@@ -188,15 +189,17 @@ const appRouter = t.router({
         checkInTime: z
           .string()
           .regex(
-            /^([01]\d|2[0-3]):([0-5]\d)$/,
-            '입실 시간은 HH:MM 형식이어야 합니다'
-          ),
+            /^([01]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$/,
+            '입실 시간은 HH:MM 또는 HH:MM:SS 형식이어야 합니다'
+          )
+          .transform(normalizeTime),
         checkOutTime: z
           .string()
           .regex(
-            /^([01]\d|2[0-3]):([0-5]\d)$/,
-            '퇴실 시간은 HH:MM 형식이어야 합니다'
-          ),
+            /^([01]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$/,
+            '퇴실 시간은 HH:MM 또는 HH:MM:SS 형식이어야 합니다'
+          )
+          .transform(normalizeTime),
         bedTypes: z.array(z.string()).default([]),
         tags: z.array(z.string()).default([]),
       }),
@@ -241,6 +244,58 @@ const appRouter = t.router({
       id: z.number(),
       type: z.enum(['HOTEL', 'E-TICKET', 'DELIVERY']),
       name: z.string(),
+      message: z.string(),
+    })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    update: publicProcedure.input(z.object({
+      id: z.number().int().positive('유효한 ID를 입력해주세요'),
+      name: z.string().min(1, '상품명은 필수입니다'),
+      brandId: z.number().int().positive('브랜드를 선택해주세요'),
+      categoryIds: z.array(z.number().int().positive()).optional(),
+      thumbnailUrls: z.array(z.string().url()).optional(),
+      description: z.string().optional(),
+      detailContent: z.string().optional(),
+      useStock: z.boolean().optional(),
+      // Hotel 전용 필드
+      baseCapacity: z.number().int().positive().optional(),
+      maxCapacity: z.number().int().positive().optional(),
+      checkInTime: z
+        .string()
+        .regex(/^([01]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$/)
+        .transform(normalizeTime)
+        .optional(),
+      checkOutTime: z
+        .string()
+        .regex(/^([01]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$/)
+        .transform(normalizeTime)
+        .optional(),
+      bedTypes: z.array(z.string()).optional(),
+      tags: z.array(z.string()).optional(),
+      // Delivery 전용 필드
+      useOptions: z.boolean().optional(),
+      delivery: z
+        .object({
+          deliveryFeeType: z.enum(['FREE', 'PAID', 'CONDITIONAL_FREE']),
+          deliveryFee: z.number().int().nonnegative().optional(),
+          freeDeliveryMinAmount: z.number().int().nonnegative().optional(),
+          returnDeliveryFee: z.number().int().nonnegative().optional(),
+          exchangeDeliveryFee: z.number().int().nonnegative().optional(),
+          remoteAreaExtraFee: z.number().int().nonnegative().optional(),
+          jejuExtraFee: z.number().int().nonnegative().optional(),
+          isJejuRestricted: z.boolean().optional(),
+          isRemoteIslandRestricted: z.boolean().optional(),
+        })
+        .optional(),
+      exchangeReturnInfo: z.string().optional(),
+      productInfoNotice: z.string().optional(),
+    })).output(z.object({
+      id: z.number(),
+      name: z.string(),
+      message: z.string(),
+    })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    delete: publicProcedure.input(z.object({
+      id: z.number().int().positive('유효한 ID를 입력해주세요'),
+    })).output(z.object({
+      id: z.number(),
       message: z.string(),
     })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
   }),
