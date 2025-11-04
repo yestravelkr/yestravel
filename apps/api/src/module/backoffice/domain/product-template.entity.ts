@@ -7,7 +7,7 @@ import {
   JoinColumn,
   EntityManager,
 } from 'typeorm';
-import { BaseEntity } from '@src/module/backoffice/domain/base.entity';
+import {BaseEntity, SoftDeleteEntity} from '@src/module/backoffice/domain/base.entity';
 import { BrandEntity } from '@src/module/backoffice/domain/brand.entity';
 import { CategoryEntity } from '@src/module/backoffice/domain/category.entity';
 import { TransactionService } from '@src/module/shared/transaction/transaction.service';
@@ -18,7 +18,7 @@ import {
 } from '@src/module/backoffice/admin/admin.schema';
 
 @Entity('product_template')
-export class ProductTemplateEntity extends BaseEntity {
+export class ProductTemplateEntity extends SoftDeleteEntity {
   // 상품 타입 (구분자)
   @Column({
     type: 'enum',

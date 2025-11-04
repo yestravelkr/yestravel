@@ -591,6 +591,281 @@ docker exec -i postgres_container psql -U postgres yestravel < backup.sql
 docker exec -t postgres_container pg_dump -U postgres --schema-only yestravel > schema.sql
 ```
 
+## PostgreSQL INHERITS 테이블 상속
+
+### 개요
+
+이 프로젝트는 PostgreSQL의 네이티브 테이블 상속 기능(`INHERITS`)을 사용합니다. TypeORM의 상속 데코레이터(`@TableInheritance`, `@ChildEntity`)는 **사용하지 않습니다**.
+
+### 테이블 계층 구조
+
+```
+BaseEntity (id, created_at, updated_at)
+  └─ SoftDeleteEntity (deleted_at)
+      └─ product_template (type, name, brand_id, ...)
+          ├─ hotel_template (base_capacity, max_capacity, ...)
+          ├─ delivery_template (use_options, delivery, ...)
+          └─ eticket_template (use_options)
+```
+
+### Entity 정의 패턴
+
+**부모 Entity (SoftDeleteEntity):**
+```typescript
+// base.entity.ts
+import { DeleteDateColumn } from 'typeorm';
+import { Nullish } from '@src/types/utility.type';
+
+export abstract class BaseEntity {
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt: Date;
+
+  @UpdateDateColumn({ name: 'updated_at' })
+  updatedAt: Date;
+}
+
+export abstract class SoftDeleteEntity extends BaseEntity {
+  @DeleteDateColumn({ name: 'deleted_at' })
+  deletedAt: Nullish<Date>;
+}
+```
+
+**부모 Entity (ProductTemplateEntity):**
+```typescript
+@Entity('product_template')
+export class ProductTemplateEntity extends SoftDeleteEntity {
+  @Column({
+    type: 'enum',
+    enum: PRODUCT_TYPE_ENUM_VALUE,
+  })
+  type: ProductTypeEnumType;
+
+  @Column()
+  name: string;
+
+  @Column({ name: 'brand_id' })
+  brandId: number;
+  
+  // 공통 필드들...
+}
+```
+
+**자식 Entity (HotelTemplateEntity):**
+```typescript
+@Entity('hotel_template')
+export class HotelTemplateEntity extends ProductTemplateEntity {
+  constructor() {
+    super();
+    this.type = ProductTypeEnum.HOTEL;
+  }
+
+  @Column({ name: 'base_capacity', type: 'integer' })
+  baseCapacity: number;
+
+  @Column({ name: 'max_capacity', type: 'integer' })
+  maxCapacity: number;
+  
+  // 호텔 전용 필드들...
+}
+```
+
+**⚠️ 금지사항:**
+```typescript
+// ❌ 사용 금지 - TypeORM 상속 데코레이터
+@TableInheritance({ column: { type: 'varchar', name: 'type' } })
+@ChildEntity(ProductTypeEnum.HOTEL)
+
+// ✅ 올바른 방법 - 데코레이터 없이 일반 상속만
+@Entity('hotel_template')
+export class HotelTemplateEntity extends ProductTemplateEntity {
+```
+
+### Migration 패턴
+
+**부모 테이블 생성:**
+```typescript
+export class CreateProductTemplateMigration implements MigrationInterface {
+  public async up(queryRunner: QueryRunner): Promise<void> {
+    // 1. Enum 타입 생성
+    await queryRunner.query(
+      `CREATE TYPE "product_type_enum" AS ENUM('HOTEL', 'E-TICKET', 'DELIVERY')`
+    );
+
+    // 2. 부모 테이블 생성
+    await queryRunner.query(
+      `CREATE TABLE "product_template" (
+        "id" SERIAL NOT NULL,
+        "type" "product_type_enum" NOT NULL,
+        "name" varchar NOT NULL,
+        "brand_id" integer NOT NULL,
+        "created_at" TIMESTAMP NOT NULL DEFAULT now(),
+        "updated_at" TIMESTAMP NOT NULL DEFAULT now(),
+        "deleted_at" TIMESTAMP,
+        CONSTRAINT "PK_product_template" PRIMARY KEY ("id")
+      )`
+    );
+
+    // 3. 자식 테이블 생성 (INHERITS 사용)
+    await queryRunner.query(
+      `CREATE TABLE "hotel_template" (
+        "base_capacity" integer NOT NULL,
+        "max_capacity" integer NOT NULL,
+        CONSTRAINT "PK_hotel_template" PRIMARY KEY ("id")
+      ) INHERITS ("product_template")`
+    );
+  }
+}
+```
+
+**⚠️ 컬럼 추가/삭제 시 중요 규칙:**
+
+PostgreSQL INHERITS를 사용하면 부모 테이블의 컬럼 변경사항이 **자동으로 자식 테이블에 상속**됩니다.
+
+```typescript
+// ✅ 올바른 방법 - 부모 테이블에만 추가
+export class AddDeletedAtMigration implements MigrationInterface {
+  public async up(queryRunner: QueryRunner): Promise<void> {
+    // product_template에만 추가하면
+    // hotel_template, delivery_template, eticket_template에 자동으로 추가됨
+    await queryRunner.query(
+      `ALTER TABLE "product_template" ADD "deleted_at" TIMESTAMP`
+    );
+  }
+
+  public async down(queryRunner: QueryRunner): Promise<void> {
+    // product_template에서만 제거하면
+    // 자식 테이블에서도 자동으로 제거됨
+    await queryRunner.query(
+      `ALTER TABLE "product_template" DROP COLUMN "deleted_at"`
+    );
+  }
+}
+```
+
+```typescript
+// ❌ 잘못된 방법 - 각 테이블에 개별 추가 (불필요하며 에러 발생)
+export class WrongMigration implements MigrationInterface {
+  public async up(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(
+      `ALTER TABLE "product_template" ADD "deleted_at" TIMESTAMP`
+    );
+    // 아래는 불필요 - 이미 상속됨
+    await queryRunner.query(
+      `ALTER TABLE "hotel_template" ADD "deleted_at" TIMESTAMP`
+    );
+    await queryRunner.query(
+      `ALTER TABLE "delivery_template" ADD "deleted_at" TIMESTAMP`
+    );
+  }
+}
+```
+
+**외래키 제약조건:**
+```typescript
+// 외래키는 각 테이블에 개별 추가 필요
+await queryRunner.query(
+  `ALTER TABLE "product_template" ADD CONSTRAINT "FK_product_template_brand"
+   FOREIGN KEY ("brand_id") REFERENCES "brand"("id")`
+);
+
+await queryRunner.query(
+  `ALTER TABLE "hotel_template" ADD CONSTRAINT "FK_hotel_template_brand"
+   FOREIGN KEY ("brand_id") REFERENCES "brand"("id")`
+);
+```
+
+### Service 조회 패턴
+
+**부모 테이블 조회 (공통 필드만):**
+```typescript
+// ⚠️ QueryBuilder 사용 불가 - TypeORM이 자식 컬럼도 SELECT에 포함
+// ✅ Raw Query 사용 필수
+async findAll(): Promise<ProductTemplateListResponse> {
+  const dataQuery = `
+    SELECT
+      pt.id,
+      pt.type,
+      pt.name,
+      pt.brand_id,
+      pt.created_at,
+      pt.updated_at,
+      b.name as brand_name
+    FROM product_template pt
+    LEFT JOIN brand b ON b.id = pt.brand_id AND b.deleted_at IS NULL
+    WHERE pt.deleted_at IS NULL
+    ORDER BY pt.created_at DESC
+  `;
+
+  const result = await this.repositoryProvider.ProductTemplateRepository.query(
+    dataQuery
+  );
+
+  return result;
+}
+```
+
+**자식 테이블 조회 (전체 필드):**
+```typescript
+// ✅ 자식 Repository 사용 - QueryBuilder 가능
+async findHotelDetail(id: number): Promise<HotelTemplate> {
+  const hotel = await this.repositoryProvider.HotelTemplateRepository
+    .createQueryBuilder('hotel')
+    .leftJoinAndSelect('hotel.brand', 'brand')
+    .where('hotel.id = :id', { id })
+    .getOne();
+
+  return hotel;
+}
+```
+
+### Soft Delete 사용
+
+TypeORM의 `@DeleteDateColumn`을 사용하여 soft delete 구현:
+
+```typescript
+// Soft delete 수행
+await repository.softRemove(entity);
+// 또는
+await repository.softDelete(id);
+
+// 삭제된 항목 포함 조회
+const withDeleted = await repository.find({ withDeleted: true });
+
+// 삭제된 항목만 조회
+const onlyDeleted = await repository
+  .createQueryBuilder('entity')
+  .where('entity.deleted_at IS NOT NULL')
+  .withDeleted()
+  .getMany();
+
+// 복원
+await repository.restore(id);
+```
+
+### 핵심 규칙 요약
+
+**✅ 해야 할 것:**
+1. Migration에서 PostgreSQL INHERITS 사용
+2. Entity에서 TypeScript extends만 사용 (데코레이터 제거)
+3. 부모 테이블 조회 시 Raw Query 사용
+4. 자식 테이블 조회 시 해당 Repository 사용
+5. 컬럼 추가/삭제는 부모 테이블에만 수행
+
+**❌ 금지사항:**
+1. `@TableInheritance` 데코레이터 사용
+2. `@ChildEntity` 데코레이터 사용
+3. 부모 Repository에서 QueryBuilder로 `find()`, `findAndCount()` 사용
+4. 자식 테이블에 개별적으로 컬럼 추가/삭제
+
+**장점:**
+- PostgreSQL 네이티브 기능 활용 (성능 우수)
+- 각 타입별 독립적인 테이블 관리
+- nullable 필드 최소화
+- 각 타입별 인덱스 최적화 가능
+
 ## 개발 모범 사례
 
 ### 1. 항상 마이그레이션 사용
@@ -598,6 +873,7 @@ docker exec -t postgres_container pg_dump -U postgres --schema-only yestravel > 
 - 프로덕션에서는 절대 `synchronize: true` 사용 금지
 - 모든 스키마 변경에 대해 마이그레이션 생성
 - 실행 전 생성된 마이그레이션 검토
+- **INHERITS 테이블의 경우 부모 테이블에만 컬럼 추가/삭제**
 
 ### 2. 엔티티 명명 규칙
 
@@ -611,6 +887,7 @@ docker exec -t postgres_container pg_dump -U postgres --schema-only yestravel > 
 - 적절한 에러 처리 사용
 - 적절한 페이지네이션 구현
 - 다단계 작업에 트랜잭션 사용
+- **INHERITS 부모 테이블 조회 시 Raw Query 사용**
 
 ### 4. 쿼리 최적화
 
@@ -618,6 +895,7 @@ docker exec -t postgres_container pg_dump -U postgres --schema-only yestravel > 
 - 복잡한 쿼리에는 쿼리 빌더 사용
 - 적절한 인덱스 추가
 - 쿼리 성능 모니터링
+- **INHERITS 자식 테이블에는 각각 인덱스 추가 가능**
 
 ### 5. 데이터 검증
 
