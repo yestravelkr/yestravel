@@ -46,8 +46,8 @@ export interface ProductTemplateListResponse {
 // Create DTO
 // ========================================
 
-export interface CreateProductTemplateInput {
-  type: 'HOTEL' | 'DELIVERY' | 'E-TICKET';
+// 공통 Base 인터페이스
+interface BaseCreateProductTemplateInput {
   name: string;
   brandId: number;
   categoryIds?: number[];
@@ -55,19 +55,52 @@ export interface CreateProductTemplateInput {
   description?: string;
   detailContent?: string;
   useStock?: boolean;
-  // Hotel 전용
-  baseCapacity?: number;
-  maxCapacity?: number;
-  checkInTime?: string;
-  checkOutTime?: string;
+}
+
+// Hotel 생성 Input
+export interface CreateHotelTemplateInput
+  extends BaseCreateProductTemplateInput {
+  type: 'HOTEL';
+  baseCapacity: number;
+  maxCapacity: number;
+  checkInTime: string;
+  checkOutTime: string;
   bedTypes?: string[];
   tags?: string[];
-  // Delivery 전용
+}
+
+// Delivery 생성 Input
+export interface CreateDeliveryTemplateInput
+  extends BaseCreateProductTemplateInput {
+  type: 'DELIVERY';
   useOptions?: boolean;
-  delivery?: any;
+  delivery: {
+    deliveryFeeType: string;
+    deliveryFee?: number;
+    freeDeliveryMinAmount?: number;
+    returnDeliveryFee?: number;
+    exchangeDeliveryFee?: number;
+    remoteAreaExtraFee?: number;
+    jejuExtraFee?: number;
+    isJejuRestricted?: boolean;
+    isRemoteIslandRestricted?: boolean;
+  };
   exchangeReturnInfo?: string;
   productInfoNotice?: string;
 }
+
+// ETicket 생성 Input
+export interface CreateETicketTemplateInput
+  extends BaseCreateProductTemplateInput {
+  type: 'E-TICKET';
+  useOptions?: boolean;
+}
+
+// Create Input Union 타입
+export type CreateProductTemplateInput =
+  | CreateHotelTemplateInput
+  | CreateDeliveryTemplateInput
+  | CreateETicketTemplateInput;
 
 export interface CreateProductTemplateResponse {
   id: number;
@@ -142,3 +175,47 @@ export type ProductTemplateDetail =
   | HotelTemplateDetail
   | DeliveryTemplateDetail
   | ETicketTemplateDetail;
+
+// ========================================
+// Update DTO
+// ========================================
+
+// Update 공통 유틸리티 타입
+export type UpdateType<T> = T & { id: number };
+
+// Hotel 수정 Input (CreateHotelTemplateInput을 extends)
+export type UpdateHotelTemplateInput = UpdateType<
+  Omit<CreateHotelTemplateInput, 'type'>
+>;
+
+// Delivery 수정 Input (CreateDeliveryTemplateInput을 extends)
+export type UpdateDeliveryTemplateInput = UpdateType<
+  Omit<CreateDeliveryTemplateInput, 'type'>
+>;
+
+// ETicket 수정 Input (CreateETicketTemplateInput을 extends)
+export type UpdateETicketTemplateInput = UpdateType<
+  Omit<CreateETicketTemplateInput, 'type'>
+>;
+
+// Update Input Union 타입
+export type UpdateProductTemplateInput =
+  | UpdateHotelTemplateInput
+  | UpdateDeliveryTemplateInput
+  | UpdateETicketTemplateInput;
+
+// Update Response
+export interface UpdateProductTemplateResponse {
+  id: number;
+  name: string;
+  message: string;
+}
+
+// ========================================
+// Delete DTO
+// ========================================
+
+export interface DeleteProductTemplateResponse {
+  id: number;
+  message: string;
+}

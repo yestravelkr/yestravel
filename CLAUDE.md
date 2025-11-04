@@ -235,6 +235,31 @@ export class ModuleRouter extends BaseTrpcRouter {
 }
 ```
 
+**Entity 조회 패턴 (findOneOrFail):**
+```typescript
+// ❌ 잘못된 방법 - findOne 후 수동 null 체크
+const entity = await repository.findOne({ where: { id } });
+if (!entity) {
+  throw new NotFoundException('엔티티를 찾을 수 없습니다');
+}
+
+// ✅ 올바른 방법 - findOneOrFail 사용
+const entity = await repository.findOneOrFail({
+  where: { id },
+}).catch(() => {
+  throw new NotFoundException('엔티티를 찾을 수 없습니다');
+});
+
+// 예시: 브랜드 존재 여부 확인
+await this.repositoryProvider.BrandRepository.findOneOrFail({
+  where: { id: input.brandId },
+}).catch(() => {
+  throw new NotFoundException(
+    `브랜드를 찾을 수 없습니다 (ID: ${input.brandId})`
+  );
+});
+```
+
 **컨트롤러 핸들러:**
 ```typescript
 @Controller()

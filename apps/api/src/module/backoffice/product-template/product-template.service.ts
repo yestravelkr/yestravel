@@ -17,6 +17,9 @@ import type {
   CreateProductTemplateInput,
   CreateProductTemplateResponse,
   ProductTemplateDetail,
+  UpdateProductTemplateInput,
+  UpdateProductTemplateResponse,
+  DeleteProductTemplateResponse,
 } from './product-template.dto';
 
 @Injectable()
@@ -112,14 +115,14 @@ export class ProductTemplateService {
   async findById(id: number): Promise<ProductTemplateDetail> {
     // 1. 먼저 ProductTemplateRepository로 id와 type만 확인 (성능 최적화)
     const baseTemplate =
-      await this.repositoryProvider.ProductTemplateRepository.findOne({
+      await this.repositoryProvider.ProductTemplateRepository.findOneOrFail({
         where: { id },
         select: ['id', 'type'],
+      }).catch(() => {
+        throw new NotFoundException(
+          `상품 템플릿을 찾을 수 없습니다 (ID: ${id})`
+        );
       });
-
-    if (!baseTemplate) {
-      throw new NotFoundException(`상품 템플릿을 찾을 수 없습니다 (ID: ${id})`);
-    }
 
     // 2. type에 따라 적절한 Repository에서 전체 데이터 조회
     switch (baseTemplate.type) {
@@ -260,15 +263,13 @@ export class ProductTemplateService {
     input: CreateProductTemplateInput
   ): Promise<CreateProductTemplateResponse> {
     // 1. 브랜드 존재 여부 확인
-    const brand = await this.repositoryProvider.BrandRepository.findOne({
+    await this.repositoryProvider.BrandRepository.findOneOrFail({
       where: { id: input.brandId },
-    });
-
-    if (!brand) {
+    }).catch(() => {
       throw new NotFoundException(
         `브랜드를 찾을 수 없습니다 (ID: ${input.brandId})`
       );
-    }
+    });
 
     // 2. 카테고리 존재 여부 확인 (categoryIds가 제공된 경우)
     if (input.categoryIds && input.categoryIds.length > 0) {
@@ -366,7 +367,7 @@ export class ProductTemplateService {
 
       default:
         throw new BadRequestException(
-          `지원하지 않는 상품 타입입니다: ${input.type}`
+          `지원하지 않는 상품 타입입니다: ${(input as any).type}`
         );
     }
 
@@ -380,6 +381,219 @@ export class ProductTemplateService {
       type: savedTemplate.type,
       name: savedTemplate.name,
       message: '상품 템플릿이 생성되었습니다',
+    };
+  }
+
+  async update(
+    input: UpdateProductTemplateInput
+  ): Promise<UpdateProductTemplateResponse> {
+    // 1. 기존 템플릿 조회 (타입 확인용)
+    const existingTemplate =
+      await this.repositoryProvider.ProductTemplateRepository.findOneOrFail({
+        where: { id: input.id },
+        select: ['id', 'type'],
+      }).catch(() => {
+        throw new NotFoundException(
+          `상품 템플릿을 찾을 수 없습니다 (ID: ${input.id})`
+        );
+      });
+
+    // 2. 브랜드 존재 여부 확인
+    await this.repositoryProvider.BrandRepository.findOneOrFail({
+      where: { id: input.brandId },
+    }).catch(() => {
+      throw new NotFoundException(
+        `브랜드를 찾을 수 없습니다 (ID: ${input.brandId})`
+      );
+    });
+
+    // 3. 카테고리 존재 여부 확인
+    if (input.categoryIds && input.categoryIds.length > 0) {
+      await validateCategoriesExist(input.categoryIds);
+    }
+
+    // 4. 타입에 따라 적절한 Repository에서 업데이트
+    let updatedTemplate:
+      | HotelTemplateEntity
+      | DeliveryTemplateEntity
+      | ETicketTemplateEntity;
+
+    switch (existingTemplate.type) {
+      case 'HOTEL': {
+        // Hotel 필수 필드 검증
+        const hotelInput = input as any;
+        if (
+          !hotelInput.baseCapacity ||
+          !hotelInput.maxCapacity ||
+          !hotelInput.checkInTime ||
+          !hotelInput.checkOutTime
+        ) {
+          throw new BadRequestException(
+            '호텔 템플릿 수정 시 기준인원, 최대인원, 입실시간, 퇴실시간은 필수입니다'
+          );
+        }
+
+        // 기존 엔티티 조회
+        const hotelTemplate =
+          await this.repositoryProvider.HotelTemplateRepository.findOneOrFail({
+            where: { id: input.id },
+          }).catch(() => {
+            throw new NotFoundException(
+              `호텔 템플릿을 찾을 수 없습니다 (ID: ${input.id})`
+            );
+          });
+
+        // 필드 업데이트
+        hotelTemplate.name = hotelInput.name;
+        hotelTemplate.brandId = hotelInput.brandId;
+        hotelTemplate.thumbnailUrls = hotelInput.thumbnailUrls || [];
+        hotelTemplate.description = hotelInput.description || '';
+        hotelTemplate.detailContent = hotelInput.detailContent || '';
+        hotelTemplate.useStock = hotelInput.useStock || false;
+        hotelTemplate.baseCapacity = hotelInput.baseCapacity;
+        hotelTemplate.maxCapacity = hotelInput.maxCapacity;
+        hotelTemplate.checkInTime = hotelInput.checkInTime;
+        hotelTemplate.checkOutTime = hotelInput.checkOutTime;
+        hotelTemplate.bedTypes = hotelInput.bedTypes || [];
+        hotelTemplate.tags = hotelInput.tags || [];
+
+        updatedTemplate =
+          await this.repositoryProvider.HotelTemplateRepository.save(
+            hotelTemplate
+          );
+        break;
+      }
+
+      case 'DELIVERY': {
+        // Delivery 필수 필드 검증
+        const deliveryInput = input as any;
+        if (!deliveryInput.delivery) {
+          throw new BadRequestException(
+            '배송상품 템플릿 수정 시 배송 정책은 필수입니다'
+          );
+        }
+
+        // 기존 엔티티 조회
+        const deliveryTemplate =
+          await this.repositoryProvider.DeliveryTemplateRepository.findOneOrFail(
+            {
+              where: { id: input.id },
+            }
+          ).catch(() => {
+            throw new NotFoundException(
+              `배송상품 템플릿을 찾을 수 없습니다 (ID: ${input.id})`
+            );
+          });
+
+        // 필드 업데이트
+        deliveryTemplate.name = deliveryInput.name;
+        deliveryTemplate.brandId = deliveryInput.brandId;
+        deliveryTemplate.thumbnailUrls = deliveryInput.thumbnailUrls || [];
+        deliveryTemplate.description = deliveryInput.description || '';
+        deliveryTemplate.detailContent = deliveryInput.detailContent || '';
+        deliveryTemplate.useStock = deliveryInput.useStock || false;
+        deliveryTemplate.useOptions = deliveryInput.useOptions || false;
+        deliveryTemplate.exchangeReturnInfo =
+          deliveryInput.exchangeReturnInfo || '';
+        deliveryTemplate.productInfoNotice =
+          deliveryInput.productInfoNotice || '';
+
+        // 배송 정책 임베디드 객체 업데이트
+        const delivery = new DeliveryEntity();
+        Object.assign(delivery, deliveryInput.delivery);
+        deliveryTemplate.delivery = delivery;
+
+        updatedTemplate =
+          await this.repositoryProvider.DeliveryTemplateRepository.save(
+            deliveryTemplate
+          );
+        break;
+      }
+
+      case 'E-TICKET': {
+        const eticketInput = input as any;
+
+        // 기존 엔티티 조회
+        const eticketTemplate =
+          await this.repositoryProvider.ETicketTemplateRepository.findOneOrFail(
+            {
+              where: { id: input.id },
+            }
+          ).catch(() => {
+            throw new NotFoundException(
+              `E-Ticket 템플릿을 찾을 수 없습니다 (ID: ${input.id})`
+            );
+          });
+
+        // 필드 업데이트
+        eticketTemplate.name = eticketInput.name;
+        eticketTemplate.brandId = eticketInput.brandId;
+        eticketTemplate.thumbnailUrls = eticketInput.thumbnailUrls || [];
+        eticketTemplate.description = eticketInput.description || '';
+        eticketTemplate.detailContent = eticketInput.detailContent || '';
+        eticketTemplate.useStock = eticketInput.useStock || false;
+        eticketTemplate.useOptions = eticketInput.useOptions || false;
+
+        updatedTemplate =
+          await this.repositoryProvider.ETicketTemplateRepository.save(
+            eticketTemplate
+          );
+        break;
+      }
+
+      default:
+        throw new BadRequestException(
+          `지원하지 않는 상품 타입입니다: ${existingTemplate.type}`
+        );
+    }
+
+    // 5. 카테고리 연결 업데이트
+    if (input.categoryIds !== undefined) {
+      await upsertProductCategory(updatedTemplate.id, input.categoryIds);
+    }
+
+    return {
+      id: updatedTemplate.id,
+      name: updatedTemplate.name,
+      message: '상품 템플릿이 수정되었습니다',
+    };
+  }
+
+  async delete(id: number): Promise<DeleteProductTemplateResponse> {
+    // 1. 템플릿 존재 여부 확인
+    const template =
+      await this.repositoryProvider.ProductTemplateRepository.findOneOrFail({
+        where: { id },
+        select: ['id', 'type', 'name'],
+      }).catch(() => {
+        throw new NotFoundException(
+          `상품 템플릿을 찾을 수 없습니다 (ID: ${id})`
+        );
+      });
+
+    // 2. 타입에 따라 적절한 Repository에서 soft delete
+    switch (template.type) {
+      case 'HOTEL':
+        await this.repositoryProvider.HotelTemplateRepository.softDelete(id);
+        break;
+
+      case 'DELIVERY':
+        await this.repositoryProvider.DeliveryTemplateRepository.softDelete(id);
+        break;
+
+      case 'E-TICKET':
+        await this.repositoryProvider.ETicketTemplateRepository.softDelete(id);
+        break;
+
+      default:
+        throw new BadRequestException(
+          `지원하지 않는 상품 타입입니다: ${template.type}`
+        );
+    }
+
+    return {
+      id,
+      message: '상품 템플릿이 삭제되었습니다',
     };
   }
 }
