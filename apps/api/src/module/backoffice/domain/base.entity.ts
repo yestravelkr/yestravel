@@ -2,7 +2,9 @@ import {
   CreateDateColumn,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
+  DeleteDateColumn,
 } from 'typeorm';
+import { Nullish } from '@src/types/utility.type';
 
 export abstract class BaseEntity {
   @PrimaryGeneratedColumn()
@@ -13,4 +15,9 @@ export abstract class BaseEntity {
 
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
+}
+
+export abstract class SoftDeleteEntity extends BaseEntity {
+  @DeleteDateColumn({ name: 'deleted_at' })
+  deletedAt: Nullish<Date>;
 }
