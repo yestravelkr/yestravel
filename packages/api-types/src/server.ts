@@ -188,15 +188,17 @@ const appRouter = t.router({
         checkInTime: z
           .string()
           .regex(
-            /^([01]\d|2[0-3]):([0-5]\d)$/,
-            '입실 시간은 HH:MM 형식이어야 합니다'
-          ),
+            /^([01]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$/,
+            '입실 시간은 HH:MM 또는 HH:MM:SS 형식이어야 합니다'
+          )
+          .transform(normalizeTime),
         checkOutTime: z
           .string()
           .regex(
-            /^([01]\d|2[0-3]):([0-5]\d)$/,
-            '퇴실 시간은 HH:MM 형식이어야 합니다'
-          ),
+            /^([01]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$/,
+            '퇴실 시간은 HH:MM 또는 HH:MM:SS 형식이어야 합니다'
+          )
+          .transform(normalizeTime),
         bedTypes: z.array(z.string()).default([]),
         tags: z.array(z.string()).default([]),
       }),
@@ -257,11 +259,13 @@ const appRouter = t.router({
       maxCapacity: z.number().int().positive().optional(),
       checkInTime: z
         .string()
-        .regex(/^([01]\d|2[0-3]):([0-5]\d)$/)
+        .regex(/^([01]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$/)
+        .transform(normalizeTime)
         .optional(),
       checkOutTime: z
         .string()
-        .regex(/^([01]\d|2[0-3]):([0-5]\d)$/)
+        .regex(/^([01]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$/)
+        .transform(normalizeTime)
         .optional(),
       bedTypes: z.array(z.string()).optional(),
       tags: z.array(z.string()).optional(),
