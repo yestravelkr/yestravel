@@ -2,3 +2,4 @@
 // Export all types and router from the generated server.ts
 
 export type { AppRouter } from './server';
+export { normalizeTime } from './utils';
