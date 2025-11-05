@@ -1,4 +1,6 @@
+import * as PortOne from '@portone/browser-sdk/v2';
 import { createFileRoute } from '@tanstack/react-router';
+import dayjs from 'dayjs';
 import { useState } from 'react';
 
 export const Route = createFileRoute('/purchase-test')({
@@ -16,8 +18,57 @@ function PurchaseTestPage() {
   );
   const [amount, setAmount] = useState(50000);
 
+  // 구매자 정보
+  const [customerName, setCustomerName] = useState('홍길동');
+  const [customerEmail, setCustomerEmail] = useState('test@example.com');
+  const [customerPhone, setCustomerPhone] = useState('01012345678');
+
   // TODO: API 연동
-  const handlePayment = () => {};
+  const handlePayment = async () => {
+    function randomId() {
+      return [...crypto.getRandomValues(new Uint32Array(2))]
+        .map(word => word.toString(16).padStart(8, '0'))
+        .join('');
+    }
+
+    try {
+      const response = await PortOne.requestPayment({
+        storeId: 'store-225e8f7c-301b-421e-bd54-189066bbb97e',
+        channelKey: 'channel-key-be836e0a-6537-4a86-bf9d-f99211e0be6c', // 테스트 키
+        paymentId: randomId(),
+        orderName: `Yestravel 테스트결제 - ${amount.toLocaleString()}원`,
+        totalAmount: amount,
+        currency: 'KRW',
+        payMethod: selectedMethod === 'CARD' ? 'CARD' : 'VIRTUAL_ACCOUNT',
+        customer: {
+          customerId: 'test-customer',
+          fullName: customerName,
+          email: customerEmail,
+          phoneNumber: customerPhone,
+        },
+        virtualAccount: {
+          accountExpiry: {
+            dueDate: dayjs(dayjs().add(1, 'days').format('YYYY-MM-DD 23:59:59'))
+              .toDate()
+              .toISOString(), // 익일 자정 전까지
+          },
+        },
+      });
+
+      console.log(response);
+      if (!response || response.code === 'FAILURE_TYPE_PG') {
+        alert('결제 실패');
+        return;
+      }
+
+      // TODO: 결제 완료 API 호출
+      alert('결제 성공!');
+      console.log('결제 응답:', response);
+    } catch (error) {
+      console.error('결제 오류:', error);
+      // alert('결제 중 오류가 발생했습니다.');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center py-8">
@@ -49,6 +100,50 @@ function PurchaseTestPage() {
             <p className="mt-2 text-sm text-gray-500">
               {amount.toLocaleString()}원
             </p>
+          </div>
+
+          {/* 구매자 정보 */}
+          <div className="space-y-4 pt-4 border-t">
+            <h3 className="text-sm font-semibold text-gray-900">구매자 정보</h3>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                이름
+              </label>
+              <input
+                type="text"
+                value={customerName}
+                onChange={e => setCustomerName(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="이름 입력"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                이메일
+              </label>
+              <input
+                type="email"
+                value={customerEmail}
+                onChange={e => setCustomerEmail(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="이메일 입력"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                전화번호
+              </label>
+              <input
+                type="tel"
+                value={customerPhone}
+                onChange={e => setCustomerPhone(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="01012345678"
+              />
+            </div>
           </div>
 
           {/* 결제 수단 선택 */}
