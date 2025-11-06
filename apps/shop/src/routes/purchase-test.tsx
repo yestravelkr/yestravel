@@ -48,9 +48,7 @@ function PurchaseTestPage() {
         },
         virtualAccount: {
           accountExpiry: {
-            dueDate: dayjs(dayjs().add(1, 'days').format('YYYY-MM-DD 23:59:59'))
-              .toDate()
-              .toISOString(), // 익일 자정 전까지
+            dueDate: dayjs().add(1, 'day').endOf('day').toISOString(), // 익일 자정 전까지
           },
         },
       });
