@@ -179,7 +179,7 @@ function PurchaseTestPage() {
           <button
             type="button"
             onClick={handlePayment}
-            className="w-full bg-blue-600 text-black py-4 px-4 rounded-lg text-lg font-semibold hover:bg-blue-700 transition-colors"
+            className="w-full bg-blue-600 text-white py-4 px-4 rounded-lg text-lg font-semibold hover:bg-blue-700 transition-colors"
           >
             {amount.toLocaleString()}원 결제하기
           </button>
