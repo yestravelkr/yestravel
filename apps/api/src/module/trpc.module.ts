@@ -7,6 +7,8 @@ import { AppController } from '@src/app.controller';
 import { AppService } from '@src/app.service';
 import { ConfigProvider } from '@src/config';
 import { AwsModule } from '@src/module/shared/aws/aws.module';
+import { PaymentController } from '@src/module/shop/payment/payment.controller';
+import { PaymentService } from '@src/module/shop/payment/payment.service';
 
 @Global()
 @Module({
@@ -31,7 +33,7 @@ class TrpcModuleExport {}
       pattern: '../**/*.{router,middleware}.{ts,js}',
     }),
   ],
-  controllers: [AppController],
-  providers: [TRPCAppContext, AppService],
+  controllers: [AppController, PaymentController],
+  providers: [TRPCAppContext, AppService, PaymentService],
 })
 export class TrpcModule {}
