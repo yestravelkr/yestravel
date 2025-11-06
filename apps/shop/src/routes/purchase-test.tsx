@@ -1,3 +1,4 @@
+import type { PaymentRequest } from '@portone/browser-sdk/dist/v2/request/PaymentRequest';
 import * as PortOne from '@portone/browser-sdk/v2';
 import { createFileRoute } from '@tanstack/react-router';
 import dayjs from 'dayjs';
@@ -32,7 +33,7 @@ function PurchaseTestPage() {
     }
 
     try {
-      const response = await PortOne.requestPayment({
+      const paymentMethod: PaymentRequest = {
         storeId: 'store-225e8f7c-301b-421e-bd54-189066bbb97e',
         channelKey: 'channel-key-be836e0a-6537-4a86-bf9d-f99211e0be6c', // 테스트 키
         paymentId: randomId(),
@@ -46,12 +47,17 @@ function PurchaseTestPage() {
           email: customerEmail,
           phoneNumber: customerPhone,
         },
-        virtualAccount: {
-          accountExpiry: {
-            dueDate: dayjs().add(1, 'day').endOf('day').toISOString(), // 익일 자정 전까지
-          },
-        },
-      });
+      };
+      switch (selectedMethod) {
+        case 'VBANK':
+          paymentMethod.virtualAccount = {
+            accountExpiry: {
+              dueDate: dayjs().add(1, 'day').endOf('day').toISOString(), // 익일 자정 전까지
+            },
+          };
+          break;
+      }
+      const response = await PortOne.requestPayment(paymentMethod);
 
       console.log(response);
       if (!response || response.code === 'FAILURE_TYPE_PG') {
