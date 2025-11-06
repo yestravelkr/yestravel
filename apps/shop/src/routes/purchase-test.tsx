@@ -1,8 +1,11 @@
 import type { PaymentRequest } from '@portone/browser-sdk/dist/v2/request/PaymentRequest';
 import * as PortOne from '@portone/browser-sdk/v2';
 import { createFileRoute } from '@tanstack/react-router';
+import axios from 'axios';
 import dayjs from 'dayjs';
 import { useState } from 'react';
+
+import { API_BASEURL } from '@/constants';
 
 export const Route = createFileRoute('/purchase-test')({
   component: PurchaseTestPage,
@@ -57,6 +60,7 @@ function PurchaseTestPage() {
           };
           break;
       }
+      console.log(paymentMethod);
       const response = await PortOne.requestPayment(paymentMethod);
 
       console.log(response);
@@ -66,13 +70,17 @@ function PurchaseTestPage() {
       }
 
       // TODO: 결제 완료 API 호출
-      alert('결제 성공!');
       console.log('결제 응답:', response);
+      paymentComplete(response);
     } catch (error) {
       console.error('결제 오류:', error);
       // alert('결제 중 오류가 발생했습니다.');
     }
   };
+
+  function paymentComplete(paymentResult: unknown) {
+    axios.post(`${API_BASEURL}/payment/complete`, paymentResult);
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center py-8">
