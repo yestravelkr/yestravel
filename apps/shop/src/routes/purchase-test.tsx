@@ -79,7 +79,9 @@ function PurchaseTestPage() {
   };
 
   function paymentComplete(paymentResult: unknown) {
-    axios.post(`${API_BASEURL}/payment/complete`, paymentResult);
+    axios.post(`${API_BASEURL}/trpc/shopPayment.complete`, paymentResult, {
+      withCredentials: true,
+    });
   }
 
   return (

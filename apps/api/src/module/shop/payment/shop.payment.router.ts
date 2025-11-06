@@ -1,6 +1,5 @@
 import { Router, Mutation, Input } from 'nestjs-trpc';
 import { BaseTrpcRouter } from '@src/module/trpc/baseTrpcRouter';
-import { MicroserviceClient } from '@src/module/trpc/microserviceClient';
 import { z } from 'zod';
 
 @Router({ alias: 'shopPayment' })
