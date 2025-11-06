@@ -7,7 +7,7 @@ import {
   JoinColumn,
   EntityManager,
 } from 'typeorm';
-import {BaseEntity, SoftDeleteEntity} from '@src/module/backoffice/domain/base.entity';
+import { SoftDeleteEntity } from '@src/module/backoffice/domain/base.entity';
 import { BrandEntity } from '@src/module/backoffice/domain/brand.entity';
 import { CategoryEntity } from '@src/module/backoffice/domain/category.entity';
 import { TransactionService } from '@src/module/shared/transaction/transaction.service';

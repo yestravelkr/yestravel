@@ -7,8 +7,7 @@ import { AppController } from '@src/app.controller';
 import { AppService } from '@src/app.service';
 import { ConfigProvider } from '@src/config';
 import { AwsModule } from '@src/module/shared/aws/aws.module';
-import { PaymentController } from '@src/module/shop/payment/payment.controller';
-import { PaymentService } from '@src/module/shop/payment/payment.service';
+import { AppModule } from '@src/app.module';
 
 @Global()
 @Module({
@@ -21,6 +20,7 @@ class TrpcModuleExport {}
 @Module({
   imports: [
     TrpcModuleExport,
+    AppModule,
     TRPCModule.forRoot({
       autoSchemaFile:
         ConfigProvider.stage === 'localdev'
@@ -33,7 +33,7 @@ class TrpcModuleExport {}
       pattern: '../**/*.{router,middleware}.{ts,js}',
     }),
   ],
-  controllers: [AppController, PaymentController],
-  providers: [TRPCAppContext, AppService, PaymentService],
+  controllers: [AppController],
+  providers: [TRPCAppContext, AppService],
 })
 export class TrpcModule {}

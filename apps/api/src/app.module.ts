@@ -6,6 +6,7 @@ import { ShopModule } from '@src/module/shop/shop.module';
 
 @Module({
   imports: [SharedModule, SampleModule, BackofficeModule, ShopModule],
+  exports: [ShopModule],
   controllers: [],
   providers: [],
 })
