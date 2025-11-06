@@ -7,7 +7,6 @@ import { AppController } from '@src/app.controller';
 import { AppService } from '@src/app.service';
 import { ConfigProvider } from '@src/config';
 import { AwsModule } from '@src/module/shared/aws/aws.module';
-import { AppModule } from '@src/app.module';
 
 @Global()
 @Module({
@@ -20,7 +19,6 @@ class TrpcModuleExport {}
 @Module({
   imports: [
     TrpcModuleExport,
-    AppModule,
     TRPCModule.forRoot({
       autoSchemaFile:
         ConfigProvider.stage === 'localdev'
