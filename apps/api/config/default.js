@@ -87,4 +87,7 @@ module.exports = {
       bucket: 'yestravel-assets',
     },
   },
+  portone: {
+    apiSecret: process.env.PORTONE_API_SECRET,
+  },
 };
