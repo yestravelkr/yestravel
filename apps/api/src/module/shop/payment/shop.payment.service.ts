@@ -5,12 +5,23 @@ import type {
   ShopPaymentCompleteInput,
   ShopPaymentCompleteOutput,
 } from './shop.payment.type';
+import dayjs from 'dayjs';
 
 @Injectable()
 export class ShopPaymentService {
   private readonly logger = new Logger(ShopPaymentService.name);
   private readonly PORTONE_API_URL = 'https://api.portone.io';
   private readonly PORTONE_API_SECRET = ConfigProvider.portone.apiSecret;
+  private portoneToken: {
+    accessToken: string | null;
+    refreshToken: string | null;
+    expiredAt: dayjs.Dayjs;
+  } = {
+    accessToken: null,
+    refreshToken: null,
+    expiredAt: dayjs().add(-1, 'h') // 처음에 바로 accessToken 발급하도록 처리
+  }
+
 
   async handlePaymentComplete(
     data: ShopPaymentCompleteInput
@@ -34,7 +45,7 @@ export class ShopPaymentService {
   // Portone 결제 승인
   async confirmPayment(data: ShopPaymentCompleteInput): Promise<void> {
     const { paymentId, paymentToken, txId } = data;
-    const apiSecret = await this.generateApiSecret();
+    await this.generatePortoneAccessToken();
     await axios
       .post(
         `${this.PORTONE_API_URL}/payments/${paymentId}/confirm`,
@@ -45,7 +56,7 @@ export class ShopPaymentService {
         {
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${apiSecret}`,
+            Authorization: `Bearer ${this.portoneToken.accessToken}`,
           },
         }
       )
@@ -53,17 +64,35 @@ export class ShopPaymentService {
         this.logger.log('Payment confirmed successfully');
       })
       .catch((error) => {
-        // this.logger.error('Payment confirmation failed', error);
-        console.log(error)
-        // throw error;
+        if (error.response?.data.type === 'ALREADY_PAID') {
+          this.logger.log('이미 결제된 요청은 에러 없이 처리');
+          return;
+        }
+        this.logger.error('Payment confirmation failed', error);
+        throw error;
       });
   }
 
-  async generateApiSecret() {
-    return await axios.post(`${this.PORTONE_API_URL}/login/api-secret`, {
+  async generatePortoneAccessToken() {
+    // 토큰이 유효하면 재발급하지 않음
+    if (
+      this.portoneToken.accessToken &&
+      dayjs().isBefore(this.portoneToken.expiredAt)
+    ) {
+      return;
+    }
+
+    const { data } = await axios.post<{
+      accessToken: string;
+      refreshToken: string;
+    }>(`${this.PORTONE_API_URL}/login/api-secret`, {
       apiSecret: this.PORTONE_API_SECRET,
-    }).then(response => {
-      return response.data.accessToken
-    })
+    });
+    this.portoneToken = {
+      ...data,
+      // 실제 expired 는 30분이지만 안정성을 위해 20분으로 처리
+      expiredAt: dayjs().add(20, 'minutes'),
+    };
+    this.logger.log('PortOne access token generated');
   }
 }
