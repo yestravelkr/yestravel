@@ -88,6 +88,6 @@ module.exports = {
     },
   },
   portone: {
-    apiSecret: process.env.PORTONE_API_SECRET,
+    apiSecret: process.env.PORTONE_SECRET,
   },
 };
