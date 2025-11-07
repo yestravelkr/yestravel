@@ -34,7 +34,7 @@ export class ShopPaymentService {
   // Portone 결제 승인
   async confirmPayment(data: ShopPaymentCompleteInput): Promise<void> {
     const { paymentId, paymentToken, txId } = data;
-
+    const apiSecret = await this.generateApiSecret();
     await axios
       .post(
         `${this.PORTONE_API_URL}/payments/${paymentId}/confirm`,
@@ -45,17 +45,25 @@ export class ShopPaymentService {
         {
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${this.PORTONE_API_SECRET}`,
+            Authorization: `Bearer ${apiSecret}`,
           },
         }
       )
       .then((response) => {
         this.logger.log('Payment confirmed successfully');
-        this.logger.log(JSON.stringify(response.data, null, 2));
       })
       .catch((error) => {
-        this.logger.error('Payment confirmation failed', error);
-        throw error;
+        // this.logger.error('Payment confirmation failed', error);
+        console.log(error)
+        // throw error;
       });
+  }
+
+  async generateApiSecret() {
+    return await axios.post(`${this.PORTONE_API_URL}/login/api-secret`, {
+      apiSecret: this.PORTONE_API_SECRET,
+    }).then(response => {
+      return response.data.accessToken
+    })
   }
 }
