@@ -7,6 +7,17 @@ const t = initTRPC.create();
 const publicProcedure = t.procedure;
 
 const appRouter = t.router({
+  shopPayment: t.router({
+    complete: publicProcedure.input(z.object({
+      paymentId: z.string(),
+      paymentToken: z.string(),
+      transactionType: z.string(),
+      txId: z.string(),
+    })).output(z.object({
+      success: z.boolean(),
+      message: z.string(),
+    })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
+  }),
   sample: t.router({
     getHello: publicProcedure.input(z.object({
       name: z.string().optional(),
