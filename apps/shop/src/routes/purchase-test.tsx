@@ -1,11 +1,22 @@
+import type { PaymentRequest } from '@portone/browser-sdk/dist/v2/request/PaymentRequest';
 import * as PortOne from '@portone/browser-sdk/v2';
 import { createFileRoute } from '@tanstack/react-router';
+import axios from 'axios';
 import dayjs from 'dayjs';
 import { useState } from 'react';
+
+import { API_BASEURL } from '@/constants';
 
 export const Route = createFileRoute('/purchase-test')({
   component: PurchaseTestPage,
 });
+
+let lastPaymentResponse: any = {
+  paymentId: '6713480791aebcfd',
+  paymentToken: 'payment-token-019a5cac-ac25-4144-5d1e-071f69d075dc',
+  transactionType: 'PAYMENT',
+  txId: '019a5cac-63d0-360a-2900-e4d419347e6f',
+};
 
 /**
  * 결제 테스트 페이지
@@ -32,7 +43,7 @@ function PurchaseTestPage() {
     }
 
     try {
-      const response = await PortOne.requestPayment({
+      const paymentMethod: PaymentRequest = {
         storeId: 'store-225e8f7c-301b-421e-bd54-189066bbb97e',
         channelKey: 'channel-key-be836e0a-6537-4a86-bf9d-f99211e0be6c', // 테스트 키
         paymentId: randomId(),
@@ -46,12 +57,19 @@ function PurchaseTestPage() {
           email: customerEmail,
           phoneNumber: customerPhone,
         },
-        virtualAccount: {
-          accountExpiry: {
-            dueDate: dayjs().add(1, 'day').endOf('day').toISOString(), // 익일 자정 전까지
-          },
-        },
-      });
+        redirectUrl: `${API_BASEURL}/payment/complete-redirect?origin=${window.location.origin}`,
+      };
+      switch (selectedMethod) {
+        case 'VBANK':
+          paymentMethod.virtualAccount = {
+            accountExpiry: {
+              dueDate: dayjs().add(1, 'day').endOf('day').toISOString(), // 익일 자정 전까지
+            },
+          };
+          break;
+      }
+      console.log(paymentMethod);
+      const response = await PortOne.requestPayment(paymentMethod);
 
       console.log(response);
       if (!response || response.code === 'FAILURE_TYPE_PG') {
@@ -60,13 +78,24 @@ function PurchaseTestPage() {
       }
 
       // TODO: 결제 완료 API 호출
-      alert('결제 성공!');
       console.log('결제 응답:', response);
+      lastPaymentResponse = response;
+      paymentComplete(response);
     } catch (error) {
       console.error('결제 오류:', error);
       // alert('결제 중 오류가 발생했습니다.');
     }
   };
+
+  function handleConfirm() {
+    paymentComplete(lastPaymentResponse);
+  }
+
+  function paymentComplete(paymentResult: unknown) {
+    axios.post(`${API_BASEURL}/trpc/shopPayment.complete`, paymentResult, {
+      withCredentials: true,
+    });
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center py-8">
@@ -182,6 +211,15 @@ function PurchaseTestPage() {
             className="w-full bg-blue-600 text-white py-4 px-4 rounded-lg text-lg font-semibold hover:bg-blue-700 transition-colors"
           >
             {amount.toLocaleString()}원 결제하기
+          </button>
+
+          {/* 결제 버튼 */}
+          <button
+            type="button"
+            onClick={handleConfirm}
+            className="w-full bg-blue-600 text-white py-4 px-4 rounded-lg text-lg font-semibold hover:bg-blue-700 transition-colors"
+          >
+            결제 승인요청
           </button>
         </div>
       </div>

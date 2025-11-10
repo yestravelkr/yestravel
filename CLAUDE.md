@@ -290,12 +290,51 @@ protectedRoute(@Ctx() ctx: BackofficeAuthorizedContext) {
 
 **데이터베이스 트랜잭션:**
 ```typescript
-@MessagePattern('module.transactionalOperation')
-@Transactional
-async performTransaction(data: any) {
-  // 오류 시 롤백과 함께 트랜잭션으로 자동 래핑
+// Controller constructor에서 TransactionService DI 필수
+@Controller()
+export class ModuleController {
+  constructor(
+    private readonly moduleService: ModuleService,
+    private readonly transactionService: TransactionService // 필수
+  ) {}
+
+  // 모든 mutation(create, update, delete) 메서드에 @Transactional 데코레이터 적용
+  @MessagePattern('moduleName.create')
+  @Transactional
+  async create(data: CreateModuleInput): Promise<Module> {
+    const result = await this.moduleService.create(data);
+    return moduleSchema.parse(result);
+  }
+
+  @MessagePattern('moduleName.update')
+  @Transactional
+  async update(data: UpdateModuleInput): Promise<Module> {
+    const result = await this.moduleService.update(data);
+    return moduleSchema.parse(result);
+  }
+
+  @MessagePattern('moduleName.delete')
+  @Transactional
+  async delete(data: { id: number }): Promise<{ success: boolean }> {
+    await this.moduleService.delete(data.id);
+    return { success: true };
+  }
+
+  // 조회(Query) 메서드는 @Transactional 불필요
+  @MessagePattern('moduleName.findAll')
+  async findAll(): Promise<ModuleList> {
+    const results = await this.moduleService.findAll();
+    return moduleListSchema.parse(results);
+  }
 }
 ```
+
+**⚠️ 트랜잭션 규칙:**
+- **필수 조건**: `@Transactional` 데코레이터를 사용하는 Controller는 **반드시 constructor에서 `TransactionService`를 주입**받아야 함
+- **적용 대상**: 모든 mutation 관련 메서드 (create, update, delete)
+- **적용 제외**: 조회(Query) 메서드는 트랜잭션 불필요
+- **동작 방식**: 오류 시 자동 롤백
+
 
 **Repository 패턴:**
 ```typescript
@@ -332,13 +371,25 @@ constructor(private readonly repositoryProvider: RepositoryProvider) {}
 
 - **자동 발견**: 새 라우터는 자동으로 로드됩니다 (수동 등록 불필요)
 - **⚠️ Router 등록 규칙**: Router 파일(`.router.ts`)은 **Module의 providers에 절대 넣지 않음**. AutoRouterModule이 자동으로 발견하고 로드함
+  - ❌ 잘못된 예:
+    ```typescript
+    @Module({
+      providers: [PaymentService, PaymentRouter], // Router를 providers에 추가 금지
+    })
+    ```
+  - ✅ 올바른 예:
+    ```typescript
+    @Module({
+      providers: [PaymentService], // Router는 제외
+    })
+    ```
 - **타입 안전성**: 모든 입력/출력 검증에 Zod 스키마 사용
 - **스키마 패턴**: 스키마는 `.schema.ts`에 정의, 타입은 `.type.ts`에서 `z.infer`로 추론
 - **⚠️ Router 스키마 규칙**: Router 파일에서는 외부 스키마 import 금지. `z.object()`, `z.enum()` 등을 직접 사용하여 인라인으로 스키마 정의
 - **⚠️ tRPC 데코레이터 Import 규칙**: Router 파일에서 `@Router`, `@Query`, `@Mutation`, `@Ctx`, `@Input`, `@UseMiddlewares` 등의 데코레이터는 **반드시 `'nestjs-trpc'` 패키지에서 import**. `'@src/module/trpc/trpc.decorator'`와 같은 로컬 경로는 존재하지 않으므로 사용 금지
 - **응답 포맷팅**: Controller에서 수동 포맷팅 대신 `schema.parse()` 사용
 - **⚠️ @Transactional 데코레이터 규칙**: `@Transactional` 데코레이터를 사용하는 Controller는 **반드시 constructor에서 `TransactionService`를 주입**받아야 함
-- **모듈 구조**: BackofficeModule로 그룹화된 하위 모듈들 (Brand, Auth, Admin 등)
+- **모듈 구조**: BackofficeModule로 그룹화된 하위 모듈들 (Brand, Auth, Admin 등), ShopModule로 그룹화된 하위 모듈들 (Payment 등)
 - **환경**: API 시작 전에 항상 `yarn generateEnv` 실행
 - **포트**: tRPC 서버는 3000 포트에서 실행
 - **데이터베이스**: Docker를 통한 PostgreSQL, TypeORM 마이그레이션으로 관리

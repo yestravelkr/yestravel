@@ -30,6 +30,10 @@ type AwsConfigType = {
   };
 };
 
+type PortOneConfigType = {
+  apiSecret: string;
+};
+
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export const ConfigProvider = {
   stage: config.get<string>('stage'),
@@ -52,4 +56,7 @@ export const ConfigProvider = {
   },
   cors: config.get<CorsConfigType>('cors'),
   aws: config.has('aws') ? config.get<AwsConfigType>('aws') : undefined,
+  portone: config.has('portone')
+    ? config.get<PortOneConfigType>('portone')
+    : { apiSecret: '' },
 } as const;
