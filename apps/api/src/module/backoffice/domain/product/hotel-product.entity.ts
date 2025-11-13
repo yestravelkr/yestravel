@@ -1,5 +1,5 @@
 import { Entity, Column, EntityManager } from 'typeorm';
-import { ProductEntity } from '@src/module/backoffice/domain/product.entity';
+import { ProductEntity } from '@src/module/backoffice/domain/product/product.entity';
 import { ProductTypeEnum } from '@src/module/backoffice/admin/admin.schema';
 import { TransactionService } from '@src/module/shared/transaction/transaction.service';
 import { getEntityManager } from '@src/database/datasources';

@@ -4,12 +4,12 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { RepositoryProvider } from '@src/module/shared/transaction/repository.provider';
-import { HotelTemplateEntity } from '@src/module/backoffice/domain/hotel-template.entity';
-import { DeliveryTemplateEntity } from '@src/module/backoffice/domain/delivery-template.entity';
-import { ETicketTemplateEntity } from '@src/module/backoffice/domain/eticket-template.entity';
+import { HotelTemplateEntity } from '@src/module/backoffice/domain/product-template/hotel-template.entity';
+import { DeliveryTemplateEntity } from '@src/module/backoffice/domain/product-template/delivery-template.entity';
+import { ETicketTemplateEntity } from '@src/module/backoffice/domain/product-template/eticket-template.entity';
 import { DeliveryEntity } from '@src/module/backoffice/domain/delivery.entity';
 import { validateCategoriesExist } from '@src/module/backoffice/domain/category.entity';
-import { upsertProductCategory } from '@src/module/backoffice/domain/product-template-category.entity';
+import { upsertProductCategory } from '@src/module/backoffice/domain/product-template/product-template-category.entity';
 import type {
   FindAllProductTemplateQuery,
   ProductTemplateListItem,

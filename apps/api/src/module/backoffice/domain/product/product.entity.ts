@@ -11,7 +11,7 @@ import { SoftDeleteEntity } from '@src/module/backoffice/domain/base.entity';
 import { BrandEntity } from '@src/module/backoffice/domain/brand.entity';
 import { CategoryEntity } from '@src/module/backoffice/domain/category.entity';
 import { CampaignEntity } from '@src/module/backoffice/domain/campaign.entity';
-import { ProductTemplateEntity } from '@src/module/backoffice/domain/product-template.entity';
+import { ProductTemplateEntity } from '@src/module/backoffice/domain/product-template/product-template.entity';
 import { TransactionService } from '@src/module/shared/transaction/transaction.service';
 import { getEntityManager } from '@src/database/datasources';
 import type { Nullish } from '@src/types/utility.type';
