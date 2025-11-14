@@ -18,6 +18,8 @@ import type { Nullish } from '@src/types/utility.type';
 import {
   ProductTypeEnumType,
   PRODUCT_TYPE_ENUM_VALUE,
+  ProductStatusEnumType,
+  PRODUCT_STATUS_ENUM_VALUE,
 } from '@src/module/backoffice/admin/admin.schema';
 
 @Entity('product')
@@ -94,9 +96,13 @@ export class ProductEntity extends SoftDeleteEntity {
   @Column({ type: 'integer' })
   price: number;
 
-  // 노출 여부
-  @Column({ name: 'is_visible', type: 'boolean', default: true })
-  isVisible: boolean;
+  // 상품 상태 (노출/미노출/품절)
+  @Column({
+    type: 'enum',
+    enum: PRODUCT_STATUS_ENUM_VALUE,
+    default: 'VISIBLE',
+  })
+  status: ProductStatusEnumType;
 
   // 정렬 순서
   @Column({ name: 'display_order', type: 'integer', nullable: true })

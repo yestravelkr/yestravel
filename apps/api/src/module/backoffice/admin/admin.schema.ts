@@ -64,6 +64,21 @@ export const DeliveryFeeTypeEnum: EnumType<DeliveryFeeTypeEnumType> = {
 };
 export const deliveryFeeTypeEnumSchema = z.enum(DELIVERY_FEE_TYPE_ENUM_VALUE);
 
+// Common product status enum for all schemas
+export const PRODUCT_STATUS_ENUM_VALUE = [
+  'VISIBLE',
+  'HIDDEN',
+  'SOLD_OUT',
+] as const;
+// Product status type for use in entities
+export type ProductStatusEnumType = (typeof PRODUCT_STATUS_ENUM_VALUE)[number];
+export const ProductStatusEnum: EnumType<ProductStatusEnumType> = {
+  VISIBLE: 'VISIBLE',
+  HIDDEN: 'HIDDEN',
+  SOLD_OUT: 'SOLD_OUT',
+};
+export const productStatusEnumSchema = z.enum(PRODUCT_STATUS_ENUM_VALUE);
+
 // Admin list response schema
 export const adminListItemSchema = z.object({
   id: z.number(),

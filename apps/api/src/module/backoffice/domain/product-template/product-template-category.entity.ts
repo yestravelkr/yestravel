@@ -7,7 +7,7 @@ import {
   CreateDateColumn,
   EntityManager,
 } from 'typeorm';
-import { ProductTemplateEntity } from '@src/module/backoffice/domain/product-template.entity';
+import { ProductTemplateEntity } from '@src/module/backoffice/domain/product-template/product-template.entity';
 import { CategoryEntity } from '@src/module/backoffice/domain/category.entity';
 import { TransactionService } from '@src/module/shared/transaction/transaction.service';
 import { getEntityManager } from '@src/database/datasources';
