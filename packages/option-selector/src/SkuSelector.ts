@@ -4,17 +4,19 @@
  * 선택 가능한 SKU들과 선택 가능한 속성(attributes) 정보를 담고 있습니다.
  */
 
-import type { Sku, SkuSelectorConfig } from './types';
+import type { Sku, SkuSelectorConfig, SkuSelectorState } from './types';
 
 export class SkuSelector {
   private selectedAttributes: Record<string, string | null> = {};
   private selectedSku: Sku | null = null;
   private readonly selectableAttributes: Record<string, string[]>;
+  private readonly config: SkuSelectorConfig;
 
   constructor(
     private readonly skus: Sku[],
     config: SkuSelectorConfig
   ) {
+    this.config = config;
     // attributes가 없는 경우 에러 처리
     if (Object.keys(config.selectableAttributes).length === 0) {
       // SKU가 attributes를 가지는지 확인
@@ -230,5 +232,32 @@ export class SkuSelector {
     });
 
     return Array.from(selectableValuesMap.values());
+  }
+
+  /**
+   * 현재 상태를 JSON으로 직렬화
+   */
+  toJSON(): SkuSelectorState {
+    return {
+      selectedAttributes: { ...this.selectedAttributes },
+      config: this.config,
+    };
+  }
+
+  /**
+   * JSON 데이터로부터 SkuSelector 인스턴스 생성
+   */
+  static fromJSON(skus: Sku[], state: SkuSelectorState): SkuSelector {
+    const selector = new SkuSelector(skus, state.config);
+    
+    // 저장된 선택 상태 복원
+    Object.keys(state.selectedAttributes).forEach((key) => {
+      const value = state.selectedAttributes[key];
+      if (value !== null) {
+        selector.selectAttribute(key, value);
+      }
+    });
+    
+    return selector;
   }
 }
