@@ -15,12 +15,61 @@ export class SkuSelector {
     private readonly skus: Sku[],
     config: SkuSelectorConfig
   ) {
-    this.selectableAttributes = config.selectableAttributes;
+    // attributes가 없는 경우 에러 처리
+    if (Object.keys(config.selectableAttributes).length === 0) {
+      // SKU가 attributes를 가지는지 확인
+      const hasAttributes = skus.some(
+        (sku) => Object.keys(sku.attributes).length > 0
+      );
+      
+      if (hasAttributes) {
+        throw new Error(
+          'SKU에 attributes가 존재하지만 selectableAttributes가 비어있습니다'
+        );
+      }
+    }
+
+    this.selectableAttributes = this.normalizeSelectableAttributes(
+      config.selectableAttributes
+    );
     
     // selectableAttributes의 key를 돌면서 selectedAttributes를 null로 초기화
     Object.keys(this.selectableAttributes).forEach((key) => {
       this.selectedAttributes[key] = null;
     });
+    
+    // 초기화 후 자동 선택 가능한 속성들 선택
+    this.autoSelectIfSingleOption();
+  }
+
+  /**
+   * selectableAttributes를 정규화
+   * value의 length가 0인 경우 모든 SKU의 해당 attribute 값들을 자동으로 추가
+   */
+  private normalizeSelectableAttributes(
+    selectableAttributes: Record<string, string[]>
+  ): Record<string, string[]> {
+    const normalized: Record<string, string[]> = {};
+
+    Object.keys(selectableAttributes).forEach((key) => {
+      const values = selectableAttributes[key];
+      
+      // length가 0인 경우, 모든 SKU에서 해당 attribute의 값을 추출
+      if (values.length === 0) {
+        const allValues = new Set<string>();
+        this.skus.forEach((sku) => {
+          const value = sku.attributes[key];
+          if (value) {
+            allValues.add(value);
+          }
+        });
+        normalized[key] = Array.from(allValues);
+      } else {
+        normalized[key] = values;
+      }
+    });
+
+    return normalized;
   }
 
   /**
@@ -88,6 +137,23 @@ export class SkuSelector {
       this.selectedAttributes[key] = null;
     });
     this.selectedSku = null;
+  }
+
+  /**
+   * 각 속성에 대해 선택 가능한 값이 하나뿐인 경우 자동으로 선택
+   */
+  private autoSelectIfSingleOption(): void {
+    Object.keys(this.selectableAttributes).forEach((key) => {
+      const selectableValues = this.getSelectableValues(key);
+      
+      // 선택 가능한 값이 정확히 1개인 경우에만 자동 선택
+      if (selectableValues.length === 1) {
+        this.selectedAttributes[key] = selectableValues[0].value;
+      }
+    });
+
+    // 자동 선택 후 SKU 체크
+    this.checkAndFilterSku();
   }
 
   /**

@@ -49,8 +49,8 @@ describe('OptionSelector', () => {
         },
         {
           selectableAttributes: {
-            color: ['yellow'],
-            size: ['XL'],
+            color: ['red', 'blue', 'yellow'],
+            size: ['S', 'M', 'L', 'XL'],
           },
         },
       ],
