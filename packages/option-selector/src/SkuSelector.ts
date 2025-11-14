@@ -167,6 +167,7 @@ export class SkuSelector {
       this.selectedAttributes[key] = null;
     });
     this.selectedSku = null;
+    this.autoSelectIfSingleOption();
   }
 
   /**
