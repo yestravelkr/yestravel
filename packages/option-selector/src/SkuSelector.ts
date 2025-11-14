@@ -29,6 +29,9 @@ export class SkuSelector {
       }
     }
 
+    // SKU 검증: selectableAttributes의 모든 키가 SKU의 attributes에 존재하는지 확인
+    this.validateSkuAttributes(skus, config.selectableAttributes);
+
     this.selectableAttributes = this.normalizeSelectableAttributes(
       config.selectableAttributes
     );
@@ -40,6 +43,31 @@ export class SkuSelector {
     
     // 초기화 후 자동 선택 가능한 속성들 선택
     this.autoSelectIfSingleOption();
+  }
+
+  /**
+   * SKU 검증: selectableAttributes의 모든 키가 각 SKU의 attributes에 존재하는지 확인
+   */
+  private validateSkuAttributes(
+    skus: Sku[],
+    selectableAttributes: Record<string, string[]>
+  ): void {
+    const selectableKeys = Object.keys(selectableAttributes);
+    
+    skus.forEach((sku, index) => {
+      const skuAttributeKeys = Object.keys(sku.attributes);
+      
+      // selectableAttributes에는 있는데 SKU attributes에 없는 키 찾기
+      const missingKeys = selectableKeys.filter(
+        (key) => !skuAttributeKeys.includes(key)
+      );
+      
+      if (missingKeys.length > 0) {
+        throw new Error(
+          `SKU[${index}] (id: ${sku.id})에 필수 속성이 없습니다: ${missingKeys.join(', ')}`
+        );
+      }
+    });
   }
 
   /**

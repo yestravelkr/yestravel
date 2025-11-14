@@ -304,4 +304,48 @@ describe('SkuSelector', () => {
       expect(selector.getSelectedSku()?.id).toBe(1);
     });
   });
+
+  describe('SKU 검증', () => {
+    it('selectableAttributes의 키가 SKU attributes에 없으면 에러를 발생시켜야 함', () => {
+      const testSkus: Sku[] = [
+        { id: 1, quantity: 10, attributes: { color: 'blue', size: 'L' } },
+      ];
+      
+      const selectableAttributes = {
+        color: [],
+        size: [],
+        sleeve: [], // SKU에는 없는 속성
+      };
+
+      expect(() => {
+        new SkuSelector(testSkus, { selectableAttributes });
+      }).toThrow('SKU[0] (id: 1)에 필수 속성이 없습니다: sleeve');
+    });
+
+    it('SKU attributes에 color와 size만 있고 selectableAttributes에 color만 있으면 정상 동작해야 함', () => {
+      const testSkus: Sku[] = [
+        { id: 1, quantity: 10, attributes: { color: 'blue', size: 'L' } },
+      ];
+      
+      const selectableAttributes = {
+        color: [],
+      };
+
+      expect(() => {
+        new SkuSelector(testSkus, { selectableAttributes });
+      }).not.toThrow();
+    });
+
+    it('SKU에 attributes가 있는데 selectableAttributes가 비어있으면 에러를 발생시켜야 함', () => {
+      const testSkus: Sku[] = [
+        { id: 1, quantity: 10, attributes: { color: 'blue', size: 'L' } },
+      ];
+      
+      const selectableAttributes = {};
+
+      expect(() => {
+        new SkuSelector(testSkus, { selectableAttributes });
+      }).toThrow('SKU에 attributes가 존재하지만 selectableAttributes가 비어있습니다');
+    });
+  });
 });
