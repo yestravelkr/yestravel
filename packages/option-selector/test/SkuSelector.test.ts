@@ -52,7 +52,7 @@ describe('SkuSelector', () => {
       size: ['S', 'M', 'L', 'XL'],
     };
 
-    skuSelector = new SkuSelector(skus, selectableAttributes);
+    skuSelector = new SkuSelector(skus, { selectableAttributes });
   });
 
   describe('초기화', () => {

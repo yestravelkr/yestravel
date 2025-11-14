@@ -4,18 +4,21 @@
  * 선택 가능한 SKU들과 선택 가능한 속성(attributes) 정보를 담고 있습니다.
  */
 
-import type { Sku } from './types';
+import type { Sku, SkuSelectorConfig } from './types';
 
 export class SkuSelector {
   private selectedAttributes: Record<string, string | null> = {};
   private selectedSku: Sku | null = null;
+  private readonly selectableAttributes: Record<string, string[]>;
 
   constructor(
     private readonly skus: Sku[],
-    private selectableAttributes: Record<string, string[]>
+    config: SkuSelectorConfig
   ) {
+    this.selectableAttributes = config.selectableAttributes;
+    
     // selectableAttributes의 key를 돌면서 selectedAttributes를 null로 초기화
-    Object.keys(selectableAttributes).forEach((key) => {
+    Object.keys(this.selectableAttributes).forEach((key) => {
       this.selectedAttributes[key] = null;
     });
   }
