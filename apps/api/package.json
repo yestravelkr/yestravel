@@ -22,7 +22,8 @@
     "migration:create": "f() { yarn run typeorm migration:create src/database/migration/${@}; }; f",
     "migration:generate": "f() { yarn run typeorm migration:generate -d migrationConfig.ts src/database/migration/${@}; }; f",
     "migration:run": "yarn run typeorm migration:run -d migrationConfig.ts",
-    "migration:revert": "yarn run typeorm migration:revert -d migrationConfig.ts"
+    "migration:revert": "yarn run typeorm migration:revert -d migrationConfig.ts",
+    "seed": "yarn generateEnv && ts-node -r dotenv/config -r tsconfig-paths/register src/database/seeds/run-seeds.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.883.0",
