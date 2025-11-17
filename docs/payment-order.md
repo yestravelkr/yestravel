@@ -59,11 +59,12 @@ erDiagram
         int id PK
         int product_id FK
         string name
-        int additional_price
+        int price
         boolean is_active
-        jsonb sku_groups "ProductOptionSkuGroup[]"
+        jsonb sku_selectors "SkuSelectorConfig[]"
         timestamp created_at
         timestamp updated_at
+        timestamp deleted_at
     }
 
     Order {
@@ -79,7 +80,7 @@ erDiagram
         int id PK
         int order_id FK
         int product_id FK
-        jsonb option_snapshot "includes sku_groups"
+        jsonb option_snapshot "includes sku_selectors"
         int quantity
         int unit_price
         timestamp created_at
@@ -246,108 +247,141 @@ Purchase #2 (추가 옵션 결제 - PG거래 #2)
 - `N:1` Product (특정 상품에 속함)
 
 **주요 필드:**
-- 옵션명
-- 추가 금액
-- 활성화 상태
-- **sku_groups (JSONB)**: ProductOptionSkuGroup 배열로 SKU 선택 규칙 정의
+- `name`: 옵션명
+- `price`: 추가 금액
+- `is_active`: 활성화 상태
+- **`sku_selectors` (JSONB)**: SkuSelectorConfig 배열로 SKU 선택 규칙 정의
 
-**SKU 그룹 구조:**
-옵션은 여러 SKU 그룹을 가질 수 있으며, 각 그룹은 TypeORM Transformer를 통해 클래스로 변환됩니다.
+**SKU Selector 구조:**
+옵션은 여러 SKU Selector를 가질 수 있으며, 각 Selector는 선택 가능한 속성들과 선택 시 한번에 선택되는 SKU 수량을 정의합니다.
 
 ```typescript
-// DB에 저장되는 JSONB 구조
+// DB에 저장되는 JSONB 구조 (SkuSelectorConfig[])
 {
-  "sku_groups": [
+  "sku_selectors": [
     {
-      "name": "빵 선택",
-      "selection_type": "FIXED",  // 고정 선택
-      "items": [
-        { "sku_id": 1, "quantity": 1 }  // 크루아상 1개 고정
-      ]
-    },
-    {
-      "name": "소스 선택",
-      "selection_type": "CHOICE",  // 선택형
-      "min_selections": 1,
-      "max_selections": 1,
-      "items": [
-        { "sku_id": 2, "quantity": 1 },  // 딸기잼
-        { "sku_id": 3, "quantity": 1 },  // 초코소스
-        { "sku_id": 4, "quantity": 1 }   // 버터
-      ]
+      "selectableAttributes": {
+        "color": ["red", "blue", "green"],
+        "size": ["S", "M", "L"]
+      },
+      "quantity": 1  // 선택 시 SKU 1개가 한번에 선택됨
     }
   ]
 }
 
-// TypeORM Transformer로 변환되는 클래스 구조
-class ProductOptionSkuGroup {
-  name: string;
-  selection_type: 'FIXED' | 'CHOICE';  // 고정 또는 선택
-  min_selections?: number;  // 최소 선택 수 (CHOICE일 때)
-  max_selections?: number;  // 최대 선택 수 (CHOICE일 때)
-  items: ProductOptionSkuGroupItem[];
+// TypeScript 타입 정의
+interface SkuSelectorConfig {
+  selectableAttributes: Record<string, string[]>;  // 속성명: 가능한 값들
+  quantity: number;  // 선택 시 한번에 선택되는 SKU 수량
 }
 
-class ProductOptionSkuGroupItem {
-  sku_id: number;
-  quantity: number;  // 해당 SKU의 수량
+interface OptionConfig {
+  skuSelectors: SkuSelectorConfig[];
 }
 ```
 
-**예시 - 아이스크림 3개 골라담기:**
+**예시 1 - 티셔츠 옵션 (색상 + 사이즈 선택):**
 ```json
 {
-  "sku_groups": [
+  "sku_selectors": [
     {
-      "name": "아이스크림 선택",
-      "selection_type": "CHOICE",
-      "min_selections": 1,
-      "max_selections": 3,  // 총 3개까지 선택 가능
-      "items": [
-        { "sku_id": 10, "quantity": 1 },  // 바닐라 (1개 단위)
-        { "sku_id": 11, "quantity": 1 },  // 초콜릿 (1개 단위)
-        { "sku_id": 12, "quantity": 1 },  // 딸기 (1개 단위)
-        { "sku_id": 13, "quantity": 1 }   // 민트 (1개 단위)
-      ]
+      "selectableAttributes": {
+        "color": ["red", "blue", "green"],
+        "size": ["S", "M", "L", "XL"]
+      },
+      "quantity": 1
     }
   ]
 }
-// 고객은 4가지 중에서 중복 가능하게 총 3개 선택
-// 예: 바닐라 2개 + 초콜릿 1개
+// 고객은 color와 size를 각각 선택 → 하나의 SKU 조합 완성
+// 예: color=red, size=L 선택 → SKU ID 조회 → 1개 추가
 ```
 
-**예시 - 빵 + 소스 세트:**
+**예시 2 - 아이스크림 3개 골라담기 (중복 선택):**
 ```json
 {
-  "sku_groups": [
+  "sku_selectors": [
     {
-      "name": "빵 (기본 포함)",
-      "selection_type": "FIXED",
-      "items": [
-        { "sku_id": 20, "quantity": 1 }  // 크루아상 1개 고정
-      ]
+      "selectableAttributes": {
+        "flavor": ["vanilla", "chocolate", "strawberry", "mint"]
+      },
+      "quantity": 1
     },
     {
-      "name": "소스 선택",
-      "selection_type": "CHOICE",
-      "min_selections": 1,
-      "max_selections": 1,
-      "items": [
-        { "sku_id": 21, "quantity": 1 },  // 딸기잼
-        { "sku_id": 22, "quantity": 1 },  // 초코소스
-        { "sku_id": 23, "quantity": 1 }   // 버터
-      ]
+      "selectableAttributes": {
+        "flavor": ["vanilla", "chocolate", "strawberry", "mint"]
+      },
+      "quantity": 1
+    },
+    {
+      "selectableAttributes": {
+        "flavor": ["vanilla", "chocolate", "strawberry", "mint"]
+      },
+      "quantity": 1
     }
   ]
 }
-// 빵은 고정으로 포함, 소스는 3가지 중 1개 선택
+// 3개의 독립적인 Selector → 각각 flavor 선택
+// 고객은 총 3번 선택하며, 같은 flavor를 여러 번 선택 가능
+// 예: vanilla, vanilla, chocolate → 바닐라 2개 + 초콜릿 1개
+```
+
+**예시 3 - 세트 메뉴 (빵 + 소스 + 음료):**
+```json
+{
+  "sku_selectors": [
+    {
+      "selectableAttributes": {
+        "bread": ["croissant", "baguette", "ciabatta"]
+      },
+      "quantity": 1
+    },
+    {
+      "selectableAttributes": {
+        "sauce": ["strawberry_jam", "chocolate", "butter"]
+      },
+      "quantity": 1
+    },
+    {
+      "selectableAttributes": {
+        "drink": ["coffee", "juice", "milk"]
+      },
+      "quantity": 1
+    }
+  ]
+}
+// 3개의 독립적인 Selector → 각각 다른 카테고리 선택
+// 예: bread=croissant, sauce=butter, drink=coffee
+```
+
+**예시 4 - 대용량 선택 (한번에 여러 개):**
+```json
+{
+  "sku_selectors": [
+    {
+      "selectableAttributes": {
+        "flavor": ["vanilla", "chocolate", "strawberry"]
+      },
+      "quantity": 3  // 선택 시 해당 SKU 3개가 한번에 선택됨
+    }
+  ]
+}
+// 고객이 vanilla 선택 → 바닐라 3개가 한번에 추가됨
+// 수량이 3으로 고정된 경우 사용
 ```
 
 **주요 특징:**
-- **FIXED 타입**: 자동 포함되는 SKU (선택 불가)
-- **CHOICE 타입**: 고객이 선택 가능한 SKU 목록
-- **중복 선택 지원**: max_selections 내에서 같은 SKU 중복 선택 가능
-- **TypeORM Transformer**: DB의 JSONB를 자동으로 클래스로 변환/저장
+- **속성 기반 선택**: SKU를 속성 조합으로 선택 (color=red + size=L)
+- **유연한 수량 관리**: `quantity` 필드로 선택 시 추가되는 개수 조정
+- **중복 선택 지원**: 여러 Selector를 배열로 정의하여 골라담기 구현
+- **독립적 선택**: 각 Selector는 독립적으로 동작
+- **프론트엔드 공유**: `@yestravelkr/option-selector` 패키지로 FE/BE 공유
+
+**OptionSelector 패키지:**
+`packages/option-selector`에서 SKU 선택 로직을 관리합니다.
+- `OptionSelector`: 전체 옵션 선택 관리 클래스
+- `SkuSelector`: 개별 SKU 선택 관리 클래스
+- FE/BE 모두에서 동일한 선택 로직 사용
 
 ### Sku (재고 관리 단위)
 상품 템플릿(ProductTemplate)의 재고 관리 단위입니다.
