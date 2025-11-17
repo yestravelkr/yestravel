@@ -16,14 +16,35 @@
 
 ```mermaid
 erDiagram
+    ProductTemplate ||--o{ Sku : "has"
+    Product }o--|| ProductTemplate : "references"
+    Product }o..o{ Sku : "uses"
     Product ||--o{ ProductOption : "has"
     Product ||--o{ OrderOption : "has"
     Order ||--o{ OrderOption : "contains"
     Order ||--o{ Purchase : "has"
     Purchase ||--o{ PurchaseLog : "tracks"
 
+    ProductTemplate {
+        int id PK
+        string name
+        boolean use_stock
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    Sku {
+        int id PK
+        int product_template_id FK
+        string sku_code
+        int stock_quantity
+        timestamp created_at
+        timestamp updated_at
+    }
+
     Product {
         int id PK
+        int product_template_id FK
         string name
         int price
         enum type
@@ -38,6 +59,7 @@ erDiagram
         string name
         int additional_price
         boolean is_active
+        jsonb sku_groups "ProductOptionSkuGroup[]"
         timestamp created_at
         timestamp updated_at
     }
@@ -55,7 +77,7 @@ erDiagram
         int id PK
         int order_id FK
         int product_id FK
-        jsonb option_snapshot
+        jsonb option_snapshot "includes sku_groups"
         int quantity
         int unit_price
         timestamp created_at
@@ -225,10 +247,143 @@ Purchase #2 (추가 옵션 결제 - PG거래 #2)
 - 옵션명
 - 추가 금액
 - 활성화 상태
+- **sku_groups (JSONB)**: ProductOptionSkuGroup 배열로 SKU 선택 규칙 정의
 
-**예시:**
-- 호텔: "오션뷰", "시티뷰", "스위트룸"
-- 배송상품: "색상: 빨강", "사이즈: L"
+**SKU 그룹 구조:**
+옵션은 여러 SKU 그룹을 가질 수 있으며, 각 그룹은 TypeORM Transformer를 통해 클래스로 변환됩니다.
+
+```typescript
+// DB에 저장되는 JSONB 구조
+{
+  "sku_groups": [
+    {
+      "name": "빵 선택",
+      "selection_type": "FIXED",  // 고정 선택
+      "items": [
+        { "sku_id": 1, "quantity": 1 }  // 크루아상 1개 고정
+      ]
+    },
+    {
+      "name": "소스 선택",
+      "selection_type": "CHOICE",  // 선택형
+      "min_selections": 1,
+      "max_selections": 1,
+      "items": [
+        { "sku_id": 2, "quantity": 1 },  // 딸기잼
+        { "sku_id": 3, "quantity": 1 },  // 초코소스
+        { "sku_id": 4, "quantity": 1 }   // 버터
+      ]
+    }
+  ]
+}
+
+// TypeORM Transformer로 변환되는 클래스 구조
+class ProductOptionSkuGroup {
+  name: string;
+  selection_type: 'FIXED' | 'CHOICE';  // 고정 또는 선택
+  min_selections?: number;  // 최소 선택 수 (CHOICE일 때)
+  max_selections?: number;  // 최대 선택 수 (CHOICE일 때)
+  items: ProductOptionSkuGroupItem[];
+}
+
+class ProductOptionSkuGroupItem {
+  sku_id: number;
+  quantity: number;  // 해당 SKU의 수량
+}
+```
+
+**예시 - 아이스크림 3개 골라담기:**
+```json
+{
+  "sku_groups": [
+    {
+      "name": "아이스크림 선택",
+      "selection_type": "CHOICE",
+      "min_selections": 1,
+      "max_selections": 3,  // 총 3개까지 선택 가능
+      "items": [
+        { "sku_id": 10, "quantity": 1 },  // 바닐라 (1개 단위)
+        { "sku_id": 11, "quantity": 1 },  // 초콜릿 (1개 단위)
+        { "sku_id": 12, "quantity": 1 },  // 딸기 (1개 단위)
+        { "sku_id": 13, "quantity": 1 }   // 민트 (1개 단위)
+      ]
+    }
+  ]
+}
+// 고객은 4가지 중에서 중복 가능하게 총 3개 선택
+// 예: 바닐라 2개 + 초콜릿 1개
+```
+
+**예시 - 빵 + 소스 세트:**
+```json
+{
+  "sku_groups": [
+    {
+      "name": "빵 (기본 포함)",
+      "selection_type": "FIXED",
+      "items": [
+        { "sku_id": 20, "quantity": 1 }  // 크루아상 1개 고정
+      ]
+    },
+    {
+      "name": "소스 선택",
+      "selection_type": "CHOICE",
+      "min_selections": 1,
+      "max_selections": 1,
+      "items": [
+        { "sku_id": 21, "quantity": 1 },  // 딸기잼
+        { "sku_id": 22, "quantity": 1 },  // 초코소스
+        { "sku_id": 23, "quantity": 1 }   // 버터
+      ]
+    }
+  ]
+}
+// 빵은 고정으로 포함, 소스는 3가지 중 1개 선택
+```
+
+**주요 특징:**
+- **FIXED 타입**: 자동 포함되는 SKU (선택 불가)
+- **CHOICE 타입**: 고객이 선택 가능한 SKU 목록
+- **중복 선택 지원**: max_selections 내에서 같은 SKU 중복 선택 가능
+- **TypeORM Transformer**: DB의 JSONB를 자동으로 클래스로 변환/저장
+
+### Sku (재고 관리 단위)
+상품 템플릿(ProductTemplate)의 재고 관리 단위입니다.
+
+**관계:**
+- `N:1` ProductTemplate (특정 상품 템플릿에 속함)
+
+**주요 필드:**
+- sku_code: SKU 고유 코드 (product_template_id와 함께 unique)
+- stock_quantity: 재고 수량
+- attributes: 상품 속성 (색상, 사이즈 등)
+
+**ProductTemplate과의 관계:**
+SKU는 Product가 아닌 **ProductTemplate에 연결**됩니다. 이는 같은 ProductTemplate으로 만든 Product들이 **재고를 공유**할 수 있도록 하기 위함입니다.
+
+**재고 공유 시나리오:**
+```
+예시:
+1. ProductTemplate: "YesTravel 티셔츠" 생성
+   └─ Sku #1: color=Blue, size=L, stock=100
+   └─ Sku #2: color=Red, size=M, stock=50
+
+2. Product #1 생성: "봄 시즌 티셔츠" (campaign_id=1)
+   └─ 위 SKU들을 사용 가능
+
+3. Product #2 생성: "여름 세일 티셔츠" (campaign_id=2)
+   └─ 동일한 SKU들을 사용 가능
+
+결과:
+- Product #1과 #2는 다른 캠페인, 다른 가격
+- 하지만 실제 재고(Sku)는 공유
+- Sku #1의 재고가 10개 남으면, 두 상품 모두 해당 SKU는 10개만 판매 가능
+```
+
+**장점:**
+- 물리적 재고는 하나지만, 여러 캠페인/이벤트에서 판매 가능
+- 재고 관리 효율성 증대
+- 실제 재고와 시스템 재고의 정확한 일치
 
 ### Order (주문)
 고객의 주문 전체를 관리하는 엔티티입니다.
