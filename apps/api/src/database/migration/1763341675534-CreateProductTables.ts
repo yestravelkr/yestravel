@@ -161,7 +161,7 @@ export class CreateProductTables1763341675534 implements MigrationInterface {
 
     await queryRunner.query(
       `ALTER TABLE "product_categories" ADD CONSTRAINT "FK_product_categories_category"
-       FOREIGN KEY ("category_id") REFERENCES "category"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
+       FOREIGN KEY ("category_id") REFERENCES "categories"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
     );
 
     // 12. 인덱스 추가
