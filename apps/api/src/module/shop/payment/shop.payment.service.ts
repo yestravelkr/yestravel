@@ -19,9 +19,8 @@ export class ShopPaymentService {
   } = {
     accessToken: null,
     refreshToken: null,
-    expiredAt: dayjs().add(-1, 'h') // 처음에 바로 accessToken 발급하도록 처리
-  }
-
+    expiredAt: dayjs().add(-1, 'h'), // 처음에 바로 accessToken 발급하도록 처리
+  };
 
   async handlePaymentComplete(
     data: ShopPaymentCompleteInput
@@ -60,10 +59,10 @@ export class ShopPaymentService {
           },
         }
       )
-      .then((response) => {
+      .then(response => {
         this.logger.log('Payment confirmed successfully');
       })
-      .catch((error) => {
+      .catch(error => {
         if (error.response?.data.type === 'ALREADY_PAID') {
           this.logger.log('이미 결제된 요청은 에러 없이 처리');
           return;
