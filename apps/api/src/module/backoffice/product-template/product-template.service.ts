@@ -7,7 +7,7 @@ import { RepositoryProvider } from '@src/module/shared/transaction/repository.pr
 import { HotelTemplateEntity } from '@src/module/backoffice/domain/product-template/hotel-template.entity';
 import { DeliveryTemplateEntity } from '@src/module/backoffice/domain/product-template/delivery-template.entity';
 import { ETicketTemplateEntity } from '@src/module/backoffice/domain/product-template/eticket-template.entity';
-import { DeliveryEntity } from '@src/module/backoffice/domain/delivery.entity';
+import { DeliveryPolicyEntity } from '@src/module/backoffice/domain/delivery-policy.entity';
 import { validateCategoriesExist } from '@src/module/backoffice/domain/category.entity';
 import { upsertProductCategory } from '@src/module/backoffice/domain/product-template/product-template-category.entity';
 import type {
@@ -337,7 +337,7 @@ export class ProductTemplateService {
         deliveryTemplate.productInfoNotice = input.productInfoNotice || '';
 
         // 배송 정책 임베디드 객체 생성
-        const delivery = new DeliveryEntity();
+        const delivery = new DeliveryPolicyEntity();
         Object.assign(delivery, input.delivery);
         deliveryTemplate.delivery = delivery;
 
@@ -499,7 +499,7 @@ export class ProductTemplateService {
           deliveryInput.productInfoNotice || '';
 
         // 배송 정책 임베디드 객체 업데이트
-        const delivery = new DeliveryEntity();
+        const delivery = new DeliveryPolicyEntity();
         Object.assign(delivery, deliveryInput.delivery);
         deliveryTemplate.delivery = delivery;
 

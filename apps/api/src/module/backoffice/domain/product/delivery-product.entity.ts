@@ -1,6 +1,6 @@
 import { Entity, Column, EntityManager } from 'typeorm';
 import { ProductEntity } from '@src/module/backoffice/domain/product/product.entity';
-import { DeliveryEntity } from '@src/module/backoffice/domain/delivery.entity';
+import { DeliveryPolicyEntity } from '@src/module/backoffice/domain/delivery-policy.entity';
 import { ProductTypeEnum } from '@src/module/backoffice/admin/admin.schema';
 import { TransactionService } from '@src/module/shared/transaction/transaction.service';
 import { getEntityManager } from '@src/database/datasources';
@@ -13,8 +13,8 @@ export class DeliveryProductEntity extends ProductEntity {
   }
 
   // 배송 정책 (임베디드 컬럼)
-  @Column(() => DeliveryEntity, { prefix: 'delivery' })
-  delivery: DeliveryEntity;
+  @Column(() => DeliveryPolicyEntity, { prefix: 'delivery' })
+  delivery: DeliveryPolicyEntity;
 
   // 교환 및 반품 안내
   @Column('text', { default: '' })

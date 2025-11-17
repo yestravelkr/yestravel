@@ -11,7 +11,7 @@ import {
  * - DDD 패턴으로 비즈니스 로직 포함
  * - 임베디드 컬럼으로 사용되어 조인 없이 사용 가능
  */
-export class DeliveryEntity {
+export class DeliveryPolicyEntity {
   // 배송비 설정 (유료 | 조건부 무료 | 무료)
   @Column({
     name: 'delivery_fee_type',
