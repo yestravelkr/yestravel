@@ -37,7 +37,9 @@ erDiagram
         int id PK
         int product_template_id FK
         string sku_code
-        int stock_quantity
+        string name
+        int quantity
+        jsonb attributes
         timestamp created_at
         timestamp updated_at
     }
@@ -355,8 +357,9 @@ class ProductOptionSkuGroupItem {
 
 **주요 필드:**
 - sku_code: SKU 고유 코드 (product_template_id와 함께 unique)
-- stock_quantity: 재고 수량
-- attributes: 상품 속성 (색상, 사이즈 등)
+- name: SKU 이름
+- quantity: 재고 수량
+- attributes: 상품 속성 (색상, 사이즈 등을 JSON 형태로 저장)
 
 **ProductTemplate과의 관계:**
 SKU는 Product가 아닌 **ProductTemplate에 연결**됩니다. 이는 같은 ProductTemplate으로 만든 Product들이 **재고를 공유**할 수 있도록 하기 위함입니다.
