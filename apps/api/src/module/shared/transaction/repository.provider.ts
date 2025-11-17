@@ -13,6 +13,7 @@ import { getProductRepository } from '@src/module/backoffice/domain/product/prod
 import { getHotelProductRepository } from '@src/module/backoffice/domain/product/hotel-product.entity';
 import { getDeliveryProductRepository } from '@src/module/backoffice/domain/product/delivery-product.entity';
 import { getETicketProductRepository } from '@src/module/backoffice/domain/product/eticket-product.entity';
+import { getSkuRepository } from '@src/module/backoffice/domain/product/sku.entity';
 
 @Injectable()
 export class RepositoryProvider {
@@ -68,5 +69,9 @@ export class RepositoryProvider {
 
   get ETicketProductRepository() {
     return getETicketProductRepository(this.transaction);
+  }
+
+  get SkuRepository() {
+    return getSkuRepository(this.transaction);
   }
 }
