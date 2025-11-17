@@ -3,6 +3,12 @@
     "baseUrl": "./",
     "paths": {
       "@src/*": ["./src/*"],
-    }
+      "@yestravelkr/option-selector": [
+        "../../../packages/option-selector/src"
+      ],
+      "@yestravelkr/option-selector/*": [
+        "../../../packages/option-selector/src/*"
+      ]
+    },
   }
 }
