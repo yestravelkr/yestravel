@@ -23,11 +23,11 @@ export class productSkuOption1763365221954 implements MigrationInterface {
                                  "price"         integer                NOT NULL DEFAULT '0',
                                  "is_active"     boolean                NOT NULL DEFAULT true,
                                  "sku_selectors" jsonb                  NOT NULL DEFAULT '[]',
-                                 CONSTRAINT "PK_4cf3c467e9bc764bdd32c4cd938" PRIMARY KEY ("id")
+                                 CONSTRAINT "PK_product_option" PRIMARY KEY ("id")
                              )`);
 
     // product_option 인덱스 생성
-    await queryRunner.query(`CREATE INDEX "IDX_e634fca34f6b594b87fdbee95f" ON "product_option" ("product_id") `);
+    await queryRunner.query(`CREATE INDEX "IDX_product_option_product_id" ON "product_option" ("product_id") `);
 
     // sku 테이블 생성
     // - SkuEntity 매핑
@@ -46,33 +46,33 @@ export class productSkuOption1763365221954 implements MigrationInterface {
                                  "quantity"            integer           NOT NULL DEFAULT '0',
                                  "attributes"          jsonb             NOT NULL DEFAULT '{}',
                                  "product_template_id" integer           NOT NULL,
-                                 CONSTRAINT "PK_ed102ac07c2cbc14c9a1438ecc2" PRIMARY KEY ("id")
+                                 CONSTRAINT "PK_sku" PRIMARY KEY ("id")
                              )`);
 
     // sku 인덱스 생성
-    await queryRunner.query(`CREATE INDEX "IDX_sku_template" ON "sku" ("product_template_id") `);
+    await queryRunner.query(`CREATE INDEX "IDX_sku_product_template_id" ON "sku" ("product_template_id") `);
 
     // sku unique 인덱스: 같은 템플릿 내에서 SKU 코드는 유일해야 함
-    await queryRunner.query(`CREATE UNIQUE INDEX "IDX_sku_template_code" ON "sku" ("product_template_id", "sku_code") `);
+    await queryRunner.query(`CREATE UNIQUE INDEX "UQ_sku_product_template_sku_code" ON "sku" ("product_template_id", "sku_code") `);
 
     // product_option FK 제약조건
     await queryRunner.query(`ALTER TABLE "product_option"
-        ADD CONSTRAINT "FK_e634fca34f6b594b87fdbee95f6" FOREIGN KEY ("product_id") REFERENCES "product" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
+        ADD CONSTRAINT "FK_product_option_product" FOREIGN KEY ("product_id") REFERENCES "product" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
 
     // sku FK 제약조건
     await queryRunner.query(`ALTER TABLE "sku"
-        ADD CONSTRAINT "FK_a022923028d4045da139f9da067" FOREIGN KEY ("product_template_id") REFERENCES "product_template" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
+        ADD CONSTRAINT "FK_sku_product_template" FOREIGN KEY ("product_template_id") REFERENCES "product_template" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
     // FK 제약조건 삭제
-    await queryRunner.query(`ALTER TABLE "sku" DROP CONSTRAINT "FK_a022923028d4045da139f9da067"`);
-    await queryRunner.query(`ALTER TABLE "product_option" DROP CONSTRAINT "FK_e634fca34f6b594b87fdbee95f6"`);
+    await queryRunner.query(`ALTER TABLE "sku" DROP CONSTRAINT "FK_sku_product_template"`);
+    await queryRunner.query(`ALTER TABLE "product_option" DROP CONSTRAINT "FK_product_option_product"`);
 
     // 인덱스 삭제
-    await queryRunner.query(`DROP INDEX "public"."IDX_sku_template_code"`);
-    await queryRunner.query(`DROP INDEX "public"."IDX_sku_template"`);
-    await queryRunner.query(`DROP INDEX "public"."IDX_e634fca34f6b594b87fdbee95f"`);
+    await queryRunner.query(`DROP INDEX "public"."UQ_sku_product_template_sku_code"`);
+    await queryRunner.query(`DROP INDEX "public"."IDX_sku_product_template_id"`);
+    await queryRunner.query(`DROP INDEX "public"."IDX_product_option_product_id"`);
 
     // 테이블 삭제
     await queryRunner.query(`DROP TABLE "sku"`);
