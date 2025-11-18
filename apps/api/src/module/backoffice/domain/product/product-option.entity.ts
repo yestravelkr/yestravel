@@ -11,13 +11,13 @@ import { ProductEntity } from './product.entity';
 import { TransactionService } from '@src/module/shared/transaction/transaction.service';
 import { getEntityManager } from '@src/database/datasources';
 import {
-  OptionConfig,
-  SkuSelectorConfig,
-} from '@yestravelkr/option-selector/src/types';
+  ProductOptionConfig,
+  ProductSkuSelectorConfig,
+} from '@yestravelkr/option-selector/src/product/types';
 
 @Entity('product_option')
 @Index(['productId'])
-export class ProductOptionEntity extends SoftDeleteEntity implements OptionConfig {
+export class ProductOptionEntity extends SoftDeleteEntity implements ProductOptionConfig {
   @Column({ name: 'product_id', type: 'integer' })
   productId: number;
 
@@ -36,7 +36,7 @@ export class ProductOptionEntity extends SoftDeleteEntity implements OptionConfi
 
   /**
    * SKU 선택기 설정 (JSONB)
-   * SkuSelectorConfig[] 형태로 저장
+   * ProductSkuSelectorConfig[] 형태로 저장
    * 각 선택기는 선택 가능한 속성들과 해당 선택 시 한번에 선택되는 SKU 수량을 정의
    * 
    * 예시:
@@ -59,7 +59,7 @@ export class ProductOptionEntity extends SoftDeleteEntity implements OptionConfi
    * ]
    */
   @Column('jsonb', { name: 'sku_selectors', default: [] })
-  skuSelectors: SkuSelectorConfig[];
+  skuSelectors: ProductSkuSelectorConfig[];
 }
 
 export const getProductOptionRepository = (
