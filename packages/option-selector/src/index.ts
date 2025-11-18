@@ -8,3 +8,12 @@ export type {
   ProductSkuSelectorState,
   ProductOptionSelectorState
 } from './product';
+
+// Hotel 옵션 선택
+export { HotelOptionSelector } from './hotel';
+export type {
+  HotelSku,
+  RoomOption,
+  HotelOptionSelectorConfig,
+  HotelOptionSelectorState,
+} from './hotel';
