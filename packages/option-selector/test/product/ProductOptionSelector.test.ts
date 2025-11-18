@@ -1,11 +1,11 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { OptionSelector } from '../src/OptionSelector';
-import type { OptionSelectorConfig, Sku } from '../src/types';
+import { ProductOptionSelector } from '../../src/product/ProductOptionSelector';
+import type { ProductOptionSelectorConfig, ProductSku } from '../../src/product/types';
 
-describe('OptionSelector', () => {
-  let skus: Sku[];
-  let config: OptionSelectorConfig;
-  let optionSelector: OptionSelector;
+describe('ProductOptionSelector', () => {
+  let skus: ProductSku[];
+  let config: ProductOptionSelectorConfig;
+  let optionSelector: ProductOptionSelector;
 
   beforeEach(() => {
     // 테스트용 SKU 데이터 설정
@@ -46,21 +46,23 @@ describe('OptionSelector', () => {
             color: ['red', 'blue'],
             size: ['S', 'M', 'L'],
           },
+          quantity: 1,
         },
         {
           selectableAttributes: {
             color: ['red', 'blue', 'yellow'],
             size: ['S', 'M', 'L', 'XL'],
           },
+          quantity: 1,
         },
       ],
     };
 
-    optionSelector = new OptionSelector(config);
+    optionSelector = new ProductOptionSelector(config);
   });
 
   describe('초기화', () => {
-    it('설정된 개수만큼 SkuSelector가 생성되어야 함', () => {
+    it('설정된 개수만큼 ProductSkuSelector가 생성되어야 함', () => {
       const selectors = optionSelector.getAllSkuSelectors();
       expect(selectors).toHaveLength(2);
     });
@@ -71,7 +73,7 @@ describe('OptionSelector', () => {
   });
 
   describe('getSkuSelector', () => {
-    it('특정 인덱스의 SkuSelector를 가져올 수 있어야 함', () => {
+    it('특정 인덱스의 ProductSkuSelector를 가져올 수 있어야 함', () => {
       const selector = optionSelector.getSkuSelector(0);
       expect(selector).toBeDefined();
     });
@@ -115,7 +117,7 @@ describe('OptionSelector', () => {
   });
 
   describe('isAllSelected', () => {
-    it('모든 SkuSelector가 선택되면 true를 반환해야 함', () => {
+    it('모든 ProductSkuSelector가 선택되면 true를 반환해야 함', () => {
       const selector1 = optionSelector.getSkuSelector(0);
       selector1?.selectAttribute('color', 'red');
       selector1?.selectAttribute('size', 'M');
@@ -136,7 +138,7 @@ describe('OptionSelector', () => {
   });
 
   describe('reset', () => {
-    it('모든 SkuSelector의 선택을 초기화해야 함', () => {
+    it('모든 ProductSkuSelector의 선택을 초기화해야 함', () => {
       const selector1 = optionSelector.getSkuSelector(0);
       selector1?.selectAttribute('color', 'red');
       selector1?.selectAttribute('size', 'M');
@@ -155,24 +157,24 @@ describe('OptionSelector', () => {
   });
 
   describe('복잡한 시나리오 - 아이스크림 3개 골라담기', () => {
-    it('여러 SkuSelector가 동일한 SKU 풀을 공유해야 함', () => {
+    it('여러 ProductSkuSelector가 동일한 SKU 풀을 공유해야 함', () => {
       // 아이스크림 맛 SKU
-      const iceCreamSkus: Sku[] = [
+      const iceCreamProductSkus: ProductSku[] = [
         { id: 101, quantity: 10, attributes: { flavor: 'vanilla' } },
         { id: 102, quantity: 5, attributes: { flavor: 'chocolate' } },
         { id: 103, quantity: 8, attributes: { flavor: 'strawberry' } },
       ];
 
-      const iceCreamConfig: OptionSelectorConfig = {
-        skus: iceCreamSkus,
+      const iceCreamConfig: ProductOptionSelectorConfig = {
+        skus: iceCreamProductSkus,
         skuSelectors: [
-          { selectableAttributes: { flavor: ['vanilla', 'chocolate', 'strawberry'] } },
-          { selectableAttributes: { flavor: ['vanilla', 'chocolate', 'strawberry'] } },
-          { selectableAttributes: { flavor: ['vanilla', 'chocolate', 'strawberry'] } },
+          { selectableAttributes: { flavor: ['vanilla', 'chocolate', 'strawberry'] }, quantity: 1 },
+          { selectableAttributes: { flavor: ['vanilla', 'chocolate', 'strawberry'] }, quantity: 1 },
+          { selectableAttributes: { flavor: ['vanilla', 'chocolate', 'strawberry'] }, quantity: 1 },
         ],
       };
 
-      const iceCreamSelector = new OptionSelector(iceCreamConfig);
+      const iceCreamSelector = new ProductOptionSelector(iceCreamConfig);
 
       // 3개 선택
       iceCreamSelector.getSkuSelector(0)?.selectAttribute('flavor', 'vanilla');
@@ -190,24 +192,24 @@ describe('OptionSelector', () => {
 
   describe('복잡한 시나리오 - 빵 + 소스 선택', () => {
     it('고정 SKU와 선택 SKU를 함께 처리해야 함', () => {
-      const bundleSkus: Sku[] = [
+      const bundleProductSkus: ProductSku[] = [
         { id: 201, quantity: 10, attributes: { type: 'bread', name: 'baguette' } },
         { id: 301, quantity: 5, attributes: { type: 'sauce', name: 'mayo' } },
         { id: 302, quantity: 8, attributes: { type: 'sauce', name: 'ketchup' } },
         { id: 303, quantity: 3, attributes: { type: 'sauce', name: 'mustard' } },
       ];
 
-      const bundleConfig: OptionSelectorConfig = {
-        skus: bundleSkus,
+      const bundleConfig: ProductOptionSelectorConfig = {
+        skus: bundleProductSkus,
         skuSelectors: [
           // 빵 - 고정 선택
-          { selectableAttributes: { type: ['bread'], name: ['baguette'] } },
+          { selectableAttributes: { type: ['bread'], name: ['baguette'] }, quantity: 1 },
           // 소스 - 3개 중 1개 선택
-          { selectableAttributes: { type: ['sauce'], name: ['mayo', 'ketchup', 'mustard'] } },
+          { selectableAttributes: { type: ['sauce'], name: ['mayo', 'ketchup', 'mustard'] }, quantity: 1 },
         ],
       };
 
-      const bundleSelector = new OptionSelector(bundleConfig);
+      const bundleSelector = new ProductOptionSelector(bundleConfig);
 
       // 빵 선택 (고정)
       bundleSelector.getSkuSelector(0)?.selectAttribute('type', 'bread');

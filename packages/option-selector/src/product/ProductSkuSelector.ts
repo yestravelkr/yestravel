@@ -1,20 +1,20 @@
 /**
- * SkuSelector - 실제 선택된 SKU를 나타내는 클래스
+ * ProductSkuSelector - 실제 선택된 Product SKU를 나타내는 클래스
  *
  * 선택 가능한 SKU들과 선택 가능한 속성(attributes) 정보를 담고 있습니다.
  */
 
-import type { Sku, SkuSelectorConfig, SkuSelectorState } from './types';
+import type { ProductSku, ProductSkuSelectorConfig, ProductSkuSelectorState } from './types';
 
-export class SkuSelector {
+export class ProductSkuSelector {
   private selectedAttributes: Record<string, string | null> = {};
-  private selectedSku: Sku | null = null;
+  private selectedSku: ProductSku | null = null;
   private readonly selectableAttributes: Record<string, string[]>;
-  private readonly config: SkuSelectorConfig;
+  private readonly config: ProductSkuSelectorConfig;
 
   constructor(
-    private readonly skus: Sku[],
-    config: SkuSelectorConfig
+    private readonly skus: ProductSku[],
+    config: ProductSkuSelectorConfig
   ) {
     this.config = config;
     // attributes가 없는 경우 에러 처리
@@ -51,7 +51,7 @@ export class SkuSelector {
    * SKU 검증: selectableAttributes의 모든 키가 각 SKU의 attributes에 존재하는지 확인
    */
   private validateSkuAttributes(
-    skus: Sku[],
+    skus: ProductSku[],
     selectableAttributes: Record<string, string[]>
   ): void {
     const selectableKeys = Object.keys(selectableAttributes);
@@ -155,7 +155,7 @@ export class SkuSelector {
   /**
    * 선택된 SKU 반환
    */
-  getSelectedSku(): Sku | null {
+  getSelectedSku(): ProductSku | null {
     return this.selectedSku;
   }
 
@@ -238,7 +238,7 @@ export class SkuSelector {
   /**
    * 현재 상태를 JSON으로 직렬화
    */
-  toJSON(): SkuSelectorState {
+  toJSON(): ProductSkuSelectorState {
     return {
       selectedAttributes: { ...this.selectedAttributes },
       config: this.config,
@@ -246,10 +246,10 @@ export class SkuSelector {
   }
 
   /**
-   * JSON 데이터로부터 SkuSelector 인스턴스 생성
+   * JSON 데이터로부터 ProductSkuSelector 인스턴스 생성
    */
-  static fromJSON(skus: Sku[], state: SkuSelectorState): SkuSelector {
-    const selector = new SkuSelector(skus, state.config);
+  static fromJSON(skus: ProductSku[], state: ProductSkuSelectorState): ProductSkuSelector {
+    const selector = new ProductSkuSelector(skus, state.config);
     
     // 저장된 선택 상태 복원
     Object.keys(state.selectedAttributes).forEach((key) => {

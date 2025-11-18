@@ -1,5 +1,5 @@
-// Product 옵션 선택
-export { ProductOptionSelector, ProductSkuSelector } from './product';
+export { ProductOptionSelector } from './ProductOptionSelector';
+export { ProductSkuSelector } from './ProductSkuSelector';
 export type { 
   ProductSku, 
   ProductSkuSelectorConfig, 
@@ -7,4 +7,4 @@ export type {
   ProductOptionConfig,
   ProductSkuSelectorState,
   ProductOptionSelectorState
-} from './product';
+} from './types';
