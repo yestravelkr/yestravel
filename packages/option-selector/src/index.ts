@@ -13,7 +13,7 @@ export type {
 export { HotelOptionSelector } from './hotel';
 export type {
   HotelSku,
-  RoomOption,
+  HotelOption,
   HotelOptionSelectorConfig,
   HotelOptionSelectorState,
 } from './hotel';
