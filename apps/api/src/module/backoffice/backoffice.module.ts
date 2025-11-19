@@ -6,6 +6,7 @@ import { AdminModule } from '@src/module/backoffice/admin/admin.module';
 import { ProductTemplateModule } from '@src/module/backoffice/product-template/product-template.module';
 import { ProductModule } from '@src/module/backoffice/product/product.module';
 import { CategoryModule } from '@src/module/backoffice/category/category.module';
+import { InfluencerModule } from '@src/module/backoffice/influencer/influencer.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { CategoryModule } from '@src/module/backoffice/category/category.module'
     ProductTemplateModule,
     ProductModule,
     CategoryModule,
+    InfluencerModule,
   ],
   exports: [
     BackofficeAuthModule,
@@ -25,6 +27,7 @@ import { CategoryModule } from '@src/module/backoffice/category/category.module'
     ProductTemplateModule,
     ProductModule,
     CategoryModule,
+    InfluencerModule,
   ],
 })
 export class BackofficeModule {}
