@@ -8,6 +8,7 @@ import { HotelProductEntity } from '@src/module/backoffice/domain/product/hotel-
 import { DeliveryProductEntity } from '@src/module/backoffice/domain/product/delivery-product.entity';
 import { ETicketProductEntity } from '@src/module/backoffice/domain/product/eticket-product.entity';
 import { DeliveryPolicyEntity } from '@src/module/backoffice/domain/delivery-policy.entity';
+import { ProductRepository } from './product.repository';
 import type {
   CreateProductInputDto,
   CreateProductResponse,
@@ -21,7 +22,10 @@ import type {
 
 @Injectable()
 export class ProductService {
-  constructor(private readonly repositoryProvider: RepositoryProvider) {}
+  constructor(
+    private readonly repositoryProvider: RepositoryProvider,
+    private readonly productRepository: ProductRepository
+  ) {}
 
   async findAll(query: FindAllProductQuery): Promise<ProductListResponse> {
     const {
@@ -38,44 +42,20 @@ export class ProductService {
       endDate,
     } = query;
 
-    // QueryBuilder 사용
-    const queryBuilder =
-      this.repositoryProvider.ProductRepository.createQueryBuilder(
-        'product'
-      ).leftJoinAndSelect('product.brand', 'brand');
-
-    // WHERE 조건 적용
-    if (type) {
-      queryBuilder.andWhere('product.type = :type', { type });
-    }
-    if (name) {
-      queryBuilder.andWhere('product.name LIKE :name', { name: `%${name}%` });
-    }
-    if (status) {
-      queryBuilder.andWhere('product.status = :status', { status });
-    }
-    if (brandIds && brandIds.length > 0) {
-      queryBuilder.andWhere('product.brandId IN (:...brandIds)', { brandIds });
-    }
-    if (startDate && endDate) {
-      const dateField =
-        dateFilterType === 'CREATED_AT'
-          ? 'product.createdAt'
-          : 'product.updatedAt';
-      queryBuilder.andWhere(`${dateField} BETWEEN :startDate AND :endDate`, {
-        startDate: new Date(startDate),
-        endDate: new Date(endDate),
-      });
-    }
-
-    // 정렬 및 페이지네이션
-    queryBuilder
-      .orderBy(`product.${orderBy}`, order)
-      .skip((page - 1) * limit)
-      .take(limit);
-
-    // 데이터 조회
-    const [products, total] = await queryBuilder.getManyAndCount();
+    // Repository를 통한 데이터 조회
+    const [products, total] = await this.productRepository.findAllWithFilters({
+      page,
+      limit,
+      orderBy,
+      order,
+      type,
+      name,
+      status,
+      brandIds,
+      dateFilterType,
+      startDate,
+      endDate,
+    });
 
     // 총 페이지 수 계산
     const totalPages = Math.ceil(total / limit);
@@ -130,30 +110,9 @@ export class ProductService {
           });
 
         return {
+          ...hotel,
           type: 'HOTEL',
-          id: hotel.id,
-          name: hotel.name,
-          brandId: hotel.brandId,
           brandName: hotel.brand.name,
-          productTemplateId: hotel.productTemplateId,
-          campaignId: hotel.campaignId,
-          thumbnailUrls: hotel.thumbnailUrls,
-          description: hotel.description,
-          detailContent: hotel.detailContent,
-          useCalendar: hotel.useCalendar,
-          useStock: hotel.useStock,
-          useOptions: hotel.useOptions,
-          price: hotel.price,
-          status: hotel.status,
-          displayOrder: hotel.displayOrder,
-          baseCapacity: hotel.baseCapacity,
-          maxCapacity: hotel.maxCapacity,
-          checkInTime: hotel.checkInTime,
-          checkOutTime: hotel.checkOutTime,
-          bedTypes: hotel.bedTypes,
-          tags: hotel.tags,
-          createdAt: hotel.createdAt,
-          updatedAt: hotel.updatedAt,
         };
       }
 
@@ -171,38 +130,9 @@ export class ProductService {
           });
 
         return {
+          ...delivery,
           type: 'DELIVERY',
-          id: delivery.id,
-          name: delivery.name,
-          brandId: delivery.brandId,
           brandName: delivery.brand.name,
-          productTemplateId: delivery.productTemplateId,
-          campaignId: delivery.campaignId,
-          thumbnailUrls: delivery.thumbnailUrls,
-          description: delivery.description,
-          detailContent: delivery.detailContent,
-          useCalendar: delivery.useCalendar,
-          useStock: delivery.useStock,
-          useOptions: delivery.useOptions,
-          price: delivery.price,
-          status: delivery.status,
-          displayOrder: delivery.displayOrder,
-          delivery: {
-            deliveryFeeType: delivery.delivery.deliveryFeeType,
-            deliveryFee: delivery.delivery.deliveryFee,
-            freeDeliveryMinAmount: delivery.delivery.freeDeliveryMinAmount,
-            returnDeliveryFee: delivery.delivery.returnDeliveryFee,
-            exchangeDeliveryFee: delivery.delivery.exchangeDeliveryFee,
-            remoteAreaExtraFee: delivery.delivery.remoteAreaExtraFee,
-            jejuExtraFee: delivery.delivery.jejuExtraFee,
-            isJejuRestricted: delivery.delivery.isJejuRestricted,
-            isRemoteIslandRestricted:
-              delivery.delivery.isRemoteIslandRestricted,
-          },
-          exchangeReturnInfo: delivery.exchangeReturnInfo,
-          productInfoNotice: delivery.productInfoNotice,
-          createdAt: delivery.createdAt,
-          updatedAt: delivery.updatedAt,
         };
       }
 
@@ -218,24 +148,9 @@ export class ProductService {
           });
 
         return {
+          ...eticket,
           type: 'E-TICKET',
-          id: eticket.id,
-          name: eticket.name,
-          brandId: eticket.brandId,
           brandName: eticket.brand.name,
-          productTemplateId: eticket.productTemplateId,
-          campaignId: eticket.campaignId,
-          thumbnailUrls: eticket.thumbnailUrls,
-          description: eticket.description,
-          detailContent: eticket.detailContent,
-          useCalendar: eticket.useCalendar,
-          useStock: eticket.useStock,
-          useOptions: eticket.useOptions,
-          price: eticket.price,
-          status: eticket.status,
-          displayOrder: eticket.displayOrder,
-          createdAt: eticket.createdAt,
-          updatedAt: eticket.updatedAt,
         };
       }
 
