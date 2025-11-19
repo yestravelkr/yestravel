@@ -26,21 +26,16 @@ export class InfluencerService {
     }
 
     // 인플루언서 엔티티 생성
-    const influencer = new InfluencerEntity();
-    influencer.name = input.name;
-    influencer.email = input.email ?? undefined;
-    influencer.phoneNumber = input.phoneNumber ?? undefined;
-    influencer.thumbnail = input.thumbnail ?? undefined;
-    influencer.businessInfo = input.businessInfo as any;
-    influencer.bankInfo = input.bankInfo as any;
+    const { socialMedias, ...data } = input;
 
-    // 소셜미디어 엔티티 생성
-    influencer.socialMedias = input.socialMedias.map(sm => {
-      const socialMedia = this.repositoryProvider.SocialMediaRepository.create({
-        platform: sm.platform,
-        url: sm.url,
-      });
-      return socialMedia;
+    const influencer = Object.assign(new InfluencerEntity(), {
+      ...data,
+      socialMedias: socialMedias.map(sm =>
+        this.repositoryProvider.SocialMediaRepository.create({
+          platform: sm.platform,
+          url: sm.url,
+        })
+      ),
     });
 
     // cascade 옵션으로 socialMedias도 함께 저장됨
@@ -81,23 +76,17 @@ export class InfluencerService {
       );
     }
 
-    // 새 소셜미디어 엔티티 생성
-    const newSocialMedias = updateData.socialMedias.map(sm =>
-      this.repositoryProvider.SocialMediaRepository.create({
-        platform: sm.platform,
-        url: sm.url,
-      })
-    );
-
     // 인플루언서 정보 업데이트
+    const { socialMedias, ...data } = updateData;
+
     Object.assign(existingInfluencer, {
-      name: updateData.name,
-      email: updateData.email ?? undefined,
-      phoneNumber: updateData.phoneNumber ?? undefined,
-      thumbnail: updateData.thumbnail ?? undefined,
-      businessInfo: updateData.businessInfo as any,
-      bankInfo: updateData.bankInfo as any,
-      socialMedias: newSocialMedias,
+      ...data,
+      socialMedias: socialMedias.map(sm =>
+        this.repositoryProvider.SocialMediaRepository.create({
+          platform: sm.platform,
+          url: sm.url,
+        })
+      ),
     });
 
     // cascade 옵션으로 socialMedias도 함께 저장됨
