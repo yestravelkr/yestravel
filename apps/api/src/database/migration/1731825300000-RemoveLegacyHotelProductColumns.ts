@@ -19,13 +19,6 @@ export class RemoveLegacyHotelProductColumns1731825300000
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    // 롤백 시 컬럼 복원
-    await queryRunner.query(
-      `ALTER TABLE "hotel_product" ADD COLUMN "address" character varying NOT NULL DEFAULT ''`
-    );
-
-    await queryRunner.query(
-      `ALTER TABLE "hotel_product" ADD COLUMN "hotel_name" character varying NOT NULL DEFAULT ''`
-    );
+    // 롤백 불가 - 레거시 컬럼 복원 불필요
   }
 }
