@@ -241,15 +241,14 @@ export class ProductSkuSelector {
   toJSON(): ProductSkuSelectorState {
     return {
       selectedAttributes: { ...this.selectedAttributes },
-      config: this.config,
     };
   }
 
   /**
    * JSON 데이터로부터 ProductSkuSelector 인스턴스 생성
    */
-  static fromJSON(skus: ProductSku[], state: ProductSkuSelectorState): ProductSkuSelector {
-    const selector = new ProductSkuSelector(skus, state.config);
+  static fromJSON(skus: ProductSku[], config: ProductSkuSelectorConfig, state: ProductSkuSelectorState): ProductSkuSelector {
+    const selector = new ProductSkuSelector(skus, config);
     
     // 저장된 선택 상태 복원
     Object.keys(state.selectedAttributes).forEach((key) => {

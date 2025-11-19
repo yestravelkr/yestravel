@@ -62,7 +62,6 @@ export class ProductOptionSelector {
    */
   toJSON(): ProductOptionSelectorState {
     return {
-      config: this.config,
       skuSelectorStates: this.skuSelectors.map((selector) => selector.toJSON()),
     };
   }
@@ -70,12 +69,12 @@ export class ProductOptionSelector {
   /**
    * JSON 데이터로부터 ProductOptionSelector 인스턴스 생성
    */
-  static fromJSON(state: ProductOptionSelectorState): ProductOptionSelector {
-    const optionSelector = new ProductOptionSelector(state.config);
+  static fromJSON(config: ProductOptionSelectorConfig, state: ProductOptionSelectorState): ProductOptionSelector {
+    const optionSelector = new ProductOptionSelector(config);
     
     // 저장된 ProductSkuSelector 상태들을 복원
     state.skuSelectorStates.forEach((selectorState, index) => {
-      const selector = ProductSkuSelector.fromJSON(state.config.skus, selectorState);
+      const selector = ProductSkuSelector.fromJSON(config.skus, config.skuSelectors[index], selectorState);
       optionSelector.skuSelectors[index] = selector;
     });
     
