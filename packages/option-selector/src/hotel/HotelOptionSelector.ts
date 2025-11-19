@@ -101,18 +101,6 @@ export class HotelOptionSelector {
   }
 
   /**
-   * 예약 가능한 날짜 목록 조회
-   *
-   * @returns 예약 가능한 날짜 배열 (정렬됨)
-   */
-  getAvailableDates(): string[] {
-    return this.config.skus
-      .filter((sku) => sku.quantity > 0)
-      .map((sku) => sku.date)
-      .sort();
-  }
-
-  /**
    * 숙박 일수 계산
    *
    * @returns 숙박 일수 (박)
