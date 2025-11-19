@@ -64,7 +64,7 @@ export class HotelOptionSelector {
       throw new Error(`잘못된 체크아웃 날짜 형식입니다: ${checkOutDate}`);
     }
 
-    if (checkIn.isSameOrAfter(checkOut)) {
+    if (!checkIn.isBefore(checkOut)) {
       throw new Error('체크아웃 날짜는 체크인 날짜보다 이후여야 합니다');
     }
 

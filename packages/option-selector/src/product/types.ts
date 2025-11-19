@@ -32,13 +32,11 @@ export interface ProductOptionSelectorConfig extends ProductOptionConfig {
  */
 export interface ProductSkuSelectorState {
   selectedAttributes: Record<string, string | null>;
-  config: ProductSkuSelectorConfig;
 }
 
 /**
  * ProductOptionSelector의 현재 상태를 나타내는 인터페이스
  */
 export interface ProductOptionSelectorState {
-  config: ProductOptionSelectorConfig;
   skuSelectorStates: ProductSkuSelectorState[];
 }
