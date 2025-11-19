@@ -44,17 +44,17 @@ export class ProductRouter extends BaseTrpcRouter {
         limit: z.number().int().positive().default(30),
         orderBy: z.string().default('createdAt'),
         order: z.enum(['ASC', 'DESC']).default('DESC'),
-        type: z.enum(['HOTEL', 'E-TICKET', 'DELIVERY']).optional(),
-        name: z.string().optional(),
-        status: z.enum(['VISIBLE', 'HIDDEN', 'SOLD_OUT']).optional(),
-        brandIds: z.array(z.number().int()).optional(),
+        type: z.enum(['HOTEL', 'E-TICKET', 'DELIVERY']).nullish(),
+        name: z.string().nullish(),
+        status: z.enum(['VISIBLE', 'HIDDEN', 'SOLD_OUT']).nullish(),
+        brandIds: z.array(z.number().int()).nullish(),
         dateFilterType: z
           .enum(['CREATED_AT', 'UPDATED_AT'])
           .default('CREATED_AT'),
-        startDate: z.string().optional(),
-        endDate: z.string().optional(),
+        startDate: z.string().nullish(),
+        endDate: z.string().nullish(),
       })
-      .optional()
+      .nullish()
       .default({}),
     output: z.object({
       data: z.array(
