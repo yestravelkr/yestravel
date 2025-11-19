@@ -14,6 +14,8 @@ import { getHotelProductRepository } from '@src/module/backoffice/domain/product
 import { getDeliveryProductRepository } from '@src/module/backoffice/domain/product/delivery-product.entity';
 import { getETicketProductRepository } from '@src/module/backoffice/domain/product/eticket-product.entity';
 import { getSkuRepository } from '@src/module/backoffice/domain/product/sku.entity';
+import { getInfluencerRepository } from '@src/module/backoffice/domain/influencer.entity';
+import { getSocialMediaRepository } from '@src/module/backoffice/domain/social-media.entity';
 
 @Injectable()
 export class RepositoryProvider {
@@ -73,5 +75,13 @@ export class RepositoryProvider {
 
   get SkuRepository() {
     return getSkuRepository(this.transaction);
+  }
+
+  get InfluencerRepository() {
+    return getInfluencerRepository(this.transaction);
+  }
+
+  get SocialMediaRepository() {
+    return getSocialMediaRepository(this.transaction);
   }
 }

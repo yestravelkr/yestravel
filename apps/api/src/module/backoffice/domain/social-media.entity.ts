@@ -1,6 +1,8 @@
-import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
+import { Column, Entity, EntityManager, JoinColumn, ManyToOne } from 'typeorm';
 import { BaseEntity } from '@src/module/backoffice/domain/base.entity';
 import { InfluencerEntity } from '@src/module/backoffice/domain/influencer.entity';
+import { TransactionService } from '@src/module/shared/transaction/transaction.service';
+import { getEntityManager } from '@src/database/datasources';
 
 // Social media platform as string literal union
 type SocialMediaPlatform =
@@ -32,3 +34,7 @@ export class SocialMediaEntity extends BaseEntity {
   @JoinColumn({ name: 'influencer_id' })
   influencer: InfluencerEntity;
 }
+
+export const getSocialMediaRepository = (
+  source?: TransactionService | EntityManager
+) => getEntityManager(source).getRepository(SocialMediaEntity);
