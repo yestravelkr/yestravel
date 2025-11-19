@@ -25,18 +25,22 @@ export class InfluencerService {
       throw new ConflictException('이미 동일한 이름의 인플루언서가 존재합니다');
     }
 
-    // 인플루언서 생성
-    const influencer = this.repositoryProvider.InfluencerRepository.create({
-      name: input.name,
-      email: input.email,
-      phoneNumber: input.phoneNumber,
-      thumbnail: input.thumbnail,
-      businessInfo: input.businessInfo,
-      bankInfo: input.bankInfo,
-      socialMedias: input.socialMedias.map(sm => ({
+    // 인플루언서 엔티티 생성
+    const influencer = new InfluencerEntity();
+    influencer.name = input.name;
+    influencer.email = input.email ?? undefined;
+    influencer.phoneNumber = input.phoneNumber ?? undefined;
+    influencer.thumbnail = input.thumbnail ?? undefined;
+    influencer.businessInfo = input.businessInfo as any;
+    influencer.bankInfo = input.bankInfo as any;
+
+    // 소셜미디어 엔티티 생성
+    influencer.socialMedias = input.socialMedias.map(sm => {
+      const socialMedia = this.repositoryProvider.SocialMediaRepository.create({
         platform: sm.platform,
         url: sm.url,
-      })),
+      });
+      return socialMedia;
     });
 
     // cascade 옵션으로 socialMedias도 함께 저장됨
@@ -70,25 +74,30 @@ export class InfluencerService {
       }
     }
 
-    // 기존 소셜미디어 삭제 (cascade로 자동 삭제됨)
+    // 기존 소셜미디어 삭제
     if (existingInfluencer.socialMedias) {
       await this.repositoryProvider.SocialMediaRepository.remove(
         existingInfluencer.socialMedias
       );
     }
 
+    // 새 소셜미디어 엔티티 생성
+    const newSocialMedias = updateData.socialMedias.map(sm =>
+      this.repositoryProvider.SocialMediaRepository.create({
+        platform: sm.platform,
+        url: sm.url,
+      })
+    );
+
     // 인플루언서 정보 업데이트
     Object.assign(existingInfluencer, {
       name: updateData.name,
-      email: updateData.email,
-      phoneNumber: updateData.phoneNumber,
-      thumbnail: updateData.thumbnail,
-      businessInfo: updateData.businessInfo,
-      bankInfo: updateData.bankInfo,
-      socialMedias: updateData.socialMedias.map(sm => ({
-        platform: sm.platform,
-        url: sm.url,
-      })),
+      email: updateData.email ?? undefined,
+      phoneNumber: updateData.phoneNumber ?? undefined,
+      thumbnail: updateData.thumbnail ?? undefined,
+      businessInfo: updateData.businessInfo as any,
+      bankInfo: updateData.bankInfo as any,
+      socialMedias: newSocialMedias,
     });
 
     // cascade 옵션으로 socialMedias도 함께 저장됨

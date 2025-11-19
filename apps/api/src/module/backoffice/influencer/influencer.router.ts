@@ -8,13 +8,27 @@ import { z } from 'zod';
 import {
   influencerSchema,
   socialMediaPlatformEnumSchema,
-  businessInfoSchema,
-  bankInfoSchema,
 } from './influencer.schema';
+import { BUSINESS_TYPE_ENUM_VALUE } from '@src/module/backoffice/brand/brand.schema';
 import type {
   CreateInfluencerInput,
   UpdateInfluencerInput,
 } from './influencer.dto';
+
+// Inline schemas for Router (Router 규칙: 외부 스키마 import 금지, 인라인 정의 필수)
+const businessTypeEnumSchema = z.enum(BUSINESS_TYPE_ENUM_VALUE);
+const businessInfoInlineSchema = z.object({
+  type: businessTypeEnumSchema.nullish(),
+  name: z.string().nullish(),
+  licenseNumber: z.string().nullish(),
+  ceoName: z.string().nullish(),
+  licenseFileUrl: z.string().nullish(),
+});
+const bankInfoInlineSchema = z.object({
+  name: z.string().nullish(),
+  accountNumber: z.string().nullish(),
+  accountHolder: z.string().nullish(),
+});
 
 @Router({ alias: 'backofficeInfluencer' })
 export class InfluencerRouter extends BaseTrpcRouter {
@@ -25,8 +39,8 @@ export class InfluencerRouter extends BaseTrpcRouter {
       email: z.string().email('유효한 이메일을 입력해주세요').nullish(),
       phoneNumber: z.string().nullish(),
       thumbnail: z.string().nullish(),
-      businessInfo: businessInfoSchema.nullish(),
-      bankInfo: bankInfoSchema.nullish(),
+      businessInfo: businessInfoInlineSchema.nullish(),
+      bankInfo: bankInfoInlineSchema.nullish(),
       socialMedias: z
         .array(
           z.object({
@@ -57,8 +71,8 @@ export class InfluencerRouter extends BaseTrpcRouter {
       email: z.string().email('유효한 이메일을 입력해주세요').nullish(),
       phoneNumber: z.string().nullish(),
       thumbnail: z.string().nullish(),
-      businessInfo: businessInfoSchema.nullish(),
-      bankInfo: bankInfoSchema.nullish(),
+      businessInfo: businessInfoInlineSchema.nullish(),
+      bankInfo: bankInfoInlineSchema.nullish(),
       socialMedias: z
         .array(
           z.object({
