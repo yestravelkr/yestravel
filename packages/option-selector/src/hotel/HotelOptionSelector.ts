@@ -33,7 +33,7 @@ export class HotelOptionSelector {
    */
   private validateConfig(): void {
     // SKU 날짜 중복 체크
-    const dates = this.config.skus.map((sku) => sku.date);
+    const dates = this.config.skus.map((sku) => dayjs(sku.date).format('YYYY-MM-DD'));
     const uniqueDates = new Set(dates);
     if (dates.length !== uniqueDates.size) {
       throw new Error('SKU에 중복된 날짜가 있습니다');
