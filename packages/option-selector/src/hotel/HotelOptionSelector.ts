@@ -41,9 +41,12 @@ export class HotelOptionSelector {
 
     // 날짜 형식 검증 (YYYY-MM-DD)
     for (const sku of this.config.skus) {
-      if (!dayjs(sku.date).isValid()) {
+      const parsedDate = dayjs(sku.date);
+      if (!parsedDate.isValid()) {
         throw new Error(`잘못된 날짜 형식입니다: ${sku.date}`);
       }
+      // 날짜를 'YYYY-MM-DD' 형식으로 정규화
+      sku.date = parsedDate.format('YYYY-MM-DD');
     }
   }
 
