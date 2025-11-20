@@ -30,6 +30,7 @@
     "@trpc/client": "^11.1.3",
     "@trpc/react-query": "^11.1.3",
     "@trpc/server": "11.4.3",
+    "@yestravelkr/min-design-system": "*",
     "axios": "^1.7.9",
     "dayjs": "^1.11.19",
     "react": "^19.0.0",
@@ -62,6 +63,7 @@
     "husky": "^9.1.7",
     "lint-staged": "^15.4.3",
     "prettier": "^3.5.0",
+    "tailwindcss": "^4.1.17",
     "typescript": "~5.7.2",
     "typescript-eslint": "^8.22.0",
     "vite": "^6.1.0"
