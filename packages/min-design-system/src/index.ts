@@ -9,3 +9,4 @@
  * Components
  */
 export { Button, type ButtonProps } from './button';
+export { Calendar, type CalendarProps } from './calendar';
