@@ -7,7 +7,7 @@ import {
   EntityManager,
   Index,
 } from 'typeorm';
-import { Sku as ISku } from '@yestravelkr/option-selector';
+import { ProductSku as IProductSku } from '@yestravelkr/option-selector';
 import {BaseEntity, SoftDeleteEntity} from '@src/module/backoffice/domain/base.entity';
 import { ProductTemplateEntity } from '@src/module/backoffice/domain/product-template/product-template.entity';
 import { TransactionService } from '@src/module/shared/transaction/transaction.service';
@@ -18,7 +18,7 @@ import { getEntityManager } from '@src/database/datasources';
   unique: true,
 })
 @Index('IDX_sku_template', ['productTemplateId'])
-export class SkuEntity extends BaseEntity implements ISku {
+export class SkuEntity extends BaseEntity implements IProductSku {
   @Column({ name: 'sku_code' })
   skuCode: string;
 
