@@ -68,8 +68,8 @@ export class HotelOptionSelector {
       throw new Error('체크아웃 날짜는 체크인 날짜보다 이후여야 합니다');
     }
 
-    this.checkInDate = checkInDate;
-    this.checkOutDate = checkOutDate;
+    this.checkInDate = checkIn.format('YYYY-MM-DD');
+    this.checkOutDate = checkOut.format('YYYY-MM-DD');
   }
 
   /**
