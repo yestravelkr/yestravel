@@ -13,7 +13,7 @@ import { getEntityManager } from '@src/database/datasources';
 import {
   ProductOptionConfig,
   ProductSkuSelectorConfig,
-} from '@yestravelkr/option-selector/src/product/types';
+} from '@yestravelkr/option-selector';
 
 @Entity('product_option')
 @Index(['productId'])
