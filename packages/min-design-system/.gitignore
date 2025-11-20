@@ -39,3 +39,4 @@ lerna-debug.log*
 docker/postgresql/data
 
 .env
+tsconfig.tsbuildinfo
