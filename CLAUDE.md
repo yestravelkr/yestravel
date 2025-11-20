@@ -721,16 +721,56 @@ apps/backoffice/src/
 ```
 
 **스타일링 패턴:**
+
+**⚠️ 필수 규칙: TSX 파일에서는 항상 tailwind-styled-components 사용**
+
 ```typescript
 import tw from 'tailwind-styled-components';
 
+// ✅ 올바른 방법 - tailwind-styled-components 사용
 const Container = tw.div`
   flex 
   flex-col 
   h-screen 
   bg-gray-50
 `;
+
+const Button = tw.button`
+  px-4
+  py-2
+  bg-blue-500
+  text-white
+  rounded
+  hover:bg-blue-600
+  transition-colors
+`;
+
+function MyComponent() {
+  return (
+    <Container>
+      <Button>Click Me</Button>
+    </Container>
+  );
+}
+
+// ❌ 잘못된 방법 - className prop에 직접 작성
+function MyComponent() {
+  return (
+    <div className="flex flex-col h-screen bg-gray-50">
+      <button className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
+        Click Me
+      </button>
+    </div>
+  );
+}
 ```
+
+**이유:**
+- **가독성 향상**: JSX와 스타일이 분리되어 코드가 깔끔해짐
+- **재사용성**: 스타일 컴포넌트를 쉽게 재사용 가능
+- **유지보수**: 스타일 변경 시 한 곳만 수정하면 됨
+- **타입 안전성**: TypeScript와 완벽하게 통합
+- **일관성**: 프로젝트 전체에서 동일한 스타일링 방식 유지
 
 **네비게이션 구조:**
 - SVG 아이콘 사용 (폰트 이모지 대신)
