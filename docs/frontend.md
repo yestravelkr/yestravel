@@ -12,6 +12,18 @@
 - **폼 처리**: React Hook Form
 - **API 통합**: tRPC client
 
+## 프로젝트별 스타일링 규칙
+
+### apps/backoffice - Backoffice 애플리케이션
+- **tailwind-styled-components 필수 사용**
+- className prop 사용 금지 (특수한 경우 제외)
+- 모든 스타일 컴포넌트는 파일 최하단에 작성
+
+### apps/shop - Shop 애플리케이션  
+- **tailwind-styled-components 필수 사용**
+- className prop 사용 금지 (특수한 경우 제외)
+- 모든 스타일 컴포넌트는 파일 최하단에 작성
+
 ## 프로젝트 구조
 
 ```
@@ -184,6 +196,38 @@ const Button = tw.button<ButtonProps>`
 - 컴포넌트명은 파스칼 케이스 사용 (예: `Container`, `Button`)
 - Props는 `$` prefix 사용 (예: `$primary`, `$active`)
 - 복잡한 로직은 별도 함수로 분리
+- **⚠️ 필수**: tailwind-styled-components로 정의한 스타일 컴포넌트는 **파일 최하단에 작성**
+
+```typescript
+// 파일 구조 예시
+import tw from 'tailwind-styled-components';
+
+// 1. 컴포넌트 로직 (상단)
+function MyComponent() {
+  return (
+    <Container>
+      <Title>제목</Title>
+      <Button>클릭</Button>
+    </Container>
+  );
+}
+
+// 2. tailwind-styled-components (최하단)
+const Container = tw.div`
+  flex 
+  flex-col
+`;
+
+const Title = tw.h1`
+  text-2xl
+  font-bold
+`;
+
+const Button = tw.button`
+  px-4
+  py-2
+`;
+```
 
 ## TanStack Router로 라우팅
 
