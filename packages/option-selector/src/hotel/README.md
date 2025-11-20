@@ -172,7 +172,6 @@ HotelOptionSelector 클래스에서 제공하는 기능:
 - `selectHotelOption(optionId: number)`: 호텔 옵션 선택 (1개만 선택 가능)
 - `clearHotelOption()`: 호텔 옵션 선택 해제
 - `getSelectedHotelOptionId()`: 현재 선택된 호텔 옵션 ID 조회
-- `getAvailableDates()`: 예약 가능한 날짜 목록 조회
 - `getTotalPrice()`: 총 요금 계산 (선택한 옵션의 가격 합산)
 - `getStayNights()`: 숙박 일수 계산
 - `validateAvailability()`: 선택한 기간의 재고 확인
