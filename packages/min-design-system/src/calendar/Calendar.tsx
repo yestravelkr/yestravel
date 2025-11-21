@@ -91,13 +91,13 @@ export function Calendar({
       <Header>
         <IconButton onClick={handlePrevMonth} type="button">
           <Icon>
-            <ArrowLeft />
+            {"<"}
           </Icon>
         </IconButton>
         <MonthTitle>{currentMonth.format('YYYY.MM')}</MonthTitle>
         <IconButton onClick={handleNextMonth} type="button">
           <Icon>
-            <ArrowRight />
+            {">"}
           </Icon>
         </IconButton>
       </Header>
@@ -120,32 +120,37 @@ export function Calendar({
             disabledDates.includes(dateStr) ||
             (minDate && dayDate.isBefore(dayjs(minDate))) ||
             (maxDate && dayDate.isAfter(dayjs(maxDate)));
-          const isCheckIn = checkInDate === dateStr;
-          const isCheckOut = checkOutDate === dateStr;
-          const isInRange =
-            checkInDate &&
-            checkOutDate &&
-            dayDate.isAfter(dayjs(checkInDate)) &&
-            dayDate.isBefore(dayjs(checkOutDate));
-
-          let variant: 'ghost' | 'subtle' | 'solid' = 'ghost';
-          if (isCheckIn || isCheckOut) {
-            variant = 'solid';
-          } else if (isInRange) {
-            variant = 'subtle';
-          }
+          const isSelected = checkInDate === dateStr || checkOutDate === dateStr;
+          const isInRange = 
+            checkInDate && 
+            checkOutDate && 
+            !dayDate.isBefore(dayjs(checkInDate)) && 
+            !dayDate.isAfter(dayjs(checkOutDate));
+          
+          const isRangeStart = checkInDate === dateStr;
+          const isRangeEnd = checkOutDate === dateStr;
+          const isSunday = dayDate.day() === 0;
+          const isSaturday = dayDate.day() === 6;
 
           return (
+            <DayBack 
+              key={dateStr}
+              $rangeLeft={isCurrentMonth && isInRange && !isRangeStart && !isSunday}
+              $rangeRight={isCurrentMonth && isInRange && !isRangeEnd && !isSaturday}
+            >
               <DayButton
-                key={dateStr}
                 onClick={() => !isDisabled && isCurrentMonth && handleDateClick(dateStr)}
-                $variant={variant}
+                $isSelected={isSelected}
                 $isCurrentMonth={isCurrentMonth}
                 $isDisabled={isDisabled}
+                $isInRange={isInRange}
                 type="button"
               >
-                <DayLabel $isCurrentMonth={isCurrentMonth}>{dayDate.date()}</DayLabel>
+                <DayLabel $isSelected={isSelected} $isCurrentMonth={isCurrentMonth}>
+                  {dayDate.date()}
+                </DayLabel>
               </DayButton>
+            </DayBack>
           );
         })}
       </CalendarGrid>
@@ -242,10 +247,34 @@ const CalendarGrid = tw.div`
   gap-0
 `;
 
+interface DayBackProps {
+  $rangeLeft: boolean;
+  $rangeRight: boolean;
+}
+
+const DayBack = tw.div<DayBackProps>`
+  relative
+  ${(props) => {
+    const bgClasses = [];
+    
+    // 일요일에는 right만, 토요일에는 left만 적용
+    if (props.$rangeLeft) {
+      bgClasses.push('before:absolute before:content-[""] before:left-0 before:top-0 before:w-1/2 before:h-full before:bg-[var(--bg-layer-base)]');
+    }
+    
+    if (props.$rangeRight) {
+      bgClasses.push('after:absolute after:content-[""] after:right-0 after:top-0 after:w-1/2 after:h-full after:bg-[var(--bg-layer-base)]');
+    }
+    
+    return bgClasses.join(' ');
+  }}
+`;
+
 interface DayButtonProps {
-  $variant: 'ghost' | 'subtle' | 'solid';
+  $isSelected: boolean;
   $isCurrentMonth: boolean;
   $isDisabled: boolean;
+  $isInRange: boolean;
 }
 
 const DayButton = tw.button<DayButtonProps>`
@@ -259,26 +288,25 @@ const DayButton = tw.button<DayButtonProps>`
   items-center
   justify-self-center
   transition-colors
-  ${(props) =>
-    props.$variant === 'solid'
-      ? 'bg-bg-neutral-solid'
-      : props.$variant === 'subtle'
-        ? 'bg-bg-neutral'
-        : 'bg-bg-transparent/0'}
-  ${(props) => (!props.$isDisabled ? 'cursor-pointer hover:bg-bg-neutral-hover' : 'cursor-not-allowed opacity-50')}
+  relative
+  z-[1]
+  ${(props) => (props.$isSelected ? 'bg-[var(--bg-neutral-solid)]' : props.$isInRange ? 'bg-[var(--bg-layer-base)]' : 'bg-transparent')}
+  ${(props) => (!props.$isDisabled && !props.$isSelected ? 'cursor-pointer hover:bg-[var(--bg-neutral-hover)]' : '')}
+  ${(props) => (props.$isDisabled ? 'cursor-not-allowed opacity-50' : '')}
 `;
 
 interface DayLabelProps {
+  $isSelected: boolean;
   $isCurrentMonth: boolean;
 }
 
 const DayLabel = tw.div<DayLabelProps>`
   px-1
-  text-fg-neutral
   text-base
   font-normal
   font-['Min_Sans_VF']
   leading-5
+  ${(props) => (props.$isSelected ? 'text-[var(--fg-on-surface)]' : 'text-[var(--fg-neutral)]')}
   ${(props) => (!props.$isCurrentMonth ? 'opacity-0' : '')}
 `;
 
