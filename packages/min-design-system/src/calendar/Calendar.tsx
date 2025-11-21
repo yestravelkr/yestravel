@@ -142,12 +142,15 @@ export function Calendar({
           const isRangeEnd = checkOutDate === dateStr;
           const isSunday = dayDate.day() === 0;
           const isSaturday = dayDate.day() === 6;
+          const isFirstDayOfMonth = dayDate.date() === 1;
+          const isLastDayOfMonth = dayDate.date() === dayDate.daysInMonth();
 
           return (
             <DayBack 
               key={dateStr}
-              $rangeLeft={isCurrentMonth && isInRange && !isRangeStart && !isSunday}
-              $rangeRight={isCurrentMonth && isInRange && !isRangeEnd && !isSaturday}
+              $rangeLeft={isCurrentMonth && isInRange && !isRangeStart && !isSunday && !isFirstDayOfMonth}
+              $rangeRight={isCurrentMonth && isInRange && !isRangeEnd && !isSaturday && !isLastDayOfMonth}
+              $isCurrentMonth={isCurrentMonth}
             >
               <DayButton
                 onClick={() => !isDisabled && isCurrentMonth && handleDateClick(dateStr)}
@@ -255,16 +258,19 @@ const CalendarGrid = tw.div`
   self-stretch
   grid
   grid-cols-7
-  gap-0
+  gap-x-0
+  gap-y-1
 `;
 
 interface DayBackProps {
   $rangeLeft: boolean;
   $rangeRight: boolean;
+  $isCurrentMonth: boolean;
 }
 
 const DayBack = tw.div<DayBackProps>`
   relative
+  ${(props) => !props.$isCurrentMonth ? 'opacity-0' : ''}
   ${(props) => {
     const bgClasses = [];
     
