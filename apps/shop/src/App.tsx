@@ -1,4 +1,5 @@
 import { RouterProvider, createRouter } from '@tanstack/react-router';
+import { SnappyModalProvider } from 'react-snappy-modal';
 
 import { routeTree } from './routeTree.gen';
 
@@ -19,7 +20,9 @@ declare module '@tanstack/react-router' {
 function App() {
   return (
     <TRPCProvider>
-      <RouterProvider router={router} />
+      <SnappyModalProvider>
+        <RouterProvider router={router} />
+      </SnappyModalProvider>
     </TRPCProvider>
   );
 }
