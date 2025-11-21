@@ -8,7 +8,7 @@ const config: Config = {
     './src/**/*.{ts,tsx,js,jsx}',
     path.resolve(
       __dirname,
-      '../../packages/min-design-system/src/**/*.{ts,tsx,js,jsx}',
+      '../../packages/min-design-system/src/**/*.{ts,tsx,js,jsx}'
     ),
   ],
 };

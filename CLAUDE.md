@@ -691,6 +691,91 @@ export const roleEnumSchema = z.enum(ROLE_ENUM_VALUE);
 - **tRPC + React Query**: 타입 안전한 API 통신
 - **Zustand**: 전역 상태 관리
 
+**⚠️ 스타일링 필수 규칙:**
+- **TSX 파일에서는 className prop 대신 tailwind-styled-components 사용 필수**
+- **tailwind-styled-components로 정의한 스타일 컴포넌트는 파일 최하단에 작성**
+- 예외: 인라인 조건부 스타일링 등 특수한 경우에만 className 사용 허용
+
+**스타일 컴포넌트 작성 패턴:**
+```typescript
+import tw from 'tailwind-styled-components';
+
+// 1. 컴포넌트 로직 (상단)
+function MyComponent() {
+  return (
+    <Container>
+      <Title>제목</Title>
+      <Button>클릭</Button>
+    </Container>
+  );
+}
+
+// 2. tailwind-styled-components (최하단)
+const Container = tw.div`
+  flex 
+  flex-col
+`;
+
+const Title = tw.h1`
+  text-2xl
+  font-bold
+`;
+
+const Button = tw.button`
+  px-4
+  py-2
+`;
+```
+
+**⚠️ 필수 스타일링 규칙:**
+- **모든 TSX 파일에서 tailwind-styled-components 사용 필수**
+- className prop에 직접 Tailwind 클래스 작성 금지
+- 스타일 컴포넌트는 **파일 최하단**에 작성
+- Props는 `$` prefix 사용 (예: `$primary`, `$active`)
+
+```typescript
+// ✅ 올바른 방법
+import tw from 'tailwind-styled-components';
+
+function MyComponent() {
+  return (
+    <Container>
+      <Title>제목</Title>
+      <Button $primary>클릭</Button>
+    </Container>
+  );
+}
+
+// tailwind-styled-components는 파일 최하단에 작성
+const Container = tw.div`
+  flex 
+  flex-col 
+  gap-4
+`;
+
+const Title = tw.h1`
+  text-2xl
+  font-bold
+`;
+
+const Button = tw.button<{ $primary?: boolean }>`
+  px-4
+  py-2
+  rounded
+  ${({ $primary }) => $primary ? 'bg-blue-500' : 'bg-gray-500'}
+`;
+
+// ❌ 잘못된 방법 - className 직접 사용
+function MyComponent() {
+  return (
+    <div className="flex flex-col gap-4">
+      <h1 className="text-2xl font-bold">제목</h1>
+      <button className="px-4 py-2 rounded bg-blue-500">클릭</button>
+    </div>
+  );
+}
+```
+
 **폴더 구조:**
 ```
 apps/backoffice/src/
@@ -721,16 +806,56 @@ apps/backoffice/src/
 ```
 
 **스타일링 패턴:**
+
+**⚠️ 필수 규칙: TSX 파일에서는 항상 tailwind-styled-components 사용**
+
 ```typescript
 import tw from 'tailwind-styled-components';
 
+// ✅ 올바른 방법 - tailwind-styled-components 사용
 const Container = tw.div`
   flex 
   flex-col 
   h-screen 
   bg-gray-50
 `;
+
+const Button = tw.button`
+  px-4
+  py-2
+  bg-blue-500
+  text-white
+  rounded
+  hover:bg-blue-600
+  transition-colors
+`;
+
+function MyComponent() {
+  return (
+    <Container>
+      <Button>Click Me</Button>
+    </Container>
+  );
+}
+
+// ❌ 잘못된 방법 - className prop에 직접 작성
+function MyComponent() {
+  return (
+    <div className="flex flex-col h-screen bg-gray-50">
+      <button className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
+        Click Me
+      </button>
+    </div>
+  );
+}
 ```
+
+**이유:**
+- **가독성 향상**: JSX와 스타일이 분리되어 코드가 깔끔해짐
+- **재사용성**: 스타일 컴포넌트를 쉽게 재사용 가능
+- **유지보수**: 스타일 변경 시 한 곳만 수정하면 됨
+- **타입 안전성**: TypeScript와 완벽하게 통합
+- **일관성**: 프로젝트 전체에서 동일한 스타일링 방식 유지
 
 **네비게이션 구조:**
 - SVG 아이콘 사용 (폰트 이모지 대신)

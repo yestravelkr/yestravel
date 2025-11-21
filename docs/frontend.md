@@ -12,6 +12,18 @@
 - **폼 처리**: React Hook Form
 - **API 통합**: tRPC client
 
+## 프로젝트별 스타일링 규칙
+
+### apps/backoffice - Backoffice 애플리케이션
+- **tailwind-styled-components 필수 사용**
+- className prop 사용 금지 (특수한 경우 제외)
+- 모든 스타일 컴포넌트는 파일 최하단에 작성
+
+### apps/shop - Shop 애플리케이션  
+- **tailwind-styled-components 필수 사용**
+- className prop 사용 금지 (특수한 경우 제외)
+- 모든 스타일 컴포넌트는 파일 최하단에 작성
+
 ## 프로젝트 구조
 
 ```
@@ -75,6 +87,146 @@ yarn preview
 
 # 린팅 실행
 yarn lint
+```
+
+## 스타일링 가이드
+
+### ⚠️ 필수 규칙: tailwind-styled-components 사용
+
+**모든 TSX 파일에서는 className prop 대신 tailwind-styled-components를 사용해야 합니다.**
+
+#### 올바른 방법 ✅
+
+```typescript
+import tw from 'tailwind-styled-components';
+
+// 스타일 컴포넌트 정의
+const Container = tw.div`
+  flex 
+  flex-col 
+  h-screen 
+  bg-gray-50
+`;
+
+const Button = tw.button`
+  px-4
+  py-2
+  bg-blue-500
+  text-white
+  rounded
+  hover:bg-blue-600
+  transition-colors
+`;
+
+const Card = tw.div`
+  bg-white
+  rounded-lg
+  shadow-md
+  p-6
+`;
+
+// 사용
+function MyComponent() {
+  return (
+    <Container>
+      <Card>
+        <h1>제목</h1>
+        <Button>클릭</Button>
+      </Card>
+    </Container>
+  );
+}
+```
+
+#### 잘못된 방법 ❌
+
+```typescript
+// className prop에 직접 작성 - 사용 금지
+function MyComponent() {
+  return (
+    <div className="flex flex-col h-screen bg-gray-50">
+      <div className="bg-white rounded-lg shadow-md p-6">
+        <h1>제목</h1>
+        <button className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
+          클릭
+        </button>
+      </div>
+    </div>
+  );
+}
+```
+
+#### 조건부 스타일링
+
+```typescript
+import tw from 'tailwind-styled-components';
+
+interface ButtonProps {
+  $primary?: boolean;
+  $disabled?: boolean;
+}
+
+const Button = tw.button<ButtonProps>`
+  px-4
+  py-2
+  rounded
+  transition-colors
+  ${({ $primary }) => $primary ? 'bg-blue-500 hover:bg-blue-600' : 'bg-gray-500 hover:bg-gray-600'}
+  ${({ $disabled }) => $disabled && 'opacity-50 cursor-not-allowed'}
+  text-white
+`;
+
+// 사용
+<Button $primary>주요 버튼</Button>
+<Button>일반 버튼</Button>
+<Button $primary $disabled>비활성화</Button>
+```
+
+#### 장점
+
+- **가독성**: JSX와 스타일이 분리되어 코드가 깔끔해짐
+- **재사용성**: 스타일 컴포넌트를 쉽게 재사용 가능
+- **유지보수**: 스타일 변경 시 한 곳만 수정하면 됨
+- **타입 안전성**: TypeScript와 완벽하게 통합
+- **일관성**: 프로젝트 전체에서 동일한 스타일링 방식 유지
+- **성능**: 컴파일 타임에 최적화됨
+
+#### 주의사항
+
+- 컴포넌트명은 파스칼 케이스 사용 (예: `Container`, `Button`)
+- Props는 `$` prefix 사용 (예: `$primary`, `$active`)
+- 복잡한 로직은 별도 함수로 분리
+- **⚠️ 필수**: tailwind-styled-components로 정의한 스타일 컴포넌트는 **파일 최하단에 작성**
+
+```typescript
+// 파일 구조 예시
+import tw from 'tailwind-styled-components';
+
+// 1. 컴포넌트 로직 (상단)
+function MyComponent() {
+  return (
+    <Container>
+      <Title>제목</Title>
+      <Button>클릭</Button>
+    </Container>
+  );
+}
+
+// 2. tailwind-styled-components (최하단)
+const Container = tw.div`
+  flex 
+  flex-col
+`;
+
+const Title = tw.h1`
+  text-2xl
+  font-bold
+`;
+
+const Button = tw.button`
+  px-4
+  py-2
+`;
 ```
 
 ## TanStack Router로 라우팅
