@@ -6,14 +6,14 @@
  */
 
 import { useState, useMemo } from 'react';
-import dayjs, { Dayjs } from 'dayjs';
+import dayjs, {ConfigType, Dayjs} from 'dayjs';
 import tw from 'tailwind-styled-components';
 
 export interface CalendarProps {
-  /** 선택된 체크인 날짜 (YYYY-MM-DD) */
-  checkInDate?: string | null;
-  /** 선택된 체크아웃 날짜 (YYYY-MM-DD) */
-  checkOutDate?: string | null;
+  /** 기본 체크인 날짜 (YYYY-MM-DD) */
+  defaultCheckInDate?: ConfigType;
+  /** 기본 체크아웃 날짜 (YYYY-MM-DD) */
+  defaultCheckOutDate?: ConfigType;
   /** 날짜 선택 시 호출되는 콜백 */
   onDateSelect?: (checkIn: string | null, checkOut: string | null) => void;
   /** 선택 불가능한 날짜들 (YYYY-MM-DD[]) */
@@ -25,13 +25,19 @@ export interface CalendarProps {
 }
 
 export function Calendar({
-  checkInDate,
-  checkOutDate,
+  defaultCheckInDate,
+  defaultCheckOutDate,
   onDateSelect,
   disabledDates = [],
   minDate,
   maxDate,
 }: CalendarProps) {
+  const [checkInDate, setCheckInDate] = useState<string | null>(
+    defaultCheckInDate ? dayjs(defaultCheckInDate).format('YYYY-MM-DD') : null
+  );
+  const [checkOutDate, setCheckOutDate] = useState<string | null>(
+    defaultCheckOutDate ? dayjs(defaultCheckOutDate).format('YYYY-MM-DD') : null
+  );
   const [currentMonth, setCurrentMonth] = useState<Dayjs>(dayjs());
 
   const handlePrevMonth = () => {
@@ -43,8 +49,6 @@ export function Calendar({
   };
 
   const handleDateClick = (date: string) => {
-    if (!onDateSelect) return;
-
     // 선택 불가능한 날짜 체크
     if (disabledDates.includes(date)) return;
     if (minDate && dayjs(date).isBefore(dayjs(minDate))) return;
@@ -52,7 +56,9 @@ export function Calendar({
 
     // 체크인 날짜가 없으면 체크인 설정
     if (!checkInDate) {
-      onDateSelect(date, null);
+      setCheckInDate(date);
+      setCheckOutDate(null);
+      onDateSelect?.(date, null);
       return;
     }
 
@@ -60,15 +66,20 @@ export function Calendar({
     if (!checkOutDate) {
       if (dayjs(date).isBefore(dayjs(checkInDate))) {
         // 체크인보다 이전 날짜를 선택하면 체크인을 다시 설정
-        onDateSelect(date, null);
+        setCheckInDate(date);
+        setCheckOutDate(null);
+        onDateSelect?.(date, null);
       } else {
-        onDateSelect(checkInDate, date);
+        setCheckOutDate(date);
+        onDateSelect?.(checkInDate, date);
       }
       return;
     }
 
     // 둘 다 있으면 초기화하고 새로 시작
-    onDateSelect(date, null);
+    setCheckInDate(date);
+    setCheckOutDate(null);
+    onDateSelect?.(date, null);
   };
 
   const calendarDates = useMemo(() => {
@@ -314,8 +325,8 @@ const DayLabel = tw.div<DayLabelProps>`
  * Usage:
  *
  * <Calendar
- *   checkInDate="2025-10-15"
- *   checkOutDate="2025-10-18"
+ *   defaultCheckInDate="2025-10-15"
+ *   defaultCheckOutDate="2025-10-18"
  *   onDateSelect={(checkIn, checkOut) => {
  *     console.log('Selected:', checkIn, checkOut);
  *   }}
