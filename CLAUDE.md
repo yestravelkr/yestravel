@@ -338,10 +338,40 @@ export class ModuleController {
 
 **Repository 패턴:**
 ```typescript
-// 1. Entity 파일에 Repository 함수 추가
+// 1. Entity 파일에 Repository 함수 추가 (기본 패턴)
 export const getModuleRepository = (
   source?: TransactionService | EntityManager
 ) => getEntityManager(source).getRepository(ModuleEntity);
+
+// 1-1. 커스텀 메서드가 필요한 경우 .extend() 사용 (권장)
+export const getBrandRepository = (
+  source?: TransactionService | EntityManager
+) =>
+  getEntityManager(source)
+    .getRepository(BrandEntity)
+    .extend({
+      // 커스텀 메서드 정의
+      async register(dto: RegisterBrandInput): Promise<BrandEntity> {
+        const brand = new BrandEntity();
+        brand.name = dto.name;
+        brand.email = dto.email;
+        // ... 필드 설정
+        return this.save(brand);
+      },
+
+      async findAllWithFilters(query: FindAllQuery): Promise<[BrandEntity[], number]> {
+        // 복잡한 QueryBuilder 로직을 Repository에 캡슐화
+        const queryBuilder = this.createQueryBuilder('brand')
+          .leftJoinAndSelect('brand.categories', 'categories');
+
+        // 필터링 로직
+        if (query.name) {
+          queryBuilder.andWhere('brand.name LIKE :name', { name: `%${query.name}%` });
+        }
+
+        return queryBuilder.getManyAndCount();
+      },
+    });
 
 // 2. RepositoryProvider에 추가
 get ModuleRepository() {
@@ -364,8 +394,19 @@ export class AdminModule {}
 
 // Service에서 RepositoryProvider를 통해서만 접근
 constructor(private readonly repositoryProvider: RepositoryProvider) {}
+// 기본 메서드 사용
 // this.repositoryProvider.AdminRepository.find()
+
+// 커스텀 메서드 사용
+// this.repositoryProvider.BrandRepository.register(dto)
+// this.repositoryProvider.BrandRepository.findAllWithFilters(query)
 ```
+
+**⚠️ Repository 커스텀 메서드 작성 가이드:**
+- **복잡한 QueryBuilder 로직**: Service에서 반복되는 복잡한 쿼리는 Repository로 이동
+- **비즈니스 로직 분리**: Entity 생성/업데이트 로직을 Repository에 캡슐화
+- **재사용성**: 여러 Service에서 공통으로 사용되는 로직은 Repository 메서드로 정의
+- **default 값 처리**: 쿼리 파라미터의 default 값은 Repository 메서드 내부에서 처리
 
 ## 중요 사항
 

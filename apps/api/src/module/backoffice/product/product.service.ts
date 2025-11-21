@@ -7,7 +7,6 @@ import { RepositoryProvider } from '@src/module/shared/transaction/repository.pr
 import { HotelProductEntity } from '@src/module/backoffice/domain/product/hotel-product.entity';
 import { DeliveryProductEntity } from '@src/module/backoffice/domain/product/delivery-product.entity';
 import { ETicketProductEntity } from '@src/module/backoffice/domain/product/eticket-product.entity';
-import { DeliveryPolicyEntity } from '@src/module/backoffice/domain/delivery-policy.entity';
 import type {
   CreateProductInputDto,
   CreateProductResponse,
@@ -174,27 +173,7 @@ export class ProductService {
 
     switch (input.type) {
       case 'HOTEL': {
-        const hotelProduct = new HotelProductEntity();
-        hotelProduct.name = input.name;
-        hotelProduct.brandId = input.brandId;
-        hotelProduct.productTemplateId = input.productTemplateId || null;
-        hotelProduct.campaignId = input.campaignId || null;
-        hotelProduct.thumbnailUrls = input.thumbnailUrls || [];
-        hotelProduct.description = input.description || '';
-        hotelProduct.detailContent = input.detailContent || '';
-        hotelProduct.useCalendar = true; // 호텔은 항상 true
-        hotelProduct.useStock = input.useStock || false;
-        hotelProduct.useOptions = input.useOptions || false;
-        hotelProduct.price = input.price;
-        hotelProduct.status = input.status || 'VISIBLE';
-        hotelProduct.displayOrder = input.displayOrder || null;
-        hotelProduct.baseCapacity = input.baseCapacity;
-        hotelProduct.maxCapacity = input.maxCapacity;
-        hotelProduct.checkInTime = input.checkInTime;
-        hotelProduct.checkOutTime = input.checkOutTime;
-        hotelProduct.bedTypes = input.bedTypes || [];
-        hotelProduct.tags = input.tags || [];
-
+        const hotelProduct = HotelProductEntity.createFromInput(input as any);
         savedProduct =
           await this.repositoryProvider.HotelProductRepository.save(
             hotelProduct
@@ -209,28 +188,9 @@ export class ProductService {
           );
         }
 
-        const deliveryProduct = new DeliveryProductEntity();
-        deliveryProduct.name = input.name;
-        deliveryProduct.brandId = input.brandId;
-        deliveryProduct.productTemplateId = input.productTemplateId || null;
-        deliveryProduct.campaignId = input.campaignId || null;
-        deliveryProduct.thumbnailUrls = input.thumbnailUrls || [];
-        deliveryProduct.description = input.description || '';
-        deliveryProduct.detailContent = input.detailContent || '';
-        deliveryProduct.useCalendar = input.useCalendar || false;
-        deliveryProduct.useStock = input.useStock || false;
-        deliveryProduct.useOptions = input.useOptions || false;
-        deliveryProduct.price = input.price;
-        deliveryProduct.status = input.status || 'VISIBLE';
-        deliveryProduct.displayOrder = input.displayOrder || null;
-        deliveryProduct.exchangeReturnInfo = input.exchangeReturnInfo || '';
-        deliveryProduct.productInfoNotice = input.productInfoNotice || '';
-
-        // 배송 정책 임베디드 객체 생성
-        const delivery = new DeliveryPolicyEntity();
-        Object.assign(delivery, input.delivery);
-        deliveryProduct.delivery = delivery;
-
+        const deliveryProduct = DeliveryProductEntity.createFromInput(
+          input as any
+        );
         savedProduct =
           await this.repositoryProvider.DeliveryProductRepository.save(
             deliveryProduct
@@ -239,21 +199,9 @@ export class ProductService {
       }
 
       case 'E-TICKET': {
-        const eticketProduct = new ETicketProductEntity();
-        eticketProduct.name = input.name;
-        eticketProduct.brandId = input.brandId;
-        eticketProduct.productTemplateId = input.productTemplateId || null;
-        eticketProduct.campaignId = input.campaignId || null;
-        eticketProduct.thumbnailUrls = input.thumbnailUrls || [];
-        eticketProduct.description = input.description || '';
-        eticketProduct.detailContent = input.detailContent || '';
-        eticketProduct.useCalendar = input.useCalendar || false;
-        eticketProduct.useStock = input.useStock || false;
-        eticketProduct.useOptions = input.useOptions || false;
-        eticketProduct.price = input.price;
-        eticketProduct.status = input.status || 'VISIBLE';
-        eticketProduct.displayOrder = input.displayOrder || null;
-
+        const eticketProduct = ETicketProductEntity.createFromInput(
+          input as any
+        );
         savedProduct =
           await this.repositoryProvider.ETicketProductRepository.save(
             eticketProduct
@@ -326,8 +274,6 @@ export class ProductService {
 
     switch (existingProduct.type) {
       case 'HOTEL': {
-        const hotelInput = input as any;
-
         // 기존 엔티티 조회
         const hotelProduct =
           await this.repositoryProvider.HotelProductRepository.findOneOrFail({
@@ -338,25 +284,8 @@ export class ProductService {
             );
           });
 
-        // 필드 업데이트
-        hotelProduct.name = hotelInput.name;
-        hotelProduct.brandId = hotelInput.brandId;
-        hotelProduct.productTemplateId = hotelInput.productTemplateId || null;
-        hotelProduct.campaignId = hotelInput.campaignId || null;
-        hotelProduct.thumbnailUrls = hotelInput.thumbnailUrls || [];
-        hotelProduct.description = hotelInput.description || '';
-        hotelProduct.detailContent = hotelInput.detailContent || '';
-        hotelProduct.useStock = hotelInput.useStock || false;
-        hotelProduct.useOptions = hotelInput.useOptions || false;
-        hotelProduct.price = hotelInput.price;
-        hotelProduct.status = hotelInput.status || 'VISIBLE';
-        hotelProduct.displayOrder = hotelInput.displayOrder || null;
-        hotelProduct.baseCapacity = hotelInput.baseCapacity;
-        hotelProduct.maxCapacity = hotelInput.maxCapacity;
-        hotelProduct.checkInTime = hotelInput.checkInTime;
-        hotelProduct.checkOutTime = hotelInput.checkOutTime;
-        hotelProduct.bedTypes = hotelInput.bedTypes || [];
-        hotelProduct.tags = hotelInput.tags || [];
+        // 헬퍼 메서드로 필드 업데이트
+        hotelProduct.updateFromInput(input as any);
 
         updatedProduct =
           await this.repositoryProvider.HotelProductRepository.save(
@@ -386,30 +315,8 @@ export class ProductService {
             );
           });
 
-        // 필드 업데이트
-        deliveryProduct.name = deliveryInput.name;
-        deliveryProduct.brandId = deliveryInput.brandId;
-        deliveryProduct.productTemplateId =
-          deliveryInput.productTemplateId || null;
-        deliveryProduct.campaignId = deliveryInput.campaignId || null;
-        deliveryProduct.thumbnailUrls = deliveryInput.thumbnailUrls || [];
-        deliveryProduct.description = deliveryInput.description || '';
-        deliveryProduct.detailContent = deliveryInput.detailContent || '';
-        deliveryProduct.useCalendar = deliveryInput.useCalendar || false;
-        deliveryProduct.useStock = deliveryInput.useStock || false;
-        deliveryProduct.useOptions = deliveryInput.useOptions || false;
-        deliveryProduct.price = deliveryInput.price;
-        deliveryProduct.status = deliveryInput.status || 'VISIBLE';
-        deliveryProduct.displayOrder = deliveryInput.displayOrder || null;
-        deliveryProduct.exchangeReturnInfo =
-          deliveryInput.exchangeReturnInfo || '';
-        deliveryProduct.productInfoNotice =
-          deliveryInput.productInfoNotice || '';
-
-        // 배송 정책 임베디드 객체 업데이트
-        const delivery = new DeliveryPolicyEntity();
-        Object.assign(delivery, deliveryInput.delivery);
-        deliveryProduct.delivery = delivery;
+        // 헬퍼 메서드로 필드 업데이트
+        deliveryProduct.updateFromInput(deliveryInput);
 
         updatedProduct =
           await this.repositoryProvider.DeliveryProductRepository.save(
@@ -419,8 +326,6 @@ export class ProductService {
       }
 
       case 'E-TICKET': {
-        const eticketInput = input as any;
-
         // 기존 엔티티 조회
         const eticketProduct =
           await this.repositoryProvider.ETicketProductRepository.findOneOrFail({
@@ -431,21 +336,8 @@ export class ProductService {
             );
           });
 
-        // 필드 업데이트
-        eticketProduct.name = eticketInput.name;
-        eticketProduct.brandId = eticketInput.brandId;
-        eticketProduct.productTemplateId =
-          eticketInput.productTemplateId || null;
-        eticketProduct.campaignId = eticketInput.campaignId || null;
-        eticketProduct.thumbnailUrls = eticketInput.thumbnailUrls || [];
-        eticketProduct.description = eticketInput.description || '';
-        eticketProduct.detailContent = eticketInput.detailContent || '';
-        eticketProduct.useCalendar = eticketInput.useCalendar || false;
-        eticketProduct.useStock = eticketInput.useStock || false;
-        eticketProduct.useOptions = eticketInput.useOptions || false;
-        eticketProduct.price = eticketInput.price;
-        eticketProduct.status = eticketInput.status || 'VISIBLE';
-        eticketProduct.displayOrder = eticketInput.displayOrder || null;
+        // 헬퍼 메서드로 필드 업데이트
+        eticketProduct.updateFromInput(input as any);
 
         updatedProduct =
           await this.repositoryProvider.ETicketProductRepository.save(
