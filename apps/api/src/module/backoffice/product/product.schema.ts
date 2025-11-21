@@ -40,14 +40,8 @@ const baseProductInputSchema = z.object({
 const hotelProductInputSchema = baseProductInputSchema.extend({
   type: z.literal('HOTEL'),
   useCalendar: z.literal(true),
-  baseCapacity: z
-    .number()
-    .int()
-    .positive('기준인원은 1명 이상이어야 합니다'),
-  maxCapacity: z
-    .number()
-    .int()
-    .positive('최대인원은 1명 이상이어야 합니다'),
+  baseCapacity: z.number().int().positive('기준인원은 1명 이상이어야 합니다'),
+  maxCapacity: z.number().int().positive('최대인원은 1명 이상이어야 합니다'),
   checkInTime: z
     .string()
     .regex(TIME_FORMAT_REGEX, TIME_FORMAT_ERROR_MESSAGE_KO)

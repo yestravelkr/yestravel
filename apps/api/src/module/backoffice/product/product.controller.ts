@@ -7,7 +7,6 @@ import {
   createProductResponseSchema,
   updateProductResponseSchema,
   deleteProductResponseSchema,
-  productDetailSchema,
 } from './product.schema';
 import { Transactional } from '@src/module/shared/transaction/transaction.decorator';
 import { TransactionService } from '@src/module/shared/transaction/transaction.service';

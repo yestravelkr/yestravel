@@ -16,10 +16,7 @@ import {
   productTemplateListItemSchema,
 } from './product-template.schema';
 import { createPaginatedResponseSchema } from '@src/module/shared/schema/pagination.schema';
-import {
-  normalizeTime,
-  TIME_FORMAT_REGEX,
-} from '@src/utils/time.util';
+import { normalizeTime, TIME_FORMAT_REGEX } from '@src/utils/time.util';
 
 @Router({ alias: 'backofficeProductTemplate' })
 export class ProductTemplateRouter extends BaseTrpcRouter {

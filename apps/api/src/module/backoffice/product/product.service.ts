@@ -8,7 +8,6 @@ import { HotelProductEntity } from '@src/module/backoffice/domain/product/hotel-
 import { DeliveryProductEntity } from '@src/module/backoffice/domain/product/delivery-product.entity';
 import { ETicketProductEntity } from '@src/module/backoffice/domain/product/eticket-product.entity';
 import { DeliveryPolicyEntity } from '@src/module/backoffice/domain/delivery-policy.entity';
-import { ProductRepository } from './product.repository';
 import type {
   CreateProductInputDto,
   CreateProductResponse,
@@ -22,10 +21,7 @@ import type {
 
 @Injectable()
 export class ProductService {
-  constructor(
-    private readonly repositoryProvider: RepositoryProvider,
-    private readonly productRepository: ProductRepository
-  ) {}
+  constructor(private readonly repositoryProvider: RepositoryProvider) {}
 
   async findAll(query: FindAllProductQuery): Promise<ProductListResponse> {
     const {
@@ -42,20 +38,44 @@ export class ProductService {
       endDate,
     } = query;
 
-    // Repository를 통한 데이터 조회
-    const [products, total] = await this.productRepository.findAllWithFilters({
-      page,
-      limit,
-      orderBy,
-      order,
-      type,
-      name,
-      status,
-      brandIds,
-      dateFilterType,
-      startDate,
-      endDate,
-    });
+    // QueryBuilder 생성
+    const queryBuilder =
+      this.repositoryProvider.ProductRepository.createQueryBuilder(
+        'product'
+      ).leftJoinAndSelect('product.brand', 'brand');
+
+    // WHERE 조건 적용
+    if (type) {
+      queryBuilder.andWhere('product.type = :type', { type });
+    }
+    if (name) {
+      queryBuilder.andWhere('product.name LIKE :name', { name: `%${name}%` });
+    }
+    if (status) {
+      queryBuilder.andWhere('product.status = :status', { status });
+    }
+    if (brandIds && brandIds.length > 0) {
+      queryBuilder.andWhere('product.brandId IN (:...brandIds)', { brandIds });
+    }
+    if (startDate && endDate) {
+      const dateField =
+        dateFilterType === 'CREATED_AT'
+          ? 'product.createdAt'
+          : 'product.updatedAt';
+      queryBuilder.andWhere(`${dateField} BETWEEN :startDate AND :endDate`, {
+        startDate: new Date(startDate),
+        endDate: new Date(endDate),
+      });
+    }
+
+    // 정렬 및 페이지네이션
+    queryBuilder
+      .orderBy(`product.${orderBy}`, order)
+      .skip((page - 1) * limit)
+      .take(limit);
+
+    // 데이터 조회
+    const [products, total] = await queryBuilder.getManyAndCount();
 
     // 총 페이지 수 계산
     const totalPages = Math.ceil(total / limit);
