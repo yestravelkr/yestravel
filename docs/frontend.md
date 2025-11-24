@@ -821,6 +821,185 @@ export const NAV_GROUPS: NavGroup[] = [
 ];
 ```
 
+## Modal 패턴
+
+### SnappyModal을 활용한 Promise 기반 Modal
+
+이 프로젝트에서는 모든 Modal을 **SnappyModal**을 사용하여 Promise 기반으로 처리합니다.
+
+#### 기본 구조
+
+Modal 컴포넌트는 다음 두 가지를 한 파일에 함께 작성합니다:
+
+1. **Modal 컴포넌트**: 실제 UI를 렌더링하는 컴포넌트
+2. **Modal 열기 함수**: SnappyModal을 사용하여 Promise를 반환하는 함수
+
+```typescript
+// DateRangeSelectModal.tsx
+import { SnappyModal } from '@snappyjs/react';
+import { useState } from 'react';
+
+// 1. Modal Props 타입 정의
+interface DateRangeSelectModalProps {
+  checkInDate: string;
+  checkOutDate: string;
+}
+
+// 2. Modal 컴포넌트
+function DateRangeSelectModal({ 
+  checkInDate, 
+  checkOutDate 
+}: DateRangeSelectModalProps) {
+  const [selectedCheckIn, setSelectedCheckIn] = useState(checkInDate);
+  const [selectedCheckOut, setSelectedCheckOut] = useState(checkOutDate);
+
+  const handleConfirm = () => {
+    SnappyModal.close({
+      checkIn: selectedCheckIn,
+      checkOut: selectedCheckOut,
+    });
+  };
+
+  const handleReset = () => {
+    setSelectedCheckIn(checkInDate);
+    setSelectedCheckOut(checkOutDate);
+  };
+
+  return (
+    <Container>
+      <Header>
+        <Title>숙박 기간 설정</Title>
+        <ResetButton onClick={handleReset}>초기화</ResetButton>
+      </Header>
+      
+      <CalendarWrapper>
+        <Calendar
+          defaultCheckInDate={selectedCheckIn}
+          defaultCheckOutDate={selectedCheckOut}
+          onDateSelect={(checkIn, checkOut) => {
+            setSelectedCheckIn(checkIn);
+            setSelectedCheckOut(checkOut);
+          }}
+        />
+      </CalendarWrapper>
+
+      <ConfirmButton onClick={handleConfirm}>
+        확인
+      </ConfirmButton>
+    </Container>
+  );
+}
+
+// 3. Modal 열기 함수 (export)
+export function openDateRangeSelectModal(props: DateRangeSelectModalProps) {
+  return SnappyModal.show(DateRangeSelectModal, props);
+}
+```
+
+#### Modal 사용 방법
+
+Promise 체이닝을 통해 Modal의 결과를 처리합니다:
+
+```typescript
+// HotelProductComponent.tsx
+import { openDateRangeSelectModal } from './DateRangeSelectModal';
+
+function HotelProductComponent() {
+  const [checkInDate, setCheckInDate] = useState('2025-01-15');
+  const [checkOutDate, setCheckOutDate] = useState('2025-01-18');
+
+  const handleDateClick = () => {
+    openDateRangeSelectModal({
+      checkInDate,
+      checkOutDate,
+    }).then(result => {
+      if (result?.checkIn && result?.checkOut) {
+        setCheckInDate(result.checkIn);
+        setCheckOutDate(result.checkOut);
+      }
+    });
+  };
+
+  return (
+    <div>
+      <button onClick={handleDateClick}>
+        {checkInDate} ~ {checkOutDate}
+      </button>
+    </div>
+  );
+}
+```
+
+#### 핵심 규칙
+
+1. **SnappyModal 사용 필수**: 모든 Modal은 SnappyModal로 구현
+2. **Promise 기반**: `SnappyModal.show()` 또는 `SnappyModal.close()`를 사용하여 Promise 반환
+3. **한 파일에 작성**: Modal 컴포넌트와 열기 함수를 같은 파일에 작성
+4. **명확한 네이밍**: 
+   - 컴포넌트: `{Name}Modal` (예: `DateRangeSelectModal`)
+   - 열기 함수: `open{Name}Modal` (예: `openDateRangeSelectModal`)
+
+#### 예시: 확인/취소 Modal
+
+```typescript
+// ConfirmModal.tsx
+import { SnappyModal } from '@snappyjs/react';
+
+interface ConfirmModalProps {
+  title: string;
+  message: string;
+  confirmText?: string;
+  cancelText?: string;
+}
+
+function ConfirmModal({ 
+  title, 
+  message, 
+  confirmText = '확인', 
+  cancelText = '취소' 
+}: ConfirmModalProps) {
+  const handleConfirm = () => {
+    SnappyModal.close(true);
+  };
+
+  const handleCancel = () => {
+    SnappyModal.close(false);
+  };
+
+  return (
+    <Container>
+      <Title>{title}</Title>
+      <Message>{message}</Message>
+      <ButtonGroup>
+        <CancelButton onClick={handleCancel}>{cancelText}</CancelButton>
+        <ConfirmButton onClick={handleConfirm}>{confirmText}</ConfirmButton>
+      </ButtonGroup>
+    </Container>
+  );
+}
+
+export function openConfirmModal(props: ConfirmModalProps) {
+  return SnappyModal.show(ConfirmModal, props);
+}
+
+// 사용 예시
+openConfirmModal({
+  title: '삭제 확인',
+  message: '정말로 삭제하시겠습니까?',
+}).then(confirmed => {
+  if (confirmed) {
+    // 삭제 로직 실행
+  }
+});
+```
+
+#### 장점
+
+- **타입 안전성**: TypeScript를 통한 완벽한 타입 추론
+- **깔끔한 코드**: Promise 체이닝으로 가독성 높은 비동기 처리
+- **재사용성**: Modal 로직을 쉽게 재사용 가능
+- **중앙화**: Modal 관련 로직이 한 파일에 모여 있어 유지보수 용이
+
 ## Claude Code 사용자를 위한 안내
 
 - **스타일링**: tailwind-styled-components를 사용하여 스타일 컴포넌트 생성
@@ -829,3 +1008,4 @@ export const NAV_GROUPS: NavGroup[] = [
 - **타입 안전성**: 모든 컴포넌트에 TypeScript 사용
 - **파일 구조**: 기능별로 그룹화된 컴포넌트 구조 유지
 - **라우팅**: TanStack Router의 파일 기반 라우팅 활용
+- **Modal**: SnappyModal을 사용한 Promise 기반 Modal 패턴 적용
