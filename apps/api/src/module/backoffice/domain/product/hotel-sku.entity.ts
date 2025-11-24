@@ -17,10 +17,10 @@ import { HotelSku } from '@yestravelkr/option-selector';
  * HotelSku 인터페이스와 구조를 일치시켜 변환 없이 사용 가능합니다.
  */
 @Entity('hotel_sku')
-@Index('IDX_hotel_sku_template_date', ['productTemplateId', 'checkInDate'], {
+@Index('IDX_hotel_sku_template_date', ['productTemplateId', 'date'], {
   unique: true,
 })
-@Index('IDX_hotel_sku_date', ['checkInDate'])
+@Index('IDX_hotel_sku_date', ['date'])
 export class HotelSkuEntity extends SkuEntity implements HotelSku {
   /**
    * 체크인 날짜 (YYYY-MM-DD)
