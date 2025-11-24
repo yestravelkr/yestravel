@@ -1,4 +1,3 @@
-
 import {
   Entity,
   Column,
@@ -8,7 +7,7 @@ import {
   Index,
 } from 'typeorm';
 import { ProductSku as IProductSku } from '@yestravelkr/option-selector';
-import {BaseEntity, SoftDeleteEntity} from '@src/module/backoffice/domain/base.entity';
+import { BaseEntity } from '@src/module/backoffice/domain/base.entity';
 import { ProductTemplateEntity } from '@src/module/backoffice/domain/product-template/product-template.entity';
 import { TransactionService } from '@src/module/shared/transaction/transaction.service';
 import { getEntityManager } from '@src/database/datasources';
@@ -43,6 +42,5 @@ export class SkuEntity extends BaseEntity implements IProductSku {
   productTemplate: ProductTemplateEntity;
 }
 
-export const getSkuRepository = (
-  source?: TransactionService | EntityManager
-) => getEntityManager(source).getRepository(SkuEntity);
+export const getSkuRepository = (source?: TransactionService | EntityManager) =>
+  getEntityManager(source).getRepository(SkuEntity);

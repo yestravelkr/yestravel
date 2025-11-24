@@ -56,7 +56,7 @@ export class CreateProductTables1763341675534 implements MigrationInterface {
     await queryRunner.query(
       `ALTER TABLE "product" ADD COLUMN "display_order" integer`
     );
-    
+
     // campaign_id UNIQUE 제약조건 제거
     await queryRunner.query(
       `ALTER TABLE "product" DROP CONSTRAINT IF EXISTS "UQ_product_campaign"`
@@ -288,28 +288,46 @@ export class CreateProductTables1763341675534 implements MigrationInterface {
     await queryRunner.query(`DROP TABLE "product_categories"`);
     await queryRunner.query(`DROP TABLE "eticket_product"`);
     await queryRunner.query(`DROP TABLE "delivery_product"`);
-    
+
     // hotel_product 테이블 컬럼 제거 (원래 상태로 복원)
     await queryRunner.query(`ALTER TABLE "hotel_product" DROP COLUMN "tags"`);
-    await queryRunner.query(`ALTER TABLE "hotel_product" DROP COLUMN "bed_types"`);
-    await queryRunner.query(`ALTER TABLE "hotel_product" DROP COLUMN "check_out_time"`);
-    await queryRunner.query(`ALTER TABLE "hotel_product" DROP COLUMN "check_in_time"`);
-    await queryRunner.query(`ALTER TABLE "hotel_product" DROP COLUMN "max_capacity"`);
-    await queryRunner.query(`ALTER TABLE "hotel_product" DROP COLUMN "base_capacity"`);
-    
+    await queryRunner.query(
+      `ALTER TABLE "hotel_product" DROP COLUMN "bed_types"`
+    );
+    await queryRunner.query(
+      `ALTER TABLE "hotel_product" DROP COLUMN "check_out_time"`
+    );
+    await queryRunner.query(
+      `ALTER TABLE "hotel_product" DROP COLUMN "check_in_time"`
+    );
+    await queryRunner.query(
+      `ALTER TABLE "hotel_product" DROP COLUMN "max_capacity"`
+    );
+    await queryRunner.query(
+      `ALTER TABLE "hotel_product" DROP COLUMN "base_capacity"`
+    );
+
     // product 테이블 컬럼 제거 (원래 상태로 복원)
-    await queryRunner.query(`ALTER TABLE "product" DROP COLUMN "display_order"`);
+    await queryRunner.query(
+      `ALTER TABLE "product" DROP COLUMN "display_order"`
+    );
     await queryRunner.query(`ALTER TABLE "product" DROP COLUMN "status"`);
     await queryRunner.query(`ALTER TABLE "product" DROP COLUMN "use_options"`);
     await queryRunner.query(`ALTER TABLE "product" DROP COLUMN "use_stock"`);
     await queryRunner.query(`ALTER TABLE "product" DROP COLUMN "use_calendar"`);
     await queryRunner.query(`ALTER TABLE "product" DROP COLUMN "brand_id"`);
-    await queryRunner.query(`ALTER TABLE "product" DROP COLUMN "detail_content"`);
+    await queryRunner.query(
+      `ALTER TABLE "product" DROP COLUMN "detail_content"`
+    );
     await queryRunner.query(`ALTER TABLE "product" DROP COLUMN "description"`);
-    await queryRunner.query(`ALTER TABLE "product" DROP COLUMN "thumbnail_urls"`);
-    await queryRunner.query(`ALTER TABLE "product" DROP COLUMN "product_template_id"`);
+    await queryRunner.query(
+      `ALTER TABLE "product" DROP COLUMN "thumbnail_urls"`
+    );
+    await queryRunner.query(
+      `ALTER TABLE "product" DROP COLUMN "product_template_id"`
+    );
     await queryRunner.query(`ALTER TABLE "product" DROP COLUMN "deleted_at"`);
-    
+
     // UNIQUE 제약조건 복원
     await queryRunner.query(
       `ALTER TABLE "product" ADD CONSTRAINT "UQ_product_campaign" UNIQUE ("campaign_id")`

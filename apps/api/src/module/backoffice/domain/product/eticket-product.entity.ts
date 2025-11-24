@@ -3,6 +3,27 @@ import { ProductEntity } from '@src/module/backoffice/domain/product/product.ent
 import { ProductTypeEnum } from '@src/module/backoffice/admin/admin.schema';
 import { TransactionService } from '@src/module/shared/transaction/transaction.service';
 import { getEntityManager } from '@src/database/datasources';
+import type { Nullish } from '@src/types/utility.type';
+
+export interface CreateETicketProductInput {
+  name: string;
+  brandId: number;
+  productTemplateId?: Nullish<number>;
+  campaignId?: Nullish<number>;
+  thumbnailUrls?: string[];
+  description?: string;
+  detailContent?: string;
+  useCalendar?: boolean;
+  useStock?: boolean;
+  useOptions?: boolean;
+  price: number;
+  status?: 'VISIBLE' | 'HIDDEN' | 'SOLD_OUT';
+  displayOrder?: Nullish<number>;
+}
+
+export interface UpdateETicketProductInput extends CreateETicketProductInput {
+  id: number;
+}
 
 @Entity('eticket_product')
 export class ETicketProductEntity extends ProductEntity {
@@ -13,6 +34,44 @@ export class ETicketProductEntity extends ProductEntity {
 
   // E-Ticket은 부모(ProductEntity)의 필드만 사용
   // useCalendar, useStock, useOptions는 사용자가 선택
+
+  // 헬퍼 메서드: Entity 생성
+  static createFromInput(
+    input: CreateETicketProductInput
+  ): ETicketProductEntity {
+    const product = new ETicketProductEntity();
+    product.name = input.name;
+    product.brandId = input.brandId;
+    product.productTemplateId = input.productTemplateId || null;
+    product.campaignId = input.campaignId || null;
+    product.thumbnailUrls = input.thumbnailUrls || [];
+    product.description = input.description || '';
+    product.detailContent = input.detailContent || '';
+    product.useCalendar = input.useCalendar || false;
+    product.useStock = input.useStock || false;
+    product.useOptions = input.useOptions || false;
+    product.price = input.price;
+    product.status = input.status || 'VISIBLE';
+    product.displayOrder = input.displayOrder || null;
+    return product;
+  }
+
+  // 헬퍼 메서드: Entity 업데이트
+  updateFromInput(input: UpdateETicketProductInput): void {
+    this.name = input.name;
+    this.brandId = input.brandId;
+    this.productTemplateId = input.productTemplateId || null;
+    this.campaignId = input.campaignId || null;
+    this.thumbnailUrls = input.thumbnailUrls || [];
+    this.description = input.description || '';
+    this.detailContent = input.detailContent || '';
+    this.useCalendar = input.useCalendar || false;
+    this.useStock = input.useStock || false;
+    this.useOptions = input.useOptions || false;
+    this.price = input.price;
+    this.status = input.status || 'VISIBLE';
+    this.displayOrder = input.displayOrder || null;
+  }
 }
 
 export const getETicketProductRepository = (

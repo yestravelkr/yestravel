@@ -338,10 +338,40 @@ export class ModuleController {
 
 **Repository 패턴:**
 ```typescript
-// 1. Entity 파일에 Repository 함수 추가
+// 1. Entity 파일에 Repository 함수 추가 (기본 패턴)
 export const getModuleRepository = (
   source?: TransactionService | EntityManager
 ) => getEntityManager(source).getRepository(ModuleEntity);
+
+// 1-1. 커스텀 메서드가 필요한 경우 .extend() 사용 (권장)
+export const getBrandRepository = (
+  source?: TransactionService | EntityManager
+) =>
+  getEntityManager(source)
+    .getRepository(BrandEntity)
+    .extend({
+      // 커스텀 메서드 정의
+      async register(dto: RegisterBrandInput): Promise<BrandEntity> {
+        const brand = new BrandEntity();
+        brand.name = dto.name;
+        brand.email = dto.email;
+        // ... 필드 설정
+        return this.save(brand);
+      },
+
+      async findAllWithFilters(query: FindAllQuery): Promise<[BrandEntity[], number]> {
+        // 복잡한 QueryBuilder 로직을 Repository에 캡슐화
+        const queryBuilder = this.createQueryBuilder('brand')
+          .leftJoinAndSelect('brand.categories', 'categories');
+
+        // 필터링 로직
+        if (query.name) {
+          queryBuilder.andWhere('brand.name LIKE :name', { name: `%${query.name}%` });
+        }
+
+        return queryBuilder.getManyAndCount();
+      },
+    });
 
 // 2. RepositoryProvider에 추가
 get ModuleRepository() {
@@ -364,8 +394,19 @@ export class AdminModule {}
 
 // Service에서 RepositoryProvider를 통해서만 접근
 constructor(private readonly repositoryProvider: RepositoryProvider) {}
+// 기본 메서드 사용
 // this.repositoryProvider.AdminRepository.find()
+
+// 커스텀 메서드 사용
+// this.repositoryProvider.BrandRepository.register(dto)
+// this.repositoryProvider.BrandRepository.findAllWithFilters(query)
 ```
+
+**⚠️ Repository 커스텀 메서드 작성 가이드:**
+- **복잡한 QueryBuilder 로직**: Service에서 반복되는 복잡한 쿼리는 Repository로 이동
+- **비즈니스 로직 분리**: Entity 생성/업데이트 로직을 Repository에 캡슐화
+- **재사용성**: 여러 Service에서 공통으로 사용되는 로직은 Repository 메서드로 정의
+- **default 값 처리**: 쿼리 파라미터의 default 값은 Repository 메서드 내부에서 처리
 
 ## 중요 사항
 
@@ -397,6 +438,65 @@ constructor(private readonly repositoryProvider: RepositoryProvider) {}
 - **Repository**: 새 Entity 생성 시 반드시 Repository 함수와 RepositoryProvider 등록 필요
 - **⚠️ Repository 접근 규칙**: 모듈에서 `TypeOrmModule.forFeature()` 사용 금지. 오직 `RepositoryProvider`를 통해서만 Entity Repository에 접근
 - **Soft Delete**: TypeORM의 soft delete가 기본 적용되어 있어 `where: { deletedAt: null }` 조건 불필요
+
+## 공통 유틸리티 함수 규칙
+
+### 시간(Time) 관련 유틸리티
+
+**위치**: `apps/api/src/utils/time.util.ts`
+
+**⚠️ 규칙**: 시간 형식 변환 및 검증 로직은 반드시 공통 유틸리티 함수를 사용해야 함
+
+**사용 가능한 유틸리티:**
+
+```typescript
+import {
+  normalizeTime,           // HH:MM:SS → HH:MM 변환
+  TIME_FORMAT_REGEX,       // 시간 형식 정규식 (/^([01]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$/)
+  TIME_FORMAT_ERROR_MESSAGE_KO,  // 한국어 에러 메시지
+  TIME_FORMAT_ERROR_MESSAGE_EN,  // 영어 에러 메시지
+} from '@src/utils/time.util';
+```
+
+**사용 예시:**
+
+```typescript
+// ✅ 올바른 방법 - 유틸리티 함수 사용
+import { normalizeTime, TIME_FORMAT_REGEX, TIME_FORMAT_ERROR_MESSAGE_KO } from '@src/utils/time.util';
+
+const schema = z.object({
+  checkInTime: z
+    .string()
+    .regex(TIME_FORMAT_REGEX, TIME_FORMAT_ERROR_MESSAGE_KO)
+    .transform(normalizeTime),
+});
+
+// ❌ 잘못된 방법 - 직접 구현
+function normalizeTime(time: string): string {
+  if (time.length > 5) {
+    return time.substring(0, 5);
+  }
+  return time;
+}
+
+const schema = z.object({
+  checkInTime: z
+    .string()
+    .regex(/^([01]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$/, '시간은 HH:MM 형식')
+    .transform(normalizeTime),
+});
+```
+
+**적용 범위:**
+- Schema 파일 (`.schema.ts`)
+- Router 파일 (`.router.ts`)
+- 시간 형식 변환이 필요한 모든 곳
+
+**장점:**
+- 일관된 시간 처리 로직
+- 중복 코드 제거
+- 유지보수 용이성 향상
+- 버그 발생 가능성 감소
 
 ## PostgreSQL INHERITS 패턴
 

@@ -16,14 +16,7 @@ import {
   productTemplateListItemSchema,
 } from './product-template.schema';
 import { createPaginatedResponseSchema } from '@src/module/shared/schema/pagination.schema';
-
-// HH:MM:SS 형식을 HH:MM으로 변환하는 함수
-function normalizeTime(time: string): string {
-  if (time.length > 5) {
-    return time.substring(0, 5);
-  }
-  return time;
-}
+import { normalizeTime, TIME_FORMAT_REGEX } from '@src/utils/time.util';
 
 @Router({ alias: 'backofficeProductTemplate' })
 export class ProductTemplateRouter extends BaseTrpcRouter {
@@ -178,17 +171,11 @@ export class ProductTemplateRouter extends BaseTrpcRouter {
           .positive('최대인원은 1명 이상이어야 합니다'),
         checkInTime: z
           .string()
-          .regex(
-            /^([01]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$/,
-            '입실 시간은 HH:MM 또는 HH:MM:SS 형식이어야 합니다'
-          )
+          .regex(TIME_FORMAT_REGEX)
           .transform(normalizeTime),
         checkOutTime: z
           .string()
-          .regex(
-            /^([01]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$/,
-            '퇴실 시간은 HH:MM 또는 HH:MM:SS 형식이어야 합니다'
-          )
+          .regex(TIME_FORMAT_REGEX)
           .transform(normalizeTime),
         bedTypes: z.array(z.string()).default([]),
         tags: z.array(z.string()).default([]),
@@ -261,12 +248,12 @@ export class ProductTemplateRouter extends BaseTrpcRouter {
       maxCapacity: z.number().int().positive().optional(),
       checkInTime: z
         .string()
-        .regex(/^([01]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$/)
+        .regex(TIME_FORMAT_REGEX)
         .transform(normalizeTime)
         .optional(),
       checkOutTime: z
         .string()
-        .regex(/^([01]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$/)
+        .regex(TIME_FORMAT_REGEX)
         .transform(normalizeTime)
         .optional(),
       bedTypes: z.array(z.string()).optional(),

@@ -4,6 +4,7 @@ import { BrandModule } from '@src/module/backoffice/brand/brand.module';
 import { CampaignModule } from '@src/module/backoffice/campaign/campaign.module';
 import { AdminModule } from '@src/module/backoffice/admin/admin.module';
 import { ProductTemplateModule } from '@src/module/backoffice/product-template/product-template.module';
+import { ProductModule } from '@src/module/backoffice/product/product.module';
 import { CategoryModule } from '@src/module/backoffice/category/category.module';
 
 @Module({
@@ -13,6 +14,7 @@ import { CategoryModule } from '@src/module/backoffice/category/category.module'
     CampaignModule,
     AdminModule,
     ProductTemplateModule,
+    ProductModule,
     CategoryModule,
   ],
   exports: [
@@ -21,6 +23,7 @@ import { CategoryModule } from '@src/module/backoffice/category/category.module'
     CampaignModule,
     AdminModule,
     ProductTemplateModule,
+    ProductModule,
     CategoryModule,
   ],
 })
