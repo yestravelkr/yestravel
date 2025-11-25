@@ -231,7 +231,6 @@ const MonthTitle = tw.div`
   text-fg-neutral
   text-lg
   font-bold
-  font-['Min_Sans_VF']
   leading-6
 `;
 
@@ -249,7 +248,6 @@ const WeekDayLabel = tw.div`
   text-[var(--fg-muted)]
   text-base
   font-normal
-  font-['Min_Sans_VF']
   leading-5
   justify-self-center
 `;
@@ -321,7 +319,6 @@ const DayLabel = tw.div<DayLabelProps>`
   px-1
   text-base
   font-normal
-  font-['Min_Sans_VF']
   leading-5
   ${(props) => (props.$isSelected ? 'text-[var(--fg-on-surface)]' : 'text-[var(--fg-neutral)]')}
   ${(props) => (!props.$isCurrentMonth ? 'opacity-0' : '')}

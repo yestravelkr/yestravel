@@ -104,7 +104,6 @@ const HeaderTitle = tw.div`
   text-[var(--fg-muted)]
   text-base
   font-medium
-  font-['Min_Sans_VF']
   leading-5
 `;
 
@@ -132,7 +131,6 @@ const ResetText = tw.div`
   text-[var(--fg-muted)]
   text-base
   font-normal
-  font-['Min_Sans_VF']
   leading-5
 `;
 
@@ -158,7 +156,6 @@ const ConfirmButton = tw.button`
   text-[var(--fg-on-surface)]
   text-base
   font-medium
-  font-['Min_Sans_VF']
   leading-5
   cursor-pointer
 `;

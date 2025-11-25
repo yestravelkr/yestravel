@@ -14,6 +14,12 @@
 
 ## 프로젝트별 스타일링 규칙
 
+### 공통 규칙
+- **Font Family**: `font-['Min_Sans_VF']` 클래스 사용 금지
+  - `tailwind.config.ts`에서 기본 폰트로 'Min Sans VF' 설정됨
+  - 별도로 font-family 지정 불필요
+- **아이콘**: lucide-react 사용 (SVG 아이콘 직접 작성 금지)
+
 ### apps/backoffice - Backoffice 애플리케이션
 - **tailwind-styled-components 필수 사용**
 - className prop 사용 금지 (특수한 경우 제외)

@@ -9,7 +9,7 @@ import { TDDefault } from './base';
  * error, readonly 상태와 prefix, postfix를 지원합니다.
  */
 
-interface TDInputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'prefix'> {
+export interface TDInputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'prefix'> {
   error?: boolean;
   prefix?: ReactNode;
   postfix?: ReactNode;

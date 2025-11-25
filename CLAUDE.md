@@ -694,6 +694,7 @@ export const roleEnumSchema = z.enum(ROLE_ENUM_VALUE);
 **⚠️ 스타일링 필수 규칙:**
 - **TSX 파일에서는 className prop 대신 tailwind-styled-components 사용 필수**
 - **tailwind-styled-components로 정의한 스타일 컴포넌트는 파일 최하단에 작성**
+- **`font-['Min_Sans_VF']` 클래스 사용 금지**: tailwind.config.ts에서 기본 폰트로 설정되어 있음
 - 예외: 인라인 조건부 스타일링 등 특수한 경우에만 className 사용 허용
 
 **스타일 컴포넌트 작성 패턴:**
@@ -732,6 +733,7 @@ const Button = tw.button`
 - className prop에 직접 Tailwind 클래스 작성 금지
 - 스타일 컴포넌트는 **파일 최하단**에 작성
 - Props는 `$` prefix 사용 (예: `$primary`, `$active`)
+- **font-family 직접 지정 금지**: `font-['Min_Sans_VF']` 사용하지 말 것 (전역 설정됨)
 
 **⚠️ 아이콘 사용 규칙:**
 - **모든 프론트엔드 프로젝트에서 lucide-react 사용 필수**
