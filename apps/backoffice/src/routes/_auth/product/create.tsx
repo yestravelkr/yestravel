@@ -26,6 +26,8 @@ import {
   RightColumn,
 } from '../product-template/_components/create/styled';
 
+import { ProductOptionsPricingCard } from './_components/create/ProductOptionsPricingCard';
+
 import { MajorPageLayout } from '@/components/layout';
 import { openLoadProductTemplateModal } from '@/components/product/LoadProductTemplateModal';
 import { trpc, trpcClient } from '@/shared/trpc';
@@ -168,6 +170,7 @@ function CreateProductPage() {
                   setValue={setValue}
                   watch={watch}
                 />
+                <ProductOptionsPricingCard />
               </LeftColumn>
 
               <RightColumn>
