@@ -55,7 +55,7 @@ function LoadProductTemplateModal() {
       />
 
       <Button
-        kind="neutral"
+        kind="primary"
         variant="solid"
         size="large"
         disabled={!selectedTemplateId}
