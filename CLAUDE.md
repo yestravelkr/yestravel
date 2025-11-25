@@ -733,6 +733,40 @@ const Button = tw.button`
 - 스타일 컴포넌트는 **파일 최하단**에 작성
 - Props는 `$` prefix 사용 (예: `$primary`, `$active`)
 
+**⚠️ 아이콘 사용 규칙:**
+- **모든 프론트엔드 프로젝트에서 lucide-react 사용 필수**
+- 폰트 이모지 사용 금지
+- 커스텀 SVG는 꼭 필요한 경우에만 별도 컴포넌트 생성
+
+```typescript
+// ✅ 올바른 방법 - lucide-react 사용
+import { Search, ChevronDown, Settings } from 'lucide-react';
+
+function SearchBar() {
+  return (
+    <SearchContainer>
+      <SearchIcon>
+        <Search size={20} />
+      </SearchIcon>
+      <input type="text" placeholder="검색" />
+      <ChevronIcon>
+        <ChevronDown size={20} />
+      </ChevronIcon>
+    </SearchContainer>
+  );
+}
+
+// ❌ 잘못된 방법 - 폰트 이모지 사용
+function SearchBar() {
+  return (
+    <div>
+      <span>🔍</span>
+      <input type="text" placeholder="검색" />
+    </div>
+  );
+}
+```
+
 ```typescript
 // ✅ 올바른 방법
 import tw from 'tailwind-styled-components';

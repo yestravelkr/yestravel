@@ -775,7 +775,70 @@ export default defineConfig({
 
 ## 아이콘 시스템
 
-### SVG 아이콘 컴포넌트
+### ⚠️ 필수 규칙: lucide-react 사용
+
+**모든 프론트엔드 프로젝트(backoffice, shop)에서는 아이콘을 lucide-react 라이브러리를 사용하여 구현합니다.**
+
+#### lucide-react 설치
+
+```bash
+yarn add lucide-react
+```
+
+#### 기본 사용법
+
+```typescript
+import { Home, Search, ChevronDown, X } from 'lucide-react';
+
+function MyComponent() {
+  return (
+    <div>
+      <Home size={20} />
+      <Search size={24} color="#666" />
+      <ChevronDown size={16} strokeWidth={2.5} />
+      <X size={20} className="text-red-500" />
+    </div>
+  );
+}
+```
+
+#### 스타일링과 함께 사용
+
+```typescript
+import tw from 'tailwind-styled-components';
+import { Settings, User } from 'lucide-react';
+
+const IconButton = tw.button`
+  p-2
+  rounded-lg
+  hover:bg-gray-100
+  transition-colors
+`;
+
+function SettingsButton() {
+  return (
+    <IconButton>
+      <Settings size={20} className="text-gray-600" />
+    </IconButton>
+  );
+}
+```
+
+#### 장점
+
+- **일관성**: 전체 프로젝트에서 통일된 아이콘 스타일
+- **다양성**: 1000개 이상의 아이콘 제공
+- **가볍고 빠름**: Tree-shaking으로 사용하는 아이콘만 번들에 포함
+- **커스터마이징**: size, color, strokeWidth 등 손쉬운 커스터마이징
+- **타입 안전성**: TypeScript 완벽 지원
+
+#### 주의사항
+
+- 기존 SVG 아이콘 컴포넌트는 점진적으로 lucide-react로 마이그레이션
+- 폰트 이모지 사용 금지
+- 커스텀 SVG가 꼭 필요한 경우에만 별도 컴포넌트 생성
+
+### 레거시: SVG 아이콘 컴포넌트 (사용 지양)
 
 ```typescript
 // src/components/icons/index.tsx

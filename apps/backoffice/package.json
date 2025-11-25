@@ -33,6 +33,7 @@
     "@trpc/server": "11.4.3",
     "@yestravelkr/min-design-system": "*",
     "axios": "^1.11.0",
+    "lucide-react": "^0.554.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.57.0",
