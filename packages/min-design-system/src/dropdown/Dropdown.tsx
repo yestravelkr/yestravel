@@ -9,6 +9,7 @@
 import { useState, useRef, useEffect, ReactNode } from 'react';
 import tw from 'tailwind-styled-components';
 import { ChevronDown } from 'lucide-react';
+import { MenuItem } from '../menuitem/MenuItem';
 
 export interface DropdownOption<T = any> {
   /** 옵션 값 */
@@ -112,7 +113,7 @@ export function Dropdown<T = any>({
   return (
     <Container ref={containerRef}>
       <Trigger
-        onClick={(e) => {
+        onClick={() => {
           if (searchable && searchInputRef.current) {
             searchInputRef.current.focus();
             setIsOpen(true);
@@ -135,7 +136,7 @@ export function Dropdown<T = any>({
               ref={searchInputRef}
               type="text"
               value={searchTerm}
-              onChange={(e) => {
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                 setSearchTerm(e.target.value);
                 if (!isOpen) setIsOpen(true);
               }}
@@ -164,14 +165,15 @@ export function Dropdown<T = any>({
               <EmptyState>검색 결과가 없습니다</EmptyState>
             ) : (
               filteredOptions.map((option, index) => (
-                <OptionItem
+                <MenuItem
                   key={index}
                   onClick={() => handleSelect(option)}
-                  $disabled={option.disabled}
-                  $selected={option.value === value}
+                  disabled={option.disabled}
+                  selected={option.value === value}
+                  size="large"
                 >
                   {option.label}
-                </OptionItem>
+                </MenuItem>
               ))
             )}
           </OptionList>
@@ -296,18 +298,6 @@ const SearchInput = tw.input`
 const OptionList = tw.div`
   max-h-60
   overflow-y-auto
-`;
-
-const OptionItem = tw.div<{ $disabled?: boolean; $selected?: boolean }>`
-  px-3
-  py-2
-  text-base
-  font-normal
-  leading-5
-  ${(p) => p.$disabled ? 'text-[var(--fg-disabled)] cursor-not-allowed' : 'text-[var(--fg-neutral)] cursor-pointer'}
-  ${(p) => p.$selected ? 'bg-[var(--bg-neutral)]' : ''}
-  ${(p) => !p.$disabled && !p.$selected ? 'hover:bg-[var(--bg-layer-base)]' : ''}
-  transition-colors
 `;
 
 const EmptyState = tw.div`
