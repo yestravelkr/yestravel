@@ -27,6 +27,7 @@ import {
 } from '../product-template/_components/create/styled';
 
 import { MajorPageLayout } from '@/components/layout';
+import { openLoadProductTemplateModal } from '@/components/product/LoadProductTemplateModal';
 
 export const Route = createFileRoute('/_auth/product/create')({
   component: CreateProductPage,
@@ -94,8 +95,12 @@ function CreateProductPage() {
     setThumbnails((prev) => prev.filter((item) => item !== target));
   };
 
-  const handleImportProduct = () => {
-    console.log('품목 불러오기');
+  const handleImportProduct = async () => {
+    const templateId = await openLoadProductTemplateModal();
+    if (templateId) {
+      console.log('선택된 품목 ID:', templateId);
+      // TODO: 품목 데이터 로드하여 폼에 채우기
+    }
   };
 
   return (

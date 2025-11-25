@@ -1,5 +1,6 @@
 import { createRouter, RouterProvider } from '@tanstack/react-router';
 import { TanStackRouterDevtools } from '@tanstack/router-devtools';
+import { SnappyModalProvider } from 'react-snappy-modal';
 
 import { routeTree } from './routeTree.gen.ts';
 
@@ -13,10 +14,10 @@ declare module '@tanstack/react-router' {
 
 function App() {
   return (
-    <>
+    <SnappyModalProvider>
       <RouterProvider router={router} />
       <TanStackRouterDevtools router={router} />
-    </>
+    </SnappyModalProvider>
   );
 }
 
