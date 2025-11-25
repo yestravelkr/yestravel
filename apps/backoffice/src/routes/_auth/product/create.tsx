@@ -28,6 +28,7 @@ import {
 
 import { MajorPageLayout } from '@/components/layout';
 import { openLoadProductTemplateModal } from '@/components/product/LoadProductTemplateModal';
+import { trpc, trpcClient } from '@/shared/trpc';
 
 export const Route = createFileRoute('/_auth/product/create')({
   component: CreateProductPage,
@@ -95,12 +96,40 @@ function CreateProductPage() {
     setThumbnails((prev) => prev.filter((item) => item !== target));
   };
 
-  const handleImportProduct = async () => {
-    const templateId = await openLoadProductTemplateModal();
-    if (templateId) {
-      console.log('선택된 품목 ID:', templateId);
-      // TODO: 품목 데이터 로드하여 폼에 채우기
-    }
+  const handleImportProduct = () => {
+    openLoadProductTemplateModal()
+      .then((templateId) => {
+        if (!templateId) return;
+
+        return trpcClient.backofficeProductTemplate.findById.query({
+          id: templateId,
+        });
+      })
+      .then((templateData) => {
+        if (!templateData) return;
+        if (templateData.type !== 'HOTEL') return;
+
+        // 품목 데이터를 폼에 채우기
+        setValue('name', templateData.name);
+        setValue('description', templateData.description);
+        setValue('brandId', templateData.brandId);
+        setValue('thumbnailUrls', templateData.thumbnailUrls);
+        setValue('detailContent', templateData.detailContent);
+        setValue('useStock', templateData.useStock);
+        setValue('baseCapacity', templateData.baseCapacity);
+        setValue('maxCapacity', templateData.maxCapacity);
+        setValue('checkInTime', templateData.checkInTime);
+        setValue('checkOutTime', templateData.checkOutTime);
+        setValue('bedTypes', templateData.bedTypes);
+        setValue('tags', templateData.tags);
+
+        // 썸네일 상태도 업데이트
+        setThumbnails(templateData.thumbnailUrls);
+      })
+      .catch((error) => {
+        console.error('품목 데이터 로드 실패:', error);
+        alert('품목 데이터를 불러오는데 실패했습니다.');
+      });
   };
 
   return (

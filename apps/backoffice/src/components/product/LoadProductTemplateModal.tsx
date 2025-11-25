@@ -68,7 +68,6 @@ function LoadProductTemplateModal() {
 }
 
 export function openLoadProductTemplateModal(): Promise<number | null> {
-  console.log('openLoadProductTemplateModal');
   return SnappyModal.show(<LoadProductTemplateModal />);
 }
 
