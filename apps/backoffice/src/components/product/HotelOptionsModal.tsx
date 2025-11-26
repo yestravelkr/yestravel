@@ -9,6 +9,7 @@ import dayjs from 'dayjs';
 import { Calendar as CalendarIcon } from 'lucide-react';
 import { useState } from 'react';
 import SnappyModal, { useCurrentModal } from 'react-snappy-modal';
+import { toast } from 'sonner';
 
 import { openDateRangePickerModal } from '@/shared/components/DateRangePickerModal';
 import { FieldWrapper } from '@/shared/components/form/FieldWrapper';
@@ -54,11 +55,11 @@ function HotelOptionsModal({
 
   const handleConfirm = () => {
     if (!startDate || !endDate) {
-      alert('투숙/이용기간을 입력해주세요.');
+      toast.error('투숙/이용기간을 입력해주세요.');
       return;
     }
     if (options.length === 0) {
-      alert('옵션을 최소 1개 이상 입력해주세요.');
+      toast.error('옵션을 최소 1개 이상 입력해주세요.');
       return;
     }
     resolveModal({ startDate, endDate, options });

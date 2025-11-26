@@ -775,6 +775,38 @@ function SearchBar() {
 }
 ```
 
+**⚠️ 알림 메시지 표시 규칙:**
+- **백오피스에서 `alert()` 사용 금지**
+- **모든 알림은 `sonner` 라이브러리의 `toast` 사용 필수**
+- 성공: `toast.success()`, 에러: `toast.error()`, 정보: `toast.info()`
+
+```typescript
+// ✅ 올바른 방법 - toast 사용
+import { toast } from 'sonner';
+
+function handleSubmit() {
+  if (!formData.name) {
+    toast.error('이름을 입력해주세요.');
+    return;
+  }
+  
+  try {
+    await saveData(formData);
+    toast.success('저장되었습니다.');
+  } catch (error) {
+    toast.error('저장 중 오류가 발생했습니다.');
+  }
+}
+
+// ❌ 잘못된 방법 - alert 사용
+function handleSubmit() {
+  if (!formData.name) {
+    alert('이름을 입력해주세요.');
+    return;
+  }
+}
+```
+
 ```typescript
 // ✅ 올바른 방법
 import tw from 'tailwind-styled-components';
