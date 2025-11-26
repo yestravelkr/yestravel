@@ -32,6 +32,7 @@ export const getInfluencerRepository = (
        */
       async existsByName(name: string, excludeId?: number): Promise<boolean> {
         const where = excludeId ? { name, id: Not(excludeId) } : { name };
-        return this.exists({ where });
+        const entity = await this.findOne({ where });
+        return entity !== null;
       },
     });
