@@ -1069,10 +1069,168 @@ openConfirmModal({
 - **재사용성**: Modal 로직을 쉽게 재사용 가능
 - **중앙화**: Modal 관련 로직이 한 파일에 모여 있어 유지보수 용이
 
+## Modal 패턴 (react-snappy-modal)
+
+이 프로젝트에서는 모든 Modal을 **react-snappy-modal**을 사용하여 Promise 기반으로 처리합니다.
+
+### 기본 패턴
+
+Modal 컴포넌트와 해당 Modal을 여는 함수를 **한 파일에 함께 작성**합니다.
+
+#### Modal 컴포넌트 작성 규칙
+
+```typescript
+import SnappyModal, { useCurrentModal } from 'react-snappy-modal';
+
+// 1. Modal에서 반환할 데이터 타입 정의
+interface ModalResultData {
+  name: string;
+  value: number;
+}
+
+// 2. Modal 컴포넌트 작성
+function MyModal() {
+  const { resolveModal } = useCurrentModal();
+  
+  const handleConfirm = () => {
+    // resolveModal로 데이터 반환
+    resolveModal({ name: 'example', value: 123 });
+  };
+  
+  const handleCancel = () => {
+    // null 반환으로 취소 처리
+    resolveModal(null);
+  };
+  
+  return (
+    <div>
+      <h1>Modal Title</h1>
+      <button onClick={handleConfirm}>확인</button>
+      <button onClick={handleCancel}>취소</button>
+    </div>
+  );
+}
+
+// 3. Modal을 여는 함수 export
+export function openMyModal(): Promise<ModalResultData | null> {
+  return SnappyModal.show(<MyModal />);
+}
+```
+
+#### ⚠️ 중요 규칙
+
+1. **Modal 내부에서 `SnappyModal.close()` 사용 금지**
+   - ❌ `SnappyModal.close(data)` (구버전 방식)
+   - ✅ `const { resolveModal } = useCurrentModal(); resolveModal(data);`
+
+2. **취소 시에도 `resolveModal(null)` 사용**
+   ```typescript
+   const handleCancel = () => {
+     resolveModal(null);  // ✅ 올바른 방법
+   };
+   ```
+
+3. **Promise 패턴으로 사용**
+   ```typescript
+   openMyModal().then(result => {
+     if (result) {
+       console.log('확인:', result);
+     } else {
+       console.log('취소됨');
+     }
+   });
+   ```
+
+### 실제 예시
+
+#### DateRangeSelectModal
+
+```typescript
+import SnappyModal, { useCurrentModal } from 'react-snappy-modal';
+import { useState } from 'react';
+
+type DateRangeSelectModalProps = {
+  checkInDate: string;
+  checkOutDate: string;
+};
+
+export function DateRangeSelectModal(props: DateRangeSelectModalProps) {
+  const { resolveModal } = useCurrentModal();
+  const [selectedCheckIn, setSelectedCheckIn] = useState(props.checkInDate);
+  const [selectedCheckOut, setSelectedCheckOut] = useState(props.checkOutDate);
+
+  const handleConfirm = () => {
+    resolveModal({
+      checkIn: selectedCheckIn,
+      checkOut: selectedCheckOut,
+    });
+  };
+
+  const handleCancel = () => {
+    resolveModal(null);
+  };
+
+  return (
+    <div>
+      {/* Calendar UI */}
+      <button onClick={handleConfirm}>확인</button>
+      <button onClick={handleCancel}>취소</button>
+    </div>
+  );
+}
+
+export function openDateRangeSelectModal(
+  props: DateRangeSelectModalProps
+): Promise<{ checkIn: string; checkOut: string } | null> {
+  return SnappyModal.show(<DateRangeSelectModal {...props} />);
+}
+```
+
+#### 사용 예시
+
+```typescript
+// 페이지 컴포넌트에서
+const handleSelectDate = () => {
+  openDateRangeSelectModal({
+    checkInDate: '2025-01-01',
+    checkOutDate: '2025-01-02',
+  }).then(result => {
+    if (result) {
+      setCheckInDate(result.checkIn);
+      setCheckOutDate(result.checkOut);
+    }
+  });
+};
+```
+
+### Modal 위치 설정
+
+```typescript
+export function openMyModal() {
+  return SnappyModal.show(<MyModal />, {
+    position: 'bottom-center',  // 또는 'center', 'top-center' 등
+  });
+}
+```
+
+### 파일 구조
+
+```
+components/
+├── product/
+│   ├── DateRangeSelectModal.tsx      # Modal 컴포넌트 + open 함수
+│   ├── LoadProductTemplateModal.tsx  # Modal 컴포넌트 + open 함수
+│   └── HotelOptionsModal.tsx         # Modal 컴포넌트 + open 함수
+```
+
+각 파일에는:
+1. Modal 컴포넌트 정의
+2. `open{ModulName}Modal` 함수 export
+3. 사용 예시 주석
+
 ## Claude Code 사용자를 위한 안내
 
 - **스타일링**: tailwind-styled-components를 사용하여 스타일 컴포넌트 생성
-- **아이콘**: 폰트 이모지 대신 SVG 아이콘 컴포넌트 사용
 - **레이아웃**: 포스타입/인스타그램 스타일의 미니멀한 디자인 적용
 - **타입 안전성**: 모든 컴포넌트에 TypeScript 사용
 - **파일 구조**: 기능별로 그룹화된 컴포넌트 구조 유지

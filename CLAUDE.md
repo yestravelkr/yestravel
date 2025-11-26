@@ -981,6 +981,108 @@ export function FileUpload({ ... }: FileUploadProps) {
  */
 ```
 
+**⚠️ Modal 패턴 (react-snappy-modal):**
+
+이 프로젝트에서는 모든 Modal을 **react-snappy-modal**을 사용하여 Promise 기반으로 처리합니다.
+
+**필수 규칙:**
+1. **Modal 컴포넌트와 open 함수를 한 파일에 함께 작성**
+2. **Modal 내부에서 `SnappyModal.close()` 사용 금지** → `useCurrentModal().resolveModal()` 사용
+3. **취소 시에도 `resolveModal(null)` 사용**
+
+**기본 패턴:**
+```typescript
+import SnappyModal, { useCurrentModal } from 'react-snappy-modal';
+
+// 1. Modal 컴포넌트 작성
+function MyModal() {
+  const { resolveModal } = useCurrentModal();
+  
+  const handleConfirm = () => {
+    resolveModal({ name: 'example', value: 123 });
+  };
+  
+  const handleCancel = () => {
+    resolveModal(null);
+  };
+  
+  return (
+    <div>
+      <h1>Modal Title</h1>
+      <button onClick={handleConfirm}>확인</button>
+      <button onClick={handleCancel}>취소</button>
+    </div>
+  );
+}
+
+// 2. Modal을 여는 함수 export
+export function openMyModal(): Promise<{ name: string; value: number } | null> {
+  return SnappyModal.show(<MyModal />);
+}
+```
+
+**사용 예시:**
+```typescript
+// ✅ 올바른 방법
+openMyModal().then(result => {
+  if (result) {
+    console.log('확인:', result.name, result.value);
+  } else {
+    console.log('취소됨');
+  }
+});
+
+// ❌ 잘못된 방법 - 구버전 방식
+function MyModal() {
+  const handleConfirm = () => {
+    SnappyModal.close(data);  // 사용 금지!
+  };
+}
+```
+
+**실제 예시:**
+```typescript
+// DateRangeSelectModal.tsx
+import SnappyModal, { useCurrentModal } from 'react-snappy-modal';
+
+function DateRangeSelectModal({ checkInDate, checkOutDate }) {
+  const { resolveModal } = useCurrentModal();
+  const [selectedCheckIn, setSelectedCheckIn] = useState(checkInDate);
+  const [selectedCheckOut, setSelectedCheckOut] = useState(checkOutDate);
+
+  const handleConfirm = () => {
+    resolveModal({ checkIn: selectedCheckIn, checkOut: selectedCheckOut });
+  };
+
+  const handleCancel = () => {
+    resolveModal(null);
+  };
+
+  return (
+    <div>
+      {/* Calendar UI */}
+      <button onClick={handleConfirm}>확인</button>
+      <button onClick={handleCancel}>취소</button>
+    </div>
+  );
+}
+
+export function openDateRangeSelectModal(props) {
+  return SnappyModal.show(<DateRangeSelectModal {...props} />, {
+    position: 'bottom-center',
+  });
+}
+
+// 사용
+openDateRangeSelectModal({ checkInDate: '2025-01-01', checkOutDate: '2025-01-02' })
+  .then(result => {
+    if (result) {
+      setCheckInDate(result.checkIn);
+      setCheckOutDate(result.checkOut);
+    }
+  });
+```
+
 ## Git 커밋 규칙
 
 **커밋 메시지 형식:**
