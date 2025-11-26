@@ -20,13 +20,25 @@ export interface HotelOptionsData {
   options: string[];
 }
 
-function HotelOptionsModal() {
-  const [startDate, setStartDate] = useState(dayjs().format('YYYY-MM-DD'));
+interface HotelOptionsModalProps {
+  defaultStartDate?: string;
+  defaultEndDate?: string;
+  defaultOptions?: string[];
+}
+
+function HotelOptionsModal({
+  defaultStartDate,
+  defaultEndDate,
+  defaultOptions,
+}: HotelOptionsModalProps) {
+  const [startDate, setStartDate] = useState(
+    defaultStartDate || dayjs().format('YYYY-MM-DD'),
+  );
   const [endDate, setEndDate] = useState(
-    dayjs().add(7, 'day').format('YYYY-MM-DD'),
+    defaultEndDate || dayjs().add(7, 'day').format('YYYY-MM-DD'),
   );
   const { resolveModal } = useCurrentModal();
-  const [options, setOptions] = useState<string[]>([]);
+  const [options, setOptions] = useState<string[]>(defaultOptions || []);
 
   const handleDateRangeClick = () => {
     openDateRangePickerModal({
@@ -101,6 +113,7 @@ function HotelOptionsModal() {
           shape="soft"
           size="large"
           onClick={handleConfirm}
+          disabled={options.length === 0}
         >
           옵션설정
         </Button>
@@ -118,17 +131,31 @@ function HotelOptionsModal() {
   );
 }
 
-export function openHotelOptionsModal(): Promise<HotelOptionsData | null> {
-  return SnappyModal.show(<HotelOptionsModal />);
+export function openHotelOptionsModal(
+  defaultValues?: HotelOptionsModalProps,
+): Promise<HotelOptionsData | null> {
+  return SnappyModal.show(<HotelOptionsModal {...defaultValues} />);
 }
 
 /**
  * Usage:
  *
+ * // 기본값 없이 사용
  * openHotelOptionsModal().then((result) => {
  *   if (result) {
  *     console.log('Date Range:', result.startDate, result.endDate);
  *     console.log('Options:', result.options);
+ *   }
+ * });
+ *
+ * // 기본값과 함께 사용
+ * openHotelOptionsModal({
+ *   defaultStartDate: '2025-01-01',
+ *   defaultEndDate: '2025-02-28',
+ *   defaultOptions: ['조식 포함', '석식 포함']
+ * }).then((result) => {
+ *   if (result) {
+ *     console.log('Updated:', result);
  *   }
  * });
  */
