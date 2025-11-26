@@ -9,13 +9,14 @@
 import { Button, Dropdown } from '@yestravelkr/min-design-system';
 import { Search, ChevronDown } from 'lucide-react';
 import { useState } from 'react';
-import SnappyModal from 'react-snappy-modal';
+import SnappyModal, { useCurrentModal } from 'react-snappy-modal';
 import tw from 'tailwind-styled-components';
 
 import { trpc } from '@/shared/trpc';
 
 function LoadProductTemplateModal() {
   const [selectedTemplateId, setSelectedTemplateId] = useState<number>();
+  const { resolveModal } = useCurrentModal();
 
   // 품목 템플릿 리스트 조회
   const { data, isLoading } = trpc.backofficeProductTemplate.findAll.useQuery({
@@ -27,7 +28,7 @@ function LoadProductTemplateModal() {
 
   const handleConfirm = () => {
     if (selectedTemplateId) {
-      SnappyModal.close(selectedTemplateId);
+      resolveModal(selectedTemplateId);
     }
   };
 

@@ -2,7 +2,7 @@ import { Calendar } from '@yestravelkr/min-design-system';
 import { ConfigType } from 'dayjs';
 import dayjs from 'dayjs';
 import { useState } from 'react';
-import SnappyModal from 'react-snappy-modal';
+import SnappyModal, { useCurrentModal } from 'react-snappy-modal';
 import tw from 'tailwind-styled-components';
 
 type DateRangeSelectModalProps = {
@@ -12,6 +12,7 @@ type DateRangeSelectModalProps = {
 
 export function DateRangeSelectModal(props: DateRangeSelectModalProps) {
   const { checkInDate, checkOutDate } = props;
+  const { resolveModal } = useCurrentModal();
 
   const [selectedCheckIn, setSelectedCheckIn] = useState<string | null>(
     dayjs(checkInDate).format('YYYY-MM-DD')
@@ -39,7 +40,7 @@ export function DateRangeSelectModal(props: DateRangeSelectModalProps) {
 
   const handleConfirm = () => {
     if (selectedCheckIn && selectedCheckOut) {
-      SnappyModal.close({
+      resolveModal({
         checkIn: selectedCheckIn,
         checkOut: selectedCheckOut,
       });
