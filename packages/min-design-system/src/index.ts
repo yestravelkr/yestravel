@@ -12,3 +12,4 @@ export { Button, type ButtonProps } from './button';
 export { Calendar, type CalendarProps } from './calendar';
 export { Dropdown, type DropdownProps, type DropdownOption } from './dropdown';
 export { MenuItem, type MenuItemProps } from './menuitem';
+export { Table, THead, TBody, TR, TH, TD } from './table';
