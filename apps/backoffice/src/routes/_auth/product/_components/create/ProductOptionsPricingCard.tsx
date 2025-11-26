@@ -7,12 +7,17 @@
 import { Button } from '@yestravelkr/min-design-system';
 import { Settings, Sheet } from 'lucide-react';
 
+import { openHotelOptionsModal } from '@/components/product/HotelOptionsModal';
 import { FormCard } from '@/shared/components/form/FormLayout';
 
 export function ProductOptionsPricingCard() {
   const handleOptionSetup = () => {
-    // TODO: 옵션 설정 모달 열기
-    console.log('옵션 설정');
+    openHotelOptionsModal().then((result) => {
+      if (result) {
+        console.log('옵션 설정 결과:', result);
+        // TODO: 옵션 데이터 처리
+      }
+    });
   };
 
   const handleExcelProcess = () => {
