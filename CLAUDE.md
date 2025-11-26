@@ -735,6 +735,12 @@ const Button = tw.button`
 - Props는 `$` prefix 사용 (예: `$primary`, `$active`)
 - **font-family 직접 지정 금지**: `font-['Min_Sans_VF']` 사용하지 말 것 (전역 설정됨)
 
+**⚠️ Tailwind Stroke 색상 변수 주의사항:**
+- `stroke`로 시작하는 색상 변수는 SVG의 `stroke` 속성과 충돌하므로 `var()` 함수 필수 사용
+- 잘못된 예: `outline-stroke-neutral`, `border-stroke-hover`
+- 올바른 예: `outline-[var(--stroke-neutral)]`, `border-[var(--stroke-hover)]`
+- 적용 대상: `outline-*`, `border-*`, `ring-*` 등
+
 **⚠️ 아이콘 사용 규칙:**
 - **모든 프론트엔드 프로젝트에서 lucide-react 사용 필수**
 - 폰트 이모지 사용 금지

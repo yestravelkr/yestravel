@@ -1069,6 +1069,58 @@ openConfirmModal({
 - **재사용성**: Modal 로직을 쉽게 재사용 가능
 - **중앙화**: Modal 관련 로직이 한 파일에 모여 있어 유지보수 용이
 
+## Tailwind CSS 특수 색상 변수 사용법
+
+### ⚠️ stroke 관련 색상 변수 사용 주의
+
+`stroke`로 시작하는 Tailwind 색상 변수는 SVG의 `stroke` 속성과 충돌할 수 있으므로, 반드시 `var()` 함수를 사용해야 합니다.
+
+#### 잘못된 방법 ❌
+
+```typescript
+// SVG stroke 속성과 충돌 발생
+<div className="outline-stroke-neutral" />
+<input className="border-stroke-hover" />
+```
+
+#### 올바른 방법 ✅
+
+```typescript
+// var() 함수로 명시적으로 CSS 변수 사용
+<div className="outline-[var(--stroke-neutral)]" />
+<input className="border-[var(--stroke-hover)]" />
+<button className="ring-[var(--stroke-focus)]" />
+```
+
+#### 적용 대상
+
+다음 CSS 속성에서 `stroke`로 시작하는 색상 변수를 사용할 때 적용:
+
+- `outline-*` → `outline-[var(--stroke-*)]`
+- `border-*` → `border-[var(--stroke-*)]`
+- `ring-*` → `ring-[var(--stroke-*)]`
+
+#### 예시
+
+```typescript
+// Before
+<div className="outline outline-1 outline-stroke-neutral" />
+<input className="border border-stroke-hover" />
+
+// After
+<div className="outline outline-1 outline-[var(--stroke-neutral)]" />
+<input className="border border-[var(--stroke-hover)]" />
+```
+
+### 다른 색상 변수는 정상 작동
+
+`fg-*`, `bg-*` 등 다른 색상 변수는 일반적인 방식으로 사용 가능합니다:
+
+```typescript
+<div className="bg-bg-layer text-fg-neutral" />
+<button className="bg-bg-field hover:bg-bg-hover" />
+```
+
 ## Modal 패턴 (react-snappy-modal)
 
 이 프로젝트에서는 모든 Modal을 **react-snappy-modal**을 사용하여 Promise 기반으로 처리합니다.
@@ -1231,8 +1283,10 @@ components/
 ## Claude Code 사용자를 위한 안내
 
 - **스타일링**: tailwind-styled-components를 사용하여 스타일 컴포넌트 생성
+- **아이콘**: lucide-react 사용 (폰트 이모지나 직접 SVG 작성 금지)
 - **레이아웃**: 포스타입/인스타그램 스타일의 미니멀한 디자인 적용
 - **타입 안전성**: 모든 컴포넌트에 TypeScript 사용
 - **파일 구조**: 기능별로 그룹화된 컴포넌트 구조 유지
 - **라우팅**: TanStack Router의 파일 기반 라우팅 활용
-- **Modal**: SnappyModal을 사용한 Promise 기반 Modal 패턴 적용
+- **Modal**: react-snappy-modal + useCurrentModal().resolveModal() 패턴 필수
+- **색상 변수**: `stroke` 관련 변수는 `var()` 함수로 사용
