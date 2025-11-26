@@ -10,6 +10,7 @@ import { Calendar as CalendarIcon } from 'lucide-react';
 import { useState } from 'react';
 import SnappyModal, { useCurrentModal } from 'react-snappy-modal';
 
+import { openDateRangePickerModal } from '@/shared/components/DateRangePickerModal';
 import { FieldWrapper } from '@/shared/components/form/FieldWrapper';
 import { TagsInput } from '@/shared/components/form/TagsInput';
 
@@ -28,8 +29,15 @@ function HotelOptionsModal() {
   const [options, setOptions] = useState<string[]>([]);
 
   const handleDateRangeClick = () => {
-    // TODO: Calendar Modal 연동
-    console.log('날짜 선택 모달 열기');
+    openDateRangePickerModal({
+      startDate,
+      endDate,
+    }).then((result) => {
+      if (result) {
+        setStartDate(result.startDate);
+        setEndDate(result.endDate);
+      }
+    });
   };
 
   const handleConfirm = () => {
@@ -86,16 +94,7 @@ function HotelOptionsModal() {
         </FieldWrapper>
       </div>
 
-      <div className="flex gap-2 justify-end">
-        <Button
-          kind="neutral"
-          variant="outline"
-          shape="soft"
-          size="large"
-          onClick={handleCancel}
-        >
-          취소
-        </Button>
+      <div className="flex gap-2 justify-start">
         <Button
           kind="neutral"
           variant="solid"
@@ -104,6 +103,15 @@ function HotelOptionsModal() {
           onClick={handleConfirm}
         >
           옵션설정
+        </Button>
+        <Button
+          kind="neutral"
+          variant="outline"
+          shape="soft"
+          size="large"
+          onClick={handleCancel}
+        >
+          취소
         </Button>
       </div>
     </div>
