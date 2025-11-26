@@ -50,6 +50,16 @@ interface ProductFormData {
   detailContent: string;
   useStock: boolean;
   thumbnailUrls: string[];
+  hotelOptions: Array<{
+    id: number;
+    name: string;
+    priceByDate: Record<string, number>;
+    optionId?: number;
+    anotherPriceByDate?: Record<
+      string,
+      { supplyPrice: number; commission: number }
+    >;
+  }>;
 }
 
 function CreateProductPage() {
@@ -70,6 +80,7 @@ function CreateProductPage() {
       detailContent: '',
       useStock: false,
       thumbnailUrls: [],
+      hotelOptions: [],
     },
   });
 

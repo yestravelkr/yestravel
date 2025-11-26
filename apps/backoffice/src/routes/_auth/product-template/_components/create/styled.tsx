@@ -21,12 +21,12 @@ export const FormColumns = tw.div`
 
 export const LeftColumn = tw.div`
   space-y-6
-  lg:col-span-3
+  flex-[6]
 `;
 
 export const RightColumn = tw.div`
   space-y-6
-  lg:col-span-2
+  flex-[4]
 `;
 
 export const FormRow = tw.div`

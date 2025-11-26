@@ -5,17 +5,106 @@
  */
 
 import { Button } from '@yestravelkr/min-design-system';
+import {
+  Table,
+  THead,
+  TBody,
+  TR,
+  TH,
+  TD,
+} from '@yestravelkr/min-design-system';
+import type { HotelOption } from '@yestravelkr/option-selector';
 import { Settings, Sheet } from 'lucide-react';
+import { useState, useMemo, useEffect } from 'react';
+import { useFormContext } from 'react-hook-form';
 
 import { openHotelOptionsModal } from '@/components/product/HotelOptionsModal';
 import { FormCard } from '@/shared/components/form/FormLayout';
 
+interface TableRowData {
+  date: string;
+  optionIndex: number;
+  optionName: string;
+  stock: number;
+  supplyPrice: number;
+  sellingPrice: number;
+  commission: number;
+}
+
+interface ExtendedHotelOption extends Omit<HotelOption, 'id'> {
+  id?: number;
+  anotherPriceByDate?: Record<
+    string,
+    { supplyPrice: number; commission: number }
+  >;
+}
+
 export function ProductOptionsPricingCard() {
+  const { setValue, watch } = useFormContext();
+  const formHotelOptions = watch('hotelOptions') as
+    | ExtendedHotelOption[]
+    | undefined;
+
+  const [dateRange, setDateRange] = useState<{
+    start: string;
+    end: string;
+  } | null>(null);
+  const [hotelOptions, setHotelOptions] = useState<ExtendedHotelOption[]>(
+    formHotelOptions || [],
+  );
+
+  // form에서 hotelOptions가 변경될 때 동기화
+  useEffect(() => {
+    if (formHotelOptions && formHotelOptions.length > 0) {
+      setHotelOptions(formHotelOptions);
+      const dates = Object.keys(formHotelOptions[0].priceByDate).sort();
+      if (dates.length > 0) {
+        setDateRange({
+          start: dates[0],
+          end: dates[dates.length - 1],
+        });
+      }
+    }
+  }, [formHotelOptions]);
+
+  // hotelOptions이 변경될 때마다 form에 등록
+  useEffect(() => {
+    setValue('hotelOptions', hotelOptions);
+  }, [hotelOptions, setValue]);
+
   const handleOptionSetup = () => {
-    openHotelOptionsModal().then((result) => {
+    openHotelOptionsModal({
+      defaultStartDate: dateRange?.start,
+      defaultEndDate: dateRange?.end,
+      defaultOptions: hotelOptions.map((opt) => opt.name),
+    }).then((result) => {
       if (result) {
-        console.log('옵션 설정 결과:', result);
-        // TODO: 옵션 데이터 처리
+        setDateRange({ start: result.startDate, end: result.endDate });
+
+        // HotelOption[] 구조로 변환
+        const dates = generateDateRange(result.startDate, result.endDate);
+        const newHotelOptions: ExtendedHotelOption[] = result.options.map(
+          (optionName) => {
+            const priceByDate: Record<string, number> = {};
+            const anotherPriceByDate: Record<
+              string,
+              { supplyPrice: number; commission: number }
+            > = {};
+
+            dates.forEach((date) => {
+              priceByDate[date] = 0; // 판매가
+              anotherPriceByDate[date] = { supplyPrice: 0, commission: 0 }; // 공급가, 수수료
+            });
+
+            return {
+              name: optionName,
+              priceByDate,
+              anotherPriceByDate,
+            };
+          },
+        );
+
+        setHotelOptions(newHotelOptions);
       }
     });
   };
@@ -23,6 +112,49 @@ export function ProductOptionsPricingCard() {
   const handleExcelProcess = () => {
     // TODO: 엑셀 처리 기능
     console.log('엑셀 처리');
+  };
+
+  const updatePrice = (
+    optionIndex: number,
+    date: string,
+    field: 'supplyPrice' | 'sellingPrice' | 'commission',
+    value: number,
+  ) => {
+    setHotelOptions((prev) => {
+      const newOptions = [...prev];
+      const option = newOptions[optionIndex];
+
+      if (field === 'sellingPrice') {
+        // 판매가는 priceByDate에 저장
+        newOptions[optionIndex] = {
+          ...option,
+          priceByDate: {
+            ...option.priceByDate,
+            [date]: value,
+          },
+        };
+      } else {
+        // 공급가와 수수료는 anotherPriceByDate에 저장
+        const anotherPriceByDate = option.anotherPriceByDate || {};
+        const currentData = anotherPriceByDate[date] || {
+          supplyPrice: 0,
+          commission: 0,
+        };
+
+        newOptions[optionIndex] = {
+          ...option,
+          anotherPriceByDate: {
+            ...anotherPriceByDate,
+            [date]: {
+              ...currentData,
+              [field]: value,
+            },
+          },
+        };
+      }
+
+      return newOptions;
+    });
   };
 
   return (
@@ -55,13 +187,152 @@ export function ProductOptionsPricingCard() {
         </div>
       }
     >
-      {/* TODO: 옵션 및 가격 입력 UI 추가 예정 */}
+      {hotelOptions.length > 0 ? (
+        <div className="overflow-x-auto">
+          <PricingTable
+            hotelOptions={hotelOptions}
+            onUpdatePrice={updatePrice}
+          />
+        </div>
+      ) : (
+        <div className="text-center py-8 [color:var(--fg-muted)]">
+          옵션 설정 버튼을 클릭하여 가격표를 생성하세요.
+        </div>
+      )}
     </FormCard>
+  );
+}
+
+function generateDateRange(start: string, end: string): string[] {
+  const dates: string[] = [];
+  const startDate = new Date(start);
+  const endDate = new Date(end);
+
+  const current = new Date(startDate);
+  while (current <= endDate) {
+    dates.push(current.toISOString().split('T')[0]);
+    current.setDate(current.getDate() + 1);
+  }
+
+  return dates;
+}
+
+interface PricingTableProps {
+  hotelOptions: ExtendedHotelOption[];
+  onUpdatePrice: (
+    optionIndex: number,
+    date: string,
+    field: 'supplyPrice' | 'sellingPrice' | 'commission',
+    value: number,
+  ) => void;
+}
+
+function PricingTable({ hotelOptions, onUpdatePrice }: PricingTableProps) {
+  // 테이블 행 데이터 생성
+  const tableRows = useMemo(() => {
+    const rows: TableRowData[] = [];
+
+    if (hotelOptions.length === 0) return rows;
+
+    // 모든 날짜 수집 (첫 번째 옵션에서)
+    const dates = Object.keys(hotelOptions[0].priceByDate).sort();
+
+    // 날짜별로 각 옵션에 대한 행 생성
+    dates.forEach((date) => {
+      hotelOptions.forEach((option, optionIndex) => {
+        const anotherPrice = option.anotherPriceByDate?.[date] || {
+          supplyPrice: 0,
+          commission: 0,
+        };
+
+        rows.push({
+          date,
+          optionIndex,
+          optionName: option.name,
+          stock: 0, // TODO: SKU와 연동 필요
+          supplyPrice: anotherPrice.supplyPrice,
+          sellingPrice: option.priceByDate[date] || 0,
+          commission: anotherPrice.commission,
+        });
+      });
+    });
+
+    return rows;
+  }, [hotelOptions]);
+
+  return (
+    <div className="w-full overflow-x-auto">
+      <Table className="table-fixed min-w-full">
+        <THead>
+          <TR>
+            <TH>날짜</TH>
+            <TH>옵션명</TH>
+            <TH>재고</TH>
+            <TH>공급가</TH>
+            <TH>판매가</TH>
+            <TH>수수료</TH>
+          </TR>
+        </THead>
+        <TBody>
+          {tableRows.map((row) => (
+            <TR key={`${row.date}-${row.optionIndex}`}>
+              <TD>{row.date}</TD>
+              <TD>{row.optionName}</TD>
+              <TD>{row.stock}</TD>
+              <TD.Input
+                type="number"
+                placeholder="0"
+                value={row.sellingPrice || ''}
+                onChange={(e) =>
+                  onUpdatePrice(
+                    row.optionIndex,
+                    row.date,
+                    'sellingPrice',
+                    Number(e.target.value),
+                  )
+                }
+                min={0}
+              />
+              <TD.Input
+                type="number"
+                placeholder="0"
+                value={row.supplyPrice || ''}
+                onChange={(e) =>
+                  onUpdatePrice(
+                    row.optionIndex,
+                    row.date,
+                    'supplyPrice',
+                    Number(e.target.value),
+                  )
+                }
+                min={0}
+              />
+              <TD.Input
+                type="number"
+                placeholder="0"
+                value={row.commission || ''}
+                onChange={(e) =>
+                  onUpdatePrice(
+                    row.optionIndex,
+                    row.date,
+                    'commission',
+                    Number(e.target.value),
+                  )
+                }
+                min={0}
+              />
+            </TR>
+          ))}
+        </TBody>
+      </Table>
+    </div>
   );
 }
 
 /**
  * Usage:
  *
- * <ProductOptionsPricingCard />
+ * <FormProvider {...methods}>
+ *   <ProductOptionsPricingCard />
+ * </FormProvider>
  */
