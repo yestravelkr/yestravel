@@ -16,12 +16,12 @@ export class InfluencerService {
 
   async create(input: CreateInfluencerInput): Promise<InfluencerEntity> {
     // 중복 이름 체크
-    const existingInfluencer =
-      await this.repositoryProvider.InfluencerRepository.findOneBy({
-        name: input.name,
-      });
+    const isDuplicate =
+      await this.repositoryProvider.InfluencerRepository.existsByName(
+        input.name
+      );
 
-    if (existingInfluencer) {
+    if (isDuplicate) {
       throw new ConflictException('이미 동일한 이름의 인플루언서가 존재합니다');
     }
 
@@ -58,11 +58,12 @@ export class InfluencerService {
 
     // 이름 중복 체크 (다른 인플루언서와 중복되는 경우)
     if (updateData.name !== existingInfluencer.name) {
-      const influencerWithSameName =
-        await this.repositoryProvider.InfluencerRepository.findOneBy({
-          name: updateData.name,
-        });
-      if (influencerWithSameName && influencerWithSameName.id !== id) {
+      const isDuplicate =
+        await this.repositoryProvider.InfluencerRepository.existsByName(
+          updateData.name,
+          id
+        );
+      if (isDuplicate) {
         throw new ConflictException(
           '이미 동일한 이름의 인플루언서가 존재합니다'
         );
