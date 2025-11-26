@@ -15,7 +15,7 @@ import {
 } from '@yestravelkr/min-design-system';
 import type { HotelOption } from '@yestravelkr/option-selector';
 import { Settings, Sheet } from 'lucide-react';
-import { useState, useMemo, useEffect } from 'react';
+import { useMemo } from 'react';
 import { useFormContext } from 'react-hook-form';
 
 import { openHotelOptionsModal } from '@/components/product/HotelOptionsModal';
@@ -41,46 +41,27 @@ interface ExtendedHotelOption extends Omit<HotelOption, 'id'> {
 
 export function ProductOptionsPricingCard() {
   const { setValue, watch } = useFormContext();
-  const formHotelOptions = watch('hotelOptions') as
-    | ExtendedHotelOption[]
-    | undefined;
-
-  const [dateRange, setDateRange] = useState<{
-    start: string;
-    end: string;
-  } | null>(null);
-  const [hotelOptions, setHotelOptions] = useState<ExtendedHotelOption[]>(
-    formHotelOptions || [],
-  );
-
-  // form에서 hotelOptions가 변경될 때 동기화
-  useEffect(() => {
-    if (formHotelOptions && formHotelOptions.length > 0) {
-      setHotelOptions(formHotelOptions);
-      const dates = Object.keys(formHotelOptions[0].priceByDate).sort();
-      if (dates.length > 0) {
-        setDateRange({
-          start: dates[0],
-          end: dates[dates.length - 1],
-        });
-      }
-    }
-  }, [formHotelOptions]);
-
-  // hotelOptions이 변경될 때마다 form에 등록
-  useEffect(() => {
-    setValue('hotelOptions', hotelOptions);
-  }, [hotelOptions, setValue]);
+  const hotelOptions = (watch('hotelOptions') as ExtendedHotelOption[]) || [];
 
   const handleOptionSetup = () => {
+    // hotelOptions에서 현재 dateRange 계산
+    let defaultStartDate: string | undefined;
+    let defaultEndDate: string | undefined;
+
+    if (hotelOptions.length > 0) {
+      const dates = Object.keys(hotelOptions[0].priceByDate).sort();
+      if (dates.length > 0) {
+        defaultStartDate = dates[0];
+        defaultEndDate = dates[dates.length - 1];
+      }
+    }
+
     openHotelOptionsModal({
-      defaultStartDate: dateRange?.start,
-      defaultEndDate: dateRange?.end,
+      defaultStartDate,
+      defaultEndDate,
       defaultOptions: hotelOptions.map((opt) => opt.name),
     }).then((result) => {
       if (result) {
-        setDateRange({ start: result.startDate, end: result.endDate });
-
         // HotelOption[] 구조로 변환
         const dates = generateDateRange(result.startDate, result.endDate);
         const newHotelOptions: ExtendedHotelOption[] = result.options.map(
@@ -104,7 +85,7 @@ export function ProductOptionsPricingCard() {
           },
         );
 
-        setHotelOptions(newHotelOptions);
+        setValue('hotelOptions', newHotelOptions);
       }
     });
   };
@@ -120,41 +101,39 @@ export function ProductOptionsPricingCard() {
     field: 'supplyPrice' | 'sellingPrice' | 'commission',
     value: number,
   ) => {
-    setHotelOptions((prev) => {
-      const newOptions = [...prev];
-      const option = newOptions[optionIndex];
+    const newOptions = [...hotelOptions];
+    const option = newOptions[optionIndex];
 
-      if (field === 'sellingPrice') {
-        // 판매가는 priceByDate에 저장
-        newOptions[optionIndex] = {
-          ...option,
-          priceByDate: {
-            ...option.priceByDate,
-            [date]: value,
+    if (field === 'sellingPrice') {
+      // 판매가는 priceByDate에 저장
+      newOptions[optionIndex] = {
+        ...option,
+        priceByDate: {
+          ...option.priceByDate,
+          [date]: value,
+        },
+      };
+    } else {
+      // 공급가와 수수료는 anotherPriceByDate에 저장
+      const anotherPriceByDate = option.anotherPriceByDate || {};
+      const currentData = anotherPriceByDate[date] || {
+        supplyPrice: 0,
+        commission: 0,
+      };
+
+      newOptions[optionIndex] = {
+        ...option,
+        anotherPriceByDate: {
+          ...anotherPriceByDate,
+          [date]: {
+            ...currentData,
+            [field]: value,
           },
-        };
-      } else {
-        // 공급가와 수수료는 anotherPriceByDate에 저장
-        const anotherPriceByDate = option.anotherPriceByDate || {};
-        const currentData = anotherPriceByDate[date] || {
-          supplyPrice: 0,
-          commission: 0,
-        };
+        },
+      };
+    }
 
-        newOptions[optionIndex] = {
-          ...option,
-          anotherPriceByDate: {
-            ...anotherPriceByDate,
-            [date]: {
-              ...currentData,
-              [field]: value,
-            },
-          },
-        };
-      }
-
-      return newOptions;
-    });
+    setValue('hotelOptions', newOptions);
   };
 
   return (
