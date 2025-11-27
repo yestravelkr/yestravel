@@ -14,7 +14,7 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Min Sans VF', 'sans-serif'],
+        sans: ['MinSans', 'Min Sans VF', 'sans-serif'],
       },
     },
   },
