@@ -1450,19 +1450,92 @@ export const updateUserInputSchema = z.object({
 **파일 구조:**
 ```
 packages/api-types/src/
-├── user.ts          # 사용자 관련 스키마
-├── brand.ts          # 브랜드 관련 스키마
+├── types/
+│   ├── common.ts     # 공통 타입 (페이지네이션, 날짜 필터 등)
+│   ├── product.ts    # 상품 관련 Enum
+│   ├── brand.ts      # 브랜드 관련 Enum 및 Schema
+│   └── index.ts      # 모든 타입 export
+├── utils.ts          # 유틸리티 함수 (normalizeTime, TIME_FORMAT_REGEX 등)
 ├── server.ts         # 자동 생성 파일 (수정 금지)
-├── index.ts          # 모든 타입 export
+├── index.ts          # 메인 export
 ├── .prettierignore   # server.ts 제외
 └── .eslintignore     # server.ts 제외
 ```
 
 **중요 규칙:**
-- **⚠️ server.ts는 자동 생성 파일**: API에서 자동으로 생성되므로 **절대 직접 수정 금지**. Claude Code는 이 파일을 수정하지 않아야 함
+- **⚠️ server.ts는 부분 자동 생성 파일**: 
+  - **수정 가능 영역**: import 문, 변수 선언 (appRouter 외부)
+  - **수정 금지 영역**: `appRouter` 객체 내부 코드 (API에서 자동 생성됨)
+  - Claude Code는 import와 변수 정의는 수정 가능하지만, appRouter 내부는 수정하지 않아야 함
+- **⚠️ server.ts에서 import되지 않는 변수 처리**: 
+  - nestjs-trpc의 자동생성이 monorepo에서 제대로 동작하지 않는 이슈로 인해, server.ts에서 사용되지만 자동으로 import되지 않는 타입/변수는 `types/` 폴더 또는 `utils.ts`에 수동으로 정의하고 import
+  - **빌드 실패 시 조치**:
+    1. `cd packages/api-types && npm run build` 실행하여 에러 확인
+    2. 에러 메시지에서 `Cannot find name 'XXX'` 찾기
+    3. `apps/api`에서 해당 변수가 어떻게 정의되어 있는지 검색 (grep 사용)
+    4. `types/*.ts` 또는 `utils.ts`에 동일하게 정의
+    5. `server.ts`의 import 문에 추가
+    6. 빌드 재실행으로 확인
 - **Linting 제외**: server.ts는 prettier, eslint 적용 제외 (.prettierignore, .eslintignore에 등록됨)
-- **타입 정의 위치**: 실제 스키마는 각 모듈별 파일에서 정의 (brand.ts, user.ts 등)
+- **타입 정의 위치**: 
+  - Enum 값: `types/*.ts` (예: `PRODUCT_TYPE_ENUM_VALUE`, `BUSINESS_TYPE_ENUM_VALUE`)
+  - Schema: `types/*.ts` (예: `businessInfoSchema`, `bankInfoSchema`)
+  - 유틸리티: `utils.ts` (예: `normalizeTime`, `TIME_FORMAT_REGEX`)
 - **⚠️ 코드 포맷팅 규칙**: apps/api 폴더의 코드를 수정한 후에는 **반드시 `cd apps/api && yarn lint` 실행**하여 코드 스타일을 통일시켜야 함
+
+**server.ts에서 사용되는 주요 import 변수들:**
+```typescript
+// types/common.ts
+- DATE_FILTER_TYPE_ENUM_VALUE
+- ORDER_DIRECTION_ENUM_VALUE
+- paginationQuerySchema
+- createPaginatedResponseSchema
+
+// types/product.ts
+- PRODUCT_TYPE_ENUM_VALUE
+- PRODUCT_STATUS_ENUM_VALUE
+- DELIVERY_FEE_TYPE_ENUM_VALUE
+
+// types/brand.ts
+- BUSINESS_TYPE_ENUM_VALUE
+- socialMediaPlatformEnumSchema
+- businessInfoSchema
+- bankInfoSchema
+
+// utils.ts
+- normalizeTime
+- TIME_FORMAT_REGEX
+- TIME_FORMAT_ERROR_MESSAGE_KO
+```
+
+**빌드 에러 수정 예시:**
+```bash
+# 1. 빌드 에러 확인
+cd packages/api-types
+npm run build
+# Error: Cannot find name 'ROLE_ENUM_VALUE'
+
+# 2. apps/api에서 변수 정의 찾기
+cd ../../apps/api
+grep -r "ROLE_ENUM_VALUE" src/
+
+# 3. 해당 정의를 types 파일에 추가
+# types/admin.ts (새 파일 생성)
+export const ROLE_ENUM_VALUE = ['ADMIN_SUPER', 'ADMIN_STAFF', 'PARTNER_SUPER', 'PARTNER_STAFF'] as const;
+
+# 4. types/index.ts에 export 추가
+export * from './admin'
+
+# 5. server.ts import 문에 추가
+import {
+  ...,
+  ROLE_ENUM_VALUE,
+} from './types';
+
+# 6. 빌드 재확인
+cd ../../packages/api-types
+npm run build
+```
 
 특정 주제에 대한 자세한 정보는 `/docs` 폴더의 해당 문서 파일을 참조하세요.
 
