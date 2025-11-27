@@ -168,12 +168,7 @@ export function ProductOptionsPricingCard() {
       }
     >
       {hotelOptions.length > 0 ? (
-        <TableContainer>
-          <PricingTable
-            hotelOptions={hotelOptions}
-            onUpdatePrice={updatePrice}
-          />
-        </TableContainer>
+        <PricingTable hotelOptions={hotelOptions} onUpdatePrice={updatePrice} />
       ) : (
         <EmptyState>옵션 설정 버튼을 클릭하여 가격표를 생성하세요.</EmptyState>
       )}
@@ -318,10 +313,6 @@ const TitleContainer = tw.div`
 const ButtonGroup = tw.div`
   flex
   gap-2
-`;
-
-const TableContainer = tw.div`
-  overflow-x-auto
 `;
 
 const EmptyState = tw.div`
