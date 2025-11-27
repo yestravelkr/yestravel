@@ -1,0 +1,44 @@
+@import './index.css';
+
+@theme {
+  /* Foreground colors */
+  --color-fg-neutral: var(--fg-neutral);
+  --color-fg-muted: var(--fg-muted);
+  --color-fg-neutral-inverted: var(--fg-neutral-inverted);
+  --color-fg-on-surface: var(--fg-on-surface);
+  --color-fg-on-surface-subtle: var(--fg-on-surface-subtle);
+  --color-fg-primary: var(--fg-primary);
+  --color-fg-secondary: var(--fg-secondary);
+  --color-fg-critical: var(--fg-critical);
+  --color-fg-placeholder: var(--fg-placeholder);
+  --color-fg-disabled: var(--fg-disabled);
+
+  /* Background colors */
+  --color-bg-layer: var(--bg-layer);
+  --color-bg-layer-base: var(--bg-layer-base);
+  --color-bg-layer-overlay: var(--bg-layer-overlay);
+  --color-bg-neutral: var(--bg-neutral);
+  --color-bg-neutral-subtle: var(--bg-neutral-subtle);
+  --color-bg-neutral-solid: var(--bg-neutral-solid);
+  --color-bg-neutral-tint: var(--bg-neutral-tint);
+  --color-bg-neutral-glass: var(--bg-neutral-glass);
+  --color-bg-primary: var(--bg-primary);
+  --color-bg-primary-solid: var(--bg-primary-solid);
+  --color-bg-secondary: var(--bg-secondary);
+  --color-bg-secondary-solid: var(--bg-secondary-solid);
+  --color-bg-critical: var(--bg-critical);
+  --color-bg-critical-solid: var(--bg-critical-solid);
+  --color-bg-field: var(--bg-field);
+  --color-bg-field-subtle: var(--bg-field-subtle);
+  --color-bg-readonly: var(--bg-readonly);
+  --color-bg-disabled: var(--bg-disabled);
+  --color-bg-transparent: var(--bg-transparent);
+
+  /* Stroke/Border colors */
+  --color-stroke-neutral: var(--stroke-neutral);
+  --color-stroke-neutral-subtle: var(--stroke-neutral-subtle);
+  --color-stroke-primary: var(--stroke-primary);
+  --color-stroke-secondary: var(--stroke-secondary);
+  --color-stroke-critical: var(--stroke-critical);
+  --color-stroke-disabled: var(--stroke-disabled);
+}

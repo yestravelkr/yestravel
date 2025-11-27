@@ -735,6 +735,12 @@ const Button = tw.button`
 - Props는 `$` prefix 사용 (예: `$primary`, `$active`)
 - **font-family 직접 지정 금지**: `font-['Min_Sans_VF']` 사용하지 말 것 (전역 설정됨)
 
+**⚠️ Tailwind 색상 시스템:**
+- 모든 색상은 `packages/min-design-system/src/index.css`의 `@theme` 디렉티브에서 중앙 관리
+- Tailwind 유틸리티 클래스 사용 권장: `text-fg-neutral`, `bg-bg-layer`
+- CSS 변수 직접 사용도 가능: `text-[var(--fg-neutral)]`, `bg-[var(--bg-layer)]`
+- tailwind.config.ts에서 색상 정의 금지 (이미 @theme에 정의됨)
+
 **⚠️ Tailwind Stroke 색상 변수 주의사항:**
 - `stroke`로 시작하는 색상 변수는 SVG의 `stroke` 속성과 충돌하므로 `var()` 함수 필수 사용
 - 잘못된 예: `outline-stroke-neutral`, `border-stroke-hover`

@@ -1069,7 +1069,40 @@ openConfirmModal({
 - **재사용성**: Modal 로직을 쉽게 재사용 가능
 - **중앙화**: Modal 관련 로직이 한 파일에 모여 있어 유지보수 용이
 
-## Tailwind CSS 특수 색상 변수 사용법
+## Tailwind CSS 색상 시스템
+
+### 🎨 @theme 기반 색상 관리
+
+프로젝트의 모든 색상은 `packages/min-design-system/src/index.css`의 `@theme` 디렉티브에서 중앙 집중식으로 관리됩니다.
+
+#### 색상 구조
+
+```css
+@theme {
+  /* Base colors */
+  --color-gray-0: #ffffff;
+  --color-gray-50: #fafafa;
+  --color-gray-900: #18181b;
+  /* ... */
+  
+  /* Semantic colors */
+  --color-fg-neutral: var(--color-gray-900);
+  --color-bg-layer: var(--color-gray-0);
+  --color-stroke-neutral: var(--color-gray-200);
+}
+```
+
+#### 사용 방법
+
+**1. Tailwind 유틸리티 클래스 (권장)**
+```typescript
+<div className="text-fg-neutral bg-bg-layer">
+```
+
+**2. CSS 변수 직접 사용 (특수한 경우)**
+```typescript
+<div className="text-[var(--fg-neutral)] bg-[var(--bg-layer)]">
+```
 
 ### ⚠️ stroke 관련 색상 변수 사용 주의
 
