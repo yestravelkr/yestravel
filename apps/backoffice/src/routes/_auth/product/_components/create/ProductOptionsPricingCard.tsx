@@ -17,6 +17,7 @@ import type { HotelOption } from '@yestravelkr/option-selector';
 import { Settings, Sheet } from 'lucide-react';
 import { useMemo } from 'react';
 import { useFormContext } from 'react-hook-form';
+import tw from 'tailwind-styled-components';
 
 import { openHotelOptionsModal } from '@/components/product/HotelOptionsModal';
 import { FormCard } from '@/shared/components/form/FormLayout';
@@ -139,9 +140,9 @@ export function ProductOptionsPricingCard() {
   return (
     <FormCard
       title={
-        <div className="flex items-center justify-between w-full">
+        <TitleContainer>
           <span>옵션 및 가격</span>
-          <div className="flex gap-2">
+          <ButtonGroup>
             <Button
               kind="neutral"
               variant="outline"
@@ -162,21 +163,19 @@ export function ProductOptionsPricingCard() {
             >
               엑셀 처리
             </Button>
-          </div>
-        </div>
+          </ButtonGroup>
+        </TitleContainer>
       }
     >
       {hotelOptions.length > 0 ? (
-        <div className="overflow-x-auto">
+        <TableContainer>
           <PricingTable
             hotelOptions={hotelOptions}
             onUpdatePrice={updatePrice}
           />
-        </div>
+        </TableContainer>
       ) : (
-        <div className="text-center py-8 [color:var(--fg-muted)]">
-          옵션 설정 버튼을 클릭하여 가격표를 생성하세요.
-        </div>
+        <EmptyState>옵션 설정 버튼을 클릭하여 가격표를 생성하세요.</EmptyState>
       )}
     </FormCard>
   );
@@ -240,8 +239,8 @@ function PricingTable({ hotelOptions, onUpdatePrice }: PricingTableProps) {
   }, [hotelOptions]);
 
   return (
-    <div className="w-full overflow-x-auto">
-      <Table className="table-fixed min-w-full">
+    <PricingTableWrapper>
+      <StyledTable>
         <THead>
           <TR>
             <TH>날짜</TH>
@@ -303,10 +302,43 @@ function PricingTable({ hotelOptions, onUpdatePrice }: PricingTableProps) {
             </TR>
           ))}
         </TBody>
-      </Table>
-    </div>
+      </StyledTable>
+    </PricingTableWrapper>
   );
 }
+
+// Styled Components
+const TitleContainer = tw.div`
+  flex
+  items-center
+  justify-between
+  w-full
+`;
+
+const ButtonGroup = tw.div`
+  flex
+  gap-2
+`;
+
+const TableContainer = tw.div`
+  overflow-x-auto
+`;
+
+const EmptyState = tw.div`
+  text-center
+  py-8
+  [color:var(--fg-muted)]
+`;
+
+const PricingTableWrapper = tw.div`
+  w-full
+  overflow-x-auto
+`;
+
+const StyledTable = tw(Table)`
+  table-fixed
+  min-w-full
+`;
 
 /**
  * Usage:
