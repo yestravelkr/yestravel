@@ -9,20 +9,26 @@ import { TDDefault } from './base';
  * error, readonly 상태와 prefix, postfix를 지원합니다.
  */
 
-interface TDInputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'prefix'> {
+export interface TDInputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'prefix'> {
   error?: boolean;
   prefix?: ReactNode;
   postfix?: ReactNode;
   containerClassName?: string;
 }
 
-const InputContainer = tw(TDDefault)`
+const TD = tw(TDDefault)`
+  p-0
+`;
+
+const InputContainer = tw.div`
   min-h-[44px]
-  flex
   items-start
+  flex
   gap-1
   border
   border-transparent
+  px-2
+  py-3
 `;
 
 const StyledInput = tw.input`
@@ -35,6 +41,7 @@ const StyledInput = tw.input`
   [color:var(--fg-neutral)]
   placeholder:[color:var(--fg-placeholder)]
   disabled:[color:var(--fg-disabled)]
+  w-full
 `;
 
 export const TDInput = ({ 
@@ -64,19 +71,21 @@ export const TDInput = ({
   }, [disabled]);
 
   return (
-    <InputContainer
-      className={`${backgroundColor} ${borderStyle} ${containerClassName || ''}`}
-      data-error={error}
-    >
-      {prefix && <div className={addonColor}>{prefix}</div>}
-      <StyledInput
-        className={className}
-        readOnly={readOnly}
-        disabled={disabled}
-        {...inputProps}
-      />
-      {postfix && <div className={addonColor}>{postfix}</div>}
-    </InputContainer>
+    <TD>
+      <InputContainer
+        className={`${backgroundColor} ${borderStyle} ${containerClassName || ''}`}
+        data-error={error}
+      >
+        {prefix && <div className={addonColor}>{prefix}</div>}
+        <StyledInput
+          className={className}
+          readOnly={readOnly}
+          disabled={disabled}
+          {...inputProps}
+        />
+        {postfix && <div className={addonColor}>{postfix}</div>}
+      </InputContainer>
+    </TD>
   );
 };
 

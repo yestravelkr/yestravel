@@ -11,6 +11,13 @@ const config: Config = {
       '../../packages/min-design-system/src/**/*.{ts,tsx,js,jsx}'
     ),
   ],
+  theme: {
+    extend: {
+      fontFamily: {
+        sans: ['MinSans', 'Min Sans VF', 'sans-serif'],
+      },
+    },
+  },
 };
 
 export default config;

@@ -66,7 +66,6 @@ const Title = tw.div`
   text-fg-neutral
   text-lg
   font-bold
-  font-['Min_Sans_VF']
   leading-6
 `;
 

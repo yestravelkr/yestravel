@@ -1,48 +1,54 @@
+/**
+ * DateRangePickerModal - 날짜 범위 선택 모달
+ *
+ * 시작일과 종료일을 선택할 수 있는 캘린더 모달입니다.
+ */
+
 import { Calendar } from '@yestravelkr/min-design-system';
 import { ConfigType } from 'dayjs';
 import dayjs from 'dayjs';
+import { RotateCcw } from 'lucide-react';
 import { useState } from 'react';
 import SnappyModal, { useCurrentModal } from 'react-snappy-modal';
 import tw from 'tailwind-styled-components';
 
-type DateRangeSelectModalProps = {
-  checkInDate: ConfigType;
-  checkOutDate: ConfigType;
+type DateRangePickerModalProps = {
+  startDate: ConfigType;
+  endDate: ConfigType;
 };
 
-export function DateRangeSelectModal(props: DateRangeSelectModalProps) {
-  const { checkInDate, checkOutDate } = props;
+export function DateRangePickerModal(props: DateRangePickerModalProps) {
+  const { startDate, endDate } = props;
   const { resolveModal } = useCurrentModal();
 
-  const [selectedCheckIn, setSelectedCheckIn] = useState<string | null>(
-    dayjs(checkInDate).format('YYYY-MM-DD')
+  const [selectedStartDate, setSelectedStartDate] = useState<string | null>(
+    dayjs(startDate).format('YYYY-MM-DD'),
   );
-  const [selectedCheckOut, setSelectedCheckOut] = useState<string | null>(
-    dayjs(checkOutDate).format('YYYY-MM-DD')
+  const [selectedEndDate, setSelectedEndDate] = useState<string | null>(
+    dayjs(endDate).format('YYYY-MM-DD'),
   );
 
   const handleDateSelect = (
     checkIn: string | null,
-    checkOut: string | null
+    checkOut: string | null,
   ) => {
-    // checkIn이나 checkOut이 null이면 업데이트하지 않음
     if (checkIn === null || checkOut === null) {
       return;
     }
-    setSelectedCheckIn(checkIn);
-    setSelectedCheckOut(checkOut);
+    setSelectedStartDate(checkIn);
+    setSelectedEndDate(checkOut);
   };
 
   const handleReset = () => {
-    setSelectedCheckIn(dayjs(checkInDate).format('YYYY-MM-DD'));
-    setSelectedCheckOut(dayjs(checkOutDate).format('YYYY-MM-DD'));
+    setSelectedStartDate(dayjs(startDate).format('YYYY-MM-DD'));
+    setSelectedEndDate(dayjs(endDate).format('YYYY-MM-DD'));
   };
 
   const handleConfirm = () => {
-    if (selectedCheckIn && selectedCheckOut) {
+    if (selectedStartDate && selectedEndDate) {
       resolveModal({
-        checkIn: selectedCheckIn,
-        checkOut: selectedCheckOut,
+        startDate: selectedStartDate,
+        endDate: selectedEndDate,
       });
     }
   };
@@ -50,18 +56,16 @@ export function DateRangeSelectModal(props: DateRangeSelectModalProps) {
   return (
     <Container>
       <Header>
-        <HeaderTitle>숙박 기간 설정</HeaderTitle>
+        <HeaderTitle>날짜 범위 선택</HeaderTitle>
         <ResetButton onClick={handleReset}>
-          <IconWrapper>
-            <div className="w-3.5 h-3 relative bg-[var(--fg-muted)]" />
-          </IconWrapper>
+          <RotateCcw size={20} className="text-[var(--fg-muted)]" />
           <ResetText>초기화</ResetText>
         </ResetButton>
       </Header>
       <CalendarWrapper>
         <Calendar
-          defaultCheckInDate={selectedCheckIn}
-          defaultCheckOutDate={selectedCheckOut}
+          defaultCheckInDate={selectedStartDate}
+          defaultCheckOutDate={selectedEndDate}
           onDateSelect={handleDateSelect}
         />
       </CalendarWrapper>
@@ -70,18 +74,19 @@ export function DateRangeSelectModal(props: DateRangeSelectModalProps) {
   );
 }
 
-export function openDateRangeSelectModal(props: DateRangeSelectModalProps) {
-  return SnappyModal.show(<DateRangeSelectModal {...props} />, {
-    position: 'bottom-center',
+export function openDateRangePickerModal(
+  props: DateRangePickerModalProps,
+): Promise<{ startDate: string; endDate: string } | null> {
+  return SnappyModal.show(<DateRangePickerModal {...props} />, {
+    position: 'center',
   });
 }
 
 const Container = tw.div`
-  self-stretch
-  h-[542px]
-  w-screen
+  w-[480px]
   p-5
   bg-white
+  rounded-[20px]
   inline-flex
   flex-col
   justify-start
@@ -114,17 +119,8 @@ const ResetButton = tw.button`
   items-center
   gap-1
   cursor-pointer
-`;
-
-const IconWrapper = tw.div`
-  flex
-  justify-start
-  items-center
-  gap-2.5
-  overflow-hidden
-  w-5
-  h-5
-  relative
+  hover:opacity-80
+  transition-opacity
 `;
 
 const ResetText = tw.div`
@@ -159,4 +155,20 @@ const ConfirmButton = tw.button`
   font-medium
   leading-5
   cursor-pointer
+  hover:opacity-90
+  transition-opacity
 `;
+
+/**
+ * Usage:
+ *
+ * openDateRangePickerModal({
+ *   startDate: '2025-01-01',
+ *   endDate: '2025-02-28',
+ * }).then(result => {
+ *   if (result) {
+ *     console.log('Start:', result.startDate);
+ *     console.log('End:', result.endDate);
+ *   }
+ * });
+ */

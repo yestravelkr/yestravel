@@ -14,6 +14,12 @@
 
 ## 프로젝트별 스타일링 규칙
 
+### 공통 규칙
+- **Font Family**: `font-['Min_Sans_VF']` 클래스 사용 금지
+  - `tailwind.config.ts`에서 기본 폰트로 'Min Sans VF' 설정됨
+  - 별도로 font-family 지정 불필요
+- **아이콘**: lucide-react 사용 (SVG 아이콘 직접 작성 금지)
+
 ### apps/backoffice - Backoffice 애플리케이션
 - **tailwind-styled-components 필수 사용**
 - className prop 사용 금지 (특수한 경우 제외)
@@ -775,7 +781,70 @@ export default defineConfig({
 
 ## 아이콘 시스템
 
-### SVG 아이콘 컴포넌트
+### ⚠️ 필수 규칙: lucide-react 사용
+
+**모든 프론트엔드 프로젝트(backoffice, shop)에서는 아이콘을 lucide-react 라이브러리를 사용하여 구현합니다.**
+
+#### lucide-react 설치
+
+```bash
+yarn add lucide-react
+```
+
+#### 기본 사용법
+
+```typescript
+import { Home, Search, ChevronDown, X } from 'lucide-react';
+
+function MyComponent() {
+  return (
+    <div>
+      <Home size={20} />
+      <Search size={24} color="#666" />
+      <ChevronDown size={16} strokeWidth={2.5} />
+      <X size={20} className="text-red-500" />
+    </div>
+  );
+}
+```
+
+#### 스타일링과 함께 사용
+
+```typescript
+import tw from 'tailwind-styled-components';
+import { Settings, User } from 'lucide-react';
+
+const IconButton = tw.button`
+  p-2
+  rounded-lg
+  hover:bg-gray-100
+  transition-colors
+`;
+
+function SettingsButton() {
+  return (
+    <IconButton>
+      <Settings size={20} className="text-gray-600" />
+    </IconButton>
+  );
+}
+```
+
+#### 장점
+
+- **일관성**: 전체 프로젝트에서 통일된 아이콘 스타일
+- **다양성**: 1000개 이상의 아이콘 제공
+- **가볍고 빠름**: Tree-shaking으로 사용하는 아이콘만 번들에 포함
+- **커스터마이징**: size, color, strokeWidth 등 손쉬운 커스터마이징
+- **타입 안전성**: TypeScript 완벽 지원
+
+#### 주의사항
+
+- 기존 SVG 아이콘 컴포넌트는 점진적으로 lucide-react로 마이그레이션
+- 폰트 이모지 사용 금지
+- 커스텀 SVG가 꼭 필요한 경우에만 별도 컴포넌트 생성
+
+### 레거시: SVG 아이콘 컴포넌트 (사용 지양)
 
 ```typescript
 // src/components/icons/index.tsx
@@ -821,11 +890,436 @@ export const NAV_GROUPS: NavGroup[] = [
 ];
 ```
 
+## Modal 패턴
+
+### SnappyModal을 활용한 Promise 기반 Modal
+
+이 프로젝트에서는 모든 Modal을 **SnappyModal**을 사용하여 Promise 기반으로 처리합니다.
+
+#### 기본 구조
+
+Modal 컴포넌트는 다음 두 가지를 한 파일에 함께 작성합니다:
+
+1. **Modal 컴포넌트**: 실제 UI를 렌더링하는 컴포넌트
+2. **Modal 열기 함수**: SnappyModal을 사용하여 Promise를 반환하는 함수
+
+```typescript
+// DateRangeSelectModal.tsx
+import { SnappyModal } from '@snappyjs/react';
+import { useState } from 'react';
+
+// 1. Modal Props 타입 정의
+interface DateRangeSelectModalProps {
+  checkInDate: string;
+  checkOutDate: string;
+}
+
+// 2. Modal 컴포넌트
+function DateRangeSelectModal({ 
+  checkInDate, 
+  checkOutDate 
+}: DateRangeSelectModalProps) {
+  const [selectedCheckIn, setSelectedCheckIn] = useState(checkInDate);
+  const [selectedCheckOut, setSelectedCheckOut] = useState(checkOutDate);
+
+  const handleConfirm = () => {
+    SnappyModal.close({
+      checkIn: selectedCheckIn,
+      checkOut: selectedCheckOut,
+    });
+  };
+
+  const handleReset = () => {
+    setSelectedCheckIn(checkInDate);
+    setSelectedCheckOut(checkOutDate);
+  };
+
+  return (
+    <Container>
+      <Header>
+        <Title>숙박 기간 설정</Title>
+        <ResetButton onClick={handleReset}>초기화</ResetButton>
+      </Header>
+      
+      <CalendarWrapper>
+        <Calendar
+          defaultCheckInDate={selectedCheckIn}
+          defaultCheckOutDate={selectedCheckOut}
+          onDateSelect={(checkIn, checkOut) => {
+            setSelectedCheckIn(checkIn);
+            setSelectedCheckOut(checkOut);
+          }}
+        />
+      </CalendarWrapper>
+
+      <ConfirmButton onClick={handleConfirm}>
+        확인
+      </ConfirmButton>
+    </Container>
+  );
+}
+
+// 3. Modal 열기 함수 (export)
+export function openDateRangeSelectModal(props: DateRangeSelectModalProps) {
+  return SnappyModal.show(DateRangeSelectModal, props);
+}
+```
+
+#### Modal 사용 방법
+
+Promise 체이닝을 통해 Modal의 결과를 처리합니다:
+
+```typescript
+// HotelProductComponent.tsx
+import { openDateRangeSelectModal } from './DateRangeSelectModal';
+
+function HotelProductComponent() {
+  const [checkInDate, setCheckInDate] = useState('2025-01-15');
+  const [checkOutDate, setCheckOutDate] = useState('2025-01-18');
+
+  const handleDateClick = () => {
+    openDateRangeSelectModal({
+      checkInDate,
+      checkOutDate,
+    }).then(result => {
+      if (result?.checkIn && result?.checkOut) {
+        setCheckInDate(result.checkIn);
+        setCheckOutDate(result.checkOut);
+      }
+    });
+  };
+
+  return (
+    <div>
+      <button onClick={handleDateClick}>
+        {checkInDate} ~ {checkOutDate}
+      </button>
+    </div>
+  );
+}
+```
+
+#### 핵심 규칙
+
+1. **SnappyModal 사용 필수**: 모든 Modal은 SnappyModal로 구현
+2. **Promise 기반**: `SnappyModal.show()` 또는 `SnappyModal.close()`를 사용하여 Promise 반환
+3. **한 파일에 작성**: Modal 컴포넌트와 열기 함수를 같은 파일에 작성
+4. **명확한 네이밍**: 
+   - 컴포넌트: `{Name}Modal` (예: `DateRangeSelectModal`)
+   - 열기 함수: `open{Name}Modal` (예: `openDateRangeSelectModal`)
+
+#### 예시: 확인/취소 Modal
+
+```typescript
+// ConfirmModal.tsx
+import { SnappyModal } from '@snappyjs/react';
+
+interface ConfirmModalProps {
+  title: string;
+  message: string;
+  confirmText?: string;
+  cancelText?: string;
+}
+
+function ConfirmModal({ 
+  title, 
+  message, 
+  confirmText = '확인', 
+  cancelText = '취소' 
+}: ConfirmModalProps) {
+  const handleConfirm = () => {
+    SnappyModal.close(true);
+  };
+
+  const handleCancel = () => {
+    SnappyModal.close(false);
+  };
+
+  return (
+    <Container>
+      <Title>{title}</Title>
+      <Message>{message}</Message>
+      <ButtonGroup>
+        <CancelButton onClick={handleCancel}>{cancelText}</CancelButton>
+        <ConfirmButton onClick={handleConfirm}>{confirmText}</ConfirmButton>
+      </ButtonGroup>
+    </Container>
+  );
+}
+
+export function openConfirmModal(props: ConfirmModalProps) {
+  return SnappyModal.show(ConfirmModal, props);
+}
+
+// 사용 예시
+openConfirmModal({
+  title: '삭제 확인',
+  message: '정말로 삭제하시겠습니까?',
+}).then(confirmed => {
+  if (confirmed) {
+    // 삭제 로직 실행
+  }
+});
+```
+
+#### 장점
+
+- **타입 안전성**: TypeScript를 통한 완벽한 타입 추론
+- **깔끔한 코드**: Promise 체이닝으로 가독성 높은 비동기 처리
+- **재사용성**: Modal 로직을 쉽게 재사용 가능
+- **중앙화**: Modal 관련 로직이 한 파일에 모여 있어 유지보수 용이
+
+## Tailwind CSS 색상 시스템
+
+### 🎨 @theme 기반 색상 관리
+
+프로젝트의 모든 색상은 `packages/min-design-system/src/index.css`의 `@theme` 디렉티브에서 중앙 집중식으로 관리됩니다.
+
+#### 색상 구조
+
+```css
+@theme {
+  /* Base colors */
+  --color-gray-0: #ffffff;
+  --color-gray-50: #fafafa;
+  --color-gray-900: #18181b;
+  /* ... */
+  
+  /* Semantic colors */
+  --color-fg-neutral: var(--color-gray-900);
+  --color-bg-layer: var(--color-gray-0);
+  --color-stroke-neutral: var(--color-gray-200);
+}
+```
+
+#### 사용 방법
+
+**1. Tailwind 유틸리티 클래스 (권장)**
+```typescript
+<div className="text-fg-neutral bg-bg-layer">
+```
+
+**2. CSS 변수 직접 사용 (특수한 경우)**
+```typescript
+<div className="text-[var(--fg-neutral)] bg-[var(--bg-layer)]">
+```
+
+### ⚠️ stroke 관련 색상 변수 사용 주의
+
+`stroke`로 시작하는 Tailwind 색상 변수는 SVG의 `stroke` 속성과 충돌할 수 있으므로, 반드시 `var()` 함수를 사용해야 합니다.
+
+#### 잘못된 방법 ❌
+
+```typescript
+// SVG stroke 속성과 충돌 발생
+<div className="outline-stroke-neutral" />
+<input className="border-stroke-hover" />
+```
+
+#### 올바른 방법 ✅
+
+```typescript
+// var() 함수로 명시적으로 CSS 변수 사용
+<div className="outline-[var(--stroke-neutral)]" />
+<input className="border-[var(--stroke-hover)]" />
+<button className="ring-[var(--stroke-focus)]" />
+```
+
+#### 적용 대상
+
+다음 CSS 속성에서 `stroke`로 시작하는 색상 변수를 사용할 때 적용:
+
+- `outline-*` → `outline-[var(--stroke-*)]`
+- `border-*` → `border-[var(--stroke-*)]`
+- `ring-*` → `ring-[var(--stroke-*)]`
+
+#### 예시
+
+```typescript
+// Before
+<div className="outline outline-1 outline-stroke-neutral" />
+<input className="border border-stroke-hover" />
+
+// After
+<div className="outline outline-1 outline-[var(--stroke-neutral)]" />
+<input className="border border-[var(--stroke-hover)]" />
+```
+
+### 다른 색상 변수는 정상 작동
+
+`fg-*`, `bg-*` 등 다른 색상 변수는 일반적인 방식으로 사용 가능합니다:
+
+```typescript
+<div className="bg-bg-layer text-fg-neutral" />
+<button className="bg-bg-field hover:bg-bg-hover" />
+```
+
+## Modal 패턴 (react-snappy-modal)
+
+이 프로젝트에서는 모든 Modal을 **react-snappy-modal**을 사용하여 Promise 기반으로 처리합니다.
+
+### 기본 패턴
+
+Modal 컴포넌트와 해당 Modal을 여는 함수를 **한 파일에 함께 작성**합니다.
+
+#### Modal 컴포넌트 작성 규칙
+
+```typescript
+import SnappyModal, { useCurrentModal } from 'react-snappy-modal';
+
+// 1. Modal에서 반환할 데이터 타입 정의
+interface ModalResultData {
+  name: string;
+  value: number;
+}
+
+// 2. Modal 컴포넌트 작성
+function MyModal() {
+  const { resolveModal } = useCurrentModal();
+  
+  const handleConfirm = () => {
+    // resolveModal로 데이터 반환
+    resolveModal({ name: 'example', value: 123 });
+  };
+  
+  const handleCancel = () => {
+    // null 반환으로 취소 처리
+    resolveModal(null);
+  };
+  
+  return (
+    <div>
+      <h1>Modal Title</h1>
+      <button onClick={handleConfirm}>확인</button>
+      <button onClick={handleCancel}>취소</button>
+    </div>
+  );
+}
+
+// 3. Modal을 여는 함수 export
+export function openMyModal(): Promise<ModalResultData | null> {
+  return SnappyModal.show(<MyModal />);
+}
+```
+
+#### ⚠️ 중요 규칙
+
+1. **Modal 내부에서 `SnappyModal.close()` 사용 금지**
+   - ❌ `SnappyModal.close(data)` (구버전 방식)
+   - ✅ `const { resolveModal } = useCurrentModal(); resolveModal(data);`
+
+2. **취소 시에도 `resolveModal(null)` 사용**
+   ```typescript
+   const handleCancel = () => {
+     resolveModal(null);  // ✅ 올바른 방법
+   };
+   ```
+
+3. **Promise 패턴으로 사용**
+   ```typescript
+   openMyModal().then(result => {
+     if (result) {
+       console.log('확인:', result);
+     } else {
+       console.log('취소됨');
+     }
+   });
+   ```
+
+### 실제 예시
+
+#### DateRangeSelectModal
+
+```typescript
+import SnappyModal, { useCurrentModal } from 'react-snappy-modal';
+import { useState } from 'react';
+
+type DateRangeSelectModalProps = {
+  checkInDate: string;
+  checkOutDate: string;
+};
+
+export function DateRangeSelectModal(props: DateRangeSelectModalProps) {
+  const { resolveModal } = useCurrentModal();
+  const [selectedCheckIn, setSelectedCheckIn] = useState(props.checkInDate);
+  const [selectedCheckOut, setSelectedCheckOut] = useState(props.checkOutDate);
+
+  const handleConfirm = () => {
+    resolveModal({
+      checkIn: selectedCheckIn,
+      checkOut: selectedCheckOut,
+    });
+  };
+
+  const handleCancel = () => {
+    resolveModal(null);
+  };
+
+  return (
+    <div>
+      {/* Calendar UI */}
+      <button onClick={handleConfirm}>확인</button>
+      <button onClick={handleCancel}>취소</button>
+    </div>
+  );
+}
+
+export function openDateRangeSelectModal(
+  props: DateRangeSelectModalProps
+): Promise<{ checkIn: string; checkOut: string } | null> {
+  return SnappyModal.show(<DateRangeSelectModal {...props} />);
+}
+```
+
+#### 사용 예시
+
+```typescript
+// 페이지 컴포넌트에서
+const handleSelectDate = () => {
+  openDateRangeSelectModal({
+    checkInDate: '2025-01-01',
+    checkOutDate: '2025-01-02',
+  }).then(result => {
+    if (result) {
+      setCheckInDate(result.checkIn);
+      setCheckOutDate(result.checkOut);
+    }
+  });
+};
+```
+
+### Modal 위치 설정
+
+```typescript
+export function openMyModal() {
+  return SnappyModal.show(<MyModal />, {
+    position: 'bottom-center',  // 또는 'center', 'top-center' 등
+  });
+}
+```
+
+### 파일 구조
+
+```
+components/
+├── product/
+│   ├── DateRangeSelectModal.tsx      # Modal 컴포넌트 + open 함수
+│   ├── LoadProductTemplateModal.tsx  # Modal 컴포넌트 + open 함수
+│   └── HotelOptionsModal.tsx         # Modal 컴포넌트 + open 함수
+```
+
+각 파일에는:
+1. Modal 컴포넌트 정의
+2. `open{ModulName}Modal` 함수 export
+3. 사용 예시 주석
+
 ## Claude Code 사용자를 위한 안내
 
 - **스타일링**: tailwind-styled-components를 사용하여 스타일 컴포넌트 생성
-- **아이콘**: 폰트 이모지 대신 SVG 아이콘 컴포넌트 사용
+- **아이콘**: lucide-react 사용 (폰트 이모지나 직접 SVG 작성 금지)
 - **레이아웃**: 포스타입/인스타그램 스타일의 미니멀한 디자인 적용
 - **타입 안전성**: 모든 컴포넌트에 TypeScript 사용
 - **파일 구조**: 기능별로 그룹화된 컴포넌트 구조 유지
 - **라우팅**: TanStack Router의 파일 기반 라우팅 활용
+- **Modal**: react-snappy-modal + useCurrentModal().resolveModal() 패턴 필수
+- **색상 변수**: `stroke` 관련 변수는 `var()` 함수로 사용

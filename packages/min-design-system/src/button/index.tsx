@@ -57,7 +57,7 @@ function getColorStyles(
     case 'neutral':
     default:
       fgColor = 'text-[var(--fg-neutral)]';
-      bgColor = 'bg-[var(--bg-neutral)]';
+      bgColor = 'bg-[var(--bg-neutral-solid)]';
       borderColor = 'border-[var(--bg-critical)]';
   }
 

@@ -794,6 +794,7 @@ export const roleEnumSchema = z.enum(ROLE_ENUM_VALUE);
 **⚠️ 스타일링 필수 규칙:**
 - **TSX 파일에서는 className prop 대신 tailwind-styled-components 사용 필수**
 - **tailwind-styled-components로 정의한 스타일 컴포넌트는 파일 최하단에 작성**
+- **`font-['Min_Sans_VF']` 클래스 사용 금지**: tailwind.config.ts에서 기본 폰트로 설정되어 있음
 - 예외: 인라인 조건부 스타일링 등 특수한 경우에만 className 사용 허용
 
 **스타일 컴포넌트 작성 패턴:**
@@ -832,6 +833,85 @@ const Button = tw.button`
 - className prop에 직접 Tailwind 클래스 작성 금지
 - 스타일 컴포넌트는 **파일 최하단**에 작성
 - Props는 `$` prefix 사용 (예: `$primary`, `$active`)
+- **font-family 직접 지정 금지**: `font-['Min_Sans_VF']` 사용하지 말 것 (전역 설정됨)
+
+**⚠️ Tailwind 색상 시스템:**
+- 모든 색상은 `packages/min-design-system/src/index.css`의 `@theme` 디렉티브에서 중앙 관리
+- Tailwind 유틸리티 클래스 사용 권장: `text-fg-neutral`, `bg-bg-layer`
+- CSS 변수 직접 사용도 가능: `text-[var(--fg-neutral)]`, `bg-[var(--bg-layer)]`
+- tailwind.config.ts에서 색상 정의 금지 (이미 @theme에 정의됨)
+
+**⚠️ Tailwind Stroke 색상 변수 주의사항:**
+- `stroke`로 시작하는 색상 변수는 SVG의 `stroke` 속성과 충돌하므로 `var()` 함수 필수 사용
+- 잘못된 예: `outline-stroke-neutral`, `border-stroke-hover`
+- 올바른 예: `outline-[var(--stroke-neutral)]`, `border-[var(--stroke-hover)]`
+- 적용 대상: `outline-*`, `border-*`, `ring-*` 등
+
+**⚠️ 아이콘 사용 규칙:**
+- **모든 프론트엔드 프로젝트에서 lucide-react 사용 필수**
+- 폰트 이모지 사용 금지
+- 커스텀 SVG는 꼭 필요한 경우에만 별도 컴포넌트 생성
+
+```typescript
+// ✅ 올바른 방법 - lucide-react 사용
+import { Search, ChevronDown, Settings } from 'lucide-react';
+
+function SearchBar() {
+  return (
+    <SearchContainer>
+      <SearchIcon>
+        <Search size={20} />
+      </SearchIcon>
+      <input type="text" placeholder="검색" />
+      <ChevronIcon>
+        <ChevronDown size={20} />
+      </ChevronIcon>
+    </SearchContainer>
+  );
+}
+
+// ❌ 잘못된 방법 - 폰트 이모지 사용
+function SearchBar() {
+  return (
+    <div>
+      <span>🔍</span>
+      <input type="text" placeholder="검색" />
+    </div>
+  );
+}
+```
+
+**⚠️ 알림 메시지 표시 규칙:**
+- **백오피스에서 `alert()` 사용 금지**
+- **모든 알림은 `sonner` 라이브러리의 `toast` 사용 필수**
+- 성공: `toast.success()`, 에러: `toast.error()`, 정보: `toast.info()`
+
+```typescript
+// ✅ 올바른 방법 - toast 사용
+import { toast } from 'sonner';
+
+function handleSubmit() {
+  if (!formData.name) {
+    toast.error('이름을 입력해주세요.');
+    return;
+  }
+  
+  try {
+    await saveData(formData);
+    toast.success('저장되었습니다.');
+  } catch (error) {
+    toast.error('저장 중 오류가 발생했습니다.');
+  }
+}
+
+// ❌ 잘못된 방법 - alert 사용
+function handleSubmit() {
+  if (!formData.name) {
+    alert('이름을 입력해주세요.');
+    return;
+  }
+}
+```
 
 ```typescript
 // ✅ 올바른 방법
@@ -1043,6 +1123,108 @@ export function FileUpload({ ... }: FileUploadProps) {
  *   uploadPath="products"
  * />
  */
+```
+
+**⚠️ Modal 패턴 (react-snappy-modal):**
+
+이 프로젝트에서는 모든 Modal을 **react-snappy-modal**을 사용하여 Promise 기반으로 처리합니다.
+
+**필수 규칙:**
+1. **Modal 컴포넌트와 open 함수를 한 파일에 함께 작성**
+2. **Modal 내부에서 `SnappyModal.close()` 사용 금지** → `useCurrentModal().resolveModal()` 사용
+3. **취소 시에도 `resolveModal(null)` 사용**
+
+**기본 패턴:**
+```typescript
+import SnappyModal, { useCurrentModal } from 'react-snappy-modal';
+
+// 1. Modal 컴포넌트 작성
+function MyModal() {
+  const { resolveModal } = useCurrentModal();
+  
+  const handleConfirm = () => {
+    resolveModal({ name: 'example', value: 123 });
+  };
+  
+  const handleCancel = () => {
+    resolveModal(null);
+  };
+  
+  return (
+    <div>
+      <h1>Modal Title</h1>
+      <button onClick={handleConfirm}>확인</button>
+      <button onClick={handleCancel}>취소</button>
+    </div>
+  );
+}
+
+// 2. Modal을 여는 함수 export
+export function openMyModal(): Promise<{ name: string; value: number } | null> {
+  return SnappyModal.show(<MyModal />);
+}
+```
+
+**사용 예시:**
+```typescript
+// ✅ 올바른 방법
+openMyModal().then(result => {
+  if (result) {
+    console.log('확인:', result.name, result.value);
+  } else {
+    console.log('취소됨');
+  }
+});
+
+// ❌ 잘못된 방법 - 구버전 방식
+function MyModal() {
+  const handleConfirm = () => {
+    SnappyModal.close(data);  // 사용 금지!
+  };
+}
+```
+
+**실제 예시:**
+```typescript
+// DateRangeSelectModal.tsx
+import SnappyModal, { useCurrentModal } from 'react-snappy-modal';
+
+function DateRangeSelectModal({ checkInDate, checkOutDate }) {
+  const { resolveModal } = useCurrentModal();
+  const [selectedCheckIn, setSelectedCheckIn] = useState(checkInDate);
+  const [selectedCheckOut, setSelectedCheckOut] = useState(checkOutDate);
+
+  const handleConfirm = () => {
+    resolveModal({ checkIn: selectedCheckIn, checkOut: selectedCheckOut });
+  };
+
+  const handleCancel = () => {
+    resolveModal(null);
+  };
+
+  return (
+    <div>
+      {/* Calendar UI */}
+      <button onClick={handleConfirm}>확인</button>
+      <button onClick={handleCancel}>취소</button>
+    </div>
+  );
+}
+
+export function openDateRangeSelectModal(props) {
+  return SnappyModal.show(<DateRangeSelectModal {...props} />, {
+    position: 'bottom-center',
+  });
+}
+
+// 사용
+openDateRangeSelectModal({ checkInDate: '2025-01-01', checkOutDate: '2025-01-02' })
+  .then(result => {
+    if (result) {
+      setCheckInDate(result.checkIn);
+      setCheckOutDate(result.checkOut);
+    }
+  });
 ```
 
 ## Git 커밋 규칙
