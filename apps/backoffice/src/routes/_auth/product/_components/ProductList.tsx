@@ -21,8 +21,8 @@ interface Product {
   status: 'VISIBLE' | 'HIDDEN' | 'SOLD_OUT';
   useStock: boolean;
   useCalendar: boolean;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export function ProductList() {
