@@ -1,7 +1,19 @@
 import { initTRPC } from "@trpc/server";
 import { z } from "zod";
-import {PRODUCT_TYPE_ENUM_VALUE,  DATE_FILTER_TYPE_ENUM_VALUE, paginationQuerySchema, createPaginatedResponseSchema} from './types';
-import { normalizeTime } from './utils';
+import {
+  PRODUCT_TYPE_ENUM_VALUE,
+  PRODUCT_STATUS_ENUM_VALUE,
+  DELIVERY_FEE_TYPE_ENUM_VALUE,
+  DATE_FILTER_TYPE_ENUM_VALUE,
+  ORDER_DIRECTION_ENUM_VALUE,
+  paginationQuerySchema,
+  createPaginatedResponseSchema,
+  BUSINESS_TYPE_ENUM_VALUE,
+  socialMediaPlatformEnumSchema,
+  businessInfoSchema,
+  bankInfoSchema,
+} from './types';
+import {normalizeTime, TIME_FORMAT_REGEX, TIME_FORMAT_ERROR_MESSAGE_KO} from './utils';
 
 const t = initTRPC.create();
 const publicProcedure = t.procedure;
@@ -199,17 +211,11 @@ const appRouter = t.router({
           .positive('최대인원은 1명 이상이어야 합니다'),
         checkInTime: z
           .string()
-          .regex(
-            /^([01]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$/,
-            '입실 시간은 HH:MM 또는 HH:MM:SS 형식이어야 합니다'
-          )
+          .regex(TIME_FORMAT_REGEX)
           .transform(normalizeTime),
         checkOutTime: z
           .string()
-          .regex(
-            /^([01]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$/,
-            '퇴실 시간은 HH:MM 또는 HH:MM:SS 형식이어야 합니다'
-          )
+          .regex(TIME_FORMAT_REGEX)
           .transform(normalizeTime),
         bedTypes: z.array(z.string()).default([]),
         tags: z.array(z.string()).default([]),
@@ -226,7 +232,7 @@ const appRouter = t.router({
         useStock: z.boolean().default(false),
         useOptions: z.boolean().default(false),
         delivery: z.object({
-          deliveryFeeType: z.enum(['FREE', 'PAID', 'CONDITIONAL_FREE']),
+          deliveryFeeType: z.enum(DELIVERY_FEE_TYPE_ENUM_VALUE),
           deliveryFee: z.number().int().nonnegative().default(0),
           freeDeliveryMinAmount: z.number().int().nonnegative().default(0),
           returnDeliveryFee: z.number().int().nonnegative().default(0),
@@ -253,7 +259,7 @@ const appRouter = t.router({
       }),
     ])).output(z.object({
       id: z.number(),
-      type: z.enum(['HOTEL', 'E-TICKET', 'DELIVERY']),
+      type: z.enum(PRODUCT_TYPE_ENUM_VALUE),
       name: z.string(),
       message: z.string(),
     })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
@@ -271,12 +277,12 @@ const appRouter = t.router({
       maxCapacity: z.number().int().positive().optional(),
       checkInTime: z
         .string()
-        .regex(/^([01]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$/)
+        .regex(TIME_FORMAT_REGEX)
         .transform(normalizeTime)
         .optional(),
       checkOutTime: z
         .string()
-        .regex(/^([01]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$/)
+        .regex(TIME_FORMAT_REGEX)
         .transform(normalizeTime)
         .optional(),
       bedTypes: z.array(z.string()).optional(),
@@ -285,7 +291,7 @@ const appRouter = t.router({
       useOptions: z.boolean().optional(),
       delivery: z
         .object({
-          deliveryFeeType: z.enum(['FREE', 'PAID', 'CONDITIONAL_FREE']),
+          deliveryFeeType: z.enum(DELIVERY_FEE_TYPE_ENUM_VALUE),
           deliveryFee: z.number().int().nonnegative().optional(),
           freeDeliveryMinAmount: z.number().int().nonnegative().optional(),
           returnDeliveryFee: z.number().int().nonnegative().optional(),
@@ -308,6 +314,429 @@ const appRouter = t.router({
     })).output(z.object({
       id: z.number(),
       message: z.string(),
+    })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
+  }),
+  backofficeProduct: t.router({
+    findAll: publicProcedure.input(z
+      .object({
+        page: z.number().int().min(1).default(1),
+        limit: z.number().int().positive().default(30),
+        orderBy: z.string().default('createdAt'),
+        order: z.enum(['ASC', 'DESC']).default('DESC'),
+        type: z.enum(PRODUCT_TYPE_ENUM_VALUE).nullish(),
+        name: z.string().nullish(),
+        status: z.enum(PRODUCT_STATUS_ENUM_VALUE).nullish(),
+        brandIds: z.array(z.number().int()).nullish(),
+        dateFilterType: z
+          .enum(['CREATED_AT', 'UPDATED_AT'])
+          .default('CREATED_AT'),
+        startDate: z.string().nullish(),
+        endDate: z.string().nullish(),
+      })
+      .nullish()
+      .default({})).output(z.object({
+        data: z.array(
+          z.object({
+            id: z.number(),
+            type: z.enum(PRODUCT_TYPE_ENUM_VALUE),
+            name: z.string(),
+            brand: z.object({
+              id: z.number(),
+              name: z.string(),
+            }),
+            price: z.number(),
+            status: z.enum(PRODUCT_STATUS_ENUM_VALUE),
+            useStock: z.boolean(),
+            useCalendar: z.boolean(),
+            createdAt: z.date(),
+            updatedAt: z.date(),
+          })
+        ),
+        total: z.number(),
+        page: z.number(),
+        limit: z.number(),
+        totalPages: z.number(),
+      })).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    findById: publicProcedure.input(z.object({
+      id: z.number().int().positive('유효한 ID를 입력해주세요'),
+    })).output(z.discriminatedUnion('type', [
+      // Hotel Detail
+      z.object({
+        type: z.literal('HOTEL'),
+        id: z.number(),
+        name: z.string(),
+        brandId: z.number(),
+        brandName: z.string(),
+        productTemplateId: z.number().nullish(),
+        campaignId: z.number().nullish(),
+        thumbnailUrls: z.array(z.string()),
+        description: z.string(),
+        detailContent: z.string(),
+        useCalendar: z.boolean(),
+        useStock: z.boolean(),
+        useOptions: z.boolean(),
+        price: z.number(),
+        status: z.enum(PRODUCT_STATUS_ENUM_VALUE),
+        displayOrder: z.number().nullish(),
+        baseCapacity: z.number(),
+        maxCapacity: z.number(),
+        checkInTime: z.string(),
+        checkOutTime: z.string(),
+        bedTypes: z.array(z.string()),
+        tags: z.array(z.string()),
+        createdAt: z.date(),
+        updatedAt: z.date(),
+      }),
+      // Delivery Detail
+      z.object({
+        type: z.literal('DELIVERY'),
+        id: z.number(),
+        name: z.string(),
+        brandId: z.number(),
+        brandName: z.string(),
+        productTemplateId: z.number().nullish(),
+        campaignId: z.number().nullish(),
+        thumbnailUrls: z.array(z.string()),
+        description: z.string(),
+        detailContent: z.string(),
+        useCalendar: z.boolean(),
+        useStock: z.boolean(),
+        useOptions: z.boolean(),
+        price: z.number(),
+        status: z.enum(PRODUCT_STATUS_ENUM_VALUE),
+        displayOrder: z.number().nullish(),
+        delivery: z.object({
+          deliveryFeeType: z.enum(DELIVERY_FEE_TYPE_ENUM_VALUE),
+          deliveryFee: z.number().int().nonnegative().default(0),
+          freeDeliveryMinAmount: z.number().int().nonnegative().default(0),
+          returnDeliveryFee: z.number().int().nonnegative().default(0),
+          exchangeDeliveryFee: z.number().int().nonnegative().default(0),
+          remoteAreaExtraFee: z.number().int().nonnegative().default(0),
+          jejuExtraFee: z.number().int().nonnegative().default(0),
+          isJejuRestricted: z.boolean().default(false),
+          isRemoteIslandRestricted: z.boolean().default(false),
+        }),
+        exchangeReturnInfo: z.string(),
+        productInfoNotice: z.string(),
+        createdAt: z.date(),
+        updatedAt: z.date(),
+      }),
+      // ETicket Detail
+      z.object({
+        type: z.literal('E-TICKET'),
+        id: z.number(),
+        name: z.string(),
+        brandId: z.number(),
+        brandName: z.string(),
+        productTemplateId: z.number().nullish(),
+        campaignId: z.number().nullish(),
+        thumbnailUrls: z.array(z.string()),
+        description: z.string(),
+        detailContent: z.string(),
+        useCalendar: z.boolean(),
+        useStock: z.boolean(),
+        useOptions: z.boolean(),
+        price: z.number(),
+        status: z.enum(PRODUCT_STATUS_ENUM_VALUE),
+        displayOrder: z.number().nullish(),
+        createdAt: z.date(),
+        updatedAt: z.date(),
+      }),
+    ])).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    create: publicProcedure.input(z.discriminatedUnion('type', [
+      // Hotel Product
+      z.object({
+        type: z.literal('HOTEL'),
+        name: z.string().min(1, '상품명은 필수입니다'),
+        brandId: z.number().int().positive('브랜드를 선택해주세요'),
+        productTemplateId: z.number().int().positive().nullish(),
+        campaignId: z.number().int().positive().nullish(),
+        categoryIds: z.array(z.number().int().positive()).default([]),
+        thumbnailUrls: z.array(z.string().url()).default([]),
+        description: z.string().default(''),
+        detailContent: z.string().default(''),
+        useCalendar: z.literal(true),
+        useStock: z.boolean().default(false),
+        useOptions: z.boolean().default(false),
+        price: z.number().int().min(0, '가격은 0 이상이어야 합니다'),
+        status: z.enum(PRODUCT_STATUS_ENUM_VALUE).default('VISIBLE'),
+        displayOrder: z.number().int().nullish(),
+        baseCapacity: z
+          .number()
+          .int()
+          .positive('기준인원은 1명 이상이어야 합니다'),
+        maxCapacity: z
+          .number()
+          .int()
+          .positive('최대인원은 1명 이상이어야 합니다'),
+        checkInTime: z
+          .string()
+          .regex(TIME_FORMAT_REGEX, TIME_FORMAT_ERROR_MESSAGE_KO)
+          .transform(normalizeTime),
+        checkOutTime: z
+          .string()
+          .regex(TIME_FORMAT_REGEX, TIME_FORMAT_ERROR_MESSAGE_KO)
+          .transform(normalizeTime),
+        bedTypes: z.array(z.string()).default([]),
+        tags: z.array(z.string()).default([]),
+      }),
+      // Delivery Product
+      z.object({
+        type: z.literal('DELIVERY'),
+        name: z.string().min(1, '상품명은 필수입니다'),
+        brandId: z.number().int().positive('브랜드를 선택해주세요'),
+        productTemplateId: z.number().int().positive().nullish(),
+        campaignId: z.number().int().positive().nullish(),
+        categoryIds: z.array(z.number().int().positive()).default([]),
+        thumbnailUrls: z.array(z.string().url()).default([]),
+        description: z.string().default(''),
+        detailContent: z.string().default(''),
+        useCalendar: z.boolean().default(false),
+        useStock: z.boolean().default(false),
+        useOptions: z.boolean().default(false),
+        price: z.number().int().min(0, '가격은 0 이상이어야 합니다'),
+        status: z.enum(PRODUCT_STATUS_ENUM_VALUE).default('VISIBLE'),
+        displayOrder: z.number().int().nullish(),
+        delivery: z.object({
+          deliveryFeeType: z.enum(DELIVERY_FEE_TYPE_ENUM_VALUE),
+          deliveryFee: z.number().int().nonnegative().default(0),
+          freeDeliveryMinAmount: z.number().int().nonnegative().default(0),
+          returnDeliveryFee: z.number().int().nonnegative().default(0),
+          exchangeDeliveryFee: z.number().int().nonnegative().default(0),
+          remoteAreaExtraFee: z.number().int().nonnegative().default(0),
+          jejuExtraFee: z.number().int().nonnegative().default(0),
+          isJejuRestricted: z.boolean().default(false),
+          isRemoteIslandRestricted: z.boolean().default(false),
+        }),
+        exchangeReturnInfo: z.string().default(''),
+        productInfoNotice: z.string().default(''),
+      }),
+      // ETicket Product
+      z.object({
+        type: z.literal('E-TICKET'),
+        name: z.string().min(1, '상품명은 필수입니다'),
+        brandId: z.number().int().positive('브랜드를 선택해주세요'),
+        productTemplateId: z.number().int().positive().nullish(),
+        campaignId: z.number().int().positive().nullish(),
+        categoryIds: z.array(z.number().int().positive()).default([]),
+        thumbnailUrls: z.array(z.string().url()).default([]),
+        description: z.string().default(''),
+        detailContent: z.string().default(''),
+        useCalendar: z.boolean().default(false),
+        useStock: z.boolean().default(false),
+        useOptions: z.boolean().default(false),
+        price: z.number().int().min(0, '가격은 0 이상이어야 합니다'),
+        status: z.enum(PRODUCT_STATUS_ENUM_VALUE).default('VISIBLE'),
+        displayOrder: z.number().int().nullish(),
+      }),
+    ])).output(z.object({
+      id: z.number(),
+      type: z.enum(PRODUCT_TYPE_ENUM_VALUE),
+      name: z.string(),
+      message: z.string(),
+    })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    update: publicProcedure.input(z.discriminatedUnion('type', [
+      // Hotel Product Update
+      z.object({
+        type: z.literal('HOTEL'),
+        id: z.number().int().positive('유효한 ID를 입력해주세요'),
+        name: z.string().min(1, '상품명은 필수입니다'),
+        brandId: z.number().int().positive('브랜드를 선택해주세요'),
+        productTemplateId: z.number().int().positive().nullish(),
+        campaignId: z.number().int().positive().nullish(),
+        categoryIds: z.array(z.number().int().positive()).default([]),
+        thumbnailUrls: z.array(z.string().url()).default([]),
+        description: z.string().default(''),
+        detailContent: z.string().default(''),
+        useCalendar: z.literal(true),
+        useStock: z.boolean().default(false),
+        useOptions: z.boolean().default(false),
+        price: z.number().int().min(0, '가격은 0 이상이어야 합니다'),
+        status: z.enum(PRODUCT_STATUS_ENUM_VALUE).default('VISIBLE'),
+        displayOrder: z.number().int().nullish(),
+        baseCapacity: z
+          .number()
+          .int()
+          .positive('기준인원은 1명 이상이어야 합니다'),
+        maxCapacity: z
+          .number()
+          .int()
+          .positive('최대인원은 1명 이상이어야 합니다'),
+        checkInTime: z
+          .string()
+          .regex(TIME_FORMAT_REGEX, TIME_FORMAT_ERROR_MESSAGE_KO)
+          .transform(normalizeTime),
+        checkOutTime: z
+          .string()
+          .regex(TIME_FORMAT_REGEX, TIME_FORMAT_ERROR_MESSAGE_KO)
+          .transform(normalizeTime),
+        bedTypes: z.array(z.string()).default([]),
+        tags: z.array(z.string()).default([]),
+      }),
+      // Delivery Product Update
+      z.object({
+        type: z.literal('DELIVERY'),
+        id: z.number().int().positive('유효한 ID를 입력해주세요'),
+        name: z.string().min(1, '상품명은 필수입니다'),
+        brandId: z.number().int().positive('브랜드를 선택해주세요'),
+        productTemplateId: z.number().int().positive().nullish(),
+        campaignId: z.number().int().positive().nullish(),
+        categoryIds: z.array(z.number().int().positive()).default([]),
+        thumbnailUrls: z.array(z.string().url()).default([]),
+        description: z.string().default(''),
+        detailContent: z.string().default(''),
+        useCalendar: z.boolean().default(false),
+        useStock: z.boolean().default(false),
+        useOptions: z.boolean().default(false),
+        price: z.number().int().min(0, '가격은 0 이상이어야 합니다'),
+        status: z.enum(PRODUCT_STATUS_ENUM_VALUE).default('VISIBLE'),
+        displayOrder: z.number().int().nullish(),
+        delivery: z.object({
+          deliveryFeeType: z.enum(DELIVERY_FEE_TYPE_ENUM_VALUE),
+          deliveryFee: z.number().int().nonnegative().default(0),
+          freeDeliveryMinAmount: z.number().int().nonnegative().default(0),
+          returnDeliveryFee: z.number().int().nonnegative().default(0),
+          exchangeDeliveryFee: z.number().int().nonnegative().default(0),
+          remoteAreaExtraFee: z.number().int().nonnegative().default(0),
+          jejuExtraFee: z.number().int().nonnegative().default(0),
+          isJejuRestricted: z.boolean().default(false),
+          isRemoteIslandRestricted: z.boolean().default(false),
+        }),
+        exchangeReturnInfo: z.string().default(''),
+        productInfoNotice: z.string().default(''),
+      }),
+      // ETicket Product Update
+      z.object({
+        type: z.literal('E-TICKET'),
+        id: z.number().int().positive('유효한 ID를 입력해주세요'),
+        name: z.string().min(1, '상품명은 필수입니다'),
+        brandId: z.number().int().positive('브랜드를 선택해주세요'),
+        productTemplateId: z.number().int().positive().nullish(),
+        campaignId: z.number().int().positive().nullish(),
+        categoryIds: z.array(z.number().int().positive()).default([]),
+        thumbnailUrls: z.array(z.string().url()).default([]),
+        description: z.string().default(''),
+        detailContent: z.string().default(''),
+        useCalendar: z.boolean().default(false),
+        useStock: z.boolean().default(false),
+        useOptions: z.boolean().default(false),
+        price: z.number().int().min(0, '가격은 0 이상이어야 합니다'),
+        status: z.enum(PRODUCT_STATUS_ENUM_VALUE).default('VISIBLE'),
+        displayOrder: z.number().int().nullish(),
+      }),
+    ])).output(z.object({
+      id: z.number(),
+      name: z.string(),
+      message: z.string(),
+    })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    delete: publicProcedure.input(z.object({
+      id: z.number().int().positive('유효한 ID를 입력해주세요'),
+    })).output(z.object({
+      id: z.number(),
+      message: z.string(),
+    })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
+  }),
+  backofficeInfluencer: t.router({
+    create: publicProcedure.input(z.object({
+      name: z.string().min(1, '인플루언서명은 필수입니다'),
+      email: z.string().email('유효한 이메일을 입력해주세요').nullish(),
+      phoneNumber: z.string().nullish(),
+      thumbnail: z.string().nullish(),
+      businessInfo: z.object({
+        type: z.enum(BUSINESS_TYPE_ENUM_VALUE).nullish(),
+        name: z.string().nullish(),
+        licenseNumber: z.string().nullish(),
+        ceoName: z.string().nullish(),
+        licenseFileUrl: z.string().nullish(),
+      }).nullish(),
+      bankInfo: z.object({
+        name: z.string().nullish(),
+        accountNumber: z.string().nullish(),
+        accountHolder: z.string().nullish(),
+      }).nullish(),
+      socialMedias: z
+        .array(
+          z.object({
+            platform: socialMediaPlatformEnumSchema,
+            url: z.string().url('유효한 URL을 입력해주세요'),
+          })
+        )
+        .min(1, '최소 1개 이상의 소셜미디어가 필요합니다'),
+    })).output(z.object({
+      id: z.number(),
+      name: z.string(),
+      email: z.string().email().nullish(),
+      phoneNumber: z.string().nullish(),
+      thumbnail: z.string().nullish(),
+      businessInfo: businessInfoSchema.nullish(),
+      bankInfo: bankInfoSchema.nullish(),
+      socialMedias: z.array(z.object({
+        id: z.number().optional(),
+        platform: z.enum(
+          [
+            'INSTAGRAM',
+            'TIKTOK',
+            'YOUTUBE',
+            'FACEBOOK',
+            'TWITTER',
+            'OTHER',
+          ] as const
+        ),
+        url: z.string().url('유효한 URL을 입력해주세요'),
+      })),
+      createdAt: z.date(),
+      updatedAt: z.date(),
+    })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    update: publicProcedure.input(z.object({
+      id: z.number(),
+      name: z.string().min(1, '인플루언서명은 필수입니다'),
+      email: z.string().email('유효한 이메일을 입력해주세요').nullish(),
+      phoneNumber: z.string().nullish(),
+      thumbnail: z.string().nullish(),
+      businessInfo: z.object({
+        type: z.enum(BUSINESS_TYPE_ENUM_VALUE).nullish(),
+        name: z.string().nullish(),
+        licenseNumber: z.string().nullish(),
+        ceoName: z.string().nullish(),
+        licenseFileUrl: z.string().nullish(),
+      }).nullish(),
+      bankInfo: z.object({
+        name: z.string().nullish(),
+        accountNumber: z.string().nullish(),
+        accountHolder: z.string().nullish(),
+      }).nullish(),
+      socialMedias: z
+        .array(
+          z.object({
+            platform: socialMediaPlatformEnumSchema,
+            url: z.string().url('유효한 URL을 입력해주세요'),
+          })
+        )
+        .min(1, '최소 1개 이상의 소셜미디어가 필요합니다'),
+    })).output(z.object({
+      id: z.number(),
+      name: z.string(),
+      email: z.string().email().nullish(),
+      phoneNumber: z.string().nullish(),
+      thumbnail: z.string().nullish(),
+      businessInfo: businessInfoSchema.nullish(),
+      bankInfo: bankInfoSchema.nullish(),
+      socialMedias: z.array(z.object({
+        id: z.number().optional(),
+        platform: z.enum(
+          [
+            'INSTAGRAM',
+            'TIKTOK',
+            'YOUTUBE',
+            'FACEBOOK',
+            'TWITTER',
+            'OTHER',
+          ] as const
+        ),
+        url: z.string().url('유효한 URL을 입력해주세요'),
+      })),
+      createdAt: z.date(),
+      updatedAt: z.date(),
     })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
   }),
   backofficeCategory: t.router({
