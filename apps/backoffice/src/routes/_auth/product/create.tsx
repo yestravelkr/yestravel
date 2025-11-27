@@ -12,6 +12,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { Button } from '@yestravelkr/min-design-system';
 import { useState } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
+import { toast } from 'sonner';
 
 import { BasicInfoCard } from '../product-template/_components/create/BasicInfoCard';
 import { ProductTemplateAssociationCard } from '../product-template/_components/create/ProductTemplateAssociationCard';
@@ -66,6 +67,16 @@ function CreateProductPage() {
   const navigate = useNavigate();
   const [thumbnails, setThumbnails] = useState<string[]>([]);
 
+  const createProductMutation = trpc.backofficeProduct.create.useMutation({
+    onSuccess: (data) => {
+      toast.success(data.message);
+      navigate({ to: '/product' });
+    },
+    onError: (error) => {
+      toast.error(error.message || '상품 생성에 실패했습니다.');
+    },
+  });
+
   const methods = useForm<ProductFormData>({
     defaultValues: {
       name: '',
@@ -97,8 +108,37 @@ function CreateProductPage() {
   };
 
   const onSubmit = async (formData: ProductFormData) => {
-    // TODO: 실제 상품 생성 API 연결
-    console.log('상품 생성 처리', formData);
+    // Hotel 타입 상품 생성 API 호출
+    await createProductMutation.mutateAsync({
+      type: 'HOTEL',
+      name: formData.name,
+      brandId: formData.brandId,
+      productTemplateId: undefined,
+      campaignId: undefined,
+      categoryIds: [],
+      thumbnailUrls: thumbnails,
+      description: formData.description,
+      detailContent: formData.detailContent,
+      useCalendar: true,
+      useStock: formData.useStock,
+      useOptions: formData.hotelOptions.length > 0,
+      price:
+        formData.hotelOptions.length > 0
+          ? Math.min(
+              ...formData.hotelOptions.map((opt) =>
+                Math.min(...Object.values(opt.priceByDate)),
+              ),
+            )
+          : 0,
+      status: 'VISIBLE',
+      displayOrder: undefined,
+      baseCapacity: formData.baseCapacity,
+      maxCapacity: formData.maxCapacity,
+      checkInTime: formData.checkInTime,
+      checkOutTime: formData.checkOutTime,
+      bedTypes: formData.bedTypes,
+      tags: formData.tags,
+    });
   };
 
   const handleAddThumbnail = (url: string) => {
@@ -207,9 +247,11 @@ function CreateProductPage() {
                 kind="primary"
                 variant="solid"
                 size="large"
-                disabled={isSubmitting}
+                disabled={isSubmitting || createProductMutation.isPending}
               >
-                {isSubmitting ? '등록 중...' : '상품 등록'}
+                {isSubmitting || createProductMutation.isPending
+                  ? '등록 중...'
+                  : '상품 등록'}
               </Button>
             </FormActions>
           </Form>
