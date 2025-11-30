@@ -177,7 +177,7 @@ export function ProductTemplateList() {
           onClick={(e: React.MouseEvent) => e.stopPropagation()}
         >
           <EditButton
-            to={`/product-template/${info.row.original.id}/edit`}
+            to={`/product-template/hotel/${info.row.original.id}/edit`}
             onClick={(e: React.MouseEvent) => e.stopPropagation()}
           >
             수정

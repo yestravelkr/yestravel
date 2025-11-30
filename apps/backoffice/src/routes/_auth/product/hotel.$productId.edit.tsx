@@ -1,23 +1,22 @@
 /**
- * Product Create Page - 상품 등록 페이지
+ * Product Edit Page - 상품 수정 페이지
  *
  * ProductTemplate과 동일한 폼 구조를 사용합니다.
  */
 
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { Button } from '@yestravelkr/min-design-system';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
 import { ProductForm } from './_components/create/ProductForm';
 
 import { MajorPageLayout } from '@/components/layout';
-import { openLoadProductTemplateModal } from '@/components/product/LoadProductTemplateModal';
-import { trpc, trpcClient } from '@/shared/trpc';
+import { trpc } from '@/shared/trpc';
 
-export const Route = createFileRoute('/_auth/product/create')({
-  component: CreateProductPage,
+export const Route = createFileRoute('/_auth/product/hotel/$productId/edit')({
+  component: EditProductPage,
 });
 
 // React Hook Form용 타입 정의
@@ -46,17 +45,24 @@ interface ProductFormData {
   }>;
 }
 
-function CreateProductPage() {
+function EditProductPage() {
   const navigate = useNavigate();
+  const { productId } = Route.useParams();
   const [thumbnails, setThumbnails] = useState<string[]>([]);
 
-  const createProductMutation = trpc.backofficeProduct.create.useMutation({
+  const { data: product, isLoading } = trpc.backofficeProduct.findById.useQuery(
+    {
+      id: Number(productId),
+    },
+  );
+
+  const updateProductMutation = trpc.backofficeProduct.update.useMutation({
     onSuccess: (data) => {
       toast.success(data.message);
-      navigate({ to: '/product' });
+      navigate({ to: '/product/hotel' });
     },
     onError: (error) => {
-      toast.error(error.message || '상품 생성에 실패했습니다.');
+      toast.error(error.message || '상품 수정에 실패했습니다.');
     },
   });
 
@@ -78,14 +84,36 @@ function CreateProductPage() {
     },
   });
 
-  const { setValue } = methods;
+  const { reset } = methods;
+
+  useEffect(() => {
+    if (product && product.type === 'HOTEL') {
+      reset({
+        name: product.name,
+        description: product.description,
+        brandId: product.brandId,
+        baseCapacity: product.baseCapacity,
+        maxCapacity: product.maxCapacity,
+        checkInTime: product.checkInTime,
+        checkOutTime: product.checkOutTime,
+        bedTypes: product.bedTypes,
+        tags: product.tags,
+        detailContent: product.detailContent,
+        useStock: product.useStock,
+        thumbnailUrls: product.thumbnailUrls,
+        hotelOptions: [],
+      });
+      setThumbnails(product.thumbnailUrls);
+    }
+  }, [product, reset]);
 
   const handleCancel = () => {
-    navigate({ to: '/product' });
+    navigate({ to: '/product/hotel' });
   };
 
   const onSubmit = async (formData: ProductFormData) => {
-    await createProductMutation.mutateAsync({
+    await updateProductMutation.mutateAsync({
+      id: Number(productId),
       type: 'HOTEL',
       name: formData.name,
       brandId: formData.brandId,
@@ -125,55 +153,34 @@ function CreateProductPage() {
     setThumbnails((prev) => prev.filter((item) => item !== target));
   };
 
-  const handleImportProduct = () => {
-    openLoadProductTemplateModal()
-      .then((templateId) => {
-        if (!templateId) return;
-        return trpcClient.backofficeProductTemplate.findById.query({
-          id: templateId,
-        });
-      })
-      .then((templateData) => {
-        if (!templateData) return;
-        if (templateData.type !== 'HOTEL') return;
+  if (isLoading) {
+    return (
+      <MajorPageLayout title="상품 수정" description="상품 정보를 수정합니다.">
+        <div className="flex items-center justify-center py-12">
+          <div className="text-gray-500">로딩 중...</div>
+        </div>
+      </MajorPageLayout>
+    );
+  }
 
-        setValue('name', templateData.name);
-        setValue('description', templateData.description);
-        setValue('brandId', templateData.brandId);
-        setValue('thumbnailUrls', templateData.thumbnailUrls);
-        setValue('detailContent', templateData.detailContent);
-        setValue('useStock', templateData.useStock);
-        setValue('baseCapacity', templateData.baseCapacity);
-        setValue('maxCapacity', templateData.maxCapacity);
-        setValue('checkInTime', templateData.checkInTime);
-        setValue('checkOutTime', templateData.checkOutTime);
-        setValue('bedTypes', templateData.bedTypes);
-        setValue('tags', templateData.tags);
-        setThumbnails(templateData.thumbnailUrls);
-      })
-      .catch((error) => {
-        console.error('품목 데이터 로드 실패:', error);
-        toast.error('품목 데이터를 불러오는데 실패했습니다.');
-      });
-  };
+  if (!product) {
+    return (
+      <MajorPageLayout title="상품 수정" description="상품 정보를 수정합니다.">
+        <div className="flex items-center justify-center py-12">
+          <div className="text-gray-500">상품을 찾을 수 없습니다.</div>
+        </div>
+      </MajorPageLayout>
+    );
+  }
 
   return (
     <MajorPageLayout
-      title="새 상품 등록"
-      description="새로운 상품을 등록하여 판매를 시작하세요."
+      title="상품 수정"
+      description="상품 정보를 수정합니다."
       headerActions={
-        <>
-          <Button
-            kind="neutral"
-            variant="outline"
-            onClick={handleImportProduct}
-          >
-            품목 불러오기
-          </Button>
-          <Button kind="neutral" variant="outline" onClick={handleCancel}>
-            취소
-          </Button>
-        </>
+        <Button kind="neutral" variant="outline" onClick={handleCancel}>
+          취소
+        </Button>
       }
     >
       <ProductForm
@@ -183,8 +190,8 @@ function CreateProductPage() {
         thumbnails={thumbnails}
         onAddThumbnail={handleAddThumbnail}
         onRemoveThumbnail={handleRemoveThumbnail}
-        submitButtonText="상품 등록"
-        isSubmitting={createProductMutation.isPending}
+        submitButtonText="상품 수정"
+        isSubmitting={updateProductMutation.isPending}
       />
     </MajorPageLayout>
   );

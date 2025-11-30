@@ -153,7 +153,7 @@ export function ProductList() {
           onClick={(e: React.MouseEvent) => e.stopPropagation()}
         >
           <EditButton
-            to={`/product/${info.row.original.id}/edit`}
+            to={`/product/hotel/${info.row.original.id}/edit`}
             onClick={(e: React.MouseEvent) => e.stopPropagation()}
           >
             수정

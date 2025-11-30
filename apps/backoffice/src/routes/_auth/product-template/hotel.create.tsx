@@ -23,7 +23,7 @@ import { Toast, ToastsContainer } from '@/shared/components/toast/Toast';
 import { useToast } from '@/shared/hooks';
 import { trpc } from '@/shared/trpc';
 
-export const Route = createFileRoute('/_auth/product-template/create')({
+export const Route = createFileRoute('/_auth/product-template/hotel/create')({
   component: CreateProductTemplatePage,
 });
 
