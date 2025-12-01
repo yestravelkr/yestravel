@@ -124,6 +124,20 @@ export const deleteProductResponseSchema = z.object({
 });
 
 // Product Detail Schemas
+// 호텔 옵션 응답 스키마
+const hotelOptionResponseSchema = z.object({
+  id: z.number(),
+  name: z.string(),
+  priceByDate: z.record(z.string(), z.number()),
+  anotherPriceByDate: z.record(
+    z.string(),
+    z.object({
+      supplyPrice: z.number(),
+      commission: z.number(),
+    })
+  ),
+});
+
 const hotelProductSchema = z.object({
   type: z.literal('HOTEL'),
   id: z.number(),
@@ -147,6 +161,7 @@ const hotelProductSchema = z.object({
   checkOutTime: z.string(),
   bedTypes: z.array(z.string()),
   tags: z.array(z.string()),
+  hotelOptions: z.array(hotelOptionResponseSchema),
   createdAt: z.date(),
   updatedAt: z.date(),
 });
