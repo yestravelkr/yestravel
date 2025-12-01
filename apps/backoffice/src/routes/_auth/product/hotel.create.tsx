@@ -2,38 +2,21 @@
  * Product Create Page - 상품 등록 페이지
  *
  * ProductTemplate과 동일한 폼 구조를 사용합니다.
- * - 기본 정보 (썸네일, 상품명, 설명)
- * - 상품 구분 (브랜드, 연결된 품목)
- * - 상세 정보 (기준/최대 인원, 입/퇴실 시간, 침대 구성, 태그)
- * - 상세 페이지 (리치 텍스트 에디터)
  */
 
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { Button } from '@yestravelkr/min-design-system';
 import { useState } from 'react';
-import { useForm, FormProvider } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
-import { BasicInfoCard } from '../product-template/_components/create/BasicInfoCard';
-import { ProductTemplateAssociationCard } from '../product-template/_components/create/ProductTemplateAssociationCard';
-import { ProductTemplateDetailInfoCard } from '../product-template/_components/create/ProductTemplateDetailInfoCard';
-import { ProductTemplateDetailPageCard } from '../product-template/_components/create/ProductTemplateDetailPageCard';
-import {
-  Form,
-  FormActions,
-  FormColumns,
-  FormContainer,
-  LeftColumn,
-  RightColumn,
-} from '../product-template/_components/create/styled';
-
-import { ProductOptionsPricingCard } from './_components/create/ProductOptionsPricingCard';
+import { ProductForm } from './_components/create/ProductForm';
 
 import { MajorPageLayout } from '@/components/layout';
 import { openLoadProductTemplateModal } from '@/components/product/LoadProductTemplateModal';
 import { trpc, trpcClient } from '@/shared/trpc';
 
-export const Route = createFileRoute('/_auth/product/create')({
+export const Route = createFileRoute('/_auth/product/hotel/create')({
   component: CreateProductPage,
 });
 
@@ -70,7 +53,7 @@ function CreateProductPage() {
   const createProductMutation = trpc.backofficeProduct.create.useMutation({
     onSuccess: (data) => {
       toast.success(data.message);
-      navigate({ to: '/product' });
+      navigate({ to: '/product/hotel' });
     },
     onError: (error) => {
       toast.error(error.message || '상품 생성에 실패했습니다.');
@@ -95,20 +78,13 @@ function CreateProductPage() {
     },
   });
 
-  const {
-    register,
-    handleSubmit,
-    formState: { isSubmitting },
-    setValue,
-    watch,
-  } = methods;
+  const { setValue } = methods;
 
   const handleCancel = () => {
-    navigate({ to: '/product' });
+    navigate({ to: '/product/hotel' });
   };
 
   const onSubmit = async (formData: ProductFormData) => {
-    // Hotel 타입 상품 생성 API 호출
     await createProductMutation.mutateAsync({
       type: 'HOTEL',
       name: formData.name,
@@ -153,7 +129,6 @@ function CreateProductPage() {
     openLoadProductTemplateModal()
       .then((templateId) => {
         if (!templateId) return;
-
         return trpcClient.backofficeProductTemplate.findById.query({
           id: templateId,
         });
@@ -162,7 +137,6 @@ function CreateProductPage() {
         if (!templateData) return;
         if (templateData.type !== 'HOTEL') return;
 
-        // 품목 데이터를 폼에 채우기
         setValue('name', templateData.name);
         setValue('description', templateData.description);
         setValue('brandId', templateData.brandId);
@@ -175,13 +149,11 @@ function CreateProductPage() {
         setValue('checkOutTime', templateData.checkOutTime);
         setValue('bedTypes', templateData.bedTypes);
         setValue('tags', templateData.tags);
-
-        // 썸네일 상태도 업데이트
         setThumbnails(templateData.thumbnailUrls);
       })
       .catch((error) => {
         console.error('품목 데이터 로드 실패:', error);
-        alert('품목 데이터를 불러오는데 실패했습니다.');
+        toast.error('품목 데이터를 불러오는데 실패했습니다.');
       });
   };
 
@@ -204,68 +176,16 @@ function CreateProductPage() {
         </>
       }
     >
-      <FormContainer>
-        <FormProvider {...methods}>
-          <Form onSubmit={handleSubmit(onSubmit)}>
-            <FormColumns>
-              <LeftColumn>
-                <BasicInfoCard
-                  thumbnails={thumbnails}
-                  onAddThumbnail={handleAddThumbnail}
-                  onRemoveThumbnail={handleRemoveThumbnail}
-                  register={register}
-                />
-                <ProductTemplateAssociationCard />
-                <ProductTemplateDetailInfoCard
-                  register={register}
-                  setValue={setValue}
-                  watch={watch}
-                />
-                <ProductOptionsPricingCard />
-              </LeftColumn>
-
-              <RightColumn>
-                <ProductTemplateDetailPageCard
-                  setValue={setValue}
-                  watch={watch}
-                />
-              </RightColumn>
-            </FormColumns>
-
-            <FormActions>
-              <Button
-                type="button"
-                kind="neutral"
-                variant="outline"
-                size="large"
-                onClick={handleCancel}
-              >
-                취소
-              </Button>
-              <Button
-                type="submit"
-                kind="primary"
-                variant="solid"
-                size="large"
-                disabled={isSubmitting || createProductMutation.isPending}
-              >
-                {isSubmitting || createProductMutation.isPending
-                  ? '등록 중...'
-                  : '상품 등록'}
-              </Button>
-            </FormActions>
-          </Form>
-        </FormProvider>
-      </FormContainer>
+      <ProductForm
+        methods={methods}
+        onSubmit={onSubmit}
+        onCancel={handleCancel}
+        thumbnails={thumbnails}
+        onAddThumbnail={handleAddThumbnail}
+        onRemoveThumbnail={handleRemoveThumbnail}
+        submitButtonText="상품 등록"
+        isSubmitting={createProductMutation.isPending}
+      />
     </MajorPageLayout>
   );
 }
-
-/**
- * Usage:
- *
- * Product 등록 페이지는 ProductTemplate과 동일한 구조를 사용합니다.
- * (판매 정보는 추후 추가 예정)
- *
- * 라우트: /product/create
- */

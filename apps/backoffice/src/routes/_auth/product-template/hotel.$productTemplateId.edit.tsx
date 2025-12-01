@@ -24,7 +24,7 @@ import { useToast } from '@/shared/hooks';
 import { trpc } from '@/shared/trpc';
 
 export const Route = createFileRoute(
-  '/_auth/product-template/$productTemplateId/edit',
+  '/_auth/product-template/hotel/$productTemplateId/edit',
 )({
   component: EditProductTemplatePage,
 });

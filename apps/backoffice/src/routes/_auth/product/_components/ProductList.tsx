@@ -1,14 +1,15 @@
-import { useNavigate, Link } from '@tanstack/react-router';
-import { createColumnHelper, type ColumnDef } from '@tanstack/react-table';
+import { Link } from '@tanstack/react-router';
+import { createColumnHelper } from '@tanstack/react-table';
 import { useState } from 'react';
+import { toast } from 'sonner';
 import tw from 'tailwind-styled-components';
 
 import { InboxIcon } from '@/components/icons';
 import { Table, EmptyState } from '@/shared/components';
 import { trpc } from '@/shared/trpc';
 
-// ProductTemplate 타입 정의 (API 응답 기반)
-interface ProductTemplate {
+// Product 타입 정의 (API 응답 기반)
+interface Product {
   id: number;
   type: 'HOTEL' | 'E-TICKET' | 'DELIVERY';
   name: string;
@@ -16,40 +17,40 @@ interface ProductTemplate {
     id: number;
     name: string;
   };
-  categories: Array<{
-    id: number;
-    name: string;
-  }>;
-  isIntegrated: boolean;
+  price: number;
+  status: 'VISIBLE' | 'HIDDEN' | 'SOLD_OUT';
   useStock: boolean;
-  createdAt: string; // API에서 string으로 반환
-  updatedAt: string; // API에서 string으로 반환
+  useCalendar: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
-export function ProductTemplateList() {
-  const navigate = useNavigate();
+export function ProductList() {
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const utils = trpc.useUtils();
 
-  // 품목 템플릿 리스트 조회 (페이지네이션 포함)
-  const [data] = trpc.backofficeProductTemplate.findAll.useSuspenseQuery({
+  // 상품 리스트 조회 (페이지네이션 포함)
+  const [data] = trpc.backofficeProduct.findAll.useSuspenseQuery({
     page: 1,
     limit: 50,
   });
-  const productTemplates = data?.data || [];
+  const products = data?.data || [];
 
-  // 품목 템플릿 삭제 mutation
-  const deleteMutation = trpc.backofficeProductTemplate.delete.useMutation({
+  // 상품 삭제 mutation
+  const deleteMutation = trpc.backofficeProduct.delete.useMutation({
     onSuccess: () => {
-      // 삭제 성공 시 리스트 갱신
-      utils.backofficeProductTemplate.findAll.invalidate();
+      toast.success('상품이 삭제되었습니다.');
+      utils.backofficeProduct.findAll.invalidate();
+    },
+    onError: (error) => {
+      toast.error(error.message || '상품 삭제에 실패했습니다.');
     },
   });
 
   // 전체 선택/해제
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedIds(productTemplates.map((item: ProductTemplate) => item.id));
+      setSelectedIds(products.map((item: Product) => item.id));
     } else {
       setSelectedIds([]);
     }
@@ -65,19 +66,22 @@ export function ProductTemplateList() {
   };
 
   // 삭제 처리
-  const handleDelete = async (id: number, name: string) => {
-    if (confirm(`"${name}" 품목을 삭제하시겠습니까?`)) {
-      try {
-        await deleteMutation.mutateAsync({ id });
-        alert('품목이 삭제되었습니다.');
-      } catch (err) {
-        console.error('품목 삭제 실패:', err);
-        alert('품목 삭제에 실패했습니다. 다시 시도해주세요.');
-      }
-    }
+  const handleDelete = (id: number, name: string) => {
+    toast(`"${name}" 상품을 삭제하시겠습니까?`, {
+      action: {
+        label: '삭제',
+        onClick: async () => {
+          await deleteMutation.mutateAsync({ id });
+        },
+      },
+      cancel: {
+        label: '취소',
+        onClick: () => {},
+      },
+    });
   };
 
-  const columnHelper = createColumnHelper<ProductTemplate>();
+  const columnHelper = createColumnHelper<Product>();
 
   const columns = [
     columnHelper.display({
@@ -86,8 +90,7 @@ export function ProductTemplateList() {
         <Checkbox
           type="checkbox"
           checked={
-            productTemplates.length > 0 &&
-            selectedIds.length === productTemplates.length
+            products.length > 0 && selectedIds.length === products.length
           }
           onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
             handleSelectAll(e.target.checked)
@@ -107,10 +110,10 @@ export function ProductTemplateList() {
       size: 50,
     }),
     columnHelper.accessor('name', {
-      header: '품목',
+      header: '상품명',
       cell: (info) => (
         <div>
-          <ProductTemplateName>{info.getValue()}</ProductTemplateName>
+          <ProductName>{info.getValue()}</ProductName>
           <TypeBadge type={info.row.original.type}>
             {getTypeLabel(info.row.original.type)}
           </TypeBadge>
@@ -123,32 +126,13 @@ export function ProductTemplateList() {
       cell: (info) => <BrandName>{info.getValue()}</BrandName>,
       size: 150,
     }),
-    columnHelper.accessor('categories', {
-      header: '카테고리',
+    columnHelper.accessor('status', {
+      header: '상태',
       cell: (info) => (
-        <CategoryList>
-          {info.getValue().length > 0
-            ? info
-                .getValue()
-                .map((cat) => cat.name)
-                .join(', ')
-            : '-'}
-        </CategoryList>
-      ),
-      size: 150,
-    }),
-    columnHelper.accessor('isIntegrated', {
-      header: '연동상태',
-      cell: (info) => (
-        <StatusBadge isActive={info.getValue()}>
-          {info.getValue() ? '연동' : '미연동'}
+        <StatusBadge status={info.getValue()}>
+          {getStatusLabel(info.getValue())}
         </StatusBadge>
       ),
-      size: 80,
-    }),
-    columnHelper.accessor('useStock', {
-      header: '재고관리',
-      cell: (info) => <StatusValue>{info.getValue() ? 'Y' : 'N'}</StatusValue>,
       size: 80,
     }),
     columnHelper.accessor('createdAt', {
@@ -177,7 +161,7 @@ export function ProductTemplateList() {
           onClick={(e: React.MouseEvent) => e.stopPropagation()}
         >
           <EditButton
-            to={`/product-template/hotel/${info.row.original.id}/edit`}
+            to={`/product/hotel/${info.row.original.id}/edit`}
             onClick={(e: React.MouseEvent) => e.stopPropagation()}
           >
             수정
@@ -196,19 +180,17 @@ export function ProductTemplateList() {
     }),
   ];
 
-  if (productTemplates && productTemplates.length > 0) {
-    return <Table columns={columns} data={productTemplates} />;
+  if (products && products.length > 0) {
+    return <Table columns={columns} data={products} />;
   }
 
   return (
     <EmptyState
       icon={<InboxIcon />}
-      title="등록된 품목이 없습니다"
-      description="새로운 품목을 등록하여 관리를 시작하세요."
+      title="등록된 상품이 없습니다"
+      description="새로운 상품을 등록하여 판매를 시작하세요."
       action={
-        <CreateButton to="/product-template/create">
-          첫 품목 등록하기
-        </CreateButton>
+        <CreateButton to="/product/hotel/create">첫 상품 등록하기</CreateButton>
       }
     />
   );
@@ -224,6 +206,16 @@ function getTypeLabel(type: 'HOTEL' | 'E-TICKET' | 'DELIVERY'): string {
   return labels[type] || type;
 }
 
+// 상태 라벨 변환 함수
+function getStatusLabel(status: 'VISIBLE' | 'HIDDEN' | 'SOLD_OUT'): string {
+  const labels = {
+    VISIBLE: '판매중',
+    HIDDEN: '숨김',
+    SOLD_OUT: '품절',
+  };
+  return labels[status] || status;
+}
+
 // 체크박스
 const Checkbox = tw.input`
   w-4
@@ -235,7 +227,7 @@ const Checkbox = tw.input`
   cursor-pointer
 `;
 
-// 타입별 색상 뱃지 (작게)
+// 타입별 색상 뱃지
 const TypeBadge = tw.span<{ type: string }>`
   inline-flex
   items-center
@@ -259,8 +251,31 @@ const TypeBadge = tw.span<{ type: string }>`
   }}
 `;
 
-// 품목명 표시 - 굵은 글씨로 강조
-const ProductTemplateName = tw.div`
+// 상태 뱃지
+const StatusBadge = tw.span<{ status: string }>`
+  inline-flex
+  items-center
+  px-2
+  py-0.5
+  rounded
+  text-xs
+  font-medium
+  ${(props) => {
+    switch (props.status) {
+      case 'VISIBLE':
+        return 'bg-green-100 text-green-800';
+      case 'HIDDEN':
+        return 'bg-gray-100 text-gray-600';
+      case 'SOLD_OUT':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-600';
+    }
+  }}
+`;
+
+// 상품명 표시
+const ProductName = tw.div`
   font-medium
   text-gray-900
   inline
@@ -272,73 +287,40 @@ const BrandName = tw.div`
   text-gray-900
 `;
 
-// 카테고리 리스트
-const CategoryList = tw.div`
-  text-sm
-  text-gray-600
-`;
-
-// 상태 뱃지 (연동/미연동)
-const StatusBadge = tw.span<{ isActive: boolean }>`
-  inline-flex
-  items-center
-  px-2
-  py-0.5
-  rounded
-  text-xs
-  font-medium
-  ${(props) =>
-    props.isActive
-      ? 'bg-green-100 text-green-800'
-      : 'bg-gray-100 text-gray-600'}
-`;
-
-// Y/N 상태 표시
-const StatusValue = tw.div`
-  text-sm
-  font-medium
-  text-gray-900
-`;
-
-// 날짜 텍스트
+// 날짜 표시
 const DateText = tw.div`
   text-sm
-  text-gray-500
+  text-gray-600
 `;
 
 // 액션 버튼 컨테이너
 const ActionsContainer = tw.div`
   flex
   gap-2
+  justify-start
 `;
 
 // 수정 버튼
 const EditButton = tw(Link)`
-  px-3
-  py-1
   text-sm
   text-blue-600
-  border
-  border-blue-600
-  rounded
-  hover:bg-blue-50
+  hover:text-blue-800
+  font-medium
+  cursor-pointer
   transition-colors
 `;
 
 // 삭제 버튼
 const DeleteButton = tw.button`
-  px-3
-  py-1
   text-sm
   text-red-600
-  border
-  border-red-600
-  rounded
-  hover:bg-red-50
+  hover:text-red-800
+  font-medium
+  cursor-pointer
   transition-colors
 `;
 
-// 새 품목 등록 버튼
+// 새 상품 등록 버튼
 const CreateButton = tw(Link)`
   px-4
   py-2
@@ -348,4 +330,5 @@ const CreateButton = tw(Link)`
   hover:bg-blue-700
   transition-colors
   font-medium
+  inline-block
 `;
