@@ -133,30 +133,31 @@ export const getHotelOptionRepository = (
         }
 
         // 3. 옵션 저장 (배치 처리)
-        const optionsToSave: HotelOptionEntity[] = [];
+        const optionsToSave = options
+          .map(option => {
+            if (option.id) {
+              const existingOption = existingOptions.find(
+                (existing: HotelOptionEntity) => existing.id === option.id
+              );
+              if (!existingOption) return null;
 
-        for (const option of options) {
-          if (option.id) {
-            // 기존 옵션 업데이트
-            const existingOption = existingOptions.find(
-              (existing: HotelOptionEntity) => existing.id === option.id
-            );
-            if (existingOption) {
-              existingOption.name = option.name;
-              existingOption.priceByDate = option.priceByDate;
-              existingOption.anotherPriceByDate = option.anotherPriceByDate;
-              optionsToSave.push(existingOption);
+              return Object.assign(existingOption, {
+                name: option.name,
+                priceByDate: option.priceByDate,
+                anotherPriceByDate: option.anotherPriceByDate,
+              });
             }
-          } else {
-            // 새 옵션 생성
-            const newOption = new HotelOptionEntity();
-            newOption.productId = productId;
-            newOption.name = option.name;
-            newOption.priceByDate = option.priceByDate;
-            newOption.anotherPriceByDate = option.anotherPriceByDate;
-            optionsToSave.push(newOption);
-          }
-        }
+
+            return Object.assign(new HotelOptionEntity(), {
+              productId,
+              name: option.name,
+              priceByDate: option.priceByDate,
+              anotherPriceByDate: option.anotherPriceByDate,
+            });
+          })
+          .filter(
+            (option): option is HotelOptionEntity => option !== null
+          );
 
         if (optionsToSave.length > 0) {
           await this.save(optionsToSave);
