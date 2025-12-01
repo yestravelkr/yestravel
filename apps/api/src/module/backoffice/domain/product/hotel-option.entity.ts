@@ -113,7 +113,7 @@ export const getHotelOptionRepository = (
         options: HotelOptionInput[]
       ): Promise<void> {
         // 1. 기존 옵션 조회
-        const existingOptions = await this.find({
+        const existingOptions: HotelOptionEntity[] = await this.find({
           where: { productId },
         });
 
@@ -123,11 +123,13 @@ export const getHotelOptionRepository = (
           .map(opt => opt.id as number);
 
         const optionsToDelete = existingOptions.filter(
-          existing => !inputOptionIds.includes(existing.id)
+          (existing: HotelOptionEntity) => !inputOptionIds.includes(existing.id)
         );
 
         if (optionsToDelete.length > 0) {
-          await this.softDelete(optionsToDelete.map(opt => opt.id));
+          await this.softDelete(
+            optionsToDelete.map((opt: HotelOptionEntity) => opt.id)
+          );
         }
 
         // 3. 옵션 저장 (배치 처리)
@@ -137,7 +139,7 @@ export const getHotelOptionRepository = (
           if (option.id) {
             // 기존 옵션 업데이트
             const existingOption = existingOptions.find(
-              existing => existing.id === option.id
+              (existing: HotelOptionEntity) => existing.id === option.id
             );
             if (existingOption) {
               existingOption.name = option.name;

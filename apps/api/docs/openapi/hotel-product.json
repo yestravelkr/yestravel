@@ -69,6 +69,11 @@
                       "2025-01-15": 30000,
                       "2025-01-16": 30000,
                       "2025-01-17": 35000
+                    },
+                    "anotherPriceByDate": {
+                      "2025-01-15": { "supplyPrice": 25000, "commission": 5000 },
+                      "2025-01-16": { "supplyPrice": 25000, "commission": 5000 },
+                      "2025-01-17": { "supplyPrice": 28000, "commission": 7000 }
                     }
                   },
                   {
@@ -76,6 +81,10 @@
                     "priceByDate": {
                       "2025-01-15": 20000,
                       "2025-01-16": 20000
+                    },
+                    "anotherPriceByDate": {
+                      "2025-01-15": { "supplyPrice": 15000, "commission": 5000 },
+                      "2025-01-16": { "supplyPrice": 15000, "commission": 5000 }
                     }
                   }
                 ]
@@ -164,12 +173,19 @@
                     "priceByDate": {
                       "2025-01-15": 35000,
                       "2025-01-16": 35000
+                    },
+                    "anotherPriceByDate": {
+                      "2025-01-15": { "supplyPrice": 28000, "commission": 7000 },
+                      "2025-01-16": { "supplyPrice": 28000, "commission": 7000 }
                     }
                   },
                   {
                     "name": "얼리 체크인 (12시)",
                     "priceByDate": {
                       "2025-01-15": 15000
+                    },
+                    "anotherPriceByDate": {
+                      "2025-01-15": { "supplyPrice": 10000, "commission": 5000 }
                     }
                   }
                 ]
@@ -241,10 +257,32 @@
             "additionalProperties": {
               "type": "integer"
             },
-            "description": "날짜별 가격 (키: YYYY-MM-DD, 값: 가격)",
+            "description": "날짜별 판매가 (키: YYYY-MM-DD, 값: 판매가)",
             "example": {
               "2025-01-15": 30000,
               "2025-01-16": 35000
+            }
+          },
+          "anotherPriceByDate": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "properties": {
+                "supplyPrice": {
+                  "type": "integer",
+                  "description": "공급가"
+                },
+                "commission": {
+                  "type": "integer",
+                  "description": "수수료"
+                }
+              },
+              "required": ["supplyPrice", "commission"]
+            },
+            "description": "날짜별 공급가 및 수수료 (키: YYYY-MM-DD, 값: { supplyPrice, commission })",
+            "example": {
+              "2025-01-15": { "supplyPrice": 25000, "commission": 5000 },
+              "2025-01-16": { "supplyPrice": 28000, "commission": 7000 }
             }
           }
         }
