@@ -56,10 +56,9 @@ export function InfluencerForm({
       socialMedias: [],
       businessInfo: {
         type: 'INDIVIDUAL',
-        businessNumber: '',
-        companyName: '',
-        representativeName: '',
-        businessAddress: '',
+        name: '',
+        licenseNumber: '',
+        ceoName: '',
       },
     },
   });
@@ -287,82 +286,64 @@ export function InfluencerForm({
 
               <FieldWrapper
                 label="사업자명"
-                value={data?.businessInfo?.companyName}
+                value={data?.businessInfo?.name}
                 isEditMode={isEditMode}
                 required
                 error={
-                  errors.businessInfo?.companyName &&
-                  typeof errors.businessInfo.companyName === 'object'
-                    ? (errors.businessInfo.companyName as any).message
+                  errors.businessInfo?.name &&
+                  typeof errors.businessInfo.name === 'object'
+                    ? (errors.businessInfo.name as any).message
                     : undefined
                 }
               >
                 <Input
-                  {...register('businessInfo.companyName', {
+                  {...register('businessInfo.name', {
                     required: '사업자명은 필수입니다',
                   })}
                   placeholder="사업자명을 입력하세요"
-                  error={!!errors.businessInfo?.companyName}
+                  error={!!errors.businessInfo?.name}
                 />
               </FieldWrapper>
 
               <FieldWrapper
                 label="사업자번호"
-                value={data?.businessInfo?.businessNumber}
+                value={data?.businessInfo?.licenseNumber}
                 isEditMode={isEditMode}
                 required
                 error={
-                  errors.businessInfo?.businessNumber &&
-                  typeof errors.businessInfo.businessNumber === 'object'
-                    ? (errors.businessInfo.businessNumber as any).message
+                  errors.businessInfo?.licenseNumber &&
+                  typeof errors.businessInfo.licenseNumber === 'object'
+                    ? (errors.businessInfo.licenseNumber as any).message
                     : undefined
                 }
               >
                 <Input
-                  {...register('businessInfo.businessNumber', {
+                  {...register('businessInfo.licenseNumber', {
                     required: '사업자번호는 필수입니다',
                   })}
                   placeholder="000-00-00000"
-                  error={!!errors.businessInfo?.businessNumber}
+                  error={!!errors.businessInfo?.licenseNumber}
                 />
               </FieldWrapper>
 
               <FieldWrapper
                 label="대표자명"
-                value={data?.businessInfo?.representativeName}
+                value={data?.businessInfo?.ceoName}
                 isEditMode={isEditMode}
                 required
                 error={
-                  errors.businessInfo?.representativeName &&
-                  typeof errors.businessInfo.representativeName === 'object'
-                    ? (errors.businessInfo.representativeName as any).message
+                  errors.businessInfo?.ceoName &&
+                  typeof errors.businessInfo.ceoName === 'object'
+                    ? (errors.businessInfo.ceoName as any).message
                     : undefined
                 }
               >
                 <Input
-                  {...register('businessInfo.representativeName', {
+                  {...register('businessInfo.ceoName', {
                     required: '대표자명은 필수입니다',
                   })}
                   placeholder="대표자명을 입력하세요"
-                  error={!!errors.businessInfo?.representativeName}
-                />
-              </FieldWrapper>
-
-              <FieldWrapper
-                label="사업자 주소"
-                value={data?.businessInfo?.businessAddress}
-                isEditMode={isEditMode}
-                error={
-                  errors.businessInfo?.businessAddress &&
-                  typeof errors.businessInfo.businessAddress === 'object'
-                    ? (errors.businessInfo.businessAddress as any).message
-                    : undefined
-                }
-              >
-                <Input
-                  {...register('businessInfo.businessAddress')}
-                  placeholder="사업자 주소를 입력하세요"
-                  error={!!errors.businessInfo?.businessAddress}
+                  error={!!errors.businessInfo?.ceoName}
                 />
               </FieldWrapper>
             </FormGrid>
@@ -374,11 +355,11 @@ export function InfluencerForm({
             <FormGrid>
               <FieldWrapper
                 label="은행명"
-                value={data?.bankInfo?.bankName}
+                value={data?.bankInfo?.name}
                 isEditMode={isEditMode}
               >
                 <Input
-                  {...register('bankInfo.bankName')}
+                  {...register('bankInfo.name')}
                   placeholder="은행명을 입력하세요"
                 />
               </FieldWrapper>
