@@ -17,7 +17,7 @@ import type { RouterInputs } from '@/shared/trpc';
 type CreateInfluencerInput = RouterInputs['backofficeInfluencer']['create'];
 
 interface InfluencerFormProps {
-  data?: CreateInfluencerInput;
+  data?: Partial<CreateInfluencerInput>;
   isEditMode?: boolean;
   onSubmit?: (data: CreateInfluencerInput) => Promise<void>;
   isSubmitting?: boolean;
@@ -148,8 +148,9 @@ export function InfluencerForm({
             {/* 프로필 이미지 - 전체 너비 */}
             <FieldWrapper
               label="프로필 이미지"
-              value={data?.thumbnail}
+              value={thumbnailUrl}
               isEditMode={isEditMode}
+              type="image"
             >
               <FileUpload
                 value={thumbnailUrl}
@@ -238,6 +239,7 @@ export function InfluencerForm({
                       <Select
                         {...register(`socialMedias.${index}.platform` as const)}
                         options={platformOptions}
+                        disabled={!isEditMode}
                       />
                     </PlatformSelect>
                     <UrlInput>
