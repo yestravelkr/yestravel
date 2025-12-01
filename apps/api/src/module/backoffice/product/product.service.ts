@@ -7,7 +7,6 @@ import { RepositoryProvider } from '@src/module/shared/transaction/repository.pr
 import { HotelProductEntity } from '@src/module/backoffice/domain/product/hotel-product.entity';
 import { DeliveryProductEntity } from '@src/module/backoffice/domain/product/delivery-product.entity';
 import { ETicketProductEntity } from '@src/module/backoffice/domain/product/eticket-product.entity';
-import { HotelOptionEntity } from '@src/module/backoffice/domain/product/hotel-option.entity';
 import type {
   CreateProductInputDto,
   CreateProductResponse,
@@ -17,7 +16,6 @@ import type {
   ProductDetail,
   FindAllProductQuery,
   ProductListResponse,
-  HotelOptionInputDto,
 } from './product.dto';
 
 @Injectable()
@@ -184,7 +182,10 @@ export class ProductService {
 
         // 호텔 옵션 저장
         if (hotelInput.hotelOptions && hotelInput.hotelOptions.length > 0) {
-          await this.saveHotelOptions(savedProduct.id, hotelInput.hotelOptions);
+          await this.repositoryProvider.HotelOptionRepository.saveOptions(
+            savedProduct.id,
+            hotelInput.hotelOptions
+          );
         }
         break;
       }
@@ -304,7 +305,10 @@ export class ProductService {
           );
 
         // 호텔 옵션 업데이트 (PUT 방식: 기존 삭제 후 새로 저장)
-        await this.updateHotelOptions(input.id, input.hotelOptions || []);
+        await this.repositoryProvider.HotelOptionRepository.updateOptions(
+          input.id,
+          input.hotelOptions || []
+        );
         break;
       }
 
@@ -405,83 +409,5 @@ export class ProductService {
       id,
       message: '상품이 삭제되었습니다',
     };
-  }
-
-  /**
-   * 호텔 옵션 저장 (생성 시 사용)
-   */
-  private async saveHotelOptions(
-    productId: number,
-    options: HotelOptionInputDto[]
-  ): Promise<void> {
-    const optionEntities = options.map(option => {
-      const entity = new HotelOptionEntity();
-      entity.productId = productId;
-      entity.name = option.name;
-      entity.priceByDate = option.priceByDate;
-      entity.anotherPriceByDate = option.anotherPriceByDate;
-      return entity;
-    });
-
-    await this.repositoryProvider.HotelOptionRepository.save(optionEntities);
-  }
-
-  /**
-   * 호텔 옵션 업데이트 (PUT 방식: 기존 옵션 soft delete 후 새로 저장)
-   */
-  private async updateHotelOptions(
-    productId: number,
-    options: HotelOptionInputDto[]
-  ): Promise<void> {
-    // 1. 기존 옵션 조회
-    const existingOptions =
-      await this.repositoryProvider.HotelOptionRepository.find({
-        where: { productId },
-      });
-
-    // 2. 입력에 없는 기존 옵션들 soft delete
-    const inputOptionIds = options
-      .filter(opt => opt.id)
-      .map(opt => opt.id as number);
-
-    const optionsToDelete = existingOptions.filter(
-      existing => !inputOptionIds.includes(existing.id)
-    );
-
-    if (optionsToDelete.length > 0) {
-      await this.repositoryProvider.HotelOptionRepository.softDelete(
-        optionsToDelete.map(opt => opt.id)
-      );
-    }
-
-    // 3. 옵션 저장 (배치 처리)
-    const optionsToSave: HotelOptionEntity[] = [];
-
-    for (const option of options) {
-      if (option.id) {
-        // 기존 옵션 업데이트
-        const existingOption = existingOptions.find(
-          existing => existing.id === option.id
-        );
-        if (existingOption) {
-          existingOption.name = option.name;
-          existingOption.priceByDate = option.priceByDate;
-          existingOption.anotherPriceByDate = option.anotherPriceByDate;
-          optionsToSave.push(existingOption);
-        }
-      } else {
-        // 새 옵션 생성
-        const newOption = new HotelOptionEntity();
-        newOption.productId = productId;
-        newOption.name = option.name;
-        newOption.priceByDate = option.priceByDate;
-        newOption.anotherPriceByDate = option.anotherPriceByDate;
-        optionsToSave.push(newOption);
-      }
-    }
-
-    if (optionsToSave.length > 0) {
-      await this.repositoryProvider.HotelOptionRepository.save(optionsToSave);
-    }
   }
 }
