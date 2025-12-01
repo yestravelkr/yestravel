@@ -81,10 +81,22 @@ export class ProductService {
             );
           });
 
+        // 호텔 옵션 조회
+        const hotelOptions = await this.repositoryProvider.HotelOptionRepository.find({
+          where: { productId: id },
+          order: { id: 'ASC' },
+        });
+
         return {
           ...hotel,
           type: 'HOTEL',
           brandName: hotel.brand.name,
+          hotelOptions: hotelOptions.map(opt => ({
+            id: opt.id,
+            name: opt.name,
+            priceByDate: opt.priceByDate,
+            anotherPriceByDate: opt.anotherPriceByDate,
+          })),
         };
       }
 
