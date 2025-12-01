@@ -1,21 +1,15 @@
 import { useNavigate, Link } from '@tanstack/react-router';
 import { createColumnHelper } from '@tanstack/react-table';
+import dayjs from 'dayjs';
 import tw from 'tailwind-styled-components';
 
 import { InboxIcon } from '@/components/icons';
 import { Table, EmptyState } from '@/shared/components';
-import { trpc } from '@/shared/trpc';
+import { trpc, type RouterOutputs } from '@/shared/trpc';
 
-// Influencer 타입 정의 (API 응답 기반)
-interface Influencer {
-  id: number;
-  name: string;
-  email?: string | null;
-  phoneNumber?: string | null;
-  instagramHandle?: string | null;
-  followerCount?: number | null;
-  createdAt: string;
-}
+// tRPC에서 타입 추출
+type InfluencerListItem =
+  RouterOutputs['backofficeInfluencer']['findAll']['data'][number];
 
 export function InfluencerList() {
   const navigate = useNavigate();
@@ -25,7 +19,7 @@ export function InfluencerList() {
     limit: 50,
   });
 
-  const columnHelper = createColumnHelper<Influencer>();
+  const columnHelper = createColumnHelper<InfluencerListItem>();
 
   const columns = [
     columnHelper.accessor('name', {
@@ -40,24 +34,6 @@ export function InfluencerList() {
       ),
       size: 300,
     }),
-    columnHelper.accessor('instagramHandle', {
-      header: '인스타그램',
-      cell: (info) => (
-        <InstagramHandle>
-          {info.getValue() ? `@${info.getValue()}` : '-'}
-        </InstagramHandle>
-      ),
-      size: 250,
-    }),
-    columnHelper.accessor('followerCount', {
-      header: '팔로워',
-      cell: (info) => (
-        <FollowerCount>
-          {info.getValue() ? `${info.getValue()?.toLocaleString()}명` : '-'}
-        </FollowerCount>
-      ),
-      size: 150,
-    }),
     columnHelper.accessor('phoneNumber', {
       header: '연락처',
       cell: (info) => <PhoneNumber>{info.getValue() || '-'}</PhoneNumber>,
@@ -66,15 +42,13 @@ export function InfluencerList() {
     columnHelper.accessor('createdAt', {
       header: '등록일',
       cell: (info) => (
-        <CreatedAt>
-          {new Date(info.getValue()).toLocaleDateString('ko-KR')}
-        </CreatedAt>
+        <CreatedAt>{dayjs(info.getValue()).format('YYYY-MM-DD')}</CreatedAt>
       ),
       size: 150,
     }),
   ];
 
-  const handleRowClick = (influencer: Influencer) => {
+  const handleRowClick = (influencer: InfluencerListItem) => {
     navigate({ to: `/influencer/${influencer.id}` });
   };
 
@@ -112,16 +86,6 @@ const InfluencerName = tw.div`
 const InfluencerEmail = tw.div`
   text-sm
   text-gray-500
-`;
-
-const InstagramHandle = tw.div`
-  text-sm
-  text-gray-900
-`;
-
-const FollowerCount = tw.div`
-  text-sm
-  text-gray-900
 `;
 
 const PhoneNumber = tw.div`
