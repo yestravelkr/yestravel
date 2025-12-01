@@ -232,7 +232,7 @@ const appRouter = t.router({
         useStock: z.boolean().default(false),
         useOptions: z.boolean().default(false),
         delivery: z.object({
-          deliveryFeeType: z.enum(DELIVERY_FEE_TYPE_ENUM_VALUE),
+          deliveryFeeType: z.enum(['FREE', 'PAID', 'CONDITIONAL_FREE']),
           deliveryFee: z.number().int().nonnegative().default(0),
           freeDeliveryMinAmount: z.number().int().nonnegative().default(0),
           returnDeliveryFee: z.number().int().nonnegative().default(0),
@@ -259,7 +259,7 @@ const appRouter = t.router({
       }),
     ])).output(z.object({
       id: z.number(),
-      type: z.enum(PRODUCT_TYPE_ENUM_VALUE),
+      type: z.enum(['HOTEL', 'E-TICKET', 'DELIVERY']),
       name: z.string(),
       message: z.string(),
     })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
@@ -291,7 +291,7 @@ const appRouter = t.router({
       useOptions: z.boolean().optional(),
       delivery: z
         .object({
-          deliveryFeeType: z.enum(DELIVERY_FEE_TYPE_ENUM_VALUE),
+          deliveryFeeType: z.enum(['FREE', 'PAID', 'CONDITIONAL_FREE']),
           deliveryFee: z.number().int().nonnegative().optional(),
           freeDeliveryMinAmount: z.number().int().nonnegative().optional(),
           returnDeliveryFee: z.number().int().nonnegative().optional(),
@@ -323,9 +323,9 @@ const appRouter = t.router({
         limit: z.number().int().positive().default(30),
         orderBy: z.string().default('createdAt'),
         order: z.enum(['ASC', 'DESC']).default('DESC'),
-        type: z.enum(PRODUCT_TYPE_ENUM_VALUE).nullish(),
+        type: z.enum(['HOTEL', 'E-TICKET', 'DELIVERY']).nullish(),
         name: z.string().nullish(),
-        status: z.enum(PRODUCT_STATUS_ENUM_VALUE).nullish(),
+        status: z.enum(['VISIBLE', 'HIDDEN', 'SOLD_OUT']).nullish(),
         brandIds: z.array(z.number().int()).nullish(),
         dateFilterType: z
           .enum(['CREATED_AT', 'UPDATED_AT'])
@@ -338,14 +338,14 @@ const appRouter = t.router({
         data: z.array(
           z.object({
             id: z.number(),
-            type: z.enum(PRODUCT_TYPE_ENUM_VALUE),
+            type: z.enum(['HOTEL', 'E-TICKET', 'DELIVERY']),
             name: z.string(),
             brand: z.object({
               id: z.number(),
               name: z.string(),
             }),
             price: z.number(),
-            status: z.enum(PRODUCT_STATUS_ENUM_VALUE),
+            status: z.enum(['VISIBLE', 'HIDDEN', 'SOLD_OUT']),
             useStock: z.boolean(),
             useCalendar: z.boolean(),
             createdAt: z.date(),
@@ -376,7 +376,7 @@ const appRouter = t.router({
         useStock: z.boolean(),
         useOptions: z.boolean(),
         price: z.number(),
-        status: z.enum(PRODUCT_STATUS_ENUM_VALUE),
+        status: z.enum(['VISIBLE', 'HIDDEN', 'SOLD_OUT']),
         displayOrder: z.number().nullish(),
         baseCapacity: z.number(),
         maxCapacity: z.number(),
@@ -403,10 +403,10 @@ const appRouter = t.router({
         useStock: z.boolean(),
         useOptions: z.boolean(),
         price: z.number(),
-        status: z.enum(PRODUCT_STATUS_ENUM_VALUE),
+        status: z.enum(['VISIBLE', 'HIDDEN', 'SOLD_OUT']),
         displayOrder: z.number().nullish(),
         delivery: z.object({
-          deliveryFeeType: z.enum(DELIVERY_FEE_TYPE_ENUM_VALUE),
+          deliveryFeeType: z.enum(['FREE', 'PAID', 'CONDITIONAL_FREE']),
           deliveryFee: z.number().int().nonnegative().default(0),
           freeDeliveryMinAmount: z.number().int().nonnegative().default(0),
           returnDeliveryFee: z.number().int().nonnegative().default(0),
@@ -437,7 +437,7 @@ const appRouter = t.router({
         useStock: z.boolean(),
         useOptions: z.boolean(),
         price: z.number(),
-        status: z.enum(PRODUCT_STATUS_ENUM_VALUE),
+        status: z.enum(['VISIBLE', 'HIDDEN', 'SOLD_OUT']),
         displayOrder: z.number().nullish(),
         createdAt: z.date(),
         updatedAt: z.date(),
@@ -459,7 +459,7 @@ const appRouter = t.router({
         useStock: z.boolean().default(false),
         useOptions: z.boolean().default(false),
         price: z.number().int().min(0, '가격은 0 이상이어야 합니다'),
-        status: z.enum(PRODUCT_STATUS_ENUM_VALUE).default('VISIBLE'),
+        status: z.enum(['VISIBLE', 'HIDDEN', 'SOLD_OUT']).default('VISIBLE'),
         displayOrder: z.number().int().nullish(),
         baseCapacity: z
           .number()
@@ -495,10 +495,10 @@ const appRouter = t.router({
         useStock: z.boolean().default(false),
         useOptions: z.boolean().default(false),
         price: z.number().int().min(0, '가격은 0 이상이어야 합니다'),
-        status: z.enum(PRODUCT_STATUS_ENUM_VALUE).default('VISIBLE'),
+        status: z.enum(['VISIBLE', 'HIDDEN', 'SOLD_OUT']).default('VISIBLE'),
         displayOrder: z.number().int().nullish(),
         delivery: z.object({
-          deliveryFeeType: z.enum(DELIVERY_FEE_TYPE_ENUM_VALUE),
+          deliveryFeeType: z.enum(['FREE', 'PAID', 'CONDITIONAL_FREE']),
           deliveryFee: z.number().int().nonnegative().default(0),
           freeDeliveryMinAmount: z.number().int().nonnegative().default(0),
           returnDeliveryFee: z.number().int().nonnegative().default(0),
@@ -526,12 +526,12 @@ const appRouter = t.router({
         useStock: z.boolean().default(false),
         useOptions: z.boolean().default(false),
         price: z.number().int().min(0, '가격은 0 이상이어야 합니다'),
-        status: z.enum(PRODUCT_STATUS_ENUM_VALUE).default('VISIBLE'),
+        status: z.enum(['VISIBLE', 'HIDDEN', 'SOLD_OUT']).default('VISIBLE'),
         displayOrder: z.number().int().nullish(),
       }),
     ])).output(z.object({
       id: z.number(),
-      type: z.enum(PRODUCT_TYPE_ENUM_VALUE),
+      type: z.enum(['HOTEL', 'E-TICKET', 'DELIVERY']),
       name: z.string(),
       message: z.string(),
     })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
@@ -552,7 +552,7 @@ const appRouter = t.router({
         useStock: z.boolean().default(false),
         useOptions: z.boolean().default(false),
         price: z.number().int().min(0, '가격은 0 이상이어야 합니다'),
-        status: z.enum(PRODUCT_STATUS_ENUM_VALUE).default('VISIBLE'),
+        status: z.enum(['VISIBLE', 'HIDDEN', 'SOLD_OUT']).default('VISIBLE'),
         displayOrder: z.number().int().nullish(),
         baseCapacity: z
           .number()
@@ -589,10 +589,10 @@ const appRouter = t.router({
         useStock: z.boolean().default(false),
         useOptions: z.boolean().default(false),
         price: z.number().int().min(0, '가격은 0 이상이어야 합니다'),
-        status: z.enum(PRODUCT_STATUS_ENUM_VALUE).default('VISIBLE'),
+        status: z.enum(['VISIBLE', 'HIDDEN', 'SOLD_OUT']).default('VISIBLE'),
         displayOrder: z.number().int().nullish(),
         delivery: z.object({
-          deliveryFeeType: z.enum(DELIVERY_FEE_TYPE_ENUM_VALUE),
+          deliveryFeeType: z.enum(['FREE', 'PAID', 'CONDITIONAL_FREE']),
           deliveryFee: z.number().int().nonnegative().default(0),
           freeDeliveryMinAmount: z.number().int().nonnegative().default(0),
           returnDeliveryFee: z.number().int().nonnegative().default(0),
@@ -621,7 +621,7 @@ const appRouter = t.router({
         useStock: z.boolean().default(false),
         useOptions: z.boolean().default(false),
         price: z.number().int().min(0, '가격은 0 이상이어야 합니다'),
-        status: z.enum(PRODUCT_STATUS_ENUM_VALUE).default('VISIBLE'),
+        status: z.enum(['VISIBLE', 'HIDDEN', 'SOLD_OUT']).default('VISIBLE'),
         displayOrder: z.number().int().nullish(),
       }),
     ])).output(z.object({
@@ -647,7 +647,7 @@ const appRouter = t.router({
           name: z.string(),
           email: z.string().nullish(),
           phoneNumber: z.string().nullish(),
-          createdAt: z.string(),
+          createdAt: z.date(),
         })
       ),
       total: z.number(),
@@ -659,13 +659,13 @@ const appRouter = t.router({
       thumbnail: z.string().nullish(),
       businessInfo: z.object({
         type: z.enum(BUSINESS_TYPE_ENUM_VALUE).nullish(),
-        businessNumber: z.string().nullish(),
-        companyName: z.string().nullish(),
-        representativeName: z.string().nullish(),
-        businessAddress: z.string().nullish(),
+        name: z.string().nullish(),
+        licenseNumber: z.string().nullish(),
+        ceoName: z.string().nullish(),
+        licenseFileUrl: z.string().nullish(),
       }).nullish(),
       bankInfo: z.object({
-        bankName: z.string().nullish(),
+        name: z.string().nullish(),
         accountNumber: z.string().nullish(),
         accountHolder: z.string().nullish(),
       }).nullish(),
@@ -710,13 +710,13 @@ const appRouter = t.router({
       thumbnail: z.string().nullish(),
       businessInfo: z.object({
         type: z.enum(BUSINESS_TYPE_ENUM_VALUE).nullish(),
-        businessNumber: z.string().nullish(),
-        companyName: z.string().nullish(),
-        representativeName: z.string().nullish(),
-        businessAddress: z.string().nullish(),
+        name: z.string().nullish(),
+        licenseNumber: z.string().nullish(),
+        ceoName: z.string().nullish(),
+        licenseFileUrl: z.string().nullish(),
       }).nullish(),
       bankInfo: z.object({
-        bankName: z.string().nullish(),
+        name: z.string().nullish(),
         accountNumber: z.string().nullish(),
         accountHolder: z.string().nullish(),
       }).nullish(),
