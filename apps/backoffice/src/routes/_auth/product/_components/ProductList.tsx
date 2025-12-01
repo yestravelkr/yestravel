@@ -1,4 +1,4 @@
-import { useNavigate, Link } from '@tanstack/react-router';
+import { Link } from '@tanstack/react-router';
 import { createColumnHelper } from '@tanstack/react-table';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -26,7 +26,6 @@ interface Product {
 }
 
 export function ProductList() {
-  const navigate = useNavigate();
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const utils = trpc.useUtils();
 
@@ -67,10 +66,19 @@ export function ProductList() {
   };
 
   // 삭제 처리
-  const handleDelete = async (id: number, name: string) => {
-    if (confirm(`"${name}" 상품을 삭제하시겠습니까?`)) {
-      await deleteMutation.mutateAsync({ id });
-    }
+  const handleDelete = (id: number, name: string) => {
+    toast(`"${name}" 상품을 삭제하시겠습니까?`, {
+      action: {
+        label: '삭제',
+        onClick: async () => {
+          await deleteMutation.mutateAsync({ id });
+        },
+      },
+      cancel: {
+        label: '취소',
+        onClick: () => {},
+      },
+    });
   };
 
   const columnHelper = createColumnHelper<Product>();
@@ -182,7 +190,7 @@ export function ProductList() {
       title="등록된 상품이 없습니다"
       description="새로운 상품을 등록하여 판매를 시작하세요."
       action={
-        <CreateButton to="/product/create">첫 상품 등록하기</CreateButton>
+        <CreateButton to="/product/hotel/create">첫 상품 등록하기</CreateButton>
       }
     />
   );
@@ -276,20 +284,6 @@ const ProductName = tw.div`
 // 브랜드명 표시
 const BrandName = tw.div`
   text-sm
-  text-gray-900
-`;
-
-// 가격 표시
-const PriceText = tw.div`
-  text-sm
-  font-medium
-  text-gray-900
-`;
-
-// Y/N 상태 표시
-const StatusValue = tw.div`
-  text-sm
-  font-medium
   text-gray-900
 `;
 
