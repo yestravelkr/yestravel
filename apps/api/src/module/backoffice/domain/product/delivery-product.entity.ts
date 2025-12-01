@@ -5,6 +5,20 @@ import { ProductTypeEnum } from '@src/module/backoffice/admin/admin.schema';
 import { TransactionService } from '@src/module/shared/transaction/transaction.service';
 import { getEntityManager } from '@src/database/datasources';
 import type { Nullish } from '@src/types/utility.type';
+import type { DeliveryFeeTypeEnumType } from '@src/module/backoffice/admin/admin.schema';
+
+// 배송 정책 Input (Entity 메서드 제외, 데이터 필드만)
+export interface DeliveryPolicyInput {
+  deliveryFeeType: DeliveryFeeTypeEnumType;
+  deliveryFee: number;
+  freeDeliveryMinAmount: number;
+  returnDeliveryFee: number;
+  exchangeDeliveryFee: number;
+  remoteAreaExtraFee: number;
+  jejuExtraFee: number;
+  isJejuRestricted: boolean;
+  isRemoteIslandRestricted: boolean;
+}
 
 export interface CreateDeliveryProductInput {
   name: string;
@@ -20,7 +34,7 @@ export interface CreateDeliveryProductInput {
   price: number;
   status?: 'VISIBLE' | 'HIDDEN' | 'SOLD_OUT';
   displayOrder?: Nullish<number>;
-  delivery: DeliveryPolicyEntity;
+  delivery: DeliveryPolicyInput;
   exchangeReturnInfo?: string;
   productInfoNotice?: string;
 }

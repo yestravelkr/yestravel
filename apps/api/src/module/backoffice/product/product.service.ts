@@ -7,6 +7,7 @@ import { RepositoryProvider } from '@src/module/shared/transaction/repository.pr
 import { HotelProductEntity } from '@src/module/backoffice/domain/product/hotel-product.entity';
 import { DeliveryProductEntity } from '@src/module/backoffice/domain/product/delivery-product.entity';
 import { ETicketProductEntity } from '@src/module/backoffice/domain/product/eticket-product.entity';
+import { HotelOptionEntity } from '@src/module/backoffice/domain/product/hotel-option.entity';
 import type {
   CreateProductInputDto,
   CreateProductResponse,
@@ -16,6 +17,7 @@ import type {
   ProductDetail,
   FindAllProductQuery,
   ProductListResponse,
+  HotelOptionInputDto,
 } from './product.dto';
 
 @Injectable()
@@ -173,11 +175,17 @@ export class ProductService {
 
     switch (input.type) {
       case 'HOTEL': {
-        const hotelProduct = HotelProductEntity.createFromInput(input as any);
+        const hotelInput = input;
+        const hotelProduct = HotelProductEntity.createFromInput(hotelInput);
         savedProduct =
           await this.repositoryProvider.HotelProductRepository.save(
             hotelProduct
           );
+
+        // 호텔 옵션 저장
+        if (hotelInput.hotelOptions && hotelInput.hotelOptions.length > 0) {
+          await this.saveHotelOptions(savedProduct.id, hotelInput.hotelOptions);
+        }
         break;
       }
 
@@ -188,9 +196,7 @@ export class ProductService {
           );
         }
 
-        const deliveryProduct = DeliveryProductEntity.createFromInput(
-          input as any
-        );
+        const deliveryProduct = DeliveryProductEntity.createFromInput(input);
         savedProduct =
           await this.repositoryProvider.DeliveryProductRepository.save(
             deliveryProduct
@@ -199,9 +205,7 @@ export class ProductService {
       }
 
       case 'E-TICKET': {
-        const eticketProduct = ETicketProductEntity.createFromInput(
-          input as any
-        );
+        const eticketProduct = ETicketProductEntity.createFromInput(input);
         savedProduct =
           await this.repositoryProvider.ETicketProductRepository.save(
             eticketProduct
@@ -211,7 +215,7 @@ export class ProductService {
 
       default:
         throw new BadRequestException(
-          `지원하지 않는 상품 타입입니다: ${(input as any).type}`
+          `지원하지 않는 상품 타입입니다: ${input as never}`
         );
     }
 
@@ -266,13 +270,20 @@ export class ProductService {
       });
     }
 
-    // 5. 타입에 따라 적절한 Repository에서 업데이트
+    // 5. 요청 타입과 기존 상품 타입 일치 확인
+    if (existingProduct.type !== input.type) {
+      throw new BadRequestException(
+        `상품 타입을 변경할 수 없습니다. 기존: ${existingProduct.type}, 요청: ${input.type}`
+      );
+    }
+
+    // 6. 타입에 따라 적절한 Repository에서 업데이트
     let updatedProduct:
       | HotelProductEntity
       | DeliveryProductEntity
       | ETicketProductEntity;
 
-    switch (existingProduct.type) {
+    switch (input.type) {
       case 'HOTEL': {
         // 기존 엔티티 조회
         const hotelProduct =
@@ -285,19 +296,20 @@ export class ProductService {
           });
 
         // 헬퍼 메서드로 필드 업데이트
-        hotelProduct.updateFromInput(input as any);
+        hotelProduct.updateFromInput(input);
 
         updatedProduct =
           await this.repositoryProvider.HotelProductRepository.save(
             hotelProduct
           );
+
+        // 호텔 옵션 업데이트 (PUT 방식: 기존 삭제 후 새로 저장)
+        await this.updateHotelOptions(input.id, input.hotelOptions || []);
         break;
       }
 
       case 'DELIVERY': {
-        const deliveryInput = input as any;
-
-        if (!deliveryInput.delivery) {
+        if (!input.delivery) {
           throw new BadRequestException(
             '배송상품 수정 시 배송 정책은 필수입니다'
           );
@@ -316,7 +328,7 @@ export class ProductService {
           });
 
         // 헬퍼 메서드로 필드 업데이트
-        deliveryProduct.updateFromInput(deliveryInput);
+        deliveryProduct.updateFromInput(input);
 
         updatedProduct =
           await this.repositoryProvider.DeliveryProductRepository.save(
@@ -337,7 +349,7 @@ export class ProductService {
           });
 
         // 헬퍼 메서드로 필드 업데이트
-        eticketProduct.updateFromInput(input as any);
+        eticketProduct.updateFromInput(input);
 
         updatedProduct =
           await this.repositoryProvider.ETicketProductRepository.save(
@@ -348,7 +360,7 @@ export class ProductService {
 
       default:
         throw new BadRequestException(
-          `지원하지 않는 상품 타입입니다: ${existingProduct.type}`
+          `지원하지 않는 상품 타입입니다: ${input as never}`
         );
     }
 
@@ -393,5 +405,76 @@ export class ProductService {
       id,
       message: '상품이 삭제되었습니다',
     };
+  }
+
+  /**
+   * 호텔 옵션 저장 (생성 시 사용)
+   */
+  private async saveHotelOptions(
+    productId: number,
+    options: HotelOptionInputDto[]
+  ): Promise<void> {
+    const optionEntities = options.map(option => {
+      const entity = new HotelOptionEntity();
+      entity.productId = productId;
+      entity.name = option.name;
+      entity.priceByDate = option.priceByDate;
+      return entity;
+    });
+
+    await this.repositoryProvider.HotelOptionRepository.save(optionEntities);
+  }
+
+  /**
+   * 호텔 옵션 업데이트 (PUT 방식: 기존 옵션 soft delete 후 새로 저장)
+   */
+  private async updateHotelOptions(
+    productId: number,
+    options: HotelOptionInputDto[]
+  ): Promise<void> {
+    // 1. 기존 옵션 조회
+    const existingOptions =
+      await this.repositoryProvider.HotelOptionRepository.find({
+        where: { productId },
+      });
+
+    // 2. 입력에 없는 기존 옵션들 soft delete
+    const inputOptionIds = options
+      .filter(opt => opt.id)
+      .map(opt => opt.id as number);
+
+    const optionsToDelete = existingOptions.filter(
+      existing => !inputOptionIds.includes(existing.id)
+    );
+
+    if (optionsToDelete.length > 0) {
+      await this.repositoryProvider.HotelOptionRepository.softDelete(
+        optionsToDelete.map(opt => opt.id)
+      );
+    }
+
+    // 3. 옵션 저장 (id가 있으면 업데이트, 없으면 생성)
+    for (const option of options) {
+      if (option.id) {
+        // 기존 옵션 업데이트
+        const existingOption = existingOptions.find(
+          existing => existing.id === option.id
+        );
+        if (existingOption) {
+          existingOption.name = option.name;
+          existingOption.priceByDate = option.priceByDate;
+          await this.repositoryProvider.HotelOptionRepository.save(
+            existingOption
+          );
+        }
+      } else {
+        // 새 옵션 생성
+        const newOption = new HotelOptionEntity();
+        newOption.productId = productId;
+        newOption.name = option.name;
+        newOption.priceByDate = option.priceByDate;
+        await this.repositoryProvider.HotelOptionRepository.save(newOption);
+      }
+    }
   }
 }

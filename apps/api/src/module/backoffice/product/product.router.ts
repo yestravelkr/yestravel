@@ -212,6 +212,17 @@ export class ProductRouter extends BaseTrpcRouter {
           .transform(normalizeTime),
         bedTypes: z.array(z.string()).default([]),
         tags: z.array(z.string()).default([]),
+        hotelOptions: z
+          .array(
+            z.object({
+              id: z.number().int().positive().nullish(),
+              name: z.string().min(1, '옵션명은 필수입니다'),
+              priceByDate: z
+                .record(z.string(), z.number().int().nonnegative())
+                .default({}),
+            })
+          )
+          .default([]),
       }),
       // Delivery Product
       z.object({
@@ -303,6 +314,17 @@ export class ProductRouter extends BaseTrpcRouter {
           .transform(normalizeTime),
         bedTypes: z.array(z.string()).default([]),
         tags: z.array(z.string()).default([]),
+        hotelOptions: z
+          .array(
+            z.object({
+              id: z.number().int().positive().nullish(),
+              name: z.string().min(1, '옵션명은 필수입니다'),
+              priceByDate: z
+                .record(z.string(), z.number().int().nonnegative())
+                .default({}),
+            })
+          )
+          .default([]),
       }),
       // Delivery Product Update
       z.object({

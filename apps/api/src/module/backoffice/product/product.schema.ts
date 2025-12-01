@@ -5,6 +5,13 @@ import {
   TIME_FORMAT_ERROR_MESSAGE_KO,
 } from '@src/utils/time.util';
 
+// HotelOption Input 스키마
+export const hotelOptionInputSchema = z.object({
+  id: z.number().int().positive().nullish(), // 기존 옵션 수정 시 사용
+  name: z.string().min(1, '옵션명은 필수입니다'),
+  priceByDate: z.record(z.string(), z.number().int().nonnegative()).default({}),
+});
+
 // DeliveryPolicy 스키마
 const deliveryPolicySchema = z.object({
   deliveryFeeType: z.enum(['FREE', 'PAID', 'CONDITIONAL_FREE']),
@@ -52,6 +59,7 @@ const hotelProductInputSchema = baseProductInputSchema.extend({
     .transform(normalizeTime),
   bedTypes: z.array(z.string()).default([]),
   tags: z.array(z.string()).default([]),
+  hotelOptions: z.array(hotelOptionInputSchema).default([]),
 });
 
 // Delivery Product Input Schema
