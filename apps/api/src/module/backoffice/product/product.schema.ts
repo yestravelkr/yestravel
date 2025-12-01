@@ -10,6 +10,15 @@ export const hotelOptionInputSchema = z.object({
   id: z.number().int().positive().nullish(), // 기존 옵션 수정 시 사용
   name: z.string().min(1, '옵션명은 필수입니다'),
   priceByDate: z.record(z.string(), z.number().int().nonnegative()).default({}),
+  anotherPriceByDate: z
+    .record(
+      z.string(),
+      z.object({
+        supplyPrice: z.number().int().nonnegative(),
+        commission: z.number().int().nonnegative(),
+      })
+    )
+    .default({}),
 });
 
 // DeliveryPolicy 스키마

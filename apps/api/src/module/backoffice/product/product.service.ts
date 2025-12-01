@@ -419,6 +419,7 @@ export class ProductService {
       entity.productId = productId;
       entity.name = option.name;
       entity.priceByDate = option.priceByDate;
+      entity.anotherPriceByDate = option.anotherPriceByDate;
       return entity;
     });
 
@@ -453,7 +454,9 @@ export class ProductService {
       );
     }
 
-    // 3. 옵션 저장 (id가 있으면 업데이트, 없으면 생성)
+    // 3. 옵션 저장 (배치 처리)
+    const optionsToSave: HotelOptionEntity[] = [];
+
     for (const option of options) {
       if (option.id) {
         // 기존 옵션 업데이트
@@ -463,9 +466,8 @@ export class ProductService {
         if (existingOption) {
           existingOption.name = option.name;
           existingOption.priceByDate = option.priceByDate;
-          await this.repositoryProvider.HotelOptionRepository.save(
-            existingOption
-          );
+          existingOption.anotherPriceByDate = option.anotherPriceByDate;
+          optionsToSave.push(existingOption);
         }
       } else {
         // 새 옵션 생성
@@ -473,8 +475,13 @@ export class ProductService {
         newOption.productId = productId;
         newOption.name = option.name;
         newOption.priceByDate = option.priceByDate;
-        await this.repositoryProvider.HotelOptionRepository.save(newOption);
+        newOption.anotherPriceByDate = option.anotherPriceByDate;
+        optionsToSave.push(newOption);
       }
+    }
+
+    if (optionsToSave.length > 0) {
+      await this.repositoryProvider.HotelOptionRepository.save(optionsToSave);
     }
   }
 }

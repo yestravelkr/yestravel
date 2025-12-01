@@ -46,6 +46,24 @@ export class HotelOptionEntity extends SoftDeleteEntity implements HotelOption {
    */
   @Column('jsonb', { name: 'price_by_date', default: {} })
   priceByDate: Record<string, number>;
+
+  /**
+   * 날짜별 공급가 및 수수료 (JSONB)
+   * Record<string, { supplyPrice: number; commission: number }> 형태로 저장
+   *
+   * 예시:
+   * {
+   *   "2025-01-15": { "supplyPrice": 25000, "commission": 5000 },
+   *   "2025-01-16": { "supplyPrice": 28000, "commission": 7000 }
+   * }
+   *
+   * 날짜 형식: YYYY-MM-DD (체크인 날짜 기준)
+   */
+  @Column('jsonb', { name: 'another_price_by_date', default: {} })
+  anotherPriceByDate: Record<
+    string,
+    { supplyPrice: number; commission: number }
+  >;
 }
 
 export const getHotelOptionRepository = (
