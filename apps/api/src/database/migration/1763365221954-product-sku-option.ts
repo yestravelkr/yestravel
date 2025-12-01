@@ -1,7 +1,7 @@
-import {MigrationInterface, QueryRunner} from "typeorm";
+import { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class productSkuOption1763365221954 implements MigrationInterface {
-  name = 'productSkuOption1763365221954'
+  name = 'productSkuOption1763365221954';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     // product_option 테이블 생성
@@ -27,7 +27,9 @@ export class productSkuOption1763365221954 implements MigrationInterface {
                              )`);
 
     // product_option 인덱스 생성
-    await queryRunner.query(`CREATE INDEX "IDX_product_option_product_id" ON "product_option" ("product_id") `);
+    await queryRunner.query(
+      `CREATE INDEX "IDX_product_option_product_id" ON "product_option" ("product_id") `
+    );
 
     // sku 테이블 생성
     // - SkuEntity 매핑
@@ -50,10 +52,14 @@ export class productSkuOption1763365221954 implements MigrationInterface {
                              )`);
 
     // sku 인덱스 생성
-    await queryRunner.query(`CREATE INDEX "IDX_sku_product_template_id" ON "sku" ("product_template_id") `);
+    await queryRunner.query(
+      `CREATE INDEX "IDX_sku_product_template_id" ON "sku" ("product_template_id") `
+    );
 
     // sku unique 인덱스: 같은 템플릿 내에서 SKU 코드는 유일해야 함
-    await queryRunner.query(`CREATE UNIQUE INDEX "UQ_sku_product_template_sku_code" ON "sku" ("product_template_id", "sku_code") `);
+    await queryRunner.query(
+      `CREATE UNIQUE INDEX "UQ_sku_product_template_sku_code" ON "sku" ("product_template_id", "sku_code") `
+    );
 
     // product_option FK 제약조건
     await queryRunner.query(`ALTER TABLE "product_option"
@@ -66,17 +72,26 @@ export class productSkuOption1763365221954 implements MigrationInterface {
 
   public async down(queryRunner: QueryRunner): Promise<void> {
     // FK 제약조건 삭제
-    await queryRunner.query(`ALTER TABLE "sku" DROP CONSTRAINT "FK_sku_product_template"`);
-    await queryRunner.query(`ALTER TABLE "product_option" DROP CONSTRAINT "FK_product_option_product"`);
+    await queryRunner.query(
+      `ALTER TABLE "sku" DROP CONSTRAINT "FK_sku_product_template"`
+    );
+    await queryRunner.query(
+      `ALTER TABLE "product_option" DROP CONSTRAINT "FK_product_option_product"`
+    );
 
     // 인덱스 삭제
-    await queryRunner.query(`DROP INDEX "public"."UQ_sku_product_template_sku_code"`);
-    await queryRunner.query(`DROP INDEX "public"."IDX_sku_product_template_id"`);
-    await queryRunner.query(`DROP INDEX "public"."IDX_product_option_product_id"`);
+    await queryRunner.query(
+      `DROP INDEX "public"."UQ_sku_product_template_sku_code"`
+    );
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_sku_product_template_id"`
+    );
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_product_option_product_id"`
+    );
 
     // 테이블 삭제
     await queryRunner.query(`DROP TABLE "sku"`);
     await queryRunner.query(`DROP TABLE "product_option"`);
   }
-
 }
