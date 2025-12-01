@@ -34,10 +34,9 @@ interface ProductFormData {
   useStock: boolean;
   thumbnailUrls: string[];
   hotelOptions: Array<{
-    id: number;
+    id?: number;
     name: string;
     priceByDate: Record<string, number>;
-    optionId?: number;
     anotherPriceByDate?: Record<
       string,
       { supplyPrice: number; commission: number }
