@@ -6,6 +6,10 @@ WORKDIR /app
 COPY package.json yarn.lock node_modules ./
 COPY apps/api/package.json ./apps/api/
 
+# Copy workspace packages (필수: yarn workspace 의존성 해결을 위해)
+COPY packages/api-types/package.json ./packages/api-types/
+COPY packages/option-selector/package.json ./packages/option-selector/
+
 # Github Action 에서 caching된 node_modules를 사용하기 위해 install하지 않음
 RUN yarn install --frozen-lockfile
 
