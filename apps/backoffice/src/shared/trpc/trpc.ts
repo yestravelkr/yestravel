@@ -1,8 +1,13 @@
 import { httpLink, TRPCClientError } from '@trpc/client';
 import { createTRPCReact } from '@trpc/react-query';
+import type { inferRouterInputs, inferRouterOutputs } from '@trpc/server';
 import type { AppRouter } from '@yestravelkr/api-types';
 
 import { useAuthStore } from '../../store/authStore';
+
+// Infer types from the tRPC router
+export type RouterInputs = inferRouterInputs<AppRouter>;
+export type RouterOutputs = inferRouterOutputs<AppRouter>;
 
 const API_BASEURL = import.meta.env.VITE_API_BASEURL || 'http://localhost:3000';
 

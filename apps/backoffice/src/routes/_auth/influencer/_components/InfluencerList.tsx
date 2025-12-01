@@ -10,19 +10,20 @@ import { trpc } from '@/shared/trpc';
 interface Influencer {
   id: number;
   name: string;
-  email: string | null;
-  phoneNumber: string | null;
-  instagramHandle: string | null;
-  followerCount: number | null;
+  email?: string | null;
+  phoneNumber?: string | null;
+  instagramHandle?: string | null;
+  followerCount?: number | null;
   createdAt: string;
 }
 
 export function InfluencerList() {
   const navigate = useNavigate();
 
-  // TODO: API 연동 후 useSuspenseQuery로 변경
-  // const [influencers] = trpc.backofficeInfluencer.findAll.useSuspenseQuery();
-  const influencers: Influencer[] = [];
+  const [influencers] = trpc.backofficeInfluencer.findAll.useSuspenseQuery({
+    page: 1,
+    limit: 50,
+  });
 
   const columnHelper = createColumnHelper<Influencer>();
 
@@ -77,9 +78,15 @@ export function InfluencerList() {
     navigate({ to: `/influencer/${influencer.id}` });
   };
 
-  if (influencers && influencers.length > 0) {
+  const influencerData = influencers?.data || [];
+
+  if (influencerData.length > 0) {
     return (
-      <Table columns={columns} data={influencers} onRowClick={handleRowClick} />
+      <Table
+        columns={columns}
+        data={influencerData}
+        onRowClick={handleRowClick}
+      />
     );
   }
 

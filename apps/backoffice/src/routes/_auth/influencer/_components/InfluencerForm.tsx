@@ -8,43 +8,18 @@ import { Button } from '@yestravelkr/min-design-system';
 import { Plus, X } from 'lucide-react';
 import { useState } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
+import { toast } from 'sonner';
 import tw from 'tailwind-styled-components';
 
 import { Input, Select, FieldWrapper, FileUpload } from '@/shared/components';
+import type { RouterInputs } from '@/shared/trpc';
 
-interface InfluencerFormData {
-  name: string;
-  email?: string;
-  phoneNumber?: string;
-  thumbnail?: string;
-  businessInfo?: {
-    type?: 'INDIVIDUAL' | 'SOLE_PROPRIETOR' | 'CORPORATION';
-    name?: string;
-    licenseNumber?: string;
-    ceoName?: string;
-    licenseFileUrl?: string;
-  };
-  bankInfo?: {
-    name?: string;
-    accountNumber?: string;
-    accountHolder?: string;
-  };
-  socialMedias: Array<{
-    platform:
-      | 'INSTAGRAM'
-      | 'FACEBOOK'
-      | 'TWITTER'
-      | 'YOUTUBE'
-      | 'TIKTOK'
-      | 'WEBSITE';
-    url: string;
-  }>;
-}
+type CreateInfluencerInput = RouterInputs['backofficeInfluencer']['create'];
 
 interface InfluencerFormProps {
-  data?: InfluencerFormData;
+  data?: CreateInfluencerInput;
   isEditMode?: boolean;
-  onSubmit?: (data: InfluencerFormData) => Promise<void>;
+  onSubmit?: (data: CreateInfluencerInput) => Promise<void>;
   isSubmitting?: boolean;
   submitButtonText?: string;
   showCancelButton?: boolean;
@@ -63,8 +38,11 @@ export function InfluencerForm({
   onEdit,
 }: InfluencerFormProps) {
   const [thumbnailUrl, setThumbnailUrl] = useState<string | undefined>(
-    data?.thumbnail,
+    data?.thumbnail ?? undefined,
   );
+  const [socialMediaError, setSocialMediaError] = useState<
+    string | undefined
+  >();
 
   const {
     register,
@@ -73,9 +51,16 @@ export function InfluencerForm({
     reset,
     control,
     setValue,
-  } = useForm<InfluencerFormData>({
+  } = useForm<CreateInfluencerInput>({
     defaultValues: data || {
       socialMedias: [],
+      businessInfo: {
+        type: 'INDIVIDUAL',
+        businessNumber: '',
+        companyName: '',
+        representativeName: '',
+        businessAddress: '',
+      },
     },
   });
 
@@ -87,8 +72,7 @@ export function InfluencerForm({
   const businessTypeOptions = [
     { value: '', label: '선택하세요' },
     { value: 'INDIVIDUAL', label: '개인 사업자' },
-    { value: 'SOLE_PROPRIETOR', label: '간이 사업자' },
-    { value: 'CORPORATION', label: '법인 사업자' },
+    { value: 'CORPORATE', label: '법인 사업자' },
   ];
 
   const platformOptions = [
@@ -97,11 +81,20 @@ export function InfluencerForm({
     { value: 'TWITTER', label: '트위터' },
     { value: 'YOUTUBE', label: '유튜브' },
     { value: 'TIKTOK', label: '틱톡' },
-    { value: 'WEBSITE', label: '웹사이트' },
+    { value: 'OTHER', label: '기타' },
   ];
 
-  const handleFormSubmit = async (formData: InfluencerFormData) => {
+  const handleFormSubmit = async (formData: CreateInfluencerInput) => {
     if (!onSubmit) return;
+
+    // 소셜미디어 최소 1개 검증
+    if (!formData.socialMedias || formData.socialMedias.length === 0) {
+      setSocialMediaError('최소 1개 이상의 소셜미디어를 추가해주세요.');
+      toast.error('최소 1개 이상의 소셜미디어를 추가해주세요.');
+      return;
+    }
+
+    setSocialMediaError(undefined);
 
     try {
       await onSubmit(formData);
@@ -111,6 +104,7 @@ export function InfluencerForm({
       }
     } catch (error) {
       console.error('Form submission error:', error);
+      // API 실패 시 form 데이터는 유지됨 (reset 호출 안 함)
     }
   };
 
@@ -119,11 +113,12 @@ export function InfluencerForm({
       onCancel();
     }
     reset();
-    setThumbnailUrl(data?.thumbnail);
+    setThumbnailUrl(data?.thumbnail ?? undefined);
   };
 
   const handleAddSocialMedia = () => {
     append({ platform: 'INSTAGRAM', url: '' });
+    setSocialMediaError(undefined); // 추가 시 에러 초기화
   };
 
   const handleThumbnailChange = (url: string | null) => {
@@ -216,7 +211,10 @@ export function InfluencerForm({
           {/* 소셜미디어 정보 */}
           <Section>
             <SectionHeader>
-              <SectionTitle>소셜미디어</SectionTitle>
+              <SectionTitleWithRequired>
+                <SectionTitle>소셜미디어</SectionTitle>
+                <RequiredBadge>*</RequiredBadge>
+              </SectionTitleWithRequired>
               {isEditMode && (
                 <AddButton type="button" onClick={handleAddSocialMedia}>
                   <Plus size={16} />
@@ -224,6 +222,10 @@ export function InfluencerForm({
                 </AddButton>
               )}
             </SectionHeader>
+
+            {socialMediaError && isEditMode && (
+              <ErrorMessage>{socialMediaError}</ErrorMessage>
+            )}
 
             {fields.length === 0 && !isEditMode && (
               <EmptyMessage>등록된 소셜미디어가 없습니다.</EmptyMessage>
@@ -266,43 +268,101 @@ export function InfluencerForm({
                 label="사업자 구분"
                 value={data?.businessInfo?.type}
                 isEditMode={isEditMode}
+                required
+                error={
+                  errors.businessInfo?.type &&
+                  typeof errors.businessInfo.type === 'object'
+                    ? (errors.businessInfo.type as any).message
+                    : undefined
+                }
               >
                 <Select
-                  {...register('businessInfo.type')}
+                  {...register('businessInfo.type', {
+                    required: '사업자 구분은 필수입니다',
+                  })}
                   options={businessTypeOptions}
+                  error={!!errors.businessInfo?.type}
                 />
               </FieldWrapper>
 
               <FieldWrapper
                 label="사업자명"
-                value={data?.businessInfo?.name}
+                value={data?.businessInfo?.companyName}
                 isEditMode={isEditMode}
+                required
+                error={
+                  errors.businessInfo?.companyName &&
+                  typeof errors.businessInfo.companyName === 'object'
+                    ? (errors.businessInfo.companyName as any).message
+                    : undefined
+                }
               >
                 <Input
-                  {...register('businessInfo.name')}
+                  {...register('businessInfo.companyName', {
+                    required: '사업자명은 필수입니다',
+                  })}
                   placeholder="사업자명을 입력하세요"
+                  error={!!errors.businessInfo?.companyName}
                 />
               </FieldWrapper>
 
               <FieldWrapper
                 label="사업자번호"
-                value={data?.businessInfo?.licenseNumber}
+                value={data?.businessInfo?.businessNumber}
                 isEditMode={isEditMode}
+                required
+                error={
+                  errors.businessInfo?.businessNumber &&
+                  typeof errors.businessInfo.businessNumber === 'object'
+                    ? (errors.businessInfo.businessNumber as any).message
+                    : undefined
+                }
               >
                 <Input
-                  {...register('businessInfo.licenseNumber')}
+                  {...register('businessInfo.businessNumber', {
+                    required: '사업자번호는 필수입니다',
+                  })}
                   placeholder="000-00-00000"
+                  error={!!errors.businessInfo?.businessNumber}
                 />
               </FieldWrapper>
 
               <FieldWrapper
                 label="대표자명"
-                value={data?.businessInfo?.ceoName}
+                value={data?.businessInfo?.representativeName}
                 isEditMode={isEditMode}
+                required
+                error={
+                  errors.businessInfo?.representativeName &&
+                  typeof errors.businessInfo.representativeName === 'object'
+                    ? (errors.businessInfo.representativeName as any).message
+                    : undefined
+                }
               >
                 <Input
-                  {...register('businessInfo.ceoName')}
+                  {...register('businessInfo.representativeName', {
+                    required: '대표자명은 필수입니다',
+                  })}
                   placeholder="대표자명을 입력하세요"
+                  error={!!errors.businessInfo?.representativeName}
+                />
+              </FieldWrapper>
+
+              <FieldWrapper
+                label="사업자 주소"
+                value={data?.businessInfo?.businessAddress}
+                isEditMode={isEditMode}
+                error={
+                  errors.businessInfo?.businessAddress &&
+                  typeof errors.businessInfo.businessAddress === 'object'
+                    ? (errors.businessInfo.businessAddress as any).message
+                    : undefined
+                }
+              >
+                <Input
+                  {...register('businessInfo.businessAddress')}
+                  placeholder="사업자 주소를 입력하세요"
+                  error={!!errors.businessInfo?.businessAddress}
                 />
               </FieldWrapper>
             </FormGrid>
@@ -314,11 +374,11 @@ export function InfluencerForm({
             <FormGrid>
               <FieldWrapper
                 label="은행명"
-                value={data?.bankInfo?.name}
+                value={data?.bankInfo?.bankName}
                 isEditMode={isEditMode}
               >
                 <Input
-                  {...register('bankInfo.name')}
+                  {...register('bankInfo.bankName')}
                   placeholder="은행명을 입력하세요"
                 />
               </FieldWrapper>
@@ -437,6 +497,17 @@ const SectionTitle = tw.h3`
   text-gray-900
 `;
 
+const SectionTitleWithRequired = tw.div`
+  flex
+  items-center
+  gap-1
+`;
+
+const RequiredBadge = tw.span`
+  text-red-500
+  font-medium
+`;
+
 const FormGrid = tw.div`
   grid
   grid-cols-1
@@ -446,6 +517,18 @@ const FormGrid = tw.div`
 
 const SocialMediaList = tw.div`
   space-y-3
+`;
+
+const ErrorMessage = tw.div`
+  text-sm
+  text-red-600
+  mt-2
+  px-3
+  py-2
+  bg-red-50
+  rounded
+  border
+  border-red-200
 `;
 
 const SocialMediaItem = tw.div`
