@@ -1,0 +1,582 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Hotel Product API",
+    "description": "호텔 상품 관리 API",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Local Development Server"
+    }
+  ],
+  "paths": {
+    "/trpc/backofficeProduct.create": {
+      "post": {
+        "summary": "호텔 상품 생성",
+        "description": "새로운 호텔 상품을 등록합니다. hotelOptions를 통해 옵션(조식, 레이트체크아웃 등)을 함께 생성할 수 있습니다.",
+        "tags": ["Hotel Product"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "description": "JWT 토큰",
+            "required": true,
+            "example": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateHotelProductInput"
+              },
+              "example": {
+                "type": "HOTEL",
+                "name": "디럭스 오션뷰룸",
+                "brandId": 1,
+                "price": 150000,
+                "useCalendar": true,
+                "useStock": false,
+                "useOptions": true,
+                "baseCapacity": 2,
+                "maxCapacity": 4,
+                "checkInTime": "15:00",
+                "checkOutTime": "11:00",
+                "thumbnailUrls": [
+                  "https://example.com/room1.jpg",
+                  "https://example.com/room2.jpg"
+                ],
+                "description": "바다가 보이는 디럭스룸입니다.",
+                "detailContent": "<p>상세 설명 HTML</p>",
+                "bedTypes": ["더블", "싱글"],
+                "tags": ["오션뷰", "조식포함"],
+                "status": "VISIBLE",
+                "hotelOptions": [
+                  {
+                    "name": "조식 포함",
+                    "priceByDate": {
+                      "2025-01-15": 30000,
+                      "2025-01-16": 30000,
+                      "2025-01-17": 35000
+                    }
+                  },
+                  {
+                    "name": "레이트 체크아웃 (14시)",
+                    "priceByDate": {
+                      "2025-01-15": 20000,
+                      "2025-01-16": 20000
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "호텔 상품 생성 성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateProductResponse"
+                },
+                "example": {
+                  "id": 1,
+                  "type": "HOTEL",
+                  "name": "디럭스 오션뷰룸",
+                  "message": "상품이 생성되었습니다"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "유효하지 않은 입력값"
+          },
+          "404": {
+            "description": "브랜드/템플릿/캠페인을 찾을 수 없습니다"
+          }
+        }
+      }
+    },
+    "/trpc/backofficeProduct.update": {
+      "post": {
+        "summary": "호텔 상품 수정",
+        "description": "기존 호텔 상품 정보를 수정합니다. hotelOptions는 PUT 방식으로 동작합니다 (배열에 없는 기존 옵션은 삭제됨).",
+        "tags": ["Hotel Product"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "description": "JWT 토큰",
+            "required": true,
+            "example": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateHotelProductInput"
+              },
+              "example": {
+                "id": 1,
+                "type": "HOTEL",
+                "name": "디럭스 오션뷰룸 (리뉴얼)",
+                "brandId": 1,
+                "price": 180000,
+                "useCalendar": true,
+                "useStock": false,
+                "useOptions": true,
+                "baseCapacity": 2,
+                "maxCapacity": 4,
+                "checkInTime": "15:00",
+                "checkOutTime": "11:00",
+                "thumbnailUrls": [],
+                "description": "리뉴얼된 오션뷰룸",
+                "detailContent": "<p>상세 설명 (수정됨)</p>",
+                "bedTypes": ["킹"],
+                "tags": ["오션뷰", "리뉴얼"],
+                "status": "VISIBLE",
+                "hotelOptions": [
+                  {
+                    "id": 1,
+                    "name": "조식 포함 (가격 인상)",
+                    "priceByDate": {
+                      "2025-01-15": 35000,
+                      "2025-01-16": 35000
+                    }
+                  },
+                  {
+                    "name": "얼리 체크인 (12시)",
+                    "priceByDate": {
+                      "2025-01-15": 15000
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "호텔 상품 수정 성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateProductResponse"
+                },
+                "example": {
+                  "id": 1,
+                  "name": "디럭스 오션뷰룸 (리뉴얼)",
+                  "message": "상품이 수정되었습니다"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "유효하지 않은 입력값 또는 상품 타입 변경 시도"
+          },
+          "404": {
+            "description": "상품/브랜드를 찾을 수 없습니다"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "ProductType": {
+        "type": "string",
+        "enum": ["HOTEL", "DELIVERY", "E-TICKET"],
+        "description": "상품 타입"
+      },
+      "ProductStatus": {
+        "type": "string",
+        "enum": ["VISIBLE", "HIDDEN", "SOLD_OUT"],
+        "description": "상품 상태"
+      },
+      "HotelOptionInput": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "nullable": true,
+            "description": "옵션 ID (수정 시 기존 옵션의 ID)"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "옵션명 (예: 조식 포함, 레이트 체크아웃)"
+          },
+          "priceByDate": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "description": "날짜별 가격 (키: YYYY-MM-DD, 값: 가격)",
+            "example": {
+              "2025-01-15": 30000,
+              "2025-01-16": 35000
+            }
+          }
+        }
+      },
+      "CreateHotelProductInput": {
+        "type": "object",
+        "required": [
+          "type",
+          "name",
+          "brandId",
+          "price",
+          "useCalendar",
+          "baseCapacity",
+          "maxCapacity",
+          "checkInTime",
+          "checkOutTime"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["HOTEL"],
+            "description": "상품 타입 (호텔)"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "상품명"
+          },
+          "brandId": {
+            "type": "integer",
+            "description": "브랜드 ID"
+          },
+          "productTemplateId": {
+            "type": "integer",
+            "nullable": true,
+            "description": "상품 템플릿 ID"
+          },
+          "campaignId": {
+            "type": "integer",
+            "nullable": true,
+            "description": "캠페인 ID"
+          },
+          "categoryIds": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "default": [],
+            "description": "카테고리 ID 목록"
+          },
+          "thumbnailUrls": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uri"
+            },
+            "default": [],
+            "description": "썸네일 이미지 URL 목록"
+          },
+          "description": {
+            "type": "string",
+            "default": "",
+            "description": "상품 설명"
+          },
+          "detailContent": {
+            "type": "string",
+            "default": "",
+            "description": "상세 설명 (HTML)"
+          },
+          "useCalendar": {
+            "type": "boolean",
+            "enum": [true],
+            "description": "캘린더 사용 여부 (호텔은 항상 true)"
+          },
+          "useStock": {
+            "type": "boolean",
+            "default": false,
+            "description": "재고 관리 사용 여부"
+          },
+          "useOptions": {
+            "type": "boolean",
+            "default": false,
+            "description": "옵션 사용 여부"
+          },
+          "price": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "기본 판매가"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ProductStatus",
+            "default": "VISIBLE",
+            "description": "상품 상태"
+          },
+          "displayOrder": {
+            "type": "integer",
+            "nullable": true,
+            "description": "노출 순서"
+          },
+          "baseCapacity": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "기준 인원"
+          },
+          "maxCapacity": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "최대 인원"
+          },
+          "checkInTime": {
+            "type": "string",
+            "pattern": "^([01]\\d|2[0-3]):([0-5]\\d)$",
+            "description": "체크인 시간 (HH:MM 형식)",
+            "example": "15:00"
+          },
+          "checkOutTime": {
+            "type": "string",
+            "pattern": "^([01]\\d|2[0-3]):([0-5]\\d)$",
+            "description": "체크아웃 시간 (HH:MM 형식)",
+            "example": "11:00"
+          },
+          "bedTypes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "default": [],
+            "description": "침대 타입 목록"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "default": [],
+            "description": "태그 목록"
+          },
+          "hotelOptions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HotelOptionInput"
+            },
+            "default": [],
+            "description": "호텔 옵션 목록 (조식, 레이트체크아웃 등)"
+          }
+        }
+      },
+      "UpdateHotelProductInput": {
+        "type": "object",
+        "required": [
+          "id",
+          "type",
+          "name",
+          "brandId",
+          "price",
+          "useCalendar",
+          "baseCapacity",
+          "maxCapacity",
+          "checkInTime",
+          "checkOutTime"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "상품 ID"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["HOTEL"],
+            "description": "상품 타입 (호텔) - 변경 불가"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "상품명"
+          },
+          "brandId": {
+            "type": "integer",
+            "description": "브랜드 ID"
+          },
+          "productTemplateId": {
+            "type": "integer",
+            "nullable": true,
+            "description": "상품 템플릿 ID"
+          },
+          "campaignId": {
+            "type": "integer",
+            "nullable": true,
+            "description": "캠페인 ID"
+          },
+          "categoryIds": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "default": [],
+            "description": "카테고리 ID 목록"
+          },
+          "thumbnailUrls": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uri"
+            },
+            "default": [],
+            "description": "썸네일 이미지 URL 목록"
+          },
+          "description": {
+            "type": "string",
+            "default": "",
+            "description": "상품 설명"
+          },
+          "detailContent": {
+            "type": "string",
+            "default": "",
+            "description": "상세 설명 (HTML)"
+          },
+          "useCalendar": {
+            "type": "boolean",
+            "enum": [true],
+            "description": "캘린더 사용 여부 (호텔은 항상 true)"
+          },
+          "useStock": {
+            "type": "boolean",
+            "default": false,
+            "description": "재고 관리 사용 여부"
+          },
+          "useOptions": {
+            "type": "boolean",
+            "default": false,
+            "description": "옵션 사용 여부"
+          },
+          "price": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "기본 판매가"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ProductStatus",
+            "default": "VISIBLE",
+            "description": "상품 상태"
+          },
+          "displayOrder": {
+            "type": "integer",
+            "nullable": true,
+            "description": "노출 순서"
+          },
+          "baseCapacity": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "기준 인원"
+          },
+          "maxCapacity": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "최대 인원"
+          },
+          "checkInTime": {
+            "type": "string",
+            "pattern": "^([01]\\d|2[0-3]):([0-5]\\d)$",
+            "description": "체크인 시간 (HH:MM 형식)",
+            "example": "15:00"
+          },
+          "checkOutTime": {
+            "type": "string",
+            "pattern": "^([01]\\d|2[0-3]):([0-5]\\d)$",
+            "description": "체크아웃 시간 (HH:MM 형식)",
+            "example": "11:00"
+          },
+          "bedTypes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "default": [],
+            "description": "침대 타입 목록"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "default": [],
+            "description": "태그 목록"
+          },
+          "hotelOptions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HotelOptionInput"
+            },
+            "default": [],
+            "description": "호텔 옵션 목록 (PUT 방식: 배열에 없는 기존 옵션은 삭제됨)"
+          }
+        }
+      },
+      "CreateProductResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "생성된 상품 ID"
+          },
+          "type": {
+            "$ref": "#/components/schemas/ProductType"
+          },
+          "name": {
+            "type": "string",
+            "description": "상품명"
+          },
+          "message": {
+            "type": "string",
+            "description": "결과 메시지"
+          }
+        }
+      },
+      "UpdateProductResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "수정된 상품 ID"
+          },
+          "name": {
+            "type": "string",
+            "description": "상품명"
+          },
+          "message": {
+            "type": "string",
+            "description": "결과 메시지"
+          }
+        }
+      }
+    }
+  }
+}

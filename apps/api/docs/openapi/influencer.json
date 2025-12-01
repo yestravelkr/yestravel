@@ -1,0 +1,394 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Influencer API",
+    "description": "인플루언서 관리 API",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Local Development Server"
+    }
+  ],
+  "paths": {
+    "/trpc/backofficeInfluencer.create": {
+      "post": {
+        "summary": "인플루언서 생성",
+        "description": "새로운 인플루언서를 등록합니다.",
+        "tags": ["Influencer"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "description": "JWT 토큰",
+            "required": true,
+            "example": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateInfluencerInput"
+              },
+              "example": {
+                "name": "테스트 인플루언서",
+                "email": "influencer@example.com",
+                "phoneNumber": "010-1234-5678",
+                "thumbnail": "https://example.com/thumbnail.jpg",
+                "businessInfo": {
+                  "type": "INDIVIDUAL",
+                  "name": "홍길동",
+                  "licenseNumber": null,
+                  "ceoName": null,
+                  "licenseFileUrl": null
+                },
+                "bankInfo": {
+                  "name": "국민은행",
+                  "accountNumber": "123-456-789",
+                  "accountHolder": "홍길동"
+                },
+                "socialMedias": [
+                  {
+                    "platform": "INSTAGRAM",
+                    "url": "https://instagram.com/test_influencer"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "인플루언서 생성 성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Influencer"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "이미 동일한 이름의 인플루언서가 존재합니다"
+          }
+        }
+      }
+    },
+    "/trpc/backofficeInfluencer.update": {
+      "post": {
+        "summary": "인플루언서 수정",
+        "description": "기존 인플루언서 정보를 수정합니다.",
+        "tags": ["Influencer"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "description": "JWT 토큰",
+            "required": true,
+            "example": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateInfluencerInput"
+              },
+              "example": {
+                "id": 1,
+                "name": "수정된 인플루언서",
+                "email": "updated@example.com",
+                "phoneNumber": "010-9876-5432",
+                "thumbnail": "https://example.com/new-thumbnail.jpg",
+                "businessInfo": {
+                  "type": "SOLE_PROPRIETOR",
+                  "name": "테스트 사업자",
+                  "licenseNumber": "123-45-67890",
+                  "ceoName": "홍길동",
+                  "licenseFileUrl": "https://example.com/license.pdf"
+                },
+                "bankInfo": {
+                  "name": "신한은행",
+                  "accountNumber": "987-654-321",
+                  "accountHolder": "홍길동"
+                },
+                "socialMedias": [
+                  {
+                    "platform": "INSTAGRAM",
+                    "url": "https://instagram.com/updated_influencer"
+                  },
+                  {
+                    "platform": "YOUTUBE",
+                    "url": "https://youtube.com/@updated_influencer"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "인플루언서 수정 성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Influencer"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "인플루언서를 찾을 수 없습니다"
+          },
+          "409": {
+            "description": "이미 동일한 이름의 인플루언서가 존재합니다"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "SocialMediaPlatform": {
+        "type": "string",
+        "enum": ["INSTAGRAM", "TIKTOK", "YOUTUBE", "FACEBOOK", "TWITTER", "OTHER"],
+        "description": "소셜미디어 플랫폼"
+      },
+      "BusinessType": {
+        "type": "string",
+        "enum": ["CORPORATION", "SOLE_PROPRIETOR", "INDIVIDUAL"],
+        "description": "사업자 유형"
+      },
+      "SocialMedia": {
+        "type": "object",
+        "required": ["platform", "url"],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "소셜미디어 ID"
+          },
+          "platform": {
+            "$ref": "#/components/schemas/SocialMediaPlatform"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "소셜미디어 URL"
+          }
+        }
+      },
+      "BusinessInfo": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "$ref": "#/components/schemas/BusinessType"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true,
+            "description": "사업자명"
+          },
+          "licenseNumber": {
+            "type": "string",
+            "nullable": true,
+            "description": "사업자등록번호"
+          },
+          "ceoName": {
+            "type": "string",
+            "nullable": true,
+            "description": "대표자명"
+          },
+          "licenseFileUrl": {
+            "type": "string",
+            "nullable": true,
+            "description": "사업자등록증 파일 URL"
+          }
+        }
+      },
+      "BankInfo": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "nullable": true,
+            "description": "은행명"
+          },
+          "accountNumber": {
+            "type": "string",
+            "nullable": true,
+            "description": "계좌번호"
+          },
+          "accountHolder": {
+            "type": "string",
+            "nullable": true,
+            "description": "예금주"
+          }
+        }
+      },
+      "CreateInfluencerInput": {
+        "type": "object",
+        "required": ["name", "socialMedias"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "인플루언서명"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "nullable": true,
+            "description": "이메일"
+          },
+          "phoneNumber": {
+            "type": "string",
+            "nullable": true,
+            "description": "전화번호"
+          },
+          "thumbnail": {
+            "type": "string",
+            "nullable": true,
+            "description": "썸네일 이미지 URL"
+          },
+          "businessInfo": {
+            "$ref": "#/components/schemas/BusinessInfo"
+          },
+          "bankInfo": {
+            "$ref": "#/components/schemas/BankInfo"
+          },
+          "socialMedias": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "#/components/schemas/SocialMedia"
+            },
+            "description": "소셜미디어 목록 (최소 1개 필수)"
+          }
+        }
+      },
+      "UpdateInfluencerInput": {
+        "type": "object",
+        "required": ["id", "name", "socialMedias"],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "인플루언서 ID"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "인플루언서명"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "nullable": true,
+            "description": "이메일"
+          },
+          "phoneNumber": {
+            "type": "string",
+            "nullable": true,
+            "description": "전화번호"
+          },
+          "thumbnail": {
+            "type": "string",
+            "nullable": true,
+            "description": "썸네일 이미지 URL"
+          },
+          "businessInfo": {
+            "$ref": "#/components/schemas/BusinessInfo"
+          },
+          "bankInfo": {
+            "$ref": "#/components/schemas/BankInfo"
+          },
+          "socialMedias": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "#/components/schemas/SocialMedia"
+            },
+            "description": "소셜미디어 목록 (최소 1개 필수)"
+          }
+        }
+      },
+      "Influencer": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "인플루언서 ID"
+          },
+          "name": {
+            "type": "string",
+            "description": "인플루언서명"
+          },
+          "email": {
+            "type": "string",
+            "nullable": true,
+            "description": "이메일"
+          },
+          "phoneNumber": {
+            "type": "string",
+            "nullable": true,
+            "description": "전화번호"
+          },
+          "thumbnail": {
+            "type": "string",
+            "nullable": true,
+            "description": "썸네일 이미지 URL"
+          },
+          "businessInfo": {
+            "$ref": "#/components/schemas/BusinessInfo"
+          },
+          "bankInfo": {
+            "$ref": "#/components/schemas/BankInfo"
+          },
+          "socialMedias": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SocialMedia"
+            },
+            "description": "소셜미디어 목록"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "생성일시"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "수정일시"
+          }
+        }
+      }
+    }
+  }
+}
