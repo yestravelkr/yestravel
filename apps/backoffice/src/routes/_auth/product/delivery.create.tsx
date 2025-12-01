@@ -4,6 +4,7 @@
 
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { Button } from '@yestravelkr/min-design-system';
+import { Package } from 'lucide-react';
 import tw from 'tailwind-styled-components';
 
 import { MajorPageLayout } from '@/components/layout';
@@ -33,7 +34,9 @@ function CreateDeliveryProductPage() {
       <ProductTypeTabs basePath="product" />
       <CardContent>
         <EmptyMessage>
-          <EmptyIcon>📦</EmptyIcon>
+          <EmptyIconWrapper>
+            <Package size={48} />
+          </EmptyIconWrapper>
           <EmptyTitle>배송 상품 등록 폼 준비 중</EmptyTitle>
           <EmptyDescription>
             배송 상품 등록 기능은 준비 중입니다.
@@ -62,8 +65,8 @@ const EmptyMessage = tw.div`
   text-center
 `;
 
-const EmptyIcon = tw.div`
-  text-6xl
+const EmptyIconWrapper = tw.div`
+  text-gray-400
   mb-4
 `;
 
