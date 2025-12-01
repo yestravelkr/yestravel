@@ -637,6 +637,21 @@ const appRouter = t.router({
     })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
   }),
   backofficeInfluencer: t.router({
+    findAll: publicProcedure.input(z.object({
+      page: z.number().min(1).default(1),
+      limit: z.number().min(1).max(100).default(50),
+    })).output(z.object({
+      data: z.array(
+        z.object({
+          id: z.number(),
+          name: z.string(),
+          email: z.string().nullish(),
+          phoneNumber: z.string().nullish(),
+          createdAt: z.string(),
+        })
+      ),
+      total: z.number(),
+    })).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
     create: publicProcedure.input(z.object({
       name: z.string().min(1, '인플루언서명은 필수입니다'),
       email: z.string().email('유효한 이메일을 입력해주세요').nullish(),

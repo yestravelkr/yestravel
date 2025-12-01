@@ -8,11 +8,32 @@ import { InfluencerEntity } from '@src/module/backoffice/domain/influencer.entit
 import type {
   CreateInfluencerInput,
   UpdateInfluencerInput,
+  InfluencerListResponse,
 } from './influencer.dto';
 
 @Injectable()
 export class InfluencerService {
   constructor(private readonly repositoryProvider: RepositoryProvider) {}
+
+  async findAll(params: {
+    page: number;
+    limit: number;
+  }): Promise<InfluencerListResponse> {
+    const { page, limit } = params;
+    const skip = (page - 1) * limit;
+
+    const [data, total] =
+      await this.repositoryProvider.InfluencerRepository.findAndCount({
+        skip,
+        take: limit,
+        order: { createdAt: 'DESC' },
+      });
+
+    return {
+      data,
+      total,
+    };
+  }
 
   async create(input: CreateInfluencerInput): Promise<InfluencerEntity> {
     // 중복 이름 체크

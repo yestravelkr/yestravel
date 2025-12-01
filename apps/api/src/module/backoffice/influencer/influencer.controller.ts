@@ -7,11 +7,14 @@ import {
   influencerSchema,
   createInfluencerInputSchema,
   updateInfluencerInputSchema,
+  influencerListSchema,
 } from './influencer.schema';
 import type {
   CreateInfluencerInput,
   UpdateInfluencerInput,
   Influencer,
+  InfluencerListResponse,
+  InfluencerList,
 } from './influencer.dto';
 
 @Controller()
@@ -20,6 +23,15 @@ export class InfluencerController {
     private readonly influencerService: InfluencerService,
     private readonly transactionService: TransactionService
   ) {}
+
+  @MessagePattern('influencer.findAll')
+  async findAll(data: {
+    page: number;
+    limit: number;
+  }): Promise<InfluencerList> {
+    const result = await this.influencerService.findAll(data);
+    return influencerListSchema.parse(result);
+  }
 
   @MessagePattern('influencer.create')
   @Transactional
