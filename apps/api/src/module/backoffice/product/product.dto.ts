@@ -3,7 +3,11 @@ import {
   createProductInputSchema,
   updateProductInputSchema,
   productDetailSchema,
+  hotelOptionInputSchema,
 } from './product.schema';
+
+// HotelOption Input DTO
+export type HotelOptionInputDto = z.infer<typeof hotelOptionInputSchema>;
 
 // Create Input DTO
 export type CreateProductInputDto = z.infer<typeof createProductInputSchema>;
