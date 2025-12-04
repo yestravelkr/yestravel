@@ -29,12 +29,16 @@ ENV AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
 
 WORKDIR /app
 
-# Copy built application
-COPY --from=builder /app/apps/api/dist ./dist
-COPY --from=builder /app/apps/api/config ./config
-COPY --from=builder /app/apps/api/scripts ./scripts
-COPY --from=builder /app/apps/api/package.json ./
+# Copy monorepo structure for production
+COPY --from=builder /app/package.json ./
 COPY --from=builder /app/yarn.lock ./
+COPY --from=builder /app/apps/api/package.json ./apps/api/
+COPY --from=builder /app/packages/option-selector ./packages/option-selector
+
+# Copy built application
+COPY --from=builder /app/apps/api/dist ./apps/api/dist
+COPY --from=builder /app/apps/api/config ./apps/api/config
+COPY --from=builder /app/apps/api/scripts ./apps/api/scripts
 
 # Install production dependencies only
 RUN yarn install --production --frozen-lockfile
@@ -43,4 +47,5 @@ RUN yarn install --production --frozen-lockfile
 RUN ln -snf /usr/share/zoneinfo/Asia/Seoul /etc/localtime
 
 EXPOSE 3000
+WORKDIR /app/apps/api
 CMD ["yarn", "start:prod"]
