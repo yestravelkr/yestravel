@@ -17,6 +17,7 @@ import { getSkuRepository } from '@src/module/backoffice/domain/product/sku.enti
 import { getProductOptionRepository } from '@src/module/backoffice/domain/product/product-option.entity';
 import { getInfluencerRepository } from '@src/module/backoffice/domain/influencer.entity';
 import { getSocialMediaRepository } from '@src/module/backoffice/domain/social-media.entity';
+import { getHotelOptionRepository } from '@src/module/backoffice/domain/product/hotel-option.entity';
 
 @Injectable()
 export class RepositoryProvider {
@@ -88,5 +89,9 @@ export class RepositoryProvider {
 
   get SocialMediaRepository() {
     return getSocialMediaRepository(this.transaction);
+  }
+
+  get HotelOptionRepository() {
+    return getHotelOptionRepository(this.transaction);
   }
 }

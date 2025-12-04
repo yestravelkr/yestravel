@@ -117,6 +117,20 @@ export class ProductRouter extends BaseTrpcRouter {
         checkOutTime: z.string(),
         bedTypes: z.array(z.string()),
         tags: z.array(z.string()),
+        hotelOptions: z.array(
+          z.object({
+            id: z.number(),
+            name: z.string(),
+            priceByDate: z.record(z.string(), z.number()),
+            anotherPriceByDate: z.record(
+              z.string(),
+              z.object({
+                supplyPrice: z.number(),
+                commission: z.number(),
+              })
+            ),
+          })
+        ),
         createdAt: z.date(),
         updatedAt: z.date(),
       }),
@@ -212,6 +226,26 @@ export class ProductRouter extends BaseTrpcRouter {
           .transform(normalizeTime),
         bedTypes: z.array(z.string()).default([]),
         tags: z.array(z.string()).default([]),
+        hotelOptions: z
+          .array(
+            z.object({
+              id: z.number().int().positive().nullish(),
+              name: z.string().min(1, '옵션명은 필수입니다'),
+              priceByDate: z
+                .record(z.string(), z.number().int().nonnegative())
+                .default({}),
+              anotherPriceByDate: z
+                .record(
+                  z.string(),
+                  z.object({
+                    supplyPrice: z.number().int().nonnegative(),
+                    commission: z.number().int().nonnegative(),
+                  })
+                )
+                .default({}),
+            })
+          )
+          .default([]),
       }),
       // Delivery Product
       z.object({
@@ -303,6 +337,26 @@ export class ProductRouter extends BaseTrpcRouter {
           .transform(normalizeTime),
         bedTypes: z.array(z.string()).default([]),
         tags: z.array(z.string()).default([]),
+        hotelOptions: z
+          .array(
+            z.object({
+              id: z.number().int().positive().nullish(),
+              name: z.string().min(1, '옵션명은 필수입니다'),
+              priceByDate: z
+                .record(z.string(), z.number().int().nonnegative())
+                .default({}),
+              anotherPriceByDate: z
+                .record(
+                  z.string(),
+                  z.object({
+                    supplyPrice: z.number().int().nonnegative(),
+                    commission: z.number().int().nonnegative(),
+                  })
+                )
+                .default({}),
+            })
+          )
+          .default([]),
       }),
       // Delivery Product Update
       z.object({

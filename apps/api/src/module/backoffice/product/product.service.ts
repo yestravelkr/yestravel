@@ -81,10 +81,22 @@ export class ProductService {
             );
           });
 
+        // 호텔 옵션 조회
+        const hotelOptions = await this.repositoryProvider.HotelOptionRepository.find({
+          where: { productId: id },
+          order: { id: 'ASC' },
+        });
+
         return {
           ...hotel,
           type: 'HOTEL',
           brandName: hotel.brand.name,
+          hotelOptions: hotelOptions.map(opt => ({
+            id: opt.id,
+            name: opt.name,
+            priceByDate: opt.priceByDate,
+            anotherPriceByDate: opt.anotherPriceByDate,
+          })),
         };
       }
 
@@ -173,11 +185,20 @@ export class ProductService {
 
     switch (input.type) {
       case 'HOTEL': {
-        const hotelProduct = HotelProductEntity.createFromInput(input as any);
+        const hotelInput = input;
+        const hotelProduct = HotelProductEntity.createFromInput(hotelInput);
         savedProduct =
           await this.repositoryProvider.HotelProductRepository.save(
             hotelProduct
           );
+
+        // 호텔 옵션 저장
+        if (hotelInput.hotelOptions && hotelInput.hotelOptions.length > 0) {
+          await this.repositoryProvider.HotelOptionRepository.saveOptions(
+            savedProduct.id,
+            hotelInput.hotelOptions
+          );
+        }
         break;
       }
 
@@ -188,9 +209,7 @@ export class ProductService {
           );
         }
 
-        const deliveryProduct = DeliveryProductEntity.createFromInput(
-          input as any
-        );
+        const deliveryProduct = DeliveryProductEntity.createFromInput(input);
         savedProduct =
           await this.repositoryProvider.DeliveryProductRepository.save(
             deliveryProduct
@@ -199,9 +218,7 @@ export class ProductService {
       }
 
       case 'E-TICKET': {
-        const eticketProduct = ETicketProductEntity.createFromInput(
-          input as any
-        );
+        const eticketProduct = ETicketProductEntity.createFromInput(input);
         savedProduct =
           await this.repositoryProvider.ETicketProductRepository.save(
             eticketProduct
@@ -211,7 +228,7 @@ export class ProductService {
 
       default:
         throw new BadRequestException(
-          `지원하지 않는 상품 타입입니다: ${(input as any).type}`
+          `지원하지 않는 상품 타입입니다: ${input as never}`
         );
     }
 
@@ -266,13 +283,20 @@ export class ProductService {
       });
     }
 
-    // 5. 타입에 따라 적절한 Repository에서 업데이트
+    // 5. 요청 타입과 기존 상품 타입 일치 확인
+    if (existingProduct.type !== input.type) {
+      throw new BadRequestException(
+        `상품 타입을 변경할 수 없습니다. 기존: ${existingProduct.type}, 요청: ${input.type}`
+      );
+    }
+
+    // 6. 타입에 따라 적절한 Repository에서 업데이트
     let updatedProduct:
       | HotelProductEntity
       | DeliveryProductEntity
       | ETicketProductEntity;
 
-    switch (existingProduct.type) {
+    switch (input.type) {
       case 'HOTEL': {
         // 기존 엔티티 조회
         const hotelProduct =
@@ -285,19 +309,23 @@ export class ProductService {
           });
 
         // 헬퍼 메서드로 필드 업데이트
-        hotelProduct.updateFromInput(input as any);
+        hotelProduct.updateFromInput(input);
 
         updatedProduct =
           await this.repositoryProvider.HotelProductRepository.save(
             hotelProduct
           );
+
+        // 호텔 옵션 업데이트 (PUT 방식: 기존 삭제 후 새로 저장)
+        await this.repositoryProvider.HotelOptionRepository.updateOptions(
+          input.id,
+          input.hotelOptions || []
+        );
         break;
       }
 
       case 'DELIVERY': {
-        const deliveryInput = input as any;
-
-        if (!deliveryInput.delivery) {
+        if (!input.delivery) {
           throw new BadRequestException(
             '배송상품 수정 시 배송 정책은 필수입니다'
           );
@@ -316,7 +344,7 @@ export class ProductService {
           });
 
         // 헬퍼 메서드로 필드 업데이트
-        deliveryProduct.updateFromInput(deliveryInput);
+        deliveryProduct.updateFromInput(input);
 
         updatedProduct =
           await this.repositoryProvider.DeliveryProductRepository.save(
@@ -337,7 +365,7 @@ export class ProductService {
           });
 
         // 헬퍼 메서드로 필드 업데이트
-        eticketProduct.updateFromInput(input as any);
+        eticketProduct.updateFromInput(input);
 
         updatedProduct =
           await this.repositoryProvider.ETicketProductRepository.save(
@@ -348,7 +376,7 @@ export class ProductService {
 
       default:
         throw new BadRequestException(
-          `지원하지 않는 상품 타입입니다: ${existingProduct.type}`
+          `지원하지 않는 상품 타입입니다: ${input as never}`
         );
     }
 

@@ -5,6 +5,22 @@ import {
   TIME_FORMAT_ERROR_MESSAGE_KO,
 } from '@src/utils/time.util';
 
+// HotelOption Input 스키마
+export const hotelOptionInputSchema = z.object({
+  id: z.number().int().positive().nullish(), // 기존 옵션 수정 시 사용
+  name: z.string().min(1, '옵션명은 필수입니다'),
+  priceByDate: z.record(z.string(), z.number().int().nonnegative()).default({}),
+  anotherPriceByDate: z
+    .record(
+      z.string(),
+      z.object({
+        supplyPrice: z.number().int().nonnegative(),
+        commission: z.number().int().nonnegative(),
+      })
+    )
+    .default({}),
+});
+
 // DeliveryPolicy 스키마
 const deliveryPolicySchema = z.object({
   deliveryFeeType: z.enum(['FREE', 'PAID', 'CONDITIONAL_FREE']),
@@ -52,6 +68,7 @@ const hotelProductInputSchema = baseProductInputSchema.extend({
     .transform(normalizeTime),
   bedTypes: z.array(z.string()).default([]),
   tags: z.array(z.string()).default([]),
+  hotelOptions: z.array(hotelOptionInputSchema).default([]),
 });
 
 // Delivery Product Input Schema
@@ -107,6 +124,20 @@ export const deleteProductResponseSchema = z.object({
 });
 
 // Product Detail Schemas
+// 호텔 옵션 응답 스키마
+const hotelOptionResponseSchema = z.object({
+  id: z.number(),
+  name: z.string(),
+  priceByDate: z.record(z.string(), z.number()),
+  anotherPriceByDate: z.record(
+    z.string(),
+    z.object({
+      supplyPrice: z.number(),
+      commission: z.number(),
+    })
+  ),
+});
+
 const hotelProductSchema = z.object({
   type: z.literal('HOTEL'),
   id: z.number(),
@@ -130,6 +161,7 @@ const hotelProductSchema = z.object({
   checkOutTime: z.string(),
   bedTypes: z.array(z.string()),
   tags: z.array(z.string()),
+  hotelOptions: z.array(hotelOptionResponseSchema),
   createdAt: z.date(),
   updatedAt: z.date(),
 });
