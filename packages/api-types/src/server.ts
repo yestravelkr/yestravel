@@ -1,5 +1,6 @@
 import { initTRPC } from "@trpc/server";
 import { z } from "zod";
+import { businessInfoSchema, bankInfoSchema } from "./types/common";
 
 const t = initTRPC.create();
 const publicProcedure = t.procedure;

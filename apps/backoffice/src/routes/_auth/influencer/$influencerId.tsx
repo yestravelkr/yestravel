@@ -5,13 +5,14 @@ import tw from 'tailwind-styled-components';
 
 import { InfluencerForm } from './_components/InfluencerForm';
 
-import { trpc, type RouterInputs } from '@/shared/trpc';
+import { trpc, type RouterInputs, type RouterOutputs } from '@/shared/trpc';
 
 export const Route = createFileRoute('/_auth/influencer/$influencerId')({
   component: InfluencerDetailPage,
 });
 
 type UpdateInfluencerInput = RouterInputs['backofficeInfluencer']['update'];
+type InfluencerDetail = RouterOutputs['backofficeInfluencer']['findById'];
 
 function InfluencerDetailPage() {
   return (
