@@ -14,6 +14,7 @@ RUN yarn install --frozen-lockfile
 
 # Copy API source code
 COPY apps/api ./apps/api
+COPY packages/option-selector ./packages/option-selector
 
 # Generate environment variables and build
 WORKDIR /app/apps/api
