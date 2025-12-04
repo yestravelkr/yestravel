@@ -1,4 +1,11 @@
-import { Ctx, Input, Mutation, Router, UseMiddlewares } from 'nestjs-trpc';
+import {
+  Ctx,
+  Input,
+  Mutation,
+  Query,
+  Router,
+  UseMiddlewares,
+} from 'nestjs-trpc';
 import { BaseTrpcRouter } from '@src/module/trpc/baseTrpcRouter';
 import {
   BackofficeAuthMiddleware,
@@ -32,6 +39,36 @@ const bankInfoInlineSchema = z.object({
 
 @Router({ alias: 'backofficeInfluencer' })
 export class InfluencerRouter extends BaseTrpcRouter {
+  @UseMiddlewares(BackofficeAuthMiddleware)
+  @Query({
+    input: z.object({
+      page: z.number().min(1).default(1),
+      limit: z.number().min(1).max(100).default(50),
+    }),
+    output: z.object({
+      data: z.array(
+        z.object({
+          id: z.number(),
+          name: z.string(),
+          email: z.string().nullish(),
+          phoneNumber: z.string().nullish(),
+          createdAt: z.date(),
+        })
+      ),
+      total: z.number(),
+    }),
+  })
+  async findAll(
+    @Ctx() ctx: BackofficeAuthorizedContext,
+    @Input() input: { page: number; limit: number }
+  ) {
+    const output = await this.microserviceClient.send(
+      'influencer.findAll',
+      input
+    );
+    return output;
+  }
+
   @UseMiddlewares(BackofficeAuthMiddleware)
   @Mutation({
     input: z.object({
