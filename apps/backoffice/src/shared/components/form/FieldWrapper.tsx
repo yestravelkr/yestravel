@@ -9,6 +9,7 @@ interface FieldWrapperProps {
   children: React.ReactNode;
   required?: boolean;
   error?: string;
+  type?: 'text' | 'image';
 }
 
 export function FieldWrapper({
@@ -18,6 +19,7 @@ export function FieldWrapper({
   children,
   required,
   error,
+  type = 'text',
 }: FieldWrapperProps) {
   if (isEditMode) {
     return (
@@ -30,7 +32,21 @@ export function FieldWrapper({
   return (
     <InfoItem>
       <InfoLabel>{label}</InfoLabel>
-      <InfoValue>{value || '-'}</InfoValue>
+      {type === 'image' ? (
+        value ? (
+          <ImagePreview>
+            <img
+              src={value}
+              alt={label}
+              className="w-[130px] h-[130px] object-cover"
+            />
+          </ImagePreview>
+        ) : (
+          <InfoValue>-</InfoValue>
+        )
+      ) : (
+        <InfoValue>{value || '-'}</InfoValue>
+      )}
     </InfoItem>
   );
 }
@@ -48,4 +64,13 @@ const InfoLabel = tw.dt`
 const InfoValue = tw.dd`
   text-sm
   text-gray-900
+`;
+
+const ImagePreview = tw.div`
+  w-[130px]
+  h-[130px]
+  rounded-lg
+  overflow-hidden
+  border
+  border-gray-200
 `;

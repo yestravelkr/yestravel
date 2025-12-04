@@ -7,6 +7,12 @@ export const DATE_FILTER_TYPE_ENUM_VALUE = [
 
 export const ORDER_DIRECTION_ENUM_VALUE = ['ASC', 'DESC'] as const;
 
+export const BUSINESS_TYPE_ENUM_VALUE = [
+  'CORPORATION',
+  'SOLE_PROPRIETOR',
+  'INDIVIDUAL',
+] as const;
+
 // Pagination helper schemas
 export const paginationQuerySchema = z.object({
   page: z.number().int().min(1).default(1),
@@ -23,3 +29,20 @@ export const createPaginatedResponseSchema = <T extends z.ZodTypeAny>(dataSchema
     limit: z.number(),
     totalPages: z.number(),
   });
+
+// Business info schemas
+export const businessTypeEnumSchema = z.enum(BUSINESS_TYPE_ENUM_VALUE);
+
+export const businessInfoSchema = z.object({
+  type: businessTypeEnumSchema.nullish(),
+  name: z.string().nullish(),
+  licenseNumber: z.string().nullish(),
+  ceoName: z.string().nullish(),
+  licenseFileUrl: z.string().nullish(),
+});
+
+export const bankInfoSchema = z.object({
+  name: z.string().nullish(),
+  accountNumber: z.string().nullish(),
+  accountHolder: z.string().nullish(),
+});

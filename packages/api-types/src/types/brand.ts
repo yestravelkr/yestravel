@@ -15,7 +15,7 @@ export const SOCIAL_MEDIA_PLATFORM_ENUM_VALUE = [
   'TWITTER',
   'YOUTUBE',
   'TIKTOK',
-  'WEBSITE',
+  'OTHER',
 ] as const;
 
 export const socialMediaPlatformEnumSchema = z.enum(SOCIAL_MEDIA_PLATFORM_ENUM_VALUE);

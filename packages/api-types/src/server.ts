@@ -1,5 +1,6 @@
 import { initTRPC } from "@trpc/server";
 import { z } from "zod";
+import { businessInfoSchema, bankInfoSchema } from "./types/common";
 
 const t = initTRPC.create();
 const publicProcedure = t.procedure;
@@ -761,6 +762,33 @@ const appRouter = t.router({
       createdAt: z.date(),
       updatedAt: z.date(),
     })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    findById: publicProcedure.input(z.object({
+      id: z.number(),
+    })).output(z.object({
+      id: z.number(),
+      name: z.string(),
+      email: z.string().email().nullish(),
+      phoneNumber: z.string().nullish(),
+      thumbnail: z.string().nullish(),
+      businessInfo: businessInfoSchema.nullish(),
+      bankInfo: bankInfoSchema.nullish(),
+      socialMedias: z.array(z.object({
+        id: z.number().optional(),
+        platform: z.enum(
+          [
+            'INSTAGRAM',
+            'TIKTOK',
+            'YOUTUBE',
+            'FACEBOOK',
+            'TWITTER',
+            'OTHER',
+          ] as const
+        ),
+        url: z.string().url('유효한 URL을 입력해주세요'),
+      })),
+      createdAt: z.date(),
+      updatedAt: z.date(),
+    })).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
     update: publicProcedure.input(z.object({
       id: z.number(),
       name: z.string().min(1, '인플루언서명은 필수입니다'),

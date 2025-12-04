@@ -35,6 +35,20 @@ export class InfluencerService {
     };
   }
 
+  async findById(id: number): Promise<InfluencerEntity> {
+    const influencer =
+      await this.repositoryProvider.InfluencerRepository.findOne({
+        where: { id },
+        relations: ['socialMedias'],
+      });
+
+    if (!influencer) {
+      throw new NotFoundException(`인플루언서를 찾을 수 없습니다 (ID: ${id})`);
+    }
+
+    return influencer;
+  }
+
   async create(input: CreateInfluencerInput): Promise<InfluencerEntity> {
     // 중복 이름 체크
     const isDuplicate =

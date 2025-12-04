@@ -101,6 +101,24 @@ export class InfluencerRouter extends BaseTrpcRouter {
   }
 
   @UseMiddlewares(BackofficeAuthMiddleware)
+  @Query({
+    input: z.object({
+      id: z.number(),
+    }),
+    output: influencerSchema,
+  })
+  async findById(
+    @Ctx() ctx: BackofficeAuthorizedContext,
+    @Input() input: { id: number }
+  ) {
+    const output = await this.microserviceClient.send(
+      'influencer.findById',
+      input
+    );
+    return influencerSchema.parse(output);
+  }
+
+  @UseMiddlewares(BackofficeAuthMiddleware)
   @Mutation({
     input: z.object({
       id: z.number(),

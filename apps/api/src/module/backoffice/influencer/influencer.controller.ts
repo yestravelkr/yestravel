@@ -33,6 +33,12 @@ export class InfluencerController {
     return influencerListSchema.parse(result);
   }
 
+  @MessagePattern('influencer.findById')
+  async findById(data: { id: number }): Promise<Influencer> {
+    const result = await this.influencerService.findById(data.id);
+    return influencerSchema.parse(result);
+  }
+
   @MessagePattern('influencer.create')
   @Transactional
   async create(data: CreateInfluencerInput): Promise<Influencer> {
