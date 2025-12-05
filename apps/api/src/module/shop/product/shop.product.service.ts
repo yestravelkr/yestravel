@@ -26,10 +26,4 @@ export class ShopProductService {
     
     throw new Error('Not implemented yet');
   }
-
-  // TODO: 상품 목록 조회 로직 추가 예정
-  // async findAll() {}
-
-  // TODO: 상품 검색 로직 추가 예정
-  // async search(query: string) {}
 }

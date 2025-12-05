@@ -18,7 +18,4 @@ export class ShopProductRouter extends BaseTrpcRouter {
   async getProductDetail(@Input() input: { influencerProductId: string }) {
     return this.microserviceClient.send('shopProduct.getDetail', input);
   }
-
-  // TODO: 상품 목록 조회 엔드포인트 추가 예정
-  // TODO: 상품 검색 엔드포인트 추가 예정
 }

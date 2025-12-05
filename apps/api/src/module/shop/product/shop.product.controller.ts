@@ -28,10 +28,4 @@ export class ShopProductController {
     // TODO: Service 로직 구현 후 연결
     return this.shopProductService.getProductDetail(input.influencerProductId);
   }
-
-  // TODO: 상품 목록 조회 메시지 패턴 추가 예정
-  // @MessagePattern('shopProduct.findAll')
-
-  // TODO: 상품 검색 메시지 패턴 추가 예정
-  // @MessagePattern('shopProduct.search')
 }

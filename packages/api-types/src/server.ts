@@ -6,6 +6,56 @@ const t = initTRPC.create();
 const publicProcedure = t.procedure;
 
 const appRouter = t.router({
+  shopProduct: t.router({
+    getProductDetail: publicProcedure.input(z.object({
+      influencerProductId: z.string().min(1),
+    })).output(z.object({
+      id: z.number(),
+      type: z.enum(PRODUCT_TYPE_ENUM_VALUE),
+      thumbnailUrl: z.string().nullish(),
+      name: z.string(),
+      description: z.string().nullish(),
+      detailContent: z.string().nullish(),
+
+      campaign: z.object({
+        id: z.number(),
+        title: z.string(),
+        startAt: z.date(),
+        endAt: z.date(),
+      }),
+
+      brand: z.object({
+        id: z.number(),
+        name: z.string(),
+      }),
+
+      influencer: z.object({
+        id: z.number(),
+        name: z.string(),
+      }),
+
+      // Hotel 타입 상품의 옵션 구조
+      options: z.object({
+        // 날짜별 SKU 재고 정보
+        skus: z.array(
+          z.object({
+            id: z.number(),
+            quantity: z.number(),
+            date: z.string(), // YYYY-MM-DD 형식
+          })
+        ),
+
+        // 선택 가능한 호텔 옵션 목록 (1개 필수 선택)
+        hotelOptions: z.array(
+          z.object({
+            id: z.number(),
+            name: z.string(),
+            priceByDate: z.record(z.number()), // { "2025-11-21": 100000, ... }
+          })
+        ),
+      }),
+    })).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
+  }),
   shopPayment: t.router({
     complete: publicProcedure.input(z.object({
       paymentId: z.string(),
@@ -38,13 +88,13 @@ const appRouter = t.router({
     findAll: publicProcedure.input(z
       .object({
         // 상품 타입 (숙박/배송상품/티켓)
-        type: z.enum(['HOTEL', 'E-TICKET', 'DELIVERY']).optional(),
+        type: z.enum(PRODUCT_TYPE_ENUM_VALUE).optional(),
 
         // 품목명 검색 (템플릿 이름)
         name: z.string().optional(),
 
         // 날짜 필터 타입 (등록일/수정일)
-        dateFilterType: z.enum(['CREATED_AT', 'UPDATED_AT']).optional(),
+        dateFilterType: z.enum(DATE_FILTER_TYPE_ENUM_VALUE).optional(),
 
         // 시작일
         startDate: z.string().datetime().optional(),
@@ -63,14 +113,10 @@ const appRouter = t.router({
 
         // 카테고리 ID 목록
         categoryIds: z.array(z.number().int().positive()).optional(),
-        page: z.number().int().min(1).default(1),
-        limit: z.number().int().min(1).max(100).default(30),
-        orderBy: z.string().default('createdAt'),
-        order: z.enum(['ASC', 'DESC']).default('DESC'),
-      }).optional().default({})).output(z.object({
-        data: z.array(z.object({
+      })
+      .merge(paginationQuerySchema).optional().default({})).output(createPaginatedResponseSchema(z.object({
         id: z.number(),
-        type: z.enum(['HOTEL', 'E-TICKET', 'DELIVERY']),
+        type: z.enum(PRODUCT_TYPE_ENUM_VALUE),
         name: z.string(),
         brand: z.object({
           id: z.number(),
@@ -86,12 +132,7 @@ const appRouter = t.router({
         useStock: z.boolean(),
         createdAt: z.date(),
         updatedAt: z.date(),
-      })),
-        total: z.number(),
-        page: z.number(),
-        limit: z.number(),
-        totalPages: z.number(),
-      })).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+      }))).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
     findById: publicProcedure.input(z.object({
       id: z.number().int().positive('유효한 ID를 입력해주세요'),
     })).output(z.discriminatedUnion('type', [
@@ -207,12 +248,12 @@ const appRouter = t.router({
           .positive('최대인원은 1명 이상이어야 합니다'),
         checkInTime: z
           .string()
-          .regex(/^([01]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$/, '시간은 HH:MM 형식이어야 합니다')
-          .transform((val) => val.length > 5 ? val.substring(0, 5) : val),
+          .regex(TIME_FORMAT_REGEX)
+          .transform(normalizeTime),
         checkOutTime: z
           .string()
-          .regex(/^([01]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$/, '시간은 HH:MM 형식이어야 합니다')
-          .transform((val) => val.length > 5 ? val.substring(0, 5) : val),
+          .regex(TIME_FORMAT_REGEX)
+          .transform(normalizeTime),
         bedTypes: z.array(z.string()).default([]),
         tags: z.array(z.string()).default([]),
       }),
@@ -273,13 +314,13 @@ const appRouter = t.router({
       maxCapacity: z.number().int().positive().optional(),
       checkInTime: z
         .string()
-        .regex(/^([01]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$/, '시간은 HH:MM 형식이어야 합니다')
-        .transform((val) => val.length > 5 ? val.substring(0, 5) : val)
+        .regex(TIME_FORMAT_REGEX)
+        .transform(normalizeTime)
         .optional(),
       checkOutTime: z
         .string()
-        .regex(/^([01]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$/, '시간은 HH:MM 형식이어야 합니다')
-        .transform((val) => val.length > 5 ? val.substring(0, 5) : val)
+        .regex(TIME_FORMAT_REGEX)
+        .transform(normalizeTime)
         .optional(),
       bedTypes: z.array(z.string()).optional(),
       tags: z.array(z.string()).optional(),
@@ -481,12 +522,12 @@ const appRouter = t.router({
           .positive('최대인원은 1명 이상이어야 합니다'),
         checkInTime: z
           .string()
-          .regex(/^([01]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$/, '시간은 HH:MM 형식이어야 합니다')
-          .transform((val) => val.length > 5 ? val.substring(0, 5) : val),
+          .regex(TIME_FORMAT_REGEX, TIME_FORMAT_ERROR_MESSAGE_KO)
+          .transform(normalizeTime),
         checkOutTime: z
           .string()
-          .regex(/^([01]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$/, '시간은 HH:MM 형식이어야 합니다')
-          .transform((val) => val.length > 5 ? val.substring(0, 5) : val),
+          .regex(TIME_FORMAT_REGEX, TIME_FORMAT_ERROR_MESSAGE_KO)
+          .transform(normalizeTime),
         bedTypes: z.array(z.string()).default([]),
         tags: z.array(z.string()).default([]),
         hotelOptions: z
@@ -594,12 +635,12 @@ const appRouter = t.router({
           .positive('최대인원은 1명 이상이어야 합니다'),
         checkInTime: z
           .string()
-          .regex(/^([01]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$/, '시간은 HH:MM 형식이어야 합니다')
-          .transform((val) => val.length > 5 ? val.substring(0, 5) : val),
+          .regex(TIME_FORMAT_REGEX, TIME_FORMAT_ERROR_MESSAGE_KO)
+          .transform(normalizeTime),
         checkOutTime: z
           .string()
-          .regex(/^([01]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$/, '시간은 HH:MM 형식이어야 합니다')
-          .transform((val) => val.length > 5 ? val.substring(0, 5) : val),
+          .regex(TIME_FORMAT_REGEX, TIME_FORMAT_ERROR_MESSAGE_KO)
+          .transform(normalizeTime),
         bedTypes: z.array(z.string()).default([]),
         tags: z.array(z.string()).default([]),
         hotelOptions: z
@@ -708,7 +749,7 @@ const appRouter = t.router({
       phoneNumber: z.string().nullish(),
       thumbnail: z.string().nullish(),
       businessInfo: z.object({
-        type: z.enum(['CORPORATION', 'SOLE_PROPRIETOR', 'INDIVIDUAL'] as const).nullish(),
+        type: z.enum(BUSINESS_TYPE_ENUM_VALUE).nullish(),
         name: z.string().nullish(),
         licenseNumber: z.string().nullish(),
         ceoName: z.string().nullish(),
@@ -722,7 +763,7 @@ const appRouter = t.router({
       socialMedias: z
         .array(
           z.object({
-            platform: z.enum(['INSTAGRAM', 'TIKTOK', 'YOUTUBE', 'FACEBOOK', 'TWITTER', 'OTHER'] as const),
+            platform: socialMediaPlatformEnumSchema,
             url: z.string().url('유효한 URL을 입력해주세요'),
           })
         )
@@ -733,18 +774,8 @@ const appRouter = t.router({
       email: z.string().email().nullish(),
       phoneNumber: z.string().nullish(),
       thumbnail: z.string().nullish(),
-      businessInfo: z.object({
-        type: z.enum(['CORPORATION', 'SOLE_PROPRIETOR', 'INDIVIDUAL'] as const).nullish(),
-        name: z.string().nullish(),
-        licenseNumber: z.string().nullish(),
-        ceoName: z.string().nullish(),
-        licenseFileUrl: z.string().nullish(),
-      }).nullish(),
-      bankInfo: z.object({
-        name: z.string().nullish(),
-        accountNumber: z.string().nullish(),
-        accountHolder: z.string().nullish(),
-      }).nullish(),
+      businessInfo: businessInfoSchema.nullish(),
+      bankInfo: bankInfoSchema.nullish(),
       socialMedias: z.array(z.object({
         id: z.number().optional(),
         platform: z.enum(
@@ -796,7 +827,7 @@ const appRouter = t.router({
       phoneNumber: z.string().nullish(),
       thumbnail: z.string().nullish(),
       businessInfo: z.object({
-        type: z.enum(['CORPORATION', 'SOLE_PROPRIETOR', 'INDIVIDUAL'] as const).nullish(),
+        type: z.enum(BUSINESS_TYPE_ENUM_VALUE).nullish(),
         name: z.string().nullish(),
         licenseNumber: z.string().nullish(),
         ceoName: z.string().nullish(),
@@ -810,7 +841,7 @@ const appRouter = t.router({
       socialMedias: z
         .array(
           z.object({
-            platform: z.enum(['INSTAGRAM', 'TIKTOK', 'YOUTUBE', 'FACEBOOK', 'TWITTER', 'OTHER'] as const),
+            platform: socialMediaPlatformEnumSchema,
             url: z.string().url('유효한 URL을 입력해주세요'),
           })
         )
@@ -821,18 +852,8 @@ const appRouter = t.router({
       email: z.string().email().nullish(),
       phoneNumber: z.string().nullish(),
       thumbnail: z.string().nullish(),
-      businessInfo: z.object({
-        type: z.enum(['CORPORATION', 'SOLE_PROPRIETOR', 'INDIVIDUAL'] as const).nullish(),
-        name: z.string().nullish(),
-        licenseNumber: z.string().nullish(),
-        ceoName: z.string().nullish(),
-        licenseFileUrl: z.string().nullish(),
-      }).nullish(),
-      bankInfo: z.object({
-        name: z.string().nullish(),
-        accountNumber: z.string().nullish(),
-        accountHolder: z.string().nullish(),
-      }).nullish(),
+      businessInfo: businessInfoSchema.nullish(),
+      bankInfo: bankInfoSchema.nullish(),
       socialMedias: z.array(z.object({
         id: z.number().optional(),
         platform: z.enum(
@@ -854,7 +875,7 @@ const appRouter = t.router({
   backofficeCategory: t.router({
     create: publicProcedure.input(z.object({
       name: z.string().min(1, '카테고리 이름은 필수입니다'),
-      productType: z.enum(['HOTEL', 'E-TICKET', 'DELIVERY'] as const),
+      productType: z.enum(PRODUCT_TYPE_ENUM_VALUE),
       parentId: z.number().nullish(),
     })).output(z.object({
       id: z.number(),
@@ -867,7 +888,7 @@ const appRouter = t.router({
     })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
     findAll: publicProcedure.input(z
       .object({
-        productType: z.enum(['HOTEL', 'E-TICKET', 'DELIVERY'] as const).optional(),
+        productType: z.enum(PRODUCT_TYPE_ENUM_VALUE).optional(),
       })
       .optional()).output(z.array(
         z.object({
