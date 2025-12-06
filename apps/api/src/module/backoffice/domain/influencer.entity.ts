@@ -35,4 +35,32 @@ export const getInfluencerRepository = (
         const entity = await this.findOne({ where });
         return entity !== null;
       },
+
+      /**
+       * 여러 인플루언서 ID의 존재 여부를 한 번에 검증
+       * @param ids 검증할 인플루언서 ID 배열
+       * @throws NotFoundException 존재하지 않는 ID가 있을 경우
+       */
+      async validateExistsByIds(ids: number[]): Promise<void> {
+        if (ids.length === 0) return;
+
+        const existingInfluencers = await this.find({
+          where: ids.map(id => ({ id })),
+          select: ['id'],
+        });
+
+        const existingIds = new Set(
+          existingInfluencers.map(
+            (influencer: InfluencerEntity) => influencer.id
+          )
+        );
+        const missingIds = ids.filter(id => !existingIds.has(id));
+
+        if (missingIds.length > 0) {
+          const { NotFoundException } = await import('@nestjs/common');
+          throw new NotFoundException(
+            `인플루언서를 찾을 수 없습니다 (ID: ${missingIds[0]})`
+          );
+        }
+      },
     });

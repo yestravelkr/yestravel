@@ -74,7 +74,7 @@ export class ProductService {
         const hotel =
           await this.repositoryProvider.HotelProductRepository.findOneOrFail({
             where: { id },
-            relations: ['brand', 'categories', 'productTemplate', 'campaign'],
+            relations: ['brand', 'categories', 'productTemplate'],
           }).catch(() => {
             throw new NotFoundException(
               `호텔 상품을 찾을 수 없습니다 (ID: ${id})`
@@ -106,7 +106,7 @@ export class ProductService {
           await this.repositoryProvider.DeliveryProductRepository.findOneOrFail(
             {
               where: { id },
-              relations: ['brand', 'categories', 'productTemplate', 'campaign'],
+              relations: ['brand', 'categories', 'productTemplate'],
             }
           ).catch(() => {
             throw new NotFoundException(
@@ -125,7 +125,7 @@ export class ProductService {
         const eticket =
           await this.repositoryProvider.ETicketProductRepository.findOneOrFail({
             where: { id },
-            relations: ['brand', 'categories', 'productTemplate', 'campaign'],
+            relations: ['brand', 'categories', 'productTemplate'],
           }).catch(() => {
             throw new NotFoundException(
               `E-Ticket 상품을 찾을 수 없습니다 (ID: ${id})`
@@ -167,18 +167,7 @@ export class ProductService {
       });
     }
 
-    // 3. Campaign 존재 여부 확인 (선택적)
-    if (input.campaignId) {
-      await this.repositoryProvider.CampaignRepository.findOneOrFail({
-        where: { id: input.campaignId },
-      }).catch(() => {
-        throw new NotFoundException(
-          `캠페인을 찾을 수 없습니다 (ID: ${input.campaignId})`
-        );
-      });
-    }
-
-    // 4. 타입에 따라 적절한 Entity 생성 및 저장
+    // 3. 타입에 따라 적절한 Entity 생성 및 저장
     let savedProduct:
       | HotelProductEntity
       | DeliveryProductEntity
@@ -273,18 +262,7 @@ export class ProductService {
       });
     }
 
-    // 4. Campaign 존재 여부 확인 (선택적)
-    if (input.campaignId) {
-      await this.repositoryProvider.CampaignRepository.findOneOrFail({
-        where: { id: input.campaignId },
-      }).catch(() => {
-        throw new NotFoundException(
-          `캠페인을 찾을 수 없습니다 (ID: ${input.campaignId})`
-        );
-      });
-    }
-
-    // 5. 요청 타입과 기존 상품 타입 일치 확인
+    // 4. 요청 타입과 기존 상품 타입 일치 확인
     if (existingProduct.type !== input.type) {
       throw new BadRequestException(
         `상품 타입을 변경할 수 없습니다. 기존: ${existingProduct.type}, 요청: ${input.type}`
