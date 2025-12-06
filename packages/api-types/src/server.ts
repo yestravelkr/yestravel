@@ -5,7 +5,9 @@ import {
   BUSINESS_TYPE_ENUM_VALUE,
   DATE_FILTER_TYPE_ENUM_VALUE,
   PRODUCT_TYPE_ENUM_VALUE,
-  socialMediaPlatformEnumSchema
+  socialMediaPlatformEnumSchema,
+  campaignProductInputSchema,
+  campaignInfluencerInputSchema
 } from "./types";
 import {normalizeTime, TIME_FORMAT_ERROR_MESSAGE_KO, TIME_FORMAT_REGEX} from "./utils";
 
