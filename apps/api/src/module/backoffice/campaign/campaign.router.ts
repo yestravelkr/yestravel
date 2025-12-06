@@ -10,6 +10,7 @@ import {
   findCampaignByIdInputSchema,
   deleteCampaignInputSchema,
   campaignSchema,
+  campaignWithRelationsSchema,
 } from './campaign.schema';
 import type {
   CreateCampaignInput,
@@ -35,7 +36,7 @@ export class CampaignRouter extends BaseTrpcRouter {
   @UseMiddlewares(BackofficeAuthMiddleware)
   @Query({
     input: findCampaignByIdInputSchema,
-    output: campaignSchema,
+    output: campaignWithRelationsSchema,
   })
   async findById(
     @Ctx() ctx: BackofficeAuthorizedContext,
@@ -45,13 +46,13 @@ export class CampaignRouter extends BaseTrpcRouter {
       'backoffice.campaign.findById',
       input
     );
-    return campaignSchema.parse(output);
+    return campaignWithRelationsSchema.parse(output);
   }
 
   @UseMiddlewares(BackofficeAuthMiddleware)
   @Mutation({
     input: createCampaignInputSchema,
-    output: campaignSchema,
+    output: campaignWithRelationsSchema,
   })
   async create(
     @Ctx() ctx: BackofficeAuthorizedContext,
@@ -61,13 +62,13 @@ export class CampaignRouter extends BaseTrpcRouter {
       'backoffice.campaign.create',
       input
     );
-    return campaignSchema.parse(output);
+    return campaignWithRelationsSchema.parse(output);
   }
 
   @UseMiddlewares(BackofficeAuthMiddleware)
   @Mutation({
     input: updateCampaignInputSchema,
-    output: campaignSchema,
+    output: campaignWithRelationsSchema,
   })
   async update(
     @Ctx() ctx: BackofficeAuthorizedContext,
@@ -77,7 +78,7 @@ export class CampaignRouter extends BaseTrpcRouter {
       'backoffice.campaign.update',
       input
     );
-    return campaignSchema.parse(output);
+    return campaignWithRelationsSchema.parse(output);
   }
 
   @UseMiddlewares(BackofficeAuthMiddleware)
