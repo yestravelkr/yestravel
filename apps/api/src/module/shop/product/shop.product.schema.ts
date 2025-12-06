@@ -8,7 +8,7 @@ export const shopProductDetailSchema = z.object({
   name: z.string(),
   description: z.string().nullish(),
   detailContent: z.string().nullish(),
-  
+
   campaign: z.object({
     id: z.number(),
     title: z.string(),
@@ -36,7 +36,7 @@ export const shopProductDetailSchema = z.object({
         date: z.string(), // YYYY-MM-DD 형식
       })
     ),
-    
+
     // 선택 가능한 호텔 옵션 목록 (1개 필수 선택)
     hotelOptions: z.array(
       z.object({

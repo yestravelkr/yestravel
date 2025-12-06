@@ -155,9 +155,7 @@ export const getHotelOptionRepository = (
               anotherPriceByDate: option.anotherPriceByDate,
             });
           })
-          .filter(
-            (option): option is HotelOptionEntity => option !== null
-          );
+          .filter((option): option is HotelOptionEntity => option !== null);
 
         if (optionsToSave.length > 0) {
           await this.save(optionsToSave);

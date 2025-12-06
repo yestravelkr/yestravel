@@ -82,10 +82,11 @@ export class ProductService {
           });
 
         // 호텔 옵션 조회
-        const hotelOptions = await this.repositoryProvider.HotelOptionRepository.find({
-          where: { productId: id },
-          order: { id: 'ASC' },
-        });
+        const hotelOptions =
+          await this.repositoryProvider.HotelOptionRepository.find({
+            where: { productId: id },
+            order: { id: 'ASC' },
+          });
 
         return {
           ...hotel,

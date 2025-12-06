@@ -13,7 +13,6 @@ import type {
   CreateInfluencerInput,
   UpdateInfluencerInput,
   Influencer,
-  InfluencerListResponse,
   InfluencerList,
 } from './influencer.dto';
 

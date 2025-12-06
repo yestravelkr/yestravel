@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { ShopProductRouter } from './shop.product.router';
 import { ShopProductController } from './shop.product.controller';
 import { ShopProductService } from './shop.product.service';
 

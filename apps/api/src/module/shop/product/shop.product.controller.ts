@@ -24,7 +24,9 @@ export class ShopProductController {
   constructor(private readonly shopProductService: ShopProductService) {}
 
   @MessagePattern('shopProduct.getDetail')
-  async getDetail(input: GetProductDetailInput): Promise<ProductDetailResponse> {
+  async getDetail(
+    input: GetProductDetailInput
+  ): Promise<ProductDetailResponse> {
     // TODO: Service 로직 구현 후 연결
     return this.shopProductService.getProductDetail(input.influencerProductId);
   }
