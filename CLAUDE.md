@@ -110,6 +110,78 @@ export class ModuleService {
 }
 ```
 
+## 코딩 스타일 규칙
+
+**⚠️ 비동기 처리 - 함수형 프로그래밍 필수:**
+- **for 루프 내 await 사용 금지**: `Promise.all()` + `map()` 패턴 사용
+- 순차 처리가 필요한 경우에도 `reduce` + `Promise` 체이닝 사용
+
+```typescript
+// ❌ 잘못된 방법 - for 루프 내 await
+async function createItems(items: Item[]) {
+  const results = [];
+  for (const item of items) {
+    const result = await this.repository.save(item);
+    results.push(result);
+  }
+  return results;
+}
+
+// ✅ 올바른 방법 - 병렬 처리 (독립적인 작업)
+async function createItems(items: Item[]) {
+  return Promise.all(
+    items.map(item => this.repository.save(item))
+  );
+}
+
+// ✅ 올바른 방법 - 순차 처리 (의존성 있는 작업)
+async function createItemsSequentially(items: Item[]) {
+  return items.reduce(
+    async (accPromise, item) => {
+      const acc = await accPromise;
+      const result = await this.repository.save(item);
+      return [...acc, result];
+    },
+    Promise.resolve([] as SavedItem[])
+  );
+}
+```
+
+**⚠️ 변수명 규칙 - 의미있는 이름 필수:**
+- **한 글자 변수명 사용 금지**: `i`, `j`, `k`, `p`, `x`, `e` 등 금지
+- 항상 의미를 명확히 전달하는 이름 사용
+
+```typescript
+// ❌ 잘못된 방법
+const ids = influencers.map(i => i.id);
+products.forEach(p => p.hotelOptions = []);
+items.filter(x => x.active);
+
+// ✅ 올바른 방법
+const ids = influencers.map(influencer => influencer.id);
+products.forEach(product => product.hotelOptions = []);
+items.filter(item => item.active);
+```
+
+**⚠️ 컬렉션 변환 - 함수형 메서드 사용:**
+- `for` 루프 대신 `map`, `filter`, `reduce`, `forEach` 사용
+- 불변성 유지: 원본 배열 수정 대신 새 배열 반환
+
+```typescript
+// ❌ 잘못된 방법
+const result = [];
+for (const item of items) {
+  if (item.active) {
+    result.push(item.name);
+  }
+}
+
+// ✅ 올바른 방법
+const result = items
+  .filter(item => item.active)
+  .map(item => item.name);
+```
+
 ## 필수 패턴
 
 **타입 정의 및 공유 (packages/api-types):**
@@ -727,6 +799,35 @@ BaseEntity (id, createdAt, updatedAt)
           ├─ DeliveryTemplateEntity (useOptions, delivery, ...)
           └─ ETicketTemplateEntity (useOptions)
 ```
+
+### ⚠️ 중요: PostgreSQL INHERITS와 Foreign Key 제약
+
+**INHERITS 테이블을 참조하는 FK는 사용 금지:**
+
+PostgreSQL INHERITS를 사용하면 자식 테이블에 insert된 데이터는 **부모 테이블의 FK 제약에서 참조할 수 없습니다**.
+
+```sql
+-- 예시: hotel_product, delivery_product, eticket_product는 product를 INHERITS
+
+-- ❌ 잘못된 방법 - FK가 자식 테이블 데이터를 참조하지 못함
+ALTER TABLE "campaign_product"
+ADD CONSTRAINT "FK_campaign_product_product"
+FOREIGN KEY ("product_id") REFERENCES "product"("id");
+-- hotel_product에 있는 id=1은 이 FK로 참조 불가!
+
+-- ✅ 올바른 방법 - FK 없이 애플리케이션 레벨에서 검증
+-- Migration에서 product_id FK 추가하지 않음
+-- Service에서 validateExistsByIds()로 존재 여부 검증
+```
+
+**INHERITS 테이블 참조 시 규칙:**
+1. **FK 제약 조건 추가 금지**: INHERITS 부모 테이블(product, product_template 등)을 참조하는 FK는 생성하지 않음
+2. **애플리케이션 레벨 검증**: Repository의 `validateExistsByIds()` 메서드로 존재 여부 검증
+3. **인덱스는 추가 가능**: FK 없이도 `product_id` 컬럼에 인덱스 생성 가능
+
+**영향받는 테이블:**
+- `product` (hotel_product, delivery_product, eticket_product의 부모)
+- `product_template` (hotel_template, delivery_template, eticket_template의 부모)
 
 ## Enum 네이밍 규칙
 
