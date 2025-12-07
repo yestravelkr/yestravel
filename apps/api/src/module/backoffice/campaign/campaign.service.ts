@@ -5,6 +5,7 @@ import { CampaignProductEntity } from '@src/module/backoffice/domain/campaign-pr
 import { CampaignInfluencerEntity } from '@src/module/backoffice/domain/campaign-influencer.entity';
 import { CampaignInfluencerProductEntity } from '@src/module/backoffice/domain/campaign-influencer-product.entity';
 import { CampaignInfluencerHotelOptionEntity } from '@src/module/backoffice/domain/campaign-influencer-hotel-option.entity';
+import type { CategoryEntity } from '@src/module/backoffice/domain/category.entity';
 import type {
   CreateCampaignInput,
   UpdateCampaignInput,
@@ -33,15 +34,20 @@ export class CampaignService {
         throw new NotFoundException('캠페인을 찾을 수 없습니다');
       });
 
+    // NOTE: categories는 n:m 관계이므로 DB join 대신 코드 레벨에서 합침
     const [products, influencers] = await Promise.all([
       this.repositoryProvider.CampaignProductRepository.find({
         where: { campaignId: id },
-        relations: ['product', 'product.brand', 'product.categories'],
+        relations: ['product', 'product.brand'],
       }),
       this.repositoryProvider.CampaignInfluencerRepository.find({
         where: { campaignId: id },
       }),
     ]);
+
+    // 상품 카테고리 별도 조회 후 합침
+    const productsWithCategories =
+      await this.loadCategoriesForCampaignProducts(products);
 
     // 인플루언서별 상품 및 호텔 옵션 조회
     const influencersWithProducts =
@@ -49,7 +55,7 @@ export class CampaignService {
 
     return this.buildCampaignResponse(
       campaign,
-      products,
+      productsWithCategories,
       influencersWithProducts
     );
   }
@@ -87,15 +93,21 @@ export class CampaignService {
     ]);
 
     // 4. Product relations 로드를 위해 다시 조회
+    // NOTE: categories는 n:m 관계이므로 DB join 대신 코드 레벨에서 합침
     const productsWithRelations =
       await this.repositoryProvider.CampaignProductRepository.find({
         where: { campaignId: savedCampaign.id },
-        relations: ['product', 'product.brand', 'product.categories'],
+        relations: ['product', 'product.brand'],
       });
+
+    // 상품 카테고리 별도 조회 후 합침
+    const productsWithCategories = await this.loadCategoriesForCampaignProducts(
+      productsWithRelations
+    );
 
     return this.buildCampaignResponse(
       savedCampaign,
-      productsWithRelations,
+      productsWithCategories,
       savedInfluencers
     );
   }
@@ -144,15 +156,21 @@ export class CampaignService {
     ]);
 
     // 5. Product relations 로드를 위해 다시 조회
+    // NOTE: categories는 n:m 관계이므로 DB join 대신 코드 레벨에서 합침
     const productsWithRelations =
       await this.repositoryProvider.CampaignProductRepository.find({
         where: { campaignId: savedCampaign.id },
-        relations: ['product', 'product.brand', 'product.categories'],
+        relations: ['product', 'product.brand'],
       });
+
+    // 상품 카테고리 별도 조회 후 합침
+    const productsWithCategories = await this.loadCategoriesForCampaignProducts(
+      productsWithRelations
+    );
 
     return this.buildCampaignResponse(
       savedCampaign,
-      productsWithRelations,
+      productsWithCategories,
       savedInfluencers
     );
   }
@@ -316,6 +334,51 @@ export class CampaignService {
       products: products.map(product => product.toResponse()),
       influencers: influencers.map(influencer => influencer.toResponse()),
     };
+  }
+
+  /**
+   * 캠페인 상품 목록에 카테고리를 로드하여 반환
+   * NOTE: n:m 관계는 DB join 대신 코드 레벨에서 합쳐서 쿼리 성능 최적화
+   */
+  private async loadCategoriesForCampaignProducts(
+    campaignProducts: CampaignProductEntity[]
+  ): Promise<CampaignProductEntity[]> {
+    if (campaignProducts.length === 0) return [];
+
+    const productIds = campaignProducts.map(
+      campaignProduct => campaignProduct.productId
+    );
+
+    // 모든 상품의 카테고리를 한 번에 조회
+    const categoriesWithProductId =
+      await this.repositoryProvider.CategoryRepository.createQueryBuilder(
+        'category'
+      )
+        .innerJoin('product_categories', 'pc', 'pc.category_id = category.id')
+        .addSelect('pc.product_id', 'productId')
+        .where('pc.product_id IN (:...productIds)', { productIds })
+        .andWhere('category.deletedAt IS NULL')
+        .getRawAndEntities();
+
+    // 카테고리를 상품별로 그룹화
+    const categoriesByProductId = categoriesWithProductId.raw.reduce(
+      (acc, raw, index) => {
+        const productId = raw.productId as number;
+        const category = categoriesWithProductId.entities[index];
+        const existing = acc.get(productId) ?? [];
+        acc.set(productId, [...existing, category]);
+        return acc;
+      },
+      new Map<number, CategoryEntity[]>()
+    );
+
+    // 각 캠페인 상품의 product에 카테고리 할당
+    campaignProducts.forEach(campaignProduct => {
+      campaignProduct.product.categories =
+        categoriesByProductId.get(campaignProduct.productId) ?? [];
+    });
+
+    return campaignProducts;
   }
 
   /**
