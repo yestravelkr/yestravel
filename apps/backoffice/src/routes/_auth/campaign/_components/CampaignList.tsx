@@ -15,8 +15,6 @@ export function CampaignList() {
       <EmptyState
         title="등록된 캠페인이 없습니다"
         description="새 캠페인을 생성하여 시작하세요"
-        actionLabel="캠페인 생성"
-        actionTo="/campaign/create"
       />
     );
   }

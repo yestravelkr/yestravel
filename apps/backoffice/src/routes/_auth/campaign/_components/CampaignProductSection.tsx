@@ -5,7 +5,15 @@
  * allProducts를 Map으로 변환하여 formProducts의 id로 데이터를 조회합니다.
  */
 
-import { Button } from '@yestravelkr/min-design-system';
+import {
+  Button,
+  Table,
+  THead,
+  TBody,
+  TR,
+  TH,
+  TD,
+} from '@yestravelkr/min-design-system';
 import { Plus } from 'lucide-react';
 import { useMemo } from 'react';
 import { Control, useWatch } from 'react-hook-form';
@@ -45,15 +53,7 @@ export function CampaignProductSection({
   });
 
   // allProducts를 id를 key로 하는 Map으로 변환
-  const productsMap: Map<
-    number,
-    {
-      id: number;
-      name: string;
-      brand: string;
-      category: string;
-    }
-  > = useMemo(() => {
+  const productsMap = useMemo(() => {
     if (!allProducts) return new Map();
 
     return new Map(
@@ -62,8 +62,8 @@ export function CampaignProductSection({
         {
           id: product.id,
           name: product.name,
-          brand: product.brand.name,
-          category: '카테고리 미구현',
+          brandName: product.brand.name,
+          category: product.type || '-',
         },
       ]),
     );
@@ -139,51 +139,51 @@ export function CampaignProductSection({
         {displayProducts.length === 0 ? (
           <EmptyMessage>추가된 상품이 없습니다.</EmptyMessage>
         ) : (
-          <ProductList>
-            {displayProducts.map((product, index) => (
-              <ProductItem key={product.id}>
-                <ProductInfo>
-                  <ProductField>
-                    <FieldLabel>상품명</FieldLabel>
-                    <FieldValue>{product.name}</FieldValue>
-                  </ProductField>
-                  <ProductField>
-                    <FieldLabel>브랜드</FieldLabel>
-                    <FieldValue>{product.brand}</FieldValue>
-                  </ProductField>
-                  <ProductField>
-                    <FieldLabel>카테고리</FieldLabel>
-                    <FieldValue>{product.category}</FieldValue>
-                  </ProductField>
-                  <ProductField>
-                    <FieldLabel>상태</FieldLabel>
-                    <Select
-                      value={product.status}
-                      onChange={(e) =>
-                        handleStatusChange(
-                          index,
-                          e.target.value as 'ACTIVE' | 'INACTIVE',
-                        )
-                      }
-                      options={statusOptions}
-                    />
-                  </ProductField>
-                  <ProductField>
-                    <FieldLabel>&nbsp;</FieldLabel>
-                    <RemoveButton
-                      type="button"
-                      onClick={() => handleRemoveProduct(index)}
-                      kind="critical"
-                      variant="outline"
-                      size="small"
-                    >
-                      삭제
-                    </RemoveButton>
-                  </ProductField>
-                </ProductInfo>
-              </ProductItem>
-            ))}
-          </ProductList>
+          <TableContainer>
+            <Table>
+              <THead>
+                <TR>
+                  <TH>상품명</TH>
+                  <TH>브랜드</TH>
+                  <TH>카테고리</TH>
+                  <TH>상태</TH>
+                  <TH>&nbsp;</TH>
+                </TR>
+              </THead>
+              <TBody>
+                {displayProducts.map((product, index) => (
+                  <TR key={product.id}>
+                    <TD>{product.name}</TD>
+                    <TD>{product.brand}</TD>
+                    <TD>{product.category}</TD>
+                    <TD>
+                      <Select
+                        value={product.status}
+                        onChange={(e) =>
+                          handleStatusChange(
+                            index,
+                            e.target.value as 'ACTIVE' | 'INACTIVE',
+                          )
+                        }
+                        options={statusOptions}
+                      />
+                    </TD>
+                    <TD>
+                      <RemoveButton
+                        type="button"
+                        onClick={() => handleRemoveProduct(index)}
+                        kind="critical"
+                        variant="outline"
+                        size="small"
+                      >
+                        삭제
+                      </RemoveButton>
+                    </TD>
+                  </TR>
+                ))}
+              </TBody>
+            </Table>
+          </TableContainer>
         )}
       </SectionContent>
     </FormSection>
@@ -225,48 +225,17 @@ const EmptyMessage = tw.div`
   text-sm
 `;
 
-const ProductList = tw.div`
-  flex
-  flex-col
-  gap-3
-`;
-
-const ProductItem = tw.div`
-  rounded-lg
-  p-4
-  bg-[var(--bg-layer)]
-`;
-
-const ProductInfo = tw.div`
-  grid
-  grid-cols-2
-  md:grid-cols-5
-  gap-4
-`;
-
-const ProductField = tw.div`
-  flex
-  flex-col
-  gap-1
-`;
-
-const FieldLabel = tw.span`
-  text-xs
-  font-medium
-  text-[var(--fg-muted)]
-`;
-
-const FieldValue = tw.span`
-  text-sm
-  text-[var(--fg-neutral)]
+const TableContainer = tw.div`
+  border-t
+  border-[var(--stroke-neutral)]
 `;
 
 const RemoveButton = tw(Button)`
-  
+  w-full
 `;
 
 /**
  * Usage:
  *
- * <CampaignProductSection control={control} />
+ * <CampaignProductSection control={control} setValue={setValue} />
  */

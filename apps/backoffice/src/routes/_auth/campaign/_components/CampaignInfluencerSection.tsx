@@ -27,8 +27,9 @@ export function CampaignInfluencerSection({
   };
 
   const statusOptions = [
-    { value: 'ACTIVE', label: '활성' },
-    { value: 'INACTIVE', label: '비활성' },
+    { value: 'VISIBLE', label: '노출' },
+    { value: 'HIDDEN', label: '미노출' },
+    { value: 'SOLD_OUT', label: '품절' },
   ];
 
   return (
@@ -60,21 +61,19 @@ export function CampaignInfluencerSection({
               ) : (
                 <InfluencerList>
                   {field.value.map((influencer, index) => (
-                    <InfluencerItem key={influencer.id}>
+                    <InfluencerItem key={influencer.influencerId}>
                       <InfluencerInfo>
                         <InfluencerField>
-                          <FieldLabel>인플루언서명</FieldLabel>
-                          <FieldValue>{influencer.name}</FieldValue>
+                          <FieldLabel>인플루언서 ID</FieldLabel>
+                          <FieldValue>{influencer.influencerId}</FieldValue>
                         </InfluencerField>
                         <InfluencerField>
-                          <FieldLabel>이메일</FieldLabel>
-                          <FieldValue>{influencer.email || '-'}</FieldValue>
+                          <FieldLabel>기간 타입</FieldLabel>
+                          <FieldValue>{influencer.periodType}</FieldValue>
                         </InfluencerField>
                         <InfluencerField>
-                          <FieldLabel>전화번호</FieldLabel>
-                          <FieldValue>
-                            {influencer.phoneNumber || '-'}
-                          </FieldValue>
+                          <FieldLabel>수수료 타입</FieldLabel>
+                          <FieldValue>{influencer.feeType}</FieldValue>
                         </InfluencerField>
                         <InfluencerField>
                           <FieldLabel>상태</FieldLabel>
@@ -84,7 +83,10 @@ export function CampaignInfluencerSection({
                               const newInfluencers = [...field.value];
                               newInfluencers[index] = {
                                 ...newInfluencers[index],
-                                status: e.target.value as 'ACTIVE' | 'INACTIVE',
+                                status: e.target.value as
+                                  | 'VISIBLE'
+                                  | 'HIDDEN'
+                                  | 'SOLD_OUT',
                               };
                               field.onChange(newInfluencers);
                             }}
@@ -101,7 +103,7 @@ export function CampaignInfluencerSection({
                           field.onChange(newInfluencers);
                         }}
                       >
-                        <X size={16} />
+                        삭제
                       </RemoveButton>
                     </InfluencerItem>
                   ))}

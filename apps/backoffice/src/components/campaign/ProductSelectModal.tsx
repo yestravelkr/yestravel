@@ -5,7 +5,15 @@
  * 체크박스로 여러 상품을 선택할 수 있으며, 선택한 상품의 ID를 반환합니다.
  */
 
-import { Button } from '@yestravelkr/min-design-system';
+import {
+  Button,
+  Table,
+  THead,
+  TBody,
+  TR,
+  TH,
+  TD,
+} from '@yestravelkr/min-design-system';
 import dayjs from 'dayjs';
 import { useState } from 'react';
 import SnappyModal, { useCurrentModal } from 'react-snappy-modal';
@@ -81,43 +89,42 @@ function ProductSelectModal({
         ) : (
           <TableContainer>
             <Table>
-              <TableHead>
-                <TableRow>
-                  <TableHeaderCell $width="60px">
+              <THead>
+                <TR>
+                  <TH>
                     <Checkbox
                       type="checkbox"
                       checked={isAllSelected}
                       onChange={handleToggleAll}
                     />
-                  </TableHeaderCell>
-                  <TableHeaderCell>상품명</TableHeaderCell>
-                  <TableHeaderCell>브랜드</TableHeaderCell>
-                  <TableHeaderCell $width="120px">등록일</TableHeaderCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
+                  </TH>
+                  <TH>상품명</TH>
+                  <TH>브랜드</TH>
+                  <TH>등록일</TH>
+                </TR>
+              </THead>
+              <TBody>
                 {products.map((product) => (
-                  <TableRow
+                  <ClickableTR
                     key={product.id}
                     onClick={() => handleToggle(product.id)}
-                    $clickable
                   >
-                    <TableCell>
+                    <TD>
                       <Checkbox
                         type="checkbox"
                         checked={selectedIds.includes(product.id)}
-                        onChange={() => handleToggle(product.id)}
-                        onClick={(e) => e.stopPropagation()}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                          handleToggle(product.id)
+                        }
+                        onClick={(e: any) => e.stopPropagation()}
                       />
-                    </TableCell>
-                    <TableCell>{product.name}</TableCell>
-                    <TableCell>{product.brand.name}</TableCell>
-                    <TableCell>
-                      {dayjs(product.createdAt).format('YYYY-MM-DD')}
-                    </TableCell>
-                  </TableRow>
+                    </TD>
+                    <TD>{product.name}</TD>
+                    <TD>{product.brand.name}</TD>
+                    <TD>{dayjs(product.createdAt).format('YYYY-MM-DD')}</TD>
+                  </ClickableTR>
                 ))}
-              </TableBody>
+              </TBody>
             </Table>
           </TableContainer>
         )}
@@ -206,49 +213,10 @@ const TableContainer = tw.div`
   rounded-lg
 `;
 
-const Table = tw.table`
-  w-full
-  border-collapse
-`;
-
-const TableHead = tw.thead`
-  bg-[var(--bg-subtle)]
-  border-b
-  border-[var(--stroke-neutral)]
-`;
-
-const TableBody = tw.tbody`
-  bg-white
-  divide-y
-  divide-[var(--stroke-neutral)]
-`;
-
-const TableRow = tw.tr<{ $clickable?: boolean }>`
-  ${({ $clickable }) =>
-    $clickable
-      ? `
-    cursor-pointer
-    hover:bg-[var(--bg-subtle)]
-    transition-colors
-  `
-      : ''}
-`;
-
-const TableHeaderCell = tw.th<{ $width?: string }>`
-  px-4
-  py-3
-  text-left
-  text-xs
-  font-medium
-  text-[var(--fg-muted)]
-  ${({ $width }) => ($width ? `width: ${$width};` : '')}
-`;
-
-const TableCell = tw.td`
-  px-4
-  py-3
-  text-sm
-  text-[var(--fg-neutral)]
+const ClickableTR = tw(TR)`
+  cursor-pointer
+  hover:bg-[var(--bg-subtle)]
+  transition-colors
 `;
 
 const Checkbox = tw.input`

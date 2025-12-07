@@ -28,7 +28,9 @@ export function BrandList() {
     }),
     columnHelper.accessor('businessInfo', {
       header: '사업자 정보',
-      cell: (info) => <BusinessInfo>{info.getValue()?.name || '-'}</BusinessInfo>,
+      cell: (info) => (
+        <BusinessInfo>{info.getValue()?.name || '-'}</BusinessInfo>
+      ),
       size: 250,
     }),
     columnHelper.accessor('phoneNumber', {
