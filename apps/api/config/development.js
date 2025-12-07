@@ -12,8 +12,15 @@ module.exports = {
       // *.dev.yestravel.co.kr 패턴 매칭
       const devPattern = /^https?:\/\/[a-zA-Z0-9-]+\.dev\.yestravel\.co\.kr$/;
       
-      // origin이 없는 경우 (같은 origin 요청)
+      // origin이 없는 경우 (같은 origin 요청, Postman 등)
       if (!origin) {
+        return callback(null, true);
+      }
+      
+      // ALB를 통한 요청의 경우 IP 주소가 올 수 있음 (http://43.200.138.237 등)
+      // 이 경우 모든 IP 요청을 허용 (내부 ALB를 통한 요청으로 간주)
+      const ipPattern = /^https?:\/\/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(:\d+)?$/;
+      if (ipPattern.test(origin)) {
         return callback(null, true);
       }
       

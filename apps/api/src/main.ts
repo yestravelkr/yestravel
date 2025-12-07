@@ -21,6 +21,22 @@ async function bootstrap() {
   await microservice.listen();
   const trpcApp = await NestFactory.create(TrpcModule);
 
+  // Get Express instance and configure trust proxy
+  const expressApp = trpcApp.getHttpAdapter().getInstance();
+  expressApp.set('trust proxy', true);
+
+  // Debug: Log incoming headers
+  expressApp.use((req: any, res: any, next: any) => {
+    console.log('=== Incoming Request ===');
+    console.log('Origin:', req.headers.origin);
+    console.log('Host:', req.headers.host);
+    console.log('X-Forwarded-Host:', req.headers['x-forwarded-host']);
+    console.log('X-Forwarded-Proto:', req.headers['x-forwarded-proto']);
+    console.log('X-Forwarded-For:', req.headers['x-forwarded-for']);
+    console.log('Referer:', req.headers.referer);
+    next();
+  });
+
   trpcApp.use(cookieParser());
   trpcApp.enableCors(ConfigProvider.cors);
 
