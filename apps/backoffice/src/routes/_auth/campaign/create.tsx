@@ -23,6 +23,7 @@ function CampaignCreatePage() {
   const {
     control,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm<CampaignFormData>({
     defaultValues: {
@@ -67,7 +68,7 @@ function CampaignCreatePage() {
     >
       <FormContainer>
         <CampaignBasicInfoSection control={control} />
-        <CampaignProductSection control={control} />
+        <CampaignProductSection control={control} setValue={setValue} />
         <CampaignInfluencerSection control={control} />
       </FormContainer>
     </MajorPageLayout>

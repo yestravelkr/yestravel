@@ -111,7 +111,7 @@ function ProductSelectModal({
                       />
                     </TableCell>
                     <TableCell>{product.name}</TableCell>
-                    <TableCell>{product.brandName}</TableCell>
+                    <TableCell>{product.brand.name}</TableCell>
                     <TableCell>
                       {dayjs(product.createdAt).format('YYYY-MM-DD')}
                     </TableCell>

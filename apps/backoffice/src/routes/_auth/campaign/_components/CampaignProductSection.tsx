@@ -2,14 +2,21 @@
  * CampaignProductSection - 캠페인 상품 섹션
  *
  * 캠페인에 포함될 상품 목록을 관리하는 섹션입니다.
+ * allProducts를 Map으로 변환하여 formProducts의 id로 데이터를 조회합니다.
  */
 
 import { Button } from '@yestravelkr/min-design-system';
-import { Plus, X } from 'lucide-react';
-import { Control, Controller } from 'react-hook-form';
+import { Plus } from 'lucide-react';
+import { useMemo } from 'react';
+import { Control, useWatch } from 'react-hook-form';
+import { UseFormSetValue } from 'react-hook-form';
 import tw from 'tailwind-styled-components';
 
-import type { CampaignFormData, CampaignProduct } from './types';
+import type {
+  CampaignFormData,
+  CampaignProductDisplay,
+  CampaignProductFormData,
+} from './types';
 
 import { openProductSelectModal } from '@/components/campaign/ProductSelectModal';
 import { Select } from '@/shared/components';
@@ -17,44 +24,96 @@ import { trpc } from '@/shared/trpc';
 
 interface CampaignProductSectionProps {
   control: Control<CampaignFormData>;
+  setValue: UseFormSetValue<CampaignFormData>;
 }
 
 export function CampaignProductSection({
   control,
+  setValue,
 }: CampaignProductSectionProps) {
-  // 상품 리스트 조회 (모달에서 선택한 상품 정보를 가져오기 위함)
+  // hookForm에 저장된 간소화된 데이터 감시
+  const formProducts = useWatch({
+    control,
+    name: 'products',
+    defaultValue: [],
+  });
+
+  // 상품 리스트 조회
   const { data: allProducts } = trpc.backofficeProduct.findAll.useQuery({
     page: 1,
     limit: 100,
   });
 
-  const handleAddProduct = async (
-    currentProducts: CampaignProduct[],
-    onChange: (products: CampaignProduct[]) => void,
-  ) => {
-    const currentProductIds = currentProducts.map((product) => product.id);
+  // allProducts를 id를 key로 하는 Map으로 변환
+  const productsMap: Map<
+    number,
+    {
+      id: number;
+      name: string;
+      brand: string;
+      category: string;
+    }
+  > = useMemo(() => {
+    if (!allProducts) return new Map();
+
+    return new Map(
+      allProducts.data.map((product) => [
+        product.id,
+        {
+          id: product.id,
+          name: product.name,
+          brand: product.brand.name,
+          category: '카테고리 미구현',
+        },
+      ]),
+    );
+  }, [allProducts]);
+
+  // formProducts와 productsMap을 조합하여 화면 표시용 데이터 생성
+  const displayProducts = useMemo(() => {
+    return formProducts
+      .map((formProduct) => {
+        const productInfo = productsMap.get(formProduct.id);
+        if (!productInfo) return null;
+
+        return {
+          ...productInfo,
+          status: formProduct.status,
+        } as CampaignProductDisplay;
+      })
+      .filter((product): product is CampaignProductDisplay => product !== null);
+  }, [formProducts, productsMap]);
+
+  const handleAddProduct = async () => {
+    const currentProductIds = formProducts.map((product) => product.id);
     const selectedIds = await openProductSelectModal(currentProductIds);
 
-    if (selectedIds && allProducts) {
-      const newProducts = selectedIds
-        .filter((id) => !currentProductIds.includes(id))
-        .map((id) => {
-          const product = allProducts.data.find((p) => p.id === id);
-          if (product) {
-            return {
-              id: product.id,
-              name: product.name,
-              brandName: product.brandName,
-              category: product.categoryName || '-',
-              status: 'ACTIVE' as const,
-            };
-          }
-          return null;
-        })
-        .filter((p): p is CampaignProduct => p !== null);
+    if (selectedIds) {
+      // 선택한 ID로 formData 생성
+      const newFormData: CampaignProductFormData[] = selectedIds.map((id) => ({
+        id,
+        status: 'ACTIVE' as const,
+      }));
 
-      onChange([...currentProducts, ...newProducts]);
+      setValue('products', newFormData, { shouldValidate: true });
     }
+  };
+
+  const handleStatusChange = (
+    index: number,
+    newStatus: 'ACTIVE' | 'INACTIVE',
+  ) => {
+    const updatedForm = [...formProducts];
+    updatedForm[index] = {
+      ...updatedForm[index],
+      status: newStatus,
+    };
+    setValue('products', updatedForm, { shouldValidate: true });
+  };
+
+  const handleRemoveProduct = (index: number) => {
+    const updatedForm = formProducts.filter((_, i) => i !== index);
+    setValue('products', updatedForm, { shouldValidate: true });
   };
 
   const statusOptions = [
@@ -66,85 +125,66 @@ export function CampaignProductSection({
     <FormSection>
       <SectionHeader>
         <SectionTitle>상품</SectionTitle>
-        <Controller
-          name="products"
-          control={control}
-          render={({ field }) => (
-            <Button
-              type="button"
-              onClick={() => handleAddProduct(field.value, field.onChange)}
-              kind="primary"
-              size="medium"
-              leadingIcon={<Plus size={16} />}
-            >
-              상품 추가
-            </Button>
-          )}
-        />
+        <Button
+          type="button"
+          onClick={handleAddProduct}
+          kind="primary"
+          size="medium"
+          leadingIcon={<Plus size={16} />}
+        >
+          상품 추가
+        </Button>
       </SectionHeader>
       <SectionContent>
-        <Controller
-          name="products"
-          control={control}
-          rules={{
-            validate: (value) =>
-              value.length > 0 || '최소 1개 이상의 상품을 추가해주세요',
-          }}
-          render={({ field }) => (
-            <>
-              {field.value.length === 0 ? (
-                <EmptyMessage>추가된 상품이 없습니다.</EmptyMessage>
-              ) : (
-                <ProductList>
-                  {field.value.map((product, index) => (
-                    <ProductItem key={product.id}>
-                      <ProductInfo>
-                        <ProductField>
-                          <FieldLabel>상품명</FieldLabel>
-                          <FieldValue>{product.name}</FieldValue>
-                        </ProductField>
-                        <ProductField>
-                          <FieldLabel>브랜드</FieldLabel>
-                          <FieldValue>{product.brandName}</FieldValue>
-                        </ProductField>
-                        <ProductField>
-                          <FieldLabel>카테고리</FieldLabel>
-                          <FieldValue>{product.category}</FieldValue>
-                        </ProductField>
-                        <ProductField>
-                          <FieldLabel>상태</FieldLabel>
-                          <Select
-                            value={product.status}
-                            onChange={(e) => {
-                              const newProducts = [...field.value];
-                              newProducts[index] = {
-                                ...newProducts[index],
-                                status: e.target.value as 'ACTIVE' | 'INACTIVE',
-                              };
-                              field.onChange(newProducts);
-                            }}
-                            options={statusOptions}
-                          />
-                        </ProductField>
-                      </ProductInfo>
-                      <RemoveButton
-                        type="button"
-                        onClick={() => {
-                          const newProducts = field.value.filter(
-                            (_, i) => i !== index,
-                          );
-                          field.onChange(newProducts);
-                        }}
-                      >
-                        <X size={16} />
-                      </RemoveButton>
-                    </ProductItem>
-                  ))}
-                </ProductList>
-              )}
-            </>
-          )}
-        />
+        {displayProducts.length === 0 ? (
+          <EmptyMessage>추가된 상품이 없습니다.</EmptyMessage>
+        ) : (
+          <ProductList>
+            {displayProducts.map((product, index) => (
+              <ProductItem key={product.id}>
+                <ProductInfo>
+                  <ProductField>
+                    <FieldLabel>상품명</FieldLabel>
+                    <FieldValue>{product.name}</FieldValue>
+                  </ProductField>
+                  <ProductField>
+                    <FieldLabel>브랜드</FieldLabel>
+                    <FieldValue>{product.brand}</FieldValue>
+                  </ProductField>
+                  <ProductField>
+                    <FieldLabel>카테고리</FieldLabel>
+                    <FieldValue>{product.category}</FieldValue>
+                  </ProductField>
+                  <ProductField>
+                    <FieldLabel>상태</FieldLabel>
+                    <Select
+                      value={product.status}
+                      onChange={(e) =>
+                        handleStatusChange(
+                          index,
+                          e.target.value as 'ACTIVE' | 'INACTIVE',
+                        )
+                      }
+                      options={statusOptions}
+                    />
+                  </ProductField>
+                  <ProductField>
+                    <FieldLabel>&nbsp;</FieldLabel>
+                    <RemoveButton
+                      type="button"
+                      onClick={() => handleRemoveProduct(index)}
+                      kind="critical"
+                      variant="outline"
+                      size="small"
+                    >
+                      삭제
+                    </RemoveButton>
+                  </ProductField>
+                </ProductInfo>
+              </ProductItem>
+            ))}
+          </ProductList>
+        )}
       </SectionContent>
     </FormSection>
   );
@@ -194,18 +234,13 @@ const ProductList = tw.div`
 const ProductItem = tw.div`
   rounded-lg
   p-4
-  flex
-  items-start
-  justify-between
-  gap-4
   bg-[var(--bg-layer)]
 `;
 
 const ProductInfo = tw.div`
-  flex-1
   grid
   grid-cols-2
-  md:grid-cols-4
+  md:grid-cols-5
   gap-4
 `;
 
@@ -226,14 +261,8 @@ const FieldValue = tw.span`
   text-[var(--fg-neutral)]
 `;
 
-const RemoveButton = tw.button`
-  p-2
-  text-[var(--fg-muted)]
-  hover:text-red-600
-  hover:bg-red-50
-  rounded
-  transition-colors
-  flex-shrink-0
+const RemoveButton = tw(Button)`
+  
 `;
 
 /**

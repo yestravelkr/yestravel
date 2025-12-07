@@ -10,7 +10,7 @@ import { Control, Controller } from 'react-hook-form';
 import { toast } from 'sonner';
 import tw from 'tailwind-styled-components';
 
-import type { CampaignFormData, CampaignInfluencer } from './types';
+import type { CampaignFormData } from './types';
 
 import { Select } from '@/shared/components';
 
