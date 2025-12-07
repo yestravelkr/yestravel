@@ -7,12 +7,13 @@
 import { Button } from '@yestravelkr/min-design-system';
 import { Plus, X } from 'lucide-react';
 import { Control, Controller } from 'react-hook-form';
-import { toast } from 'sonner';
 import tw from 'tailwind-styled-components';
 
 import type { CampaignFormData, CampaignProduct } from './types';
 
+import { openProductSelectModal } from '@/components/campaign/ProductSelectModal';
 import { Select } from '@/shared/components';
+import { trpc } from '@/shared/trpc';
 
 interface CampaignProductSectionProps {
   control: Control<CampaignFormData>;
@@ -21,9 +22,39 @@ interface CampaignProductSectionProps {
 export function CampaignProductSection({
   control,
 }: CampaignProductSectionProps) {
-  const handleAddProduct = async () => {
-    // TODO: 상품 선택 모달 열기
-    toast.info('상품 선택 모달 구현 예정');
+  // 상품 리스트 조회 (모달에서 선택한 상품 정보를 가져오기 위함)
+  const { data: allProducts } = trpc.backofficeProduct.findAll.useQuery({
+    page: 1,
+    limit: 100,
+  });
+
+  const handleAddProduct = async (
+    currentProducts: CampaignProduct[],
+    onChange: (products: CampaignProduct[]) => void,
+  ) => {
+    const currentProductIds = currentProducts.map((product) => product.id);
+    const selectedIds = await openProductSelectModal(currentProductIds);
+
+    if (selectedIds && allProducts) {
+      const newProducts = selectedIds
+        .filter((id) => !currentProductIds.includes(id))
+        .map((id) => {
+          const product = allProducts.data.find((p) => p.id === id);
+          if (product) {
+            return {
+              id: product.id,
+              name: product.name,
+              brandName: product.brandName,
+              category: product.categoryName || '-',
+              status: 'ACTIVE' as const,
+            };
+          }
+          return null;
+        })
+        .filter((p): p is CampaignProduct => p !== null);
+
+      onChange([...currentProducts, ...newProducts]);
+    }
   };
 
   const statusOptions = [
@@ -35,15 +66,21 @@ export function CampaignProductSection({
     <FormSection>
       <SectionHeader>
         <SectionTitle>상품</SectionTitle>
-        <Button
-          type="button"
-          onClick={handleAddProduct}
-          kind="primary"
-          size="medium"
-          leadingIcon={<Plus size={16} />}
-        >
-          상품 추가
-        </Button>
+        <Controller
+          name="products"
+          control={control}
+          render={({ field }) => (
+            <Button
+              type="button"
+              onClick={() => handleAddProduct(field.value, field.onChange)}
+              kind="primary"
+              size="medium"
+              leadingIcon={<Plus size={16} />}
+            >
+              상품 추가
+            </Button>
+          )}
+        />
       </SectionHeader>
       <SectionContent>
         <Controller
@@ -138,7 +175,7 @@ const SectionTitle = tw.h2`
 `;
 
 const SectionContent = tw.div`
-  p-6
+  p-0
 `;
 
 const EmptyMessage = tw.div`
@@ -155,8 +192,6 @@ const ProductList = tw.div`
 `;
 
 const ProductItem = tw.div`
-  border
-  border-[var(--stroke-neutral)]
   rounded-lg
   p-4
   flex
