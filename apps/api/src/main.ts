@@ -21,6 +21,21 @@ async function bootstrap() {
   await microservice.listen();
   const trpcApp = await NestFactory.create(TrpcModule);
 
+  // Trust proxy to get real client IP and headers from ALB
+  trpcApp.set('trust proxy', true);
+
+  // Debug: Log incoming headers
+  trpcApp.use((req, res, next) => {
+    console.log('=== Incoming Request ===');
+    console.log('Origin:', req.headers.origin);
+    console.log('Host:', req.headers.host);
+    console.log('X-Forwarded-Host:', req.headers['x-forwarded-host']);
+    console.log('X-Forwarded-Proto:', req.headers['x-forwarded-proto']);
+    console.log('X-Forwarded-For:', req.headers['x-forwarded-for']);
+    console.log('Referer:', req.headers.referer);
+    next();
+  });
+
   trpcApp.use(cookieParser());
   trpcApp.enableCors(ConfigProvider.cors);
 
