@@ -30,9 +30,10 @@ export class AddCampaignEntities1765000000000 implements MigrationInterface {
     `);
 
     // 3. campaign_influencer 테이블 생성
+    // id는 `${campaignId}_${influencerId}` 형식의 varchar composite key
     await queryRunner.query(`
       CREATE TABLE "campaign_influencer" (
-        "id" SERIAL NOT NULL,
+        "id" varchar(50) NOT NULL,
         "created_at" TIMESTAMP NOT NULL DEFAULT now(),
         "updated_at" TIMESTAMP NOT NULL DEFAULT now(),
         "campaign_id" integer NOT NULL,
@@ -43,7 +44,6 @@ export class AddCampaignEntities1765000000000 implements MigrationInterface {
         "fee_type" "public"."campaign_fee_type_enum" NOT NULL DEFAULT 'NONE',
         "fee" integer,
         "status" "public"."campaign_status_enum" NOT NULL DEFAULT 'VISIBLE',
-        CONSTRAINT "UQ_campaign_influencer" UNIQUE ("campaign_id", "influencer_id"),
         CONSTRAINT "PK_campaign_influencer" PRIMARY KEY ("id")
       )
     `);
@@ -54,7 +54,7 @@ export class AddCampaignEntities1765000000000 implements MigrationInterface {
         "id" SERIAL NOT NULL,
         "created_at" TIMESTAMP NOT NULL DEFAULT now(),
         "updated_at" TIMESTAMP NOT NULL DEFAULT now(),
-        "campaign_influencer_id" integer NOT NULL,
+        "campaign_influencer_id" varchar(50) NOT NULL,
         "product_id" integer NOT NULL,
         "use_custom_commission" boolean NOT NULL DEFAULT false,
         CONSTRAINT "UQ_campaign_influencer_product" UNIQUE ("campaign_influencer_id", "product_id"),
@@ -62,9 +62,9 @@ export class AddCampaignEntities1765000000000 implements MigrationInterface {
       )
     `);
 
-    // 5. campaign_hotel_option 테이블 생성
+    // 5. campaign_influencer_hotel_option 테이블 생성
     await queryRunner.query(`
-      CREATE TABLE "campaign_hotel_option" (
+      CREATE TABLE "campaign_influencer_hotel_option" (
         "id" SERIAL NOT NULL,
         "created_at" TIMESTAMP NOT NULL DEFAULT now(),
         "updated_at" TIMESTAMP NOT NULL DEFAULT now(),
@@ -72,7 +72,8 @@ export class AddCampaignEntities1765000000000 implements MigrationInterface {
         "hotel_option_id" integer NOT NULL,
         "influencer_id" integer NOT NULL,
         "commission_by_date" jsonb NOT NULL DEFAULT '{}',
-        CONSTRAINT "PK_campaign_hotel_option" PRIMARY KEY ("id")
+        CONSTRAINT "UQ_campaign_influencer_hotel_option" UNIQUE ("campaign_influencer_product_id", "hotel_option_id"),
+        CONSTRAINT "PK_campaign_influencer_hotel_option" PRIMARY KEY ("id")
       )
     `);
 
@@ -96,13 +97,13 @@ export class AddCampaignEntities1765000000000 implements MigrationInterface {
       `CREATE INDEX "IDX_campaign_influencer_product_product_id" ON "campaign_influencer_product" ("product_id")`
     );
     await queryRunner.query(
-      `CREATE INDEX "IDX_campaign_hotel_option_campaign_influencer_product_id" ON "campaign_hotel_option" ("campaign_influencer_product_id")`
+      `CREATE INDEX "IDX_campaign_influencer_hotel_option_campaign_influencer_product_id" ON "campaign_influencer_hotel_option" ("campaign_influencer_product_id")`
     );
     await queryRunner.query(
-      `CREATE INDEX "IDX_campaign_hotel_option_hotel_option_id" ON "campaign_hotel_option" ("hotel_option_id")`
+      `CREATE INDEX "IDX_campaign_influencer_hotel_option_hotel_option_id" ON "campaign_influencer_hotel_option" ("hotel_option_id")`
     );
     await queryRunner.query(
-      `CREATE INDEX "IDX_campaign_hotel_option_influencer_id" ON "campaign_hotel_option" ("influencer_id")`
+      `CREATE INDEX "IDX_campaign_influencer_hotel_option_influencer_id" ON "campaign_influencer_hotel_option" ("influencer_id")`
     );
 
     // 7. Foreign Key 제약조건 추가
@@ -137,20 +138,20 @@ export class AddCampaignEntities1765000000000 implements MigrationInterface {
       FOREIGN KEY ("campaign_influencer_id") REFERENCES "campaign_influencer"("id") ON DELETE CASCADE ON UPDATE NO ACTION
     `);
 
-    // campaign_hotel_option
+    // campaign_influencer_hotel_option
     await queryRunner.query(`
-      ALTER TABLE "campaign_hotel_option"
-      ADD CONSTRAINT "FK_campaign_hotel_option_campaign_influencer_product"
+      ALTER TABLE "campaign_influencer_hotel_option"
+      ADD CONSTRAINT "FK_campaign_influencer_hotel_option_campaign_influencer_product"
       FOREIGN KEY ("campaign_influencer_product_id") REFERENCES "campaign_influencer_product"("id") ON DELETE CASCADE ON UPDATE NO ACTION
     `);
     await queryRunner.query(`
-      ALTER TABLE "campaign_hotel_option"
-      ADD CONSTRAINT "FK_campaign_hotel_option_hotel_option"
+      ALTER TABLE "campaign_influencer_hotel_option"
+      ADD CONSTRAINT "FK_campaign_influencer_hotel_option_hotel_option"
       FOREIGN KEY ("hotel_option_id") REFERENCES "hotel_option"("id") ON DELETE CASCADE ON UPDATE NO ACTION
     `);
     await queryRunner.query(`
-      ALTER TABLE "campaign_hotel_option"
-      ADD CONSTRAINT "FK_campaign_hotel_option_influencer"
+      ALTER TABLE "campaign_influencer_hotel_option"
+      ADD CONSTRAINT "FK_campaign_influencer_hotel_option_influencer"
       FOREIGN KEY ("influencer_id") REFERENCES "influencer"("id") ON DELETE CASCADE ON UPDATE NO ACTION
     `);
 
@@ -188,13 +189,13 @@ export class AddCampaignEntities1765000000000 implements MigrationInterface {
 
     // 2. Foreign Key 제약조건 제거
     await queryRunner.query(
-      `ALTER TABLE "campaign_hotel_option" DROP CONSTRAINT "FK_campaign_hotel_option_influencer"`
+      `ALTER TABLE "campaign_influencer_hotel_option" DROP CONSTRAINT "FK_campaign_influencer_hotel_option_influencer"`
     );
     await queryRunner.query(
-      `ALTER TABLE "campaign_hotel_option" DROP CONSTRAINT "FK_campaign_hotel_option_hotel_option"`
+      `ALTER TABLE "campaign_influencer_hotel_option" DROP CONSTRAINT "FK_campaign_influencer_hotel_option_hotel_option"`
     );
     await queryRunner.query(
-      `ALTER TABLE "campaign_hotel_option" DROP CONSTRAINT "FK_campaign_hotel_option_campaign_influencer_product"`
+      `ALTER TABLE "campaign_influencer_hotel_option" DROP CONSTRAINT "FK_campaign_influencer_hotel_option_campaign_influencer_product"`
     );
     await queryRunner.query(
       `ALTER TABLE "campaign_influencer_product" DROP CONSTRAINT "FK_campaign_influencer_product_campaign_influencer"`
@@ -211,13 +212,13 @@ export class AddCampaignEntities1765000000000 implements MigrationInterface {
 
     // 3. 인덱스 제거
     await queryRunner.query(
-      `DROP INDEX "public"."IDX_campaign_hotel_option_influencer_id"`
+      `DROP INDEX "public"."IDX_campaign_influencer_hotel_option_influencer_id"`
     );
     await queryRunner.query(
-      `DROP INDEX "public"."IDX_campaign_hotel_option_hotel_option_id"`
+      `DROP INDEX "public"."IDX_campaign_influencer_hotel_option_hotel_option_id"`
     );
     await queryRunner.query(
-      `DROP INDEX "public"."IDX_campaign_hotel_option_campaign_influencer_product_id"`
+      `DROP INDEX "public"."IDX_campaign_influencer_hotel_option_campaign_influencer_product_id"`
     );
     await queryRunner.query(
       `DROP INDEX "public"."IDX_campaign_influencer_product_product_id"`
@@ -239,7 +240,7 @@ export class AddCampaignEntities1765000000000 implements MigrationInterface {
     );
 
     // 4. 테이블 제거
-    await queryRunner.query(`DROP TABLE "campaign_hotel_option"`);
+    await queryRunner.query(`DROP TABLE "campaign_influencer_hotel_option"`);
     await queryRunner.query(`DROP TABLE "campaign_influencer_product"`);
     await queryRunner.query(`DROP TABLE "campaign_influencer"`);
     await queryRunner.query(`DROP TABLE "campaign_product"`);
