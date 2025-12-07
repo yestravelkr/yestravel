@@ -5,6 +5,7 @@ import {
   JoinColumn,
   EntityManager,
   Index,
+  Unique,
 } from 'typeorm';
 import { BaseEntity } from '@src/module/backoffice/domain/base.entity';
 import { CampaignInfluencerProductEntity } from '@src/module/backoffice/domain/campaign-influencer-product.entity';
@@ -14,14 +15,14 @@ import { TransactionService } from '@src/module/shared/transaction/transaction.s
 import { getEntityManager } from '@src/database/datasources';
 
 // Response 타입 (Entity 파일 내에서 정의하여 순환 참조 방지)
-export interface CampaignHotelOptionResponse {
-  campaignHotelOptionId: number;
+export interface CampaignInfluencerHotelOptionResponse {
+  campaignInfluencerHotelOptionId: number;
   hotelOptionId: number;
   commissionByDate: Record<string, number>;
 }
 
 /**
- * CampaignHotelOption Entity
+ * CampaignInfluencerHotelOption Entity
  *
  * 인플루언서별 호텔 옵션 커스텀 수수료를 관리합니다.
  * 기본값은 HotelOption.anotherPriceByDate를 사용합니다.
@@ -30,11 +31,12 @@ export interface CampaignHotelOptionResponse {
  * - hotelOptionId: 원본 HotelOption 참조 (name, priceByDate는 여기서 조회)
  * - commissionByDate: 커스텀 수수료만 저장
  */
-@Entity('campaign_hotel_option')
+@Entity('campaign_influencer_hotel_option')
+@Unique(['campaignInfluencerProductId', 'hotelOptionId'])
 @Index(['campaignInfluencerProductId'])
 @Index(['hotelOptionId'])
 @Index(['influencerId'])
-export class CampaignHotelOptionEntity extends BaseEntity {
+export class CampaignInfluencerHotelOptionEntity extends BaseEntity {
   @Column({ name: 'campaign_influencer_product_id', type: 'integer' })
   campaignInfluencerProductId: number;
 
@@ -74,15 +76,16 @@ export class CampaignHotelOptionEntity extends BaseEntity {
   @Column('jsonb', { name: 'commission_by_date', default: {} })
   commissionByDate: Record<string, number>;
 
-  toResponse(): CampaignHotelOptionResponse {
+  toResponse(): CampaignInfluencerHotelOptionResponse {
     return {
-      campaignHotelOptionId: this.id,
+      campaignInfluencerHotelOptionId: this.id,
       hotelOptionId: this.hotelOptionId,
       commissionByDate: this.commissionByDate,
     };
   }
 }
 
-export const getCampaignHotelOptionRepository = (
+export const getCampaignInfluencerHotelOptionRepository = (
   source?: TransactionService | EntityManager
-) => getEntityManager(source).getRepository(CampaignHotelOptionEntity);
+) =>
+  getEntityManager(source).getRepository(CampaignInfluencerHotelOptionEntity);
