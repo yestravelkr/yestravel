@@ -7,10 +7,10 @@ import {
   JoinColumn,
   EntityManager,
 } from 'typeorm';
+import { NotFoundException } from '@nestjs/common';
 import { SoftDeleteEntity } from '@src/module/backoffice/domain/base.entity';
 import { BrandEntity } from '@src/module/backoffice/domain/brand.entity';
 import { CategoryEntity } from '@src/module/backoffice/domain/category.entity';
-import { CampaignEntity } from '@src/module/backoffice/domain/campaign.entity';
 import { ProductTemplateEntity } from '@src/module/backoffice/domain/product-template/product-template.entity';
 import { TransactionService } from '@src/module/shared/transaction/transaction.service';
 import { getEntityManager } from '@src/database/datasources';
@@ -38,14 +38,6 @@ export class ProductEntity extends SoftDeleteEntity {
   @ManyToOne(() => ProductTemplateEntity, { nullable: true })
   @JoinColumn({ name: 'product_template_id' })
   productTemplate: Nullish<ProductTemplateEntity>;
-
-  // 캠페인 참조 (선택적 - 캠페인에 등록될 수도, 안 될 수도)
-  @Column({ name: 'campaign_id', type: 'integer', nullable: true })
-  campaignId: Nullish<number>;
-
-  @ManyToOne(() => CampaignEntity, { nullable: true })
-  @JoinColumn({ name: 'campaign_id' })
-  campaign: Nullish<CampaignEntity>;
 
   // 상품 썸네일 (이미지 url 여러개가능)
   @Column('jsonb', { default: [] })
@@ -191,5 +183,30 @@ export const getProductRepository = (
 
         // 데이터 조회
         return queryBuilder.getManyAndCount();
+      },
+
+      /**
+       * 여러 상품 ID의 존재 여부를 한 번에 검증
+       * @param ids 검증할 상품 ID 배열
+       * @throws NotFoundException 존재하지 않는 ID가 있을 경우
+       */
+      async validateExistsByIds(ids: number[]): Promise<void> {
+        if (ids.length === 0) return;
+
+        const existingProducts = await this.find({
+          where: ids.map(id => ({ id })),
+          select: ['id'],
+        });
+
+        const existingIds = new Set(
+          existingProducts.map((product: ProductEntity) => product.id)
+        );
+        const missingIds = ids.filter(id => !existingIds.has(id));
+
+        if (missingIds.length > 0) {
+          throw new NotFoundException(
+            `상품을 찾을 수 없습니다 (ID: ${missingIds[0]})`
+          );
+        }
       },
     });

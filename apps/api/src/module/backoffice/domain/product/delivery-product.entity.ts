@@ -24,7 +24,6 @@ export interface CreateDeliveryProductInput {
   name: string;
   brandId: number;
   productTemplateId?: Nullish<number>;
-  campaignId?: Nullish<number>;
   thumbnailUrls?: string[];
   description?: string;
   detailContent?: string;
@@ -70,7 +69,6 @@ export class DeliveryProductEntity extends ProductEntity {
     product.name = input.name;
     product.brandId = input.brandId;
     product.productTemplateId = input.productTemplateId || null;
-    product.campaignId = input.campaignId || null;
     product.thumbnailUrls = input.thumbnailUrls || [];
     product.description = input.description || '';
     product.detailContent = input.detailContent || '';
@@ -96,7 +94,6 @@ export class DeliveryProductEntity extends ProductEntity {
     this.name = input.name;
     this.brandId = input.brandId;
     this.productTemplateId = input.productTemplateId || null;
-    this.campaignId = input.campaignId || null;
     this.thumbnailUrls = input.thumbnailUrls || [];
     this.description = input.description || '';
     this.detailContent = input.detailContent || '';

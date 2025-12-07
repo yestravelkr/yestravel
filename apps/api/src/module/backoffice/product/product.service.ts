@@ -7,6 +7,7 @@ import { RepositoryProvider } from '@src/module/shared/transaction/repository.pr
 import { HotelProductEntity } from '@src/module/backoffice/domain/product/hotel-product.entity';
 import { DeliveryProductEntity } from '@src/module/backoffice/domain/product/delivery-product.entity';
 import { ETicketProductEntity } from '@src/module/backoffice/domain/product/eticket-product.entity';
+import type { CategoryEntity } from '@src/module/backoffice/domain/category.entity';
 import type {
   CreateProductInputDto,
   CreateProductResponse,
@@ -69,24 +70,27 @@ export class ProductService {
       });
 
     // 2. type에 따라 적절한 Repository에서 전체 데이터 조회
+    // NOTE: categories는 n:m 관계이므로 DB join 대신 코드 레벨에서 합침
     switch (baseProduct.type) {
       case 'HOTEL': {
-        const hotel =
-          await this.repositoryProvider.HotelProductRepository.findOneOrFail({
+        const [hotel, categories, hotelOptions] = await Promise.all([
+          this.repositoryProvider.HotelProductRepository.findOneOrFail({
             where: { id },
-            relations: ['brand', 'categories', 'productTemplate', 'campaign'],
+            relations: ['brand', 'productTemplate'],
           }).catch(() => {
             throw new NotFoundException(
               `호텔 상품을 찾을 수 없습니다 (ID: ${id})`
             );
-          });
-
-        // 호텔 옵션 조회
-        const hotelOptions =
-          await this.repositoryProvider.HotelOptionRepository.find({
+          }),
+          this.loadCategoriesForProduct(id),
+          this.repositoryProvider.HotelOptionRepository.find({
             where: { productId: id },
             order: { id: 'ASC' },
-          });
+          }),
+        ]);
+
+        // categories를 entity에 할당 후 spread로 포함
+        hotel.categories = categories;
 
         return {
           ...hotel,
@@ -102,17 +106,20 @@ export class ProductService {
       }
 
       case 'DELIVERY': {
-        const delivery =
-          await this.repositoryProvider.DeliveryProductRepository.findOneOrFail(
-            {
-              where: { id },
-              relations: ['brand', 'categories', 'productTemplate', 'campaign'],
-            }
-          ).catch(() => {
+        const [delivery, categories] = await Promise.all([
+          this.repositoryProvider.DeliveryProductRepository.findOneOrFail({
+            where: { id },
+            relations: ['brand', 'productTemplate'],
+          }).catch(() => {
             throw new NotFoundException(
               `배송상품을 찾을 수 없습니다 (ID: ${id})`
             );
-          });
+          }),
+          this.loadCategoriesForProduct(id),
+        ]);
+
+        // categories를 entity에 할당 후 spread로 포함
+        delivery.categories = categories;
 
         return {
           ...delivery,
@@ -122,15 +129,20 @@ export class ProductService {
       }
 
       case 'E-TICKET': {
-        const eticket =
-          await this.repositoryProvider.ETicketProductRepository.findOneOrFail({
+        const [eticket, categories] = await Promise.all([
+          this.repositoryProvider.ETicketProductRepository.findOneOrFail({
             where: { id },
-            relations: ['brand', 'categories', 'productTemplate', 'campaign'],
+            relations: ['brand', 'productTemplate'],
           }).catch(() => {
             throw new NotFoundException(
               `E-Ticket 상품을 찾을 수 없습니다 (ID: ${id})`
             );
-          });
+          }),
+          this.loadCategoriesForProduct(id),
+        ]);
+
+        // categories를 entity에 할당 후 spread로 포함
+        eticket.categories = categories;
 
         return {
           ...eticket,
@@ -167,18 +179,7 @@ export class ProductService {
       });
     }
 
-    // 3. Campaign 존재 여부 확인 (선택적)
-    if (input.campaignId) {
-      await this.repositoryProvider.CampaignRepository.findOneOrFail({
-        where: { id: input.campaignId },
-      }).catch(() => {
-        throw new NotFoundException(
-          `캠페인을 찾을 수 없습니다 (ID: ${input.campaignId})`
-        );
-      });
-    }
-
-    // 4. 타입에 따라 적절한 Entity 생성 및 저장
+    // 3. 타입에 따라 적절한 Entity 생성 및 저장
     let savedProduct:
       | HotelProductEntity
       | DeliveryProductEntity
@@ -273,18 +274,7 @@ export class ProductService {
       });
     }
 
-    // 4. Campaign 존재 여부 확인 (선택적)
-    if (input.campaignId) {
-      await this.repositoryProvider.CampaignRepository.findOneOrFail({
-        where: { id: input.campaignId },
-      }).catch(() => {
-        throw new NotFoundException(
-          `캠페인을 찾을 수 없습니다 (ID: ${input.campaignId})`
-        );
-      });
-    }
-
-    // 5. 요청 타입과 기존 상품 타입 일치 확인
+    // 4. 요청 타입과 기존 상품 타입 일치 확인
     if (existingProduct.type !== input.type) {
       throw new BadRequestException(
         `상품 타입을 변경할 수 없습니다. 기존: ${existingProduct.type}, 요청: ${input.type}`
@@ -422,5 +412,21 @@ export class ProductService {
       id,
       message: '상품이 삭제되었습니다',
     };
+  }
+
+  /**
+   * 상품의 카테고리 목록을 별도 조회
+   * NOTE: n:m 관계는 DB join 대신 코드 레벨에서 합쳐서 쿼리 성능 최적화
+   */
+  private async loadCategoriesForProduct(
+    productId: number
+  ): Promise<CategoryEntity[]> {
+    return this.repositoryProvider.CategoryRepository.createQueryBuilder(
+      'category'
+    )
+      .innerJoin('product_categories', 'pc', 'pc.category_id = category.id')
+      .where('pc.product_id = :productId', { productId })
+      .andWhere('category.deletedAt IS NULL')
+      .getMany();
   }
 }

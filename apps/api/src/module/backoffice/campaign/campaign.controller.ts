@@ -4,6 +4,7 @@ import { CampaignService } from '@src/module/backoffice/campaign/campaign.servic
 import { TransactionService } from '@src/module/shared/transaction/transaction.service';
 import { Transactional } from '@src/module/shared/transaction/transaction.decorator';
 import { CampaignEntity } from '@src/module/backoffice/domain/campaign.entity';
+import { campaignSchema, campaignWithRelationsSchema } from './campaign.schema';
 import type {
   Campaign,
   CreateCampaignInput,
@@ -11,6 +12,7 @@ import type {
   FindCampaignByIdInput,
   DeleteCampaignInput,
 } from './campaign.type';
+import type { CampaignWithRelations } from './campaign.dto';
 
 @Controller()
 export class CampaignController {
@@ -20,7 +22,7 @@ export class CampaignController {
   ) {}
 
   private formatCampaignResponse(campaign: CampaignEntity): Campaign {
-    return {
+    return campaignSchema.parse({
       id: campaign.id,
       title: campaign.title,
       startAt: campaign.startAt,
@@ -29,7 +31,7 @@ export class CampaignController {
       thumbnail: campaign.thumbnail,
       createdAt: campaign.createdAt,
       updatedAt: campaign.updatedAt,
-    };
+    });
   }
 
   @MessagePattern('backoffice.campaign.findAll')
@@ -39,23 +41,23 @@ export class CampaignController {
   }
 
   @MessagePattern('backoffice.campaign.findById')
-  async findById(data: FindCampaignByIdInput): Promise<Campaign> {
+  async findById(data: FindCampaignByIdInput): Promise<CampaignWithRelations> {
     const campaign = await this.campaignService.findById(data.id);
-    return this.formatCampaignResponse(campaign);
+    return campaignWithRelationsSchema.parse(campaign);
   }
 
   @MessagePattern('backoffice.campaign.create')
   @Transactional
-  async create(data: CreateCampaignInput): Promise<Campaign> {
+  async create(data: CreateCampaignInput): Promise<CampaignWithRelations> {
     const campaign = await this.campaignService.create(data);
-    return this.formatCampaignResponse(campaign);
+    return campaignWithRelationsSchema.parse(campaign);
   }
 
   @MessagePattern('backoffice.campaign.update')
   @Transactional
-  async update(data: UpdateCampaignInput): Promise<Campaign> {
+  async update(data: UpdateCampaignInput): Promise<CampaignWithRelations> {
     const campaign = await this.campaignService.update(data.id, data);
-    return this.formatCampaignResponse(campaign);
+    return campaignWithRelationsSchema.parse(campaign);
   }
 
   @MessagePattern('backoffice.campaign.delete')

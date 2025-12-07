@@ -1,13 +1,22 @@
 import { initTRPC } from "@trpc/server";
 import { z } from "zod";
-import {businessInfoSchema, bankInfoSchema, createPaginatedResponseSchema, paginationQuerySchema} from "./types/common";
 import {
-  BUSINESS_TYPE_ENUM_VALUE,
-  DATE_FILTER_TYPE_ENUM_VALUE,
   PRODUCT_TYPE_ENUM_VALUE,
-  socialMediaPlatformEnumSchema
-} from "./types";
-import {normalizeTime, TIME_FORMAT_ERROR_MESSAGE_KO, TIME_FORMAT_REGEX} from "./utils";
+  DATE_FILTER_TYPE_ENUM_VALUE,
+  paginationQuerySchema,
+  createPaginatedResponseSchema,
+  BUSINESS_TYPE_ENUM_VALUE,
+  socialMediaPlatformEnumSchema,
+  businessInfoSchema,
+  bankInfoSchema,
+  campaignProductInputSchema,
+  campaignInfluencerInputSchema,
+} from './types';
+import {
+  normalizeTime,
+  TIME_FORMAT_REGEX,
+  TIME_FORMAT_ERROR_MESSAGE_KO,
+} from './utils';
 
 const t = initTRPC.create();
 const publicProcedure = t.procedure;
@@ -931,13 +940,69 @@ const appRouter = t.router({
       thumbnail: z.string().nullish(),
       createdAt: z.date(),
       updatedAt: z.date(),
+    }).extend({
+      products: z.array(z.object({
+        // Product 정보 (flat)
+        id: z.number(),
+        name: z.string(),
+        brand: z.object({
+          id: z.number(),
+          name: z.string(),
+        }),
+        categories: z.array(
+          z.object({
+            id: z.number(),
+            name: z.string(),
+          })
+        ),
+        createdAt: z.date(),
+        updatedAt: z.date(),
+        // CampaignProduct 메타데이터
+        campaignProductId: z.number(),
+        status: z.enum([
+          'VISIBLE',
+          'HIDDEN',
+          'SOLD_OUT',
+        ] as const),
+      })),
+      influencers: z.array(z.object({
+        campaignInfluencerId: z.string(), // composite key: `${campaignId}_${influencerId}`
+        influencerId: z.number(),
+        periodType: z.enum(
+          ['DEFAULT', 'CUSTOM'] as const
+        ),
+        startAt: z.date().nullable(),
+        endAt: z.date().nullable(),
+        feeType: z.enum(['NONE', 'CUSTOM'] as const),
+        fee: z.number().nullable(),
+        status: z.enum([
+          'VISIBLE',
+          'HIDDEN',
+          'SOLD_OUT',
+        ] as const),
+        // 인플루언서별 상품 목록
+        products: z.array(z.object({
+          campaignInfluencerProductId: z.number(),
+          productId: z.number(),
+          useCustomCommission: z.boolean(),
+          hotelOptions: z.array(z.object({
+            campaignInfluencerHotelOptionId: z.number(),
+            hotelOptionId: z.number(),
+            commissionByDate: z.record(z.string(), z.number()),
+          })),
+        })),
+      })),
     })).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
     create: publicProcedure.input(z.object({
-      title: z.string().min(1, 'Title is required'),
-      startAt: z.date(),
-      endAt: z.date(),
+      title: z.string().min(1, '캠페인명은 필수입니다'),
+      startAt: z.coerce.date(),
+      endAt: z.coerce.date(),
       description: z.string().nullish(),
       thumbnail: z.string().nullish(),
+      // 상품 목록 (선택)
+      products: z.array(campaignProductInputSchema).default([]),
+      // 인플루언서 목록 (선택)
+      influencers: z.array(campaignInfluencerInputSchema).default([]),
     })).output(z.object({
       id: z.number(),
       title: z.string(),
@@ -947,13 +1012,69 @@ const appRouter = t.router({
       thumbnail: z.string().nullish(),
       createdAt: z.date(),
       updatedAt: z.date(),
+    }).extend({
+      products: z.array(z.object({
+        // Product 정보 (flat)
+        id: z.number(),
+        name: z.string(),
+        brand: z.object({
+          id: z.number(),
+          name: z.string(),
+        }),
+        categories: z.array(
+          z.object({
+            id: z.number(),
+            name: z.string(),
+          })
+        ),
+        createdAt: z.date(),
+        updatedAt: z.date(),
+        // CampaignProduct 메타데이터
+        campaignProductId: z.number(),
+        status: z.enum([
+          'VISIBLE',
+          'HIDDEN',
+          'SOLD_OUT',
+        ] as const),
+      })),
+      influencers: z.array(z.object({
+        campaignInfluencerId: z.string(), // composite key: `${campaignId}_${influencerId}`
+        influencerId: z.number(),
+        periodType: z.enum(
+          ['DEFAULT', 'CUSTOM'] as const
+        ),
+        startAt: z.date().nullable(),
+        endAt: z.date().nullable(),
+        feeType: z.enum(['NONE', 'CUSTOM'] as const),
+        fee: z.number().nullable(),
+        status: z.enum([
+          'VISIBLE',
+          'HIDDEN',
+          'SOLD_OUT',
+        ] as const),
+        // 인플루언서별 상품 목록
+        products: z.array(z.object({
+          campaignInfluencerProductId: z.number(),
+          productId: z.number(),
+          useCustomCommission: z.boolean(),
+          hotelOptions: z.array(z.object({
+            campaignInfluencerHotelOptionId: z.number(),
+            hotelOptionId: z.number(),
+            commissionByDate: z.record(z.string(), z.number()),
+          })),
+        })),
+      })),
     })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
     update: publicProcedure.input(z.object({
-      title: z.string().min(1, 'Title is required'),
-      startAt: z.date(),
-      endAt: z.date(),
+      title: z.string().min(1, '캠페인명은 필수입니다'),
+      startAt: z.coerce.date(),
+      endAt: z.coerce.date(),
       description: z.string().nullish(),
       thumbnail: z.string().nullish(),
+      // 상품 목록 (선택)
+      products: z.array(campaignProductInputSchema).default([]),
+      // 인플루언서 목록 (선택)
+      influencers: z.array(campaignInfluencerInputSchema).default([]),
     }).extend({
       id: z.number(),
     })).output(z.object({
@@ -965,6 +1086,58 @@ const appRouter = t.router({
       thumbnail: z.string().nullish(),
       createdAt: z.date(),
       updatedAt: z.date(),
+    }).extend({
+      products: z.array(z.object({
+        // Product 정보 (flat)
+        id: z.number(),
+        name: z.string(),
+        brand: z.object({
+          id: z.number(),
+          name: z.string(),
+        }),
+        categories: z.array(
+          z.object({
+            id: z.number(),
+            name: z.string(),
+          })
+        ),
+        createdAt: z.date(),
+        updatedAt: z.date(),
+        // CampaignProduct 메타데이터
+        campaignProductId: z.number(),
+        status: z.enum([
+          'VISIBLE',
+          'HIDDEN',
+          'SOLD_OUT',
+        ] as const),
+      })),
+      influencers: z.array(z.object({
+        campaignInfluencerId: z.string(), // composite key: `${campaignId}_${influencerId}`
+        influencerId: z.number(),
+        periodType: z.enum(
+          ['DEFAULT', 'CUSTOM'] as const
+        ),
+        startAt: z.date().nullable(),
+        endAt: z.date().nullable(),
+        feeType: z.enum(['NONE', 'CUSTOM'] as const),
+        fee: z.number().nullable(),
+        status: z.enum([
+          'VISIBLE',
+          'HIDDEN',
+          'SOLD_OUT',
+        ] as const),
+        // 인플루언서별 상품 목록
+        products: z.array(z.object({
+          campaignInfluencerProductId: z.number(),
+          productId: z.number(),
+          useCustomCommission: z.boolean(),
+          hotelOptions: z.array(z.object({
+            campaignInfluencerHotelOptionId: z.number(),
+            hotelOptionId: z.number(),
+            commissionByDate: z.record(z.string(), z.number()),
+          })),
+        })),
+      })),
     })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
     delete: publicProcedure.input(z.object({
       id: z.number(),

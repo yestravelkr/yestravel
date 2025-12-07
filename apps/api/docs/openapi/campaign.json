@@ -1,0 +1,620 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Campaign API",
+    "description": "YesTravel 캠페인 관리 API (tRPC)",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Local Development"
+    }
+  ],
+  "paths": {
+    "/trpc/backofficeCampaign.findAll": {
+      "get": {
+        "tags": ["Campaign"],
+        "summary": "캠페인 목록 조회",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": { "$ref": "#/components/schemas/Campaign" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/trpc/backofficeCampaign.findById": {
+      "get": {
+        "tags": ["Campaign"],
+        "summary": "캠페인 상세 조회",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "input",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "{\"id\":1}"
+            },
+            "description": "JSON encoded input: {\"id\": number}"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "data": { "$ref": "#/components/schemas/CampaignWithRelations" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/trpc/backofficeCampaign.create": {
+      "post": {
+        "tags": ["Campaign"],
+        "summary": "캠페인 생성",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateCampaignInput" },
+              "examples": {
+                "basic": {
+                  "summary": "기본 캠페인 (상품/인플루언서 없이)",
+                  "value": {
+                    "title": "2025 여름 프로모션",
+                    "startAt": "2025-07-01T00:00:00.000Z",
+                    "endAt": "2025-08-31T23:59:59.000Z",
+                    "description": "여름 시즌 특별 캠페인",
+                    "thumbnail": "https://example.com/image.jpg",
+                    "products": [],
+                    "influencers": []
+                  }
+                },
+                "withProducts": {
+                  "summary": "상품만 포함",
+                  "value": {
+                    "title": "호텔 특가 캠페인",
+                    "startAt": "2025-07-01T00:00:00.000Z",
+                    "endAt": "2025-07-31T23:59:59.000Z",
+                    "description": "호텔 상품 특가 프로모션",
+                    "thumbnail": "https://example.com/hotel-campaign.jpg",
+                    "products": [
+                      { "productId": 1, "status": "VISIBLE" },
+                      { "productId": 2, "status": "VISIBLE" },
+                      { "productId": 3, "status": "HIDDEN" },
+                      { "productId": 4, "status": "SOLD_OUT" }
+                    ],
+                    "influencers": []
+                  }
+                },
+                "full": {
+                  "summary": "전체 데이터 (상품 + 인플루언서 + 인플루언서별 상품 + 호텔옵션)",
+                  "value": {
+                    "title": "2025 여름 인플루언서 콜라보 캠페인",
+                    "startAt": "2025-07-01T00:00:00.000Z",
+                    "endAt": "2025-08-31T23:59:59.000Z",
+                    "description": "인기 인플루언서들과 함께하는 여름 호텔 특가 캠페인",
+                    "thumbnail": "https://example.com/summer-collab.jpg",
+                    "products": [
+                      { "productId": 1, "status": "VISIBLE" },
+                      { "productId": 2, "status": "VISIBLE" },
+                      { "productId": 3, "status": "VISIBLE" },
+                      { "productId": 4, "status": "HIDDEN" },
+                      { "productId": 5, "status": "SOLD_OUT" }
+                    ],
+                    "influencers": [
+                      {
+                        "influencerId": 1,
+                        "periodType": "DEFAULT",
+                        "startAt": null,
+                        "endAt": null,
+                        "feeType": "CUSTOM",
+                        "fee": 1000000,
+                        "status": "VISIBLE",
+                        "products": [
+                          {
+                            "productId": 1,
+                            "useCustomCommission": true,
+                            "hotelOptions": [
+                              {
+                                "hotelOptionId": 1,
+                                "commissionByDate": {
+                                  "2025-07-01": 15000,
+                                  "2025-07-02": 15000,
+                                  "2025-07-03": 18000,
+                                  "2025-07-04": 20000,
+                                  "2025-07-05": 22000,
+                                  "2025-07-06": 22000,
+                                  "2025-07-07": 18000
+                                }
+                              },
+                              {
+                                "hotelOptionId": 2,
+                                "commissionByDate": {
+                                  "2025-07-01": 20000,
+                                  "2025-07-02": 20000,
+                                  "2025-07-03": 25000,
+                                  "2025-07-04": 28000,
+                                  "2025-07-05": 30000,
+                                  "2025-07-06": 30000,
+                                  "2025-07-07": 25000
+                                }
+                              },
+                              {
+                                "hotelOptionId": 3,
+                                "commissionByDate": {
+                                  "2025-07-01": 30000,
+                                  "2025-07-02": 30000,
+                                  "2025-07-03": 35000,
+                                  "2025-07-04": 40000,
+                                  "2025-07-05": 45000,
+                                  "2025-07-06": 45000,
+                                  "2025-07-07": 35000
+                                }
+                              }
+                            ]
+                          },
+                          {
+                            "productId": 2,
+                            "useCustomCommission": true,
+                            "hotelOptions": [
+                              {
+                                "hotelOptionId": 4,
+                                "commissionByDate": {
+                                  "2025-07-01": 12000,
+                                  "2025-07-02": 12000,
+                                  "2025-07-03": 15000
+                                }
+                              }
+                            ]
+                          },
+                          {
+                            "productId": 3,
+                            "useCustomCommission": false,
+                            "hotelOptions": []
+                          }
+                        ]
+                      },
+                      {
+                        "influencerId": 2,
+                        "periodType": "CUSTOM",
+                        "startAt": "2025-07-15T00:00:00.000Z",
+                        "endAt": "2025-08-15T23:59:59.000Z",
+                        "feeType": "CUSTOM",
+                        "fee": 500000,
+                        "status": "VISIBLE",
+                        "products": [
+                          {
+                            "productId": 1,
+                            "useCustomCommission": true,
+                            "hotelOptions": [
+                              {
+                                "hotelOptionId": 1,
+                                "commissionByDate": {
+                                  "2025-07-15": 10000,
+                                  "2025-07-16": 10000,
+                                  "2025-07-17": 12000,
+                                  "2025-07-18": 15000,
+                                  "2025-07-19": 15000,
+                                  "2025-07-20": 15000
+                                }
+                              },
+                              {
+                                "hotelOptionId": 2,
+                                "commissionByDate": {
+                                  "2025-07-15": 15000,
+                                  "2025-07-16": 15000,
+                                  "2025-07-17": 18000,
+                                  "2025-07-18": 20000,
+                                  "2025-07-19": 20000,
+                                  "2025-07-20": 20000
+                                }
+                              }
+                            ]
+                          },
+                          {
+                            "productId": 4,
+                            "useCustomCommission": false,
+                            "hotelOptions": []
+                          }
+                        ]
+                      },
+                      {
+                        "influencerId": 3,
+                        "periodType": "DEFAULT",
+                        "startAt": null,
+                        "endAt": null,
+                        "feeType": "NONE",
+                        "fee": null,
+                        "status": "VISIBLE",
+                        "products": [
+                          {
+                            "productId": 2,
+                            "useCustomCommission": false,
+                            "hotelOptions": []
+                          },
+                          {
+                            "productId": 3,
+                            "useCustomCommission": false,
+                            "hotelOptions": []
+                          },
+                          {
+                            "productId": 5,
+                            "useCustomCommission": false,
+                            "hotelOptions": []
+                          }
+                        ]
+                      },
+                      {
+                        "influencerId": 4,
+                        "periodType": "CUSTOM",
+                        "startAt": "2025-08-01T00:00:00.000Z",
+                        "endAt": "2025-08-31T23:59:59.000Z",
+                        "feeType": "CUSTOM",
+                        "fee": 300000,
+                        "status": "HIDDEN",
+                        "products": []
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "data": { "$ref": "#/components/schemas/CampaignWithRelations" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/trpc/backofficeCampaign.update": {
+      "post": {
+        "tags": ["Campaign"],
+        "summary": "캠페인 수정",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateCampaignInput" },
+              "examples": {
+                "full": {
+                  "summary": "전체 수정",
+                  "value": {
+                    "id": 1,
+                    "title": "수정된 캠페인명",
+                    "startAt": "2025-07-01T00:00:00.000Z",
+                    "endAt": "2025-08-31T23:59:59.000Z",
+                    "description": "수정된 설명",
+                    "products": [
+                      { "productId": 1, "status": "VISIBLE" }
+                    ],
+                    "influencers": [
+                      {
+                        "influencerId": 1,
+                        "periodType": "DEFAULT",
+                        "feeType": "NONE",
+                        "status": "VISIBLE",
+                        "products": []
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "data": { "$ref": "#/components/schemas/CampaignWithRelations" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/trpc/backofficeCampaign.delete": {
+      "post": {
+        "tags": ["Campaign"],
+        "summary": "캠페인 삭제",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["id"],
+                "properties": {
+                  "id": { "type": "integer", "example": 1 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "success": { "type": "boolean" }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "CampaignStatus": {
+        "type": "string",
+        "enum": ["VISIBLE", "HIDDEN", "SOLD_OUT"],
+        "description": "상태: VISIBLE(노출), HIDDEN(미노출), SOLD_OUT(품절)"
+      },
+      "CampaignPeriodType": {
+        "type": "string",
+        "enum": ["DEFAULT", "CUSTOM"],
+        "description": "기간 타입: DEFAULT(캠페인 기간 사용), CUSTOM(직접 입력)"
+      },
+      "CampaignFeeType": {
+        "type": "string",
+        "enum": ["NONE", "CUSTOM"],
+        "description": "진행비 타입: NONE(없음), CUSTOM(직접 입력)"
+      },
+      "Campaign": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "title": { "type": "string" },
+          "startAt": { "type": "string", "format": "date-time" },
+          "endAt": { "type": "string", "format": "date-time" },
+          "description": { "type": "string", "nullable": true },
+          "thumbnail": { "type": "string", "nullable": true },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "CampaignProductInput": {
+        "type": "object",
+        "required": ["productId"],
+        "properties": {
+          "productId": { "type": "integer", "description": "상품 ID" },
+          "status": { "$ref": "#/components/schemas/CampaignStatus", "default": "VISIBLE" }
+        }
+      },
+      "CampaignProductResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "productId": { "type": "integer" },
+          "status": { "$ref": "#/components/schemas/CampaignStatus" }
+        }
+      },
+      "CampaignHotelOptionInput": {
+        "type": "object",
+        "required": ["hotelOptionId"],
+        "properties": {
+          "hotelOptionId": { "type": "integer", "description": "호텔 옵션 ID" },
+          "commissionByDate": {
+            "type": "object",
+            "additionalProperties": { "type": "number" },
+            "description": "날짜별 수수료 (예: {\"2025-07-01\": 10000})",
+            "example": { "2025-07-01": 10000, "2025-07-02": 12000 }
+          }
+        }
+      },
+      "CampaignHotelOptionResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "hotelOptionId": { "type": "integer" },
+          "commissionByDate": {
+            "type": "object",
+            "additionalProperties": { "type": "number" }
+          }
+        }
+      },
+      "CampaignInfluencerProductInput": {
+        "type": "object",
+        "required": ["productId"],
+        "properties": {
+          "productId": { "type": "integer", "description": "상품 ID" },
+          "useCustomCommission": { "type": "boolean", "default": false, "description": "별도 수수료 사용 여부" },
+          "hotelOptions": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CampaignHotelOptionInput" },
+            "default": []
+          }
+        }
+      },
+      "CampaignInfluencerProductResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "productId": { "type": "integer" },
+          "useCustomCommission": { "type": "boolean" },
+          "hotelOptions": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CampaignHotelOptionResponse" }
+          }
+        }
+      },
+      "CampaignInfluencerInput": {
+        "type": "object",
+        "required": ["influencerId"],
+        "properties": {
+          "influencerId": { "type": "integer", "description": "인플루언서 ID" },
+          "periodType": { "$ref": "#/components/schemas/CampaignPeriodType", "default": "DEFAULT" },
+          "startAt": { "type": "string", "format": "date-time", "nullable": true, "description": "CUSTOM일 때 시작일" },
+          "endAt": { "type": "string", "format": "date-time", "nullable": true, "description": "CUSTOM일 때 종료일" },
+          "feeType": { "$ref": "#/components/schemas/CampaignFeeType", "default": "NONE" },
+          "fee": { "type": "integer", "nullable": true, "description": "CUSTOM일 때 진행비" },
+          "status": { "$ref": "#/components/schemas/CampaignStatus", "default": "VISIBLE" },
+          "products": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CampaignInfluencerProductInput" },
+            "default": [],
+            "description": "인플루언서별 상품 설정"
+          }
+        }
+      },
+      "CampaignInfluencerResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "influencerId": { "type": "integer" },
+          "periodType": { "$ref": "#/components/schemas/CampaignPeriodType" },
+          "startAt": { "type": "string", "format": "date-time", "nullable": true },
+          "endAt": { "type": "string", "format": "date-time", "nullable": true },
+          "feeType": { "$ref": "#/components/schemas/CampaignFeeType" },
+          "fee": { "type": "integer", "nullable": true },
+          "status": { "$ref": "#/components/schemas/CampaignStatus" },
+          "products": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CampaignInfluencerProductResponse" }
+          }
+        }
+      },
+      "CreateCampaignInput": {
+        "type": "object",
+        "required": ["title", "startAt", "endAt"],
+        "properties": {
+          "title": { "type": "string", "minLength": 1, "description": "캠페인명" },
+          "startAt": { "type": "string", "format": "date-time", "description": "시작일" },
+          "endAt": { "type": "string", "format": "date-time", "description": "종료일" },
+          "description": { "type": "string", "nullable": true, "description": "설명" },
+          "thumbnail": { "type": "string", "nullable": true, "description": "썸네일 URL" },
+          "products": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CampaignProductInput" },
+            "default": [],
+            "description": "캠페인 상품 목록"
+          },
+          "influencers": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CampaignInfluencerInput" },
+            "default": [],
+            "description": "캠페인 인플루언서 목록"
+          }
+        }
+      },
+      "UpdateCampaignInput": {
+        "allOf": [
+          { "$ref": "#/components/schemas/CreateCampaignInput" },
+          {
+            "type": "object",
+            "required": ["id"],
+            "properties": {
+              "id": { "type": "integer", "description": "캠페인 ID" }
+            }
+          }
+        ]
+      },
+      "CampaignWithRelations": {
+        "allOf": [
+          { "$ref": "#/components/schemas/Campaign" },
+          {
+            "type": "object",
+            "properties": {
+              "products": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/CampaignProductResponse" }
+              },
+              "influencers": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/CampaignInfluencerResponse" }
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}
