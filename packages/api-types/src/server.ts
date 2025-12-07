@@ -1,15 +1,5 @@
 import { initTRPC } from "@trpc/server";
 import { z } from "zod";
-import {businessInfoSchema, bankInfoSchema, createPaginatedResponseSchema, paginationQuerySchema} from "./types/common";
-import {
-  BUSINESS_TYPE_ENUM_VALUE,
-  DATE_FILTER_TYPE_ENUM_VALUE,
-  PRODUCT_TYPE_ENUM_VALUE,
-  socialMediaPlatformEnumSchema,
-  campaignProductInputSchema,
-  campaignInfluencerInputSchema
-} from "./types";
-import {normalizeTime, TIME_FORMAT_ERROR_MESSAGE_KO, TIME_FORMAT_REGEX} from "./utils";
 
 const t = initTRPC.create();
 const publicProcedure = t.procedure;
@@ -959,7 +949,7 @@ const appRouter = t.router({
         ] as const),
       })),
       influencers: z.array(z.object({
-        campaignInfluencerId: z.number(),
+        campaignInfluencerId: z.string(), // composite key: `${campaignId}_${influencerId}`
         influencerId: z.number(),
         periodType: z.enum(
           ['DEFAULT', 'CUSTOM'] as const
@@ -979,7 +969,7 @@ const appRouter = t.router({
           productId: z.number(),
           useCustomCommission: z.boolean(),
           hotelOptions: z.array(z.object({
-            campaignHotelOptionId: z.number(),
+            campaignInfluencerHotelOptionId: z.number(),
             hotelOptionId: z.number(),
             commissionByDate: z.record(z.string(), z.number()),
           })),
@@ -1031,7 +1021,7 @@ const appRouter = t.router({
         ] as const),
       })),
       influencers: z.array(z.object({
-        campaignInfluencerId: z.number(),
+        campaignInfluencerId: z.string(), // composite key: `${campaignId}_${influencerId}`
         influencerId: z.number(),
         periodType: z.enum(
           ['DEFAULT', 'CUSTOM'] as const
@@ -1051,7 +1041,7 @@ const appRouter = t.router({
           productId: z.number(),
           useCustomCommission: z.boolean(),
           hotelOptions: z.array(z.object({
-            campaignHotelOptionId: z.number(),
+            campaignInfluencerHotelOptionId: z.number(),
             hotelOptionId: z.number(),
             commissionByDate: z.record(z.string(), z.number()),
           })),
@@ -1105,7 +1095,7 @@ const appRouter = t.router({
         ] as const),
       })),
       influencers: z.array(z.object({
-        campaignInfluencerId: z.number(),
+        campaignInfluencerId: z.string(), // composite key: `${campaignId}_${influencerId}`
         influencerId: z.number(),
         periodType: z.enum(
           ['DEFAULT', 'CUSTOM'] as const
@@ -1125,7 +1115,7 @@ const appRouter = t.router({
           productId: z.number(),
           useCustomCommission: z.boolean(),
           hotelOptions: z.array(z.object({
-            campaignHotelOptionId: z.number(),
+            campaignInfluencerHotelOptionId: z.number(),
             hotelOptionId: z.number(),
             commissionByDate: z.record(z.string(), z.number()),
           })),
