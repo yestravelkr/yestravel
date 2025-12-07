@@ -26,6 +26,10 @@ export const NAV_GROUPS: NavGroup[] = [
         title: '상품',
         url: '/product',
       },
+      {
+        title: '캠페인',
+        url: '/campaign',
+      },
     ],
   },
   {
