@@ -7,6 +7,7 @@ import {
   JoinColumn,
   EntityManager,
 } from 'typeorm';
+import { NotFoundException } from '@nestjs/common';
 import { SoftDeleteEntity } from '@src/module/backoffice/domain/base.entity';
 import { BrandEntity } from '@src/module/backoffice/domain/brand.entity';
 import { CategoryEntity } from '@src/module/backoffice/domain/category.entity';
@@ -203,8 +204,6 @@ export const getProductRepository = (
         const missingIds = ids.filter(id => !existingIds.has(id));
 
         if (missingIds.length > 0) {
-          // 첫 번째 없는 ID만 에러 메시지에 포함
-          const { NotFoundException } = await import('@nestjs/common');
           throw new NotFoundException(
             `상품을 찾을 수 없습니다 (ID: ${missingIds[0]})`
           );

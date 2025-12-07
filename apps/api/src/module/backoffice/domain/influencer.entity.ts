@@ -1,4 +1,5 @@
 import { Entity, EntityManager, Not, OneToMany } from 'typeorm';
+import { NotFoundException } from '@nestjs/common';
 import { PartnerEntity } from '@src/module/backoffice/domain/partner-entity.abstract';
 import { SocialMediaEntity } from '@src/module/backoffice/domain/social-media.entity';
 import { InfluencerManagerEntity } from '@src/module/backoffice/domain/influencer-manager.entity';
@@ -57,7 +58,6 @@ export const getInfluencerRepository = (
         const missingIds = ids.filter(id => !existingIds.has(id));
 
         if (missingIds.length > 0) {
-          const { NotFoundException } = await import('@nestjs/common');
           throw new NotFoundException(
             `인플루언서를 찾을 수 없습니다 (ID: ${missingIds[0]})`
           );
