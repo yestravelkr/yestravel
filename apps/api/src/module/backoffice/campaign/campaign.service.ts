@@ -4,14 +4,14 @@ import { CampaignEntity } from '@src/module/backoffice/domain/campaign.entity';
 import { CampaignProductEntity } from '@src/module/backoffice/domain/campaign-product.entity';
 import { CampaignInfluencerEntity } from '@src/module/backoffice/domain/campaign-influencer.entity';
 import { CampaignInfluencerProductEntity } from '@src/module/backoffice/domain/campaign-influencer-product.entity';
-import { CampaignHotelOptionEntity } from '@src/module/backoffice/domain/campaign-hotel-option.entity';
+import { CampaignInfluencerHotelOptionEntity } from '@src/module/backoffice/domain/campaign-influencer-hotel-option.entity';
 import type {
   CreateCampaignInput,
   UpdateCampaignInput,
   CampaignProductInput,
   CampaignInfluencerInput,
   CampaignInfluencerProductInput,
-  CampaignHotelOptionInput,
+  CampaignInfluencerHotelOptionInput,
 } from './campaign.type';
 import type { CampaignWithRelations } from './campaign.dto';
 
@@ -199,8 +199,11 @@ export class CampaignService {
         const acc = await accPromise;
 
         // 1. CampaignInfluencer 생성
+        // id는 `${campaignId}_${influencerId}` 형식의 composite key
+        const compositeId = `${campaignId}_${influencerInput.influencerId}`;
         const entity =
           this.repositoryProvider.CampaignInfluencerRepository.create({
+            id: compositeId,
             campaignId,
             influencerId: influencerInput.influencerId,
             periodType: influencerInput.periodType,
@@ -234,7 +237,7 @@ export class CampaignService {
   }
 
   private async createCampaignInfluencerProducts(
-    campaignInfluencerId: number,
+    campaignInfluencerId: string,
     influencerId: number,
     products: CampaignInfluencerProductInput[]
   ): Promise<CampaignInfluencerProductEntity[]> {
@@ -258,11 +261,11 @@ export class CampaignService {
             entity
           );
 
-        // 2. CampaignHotelOption 생성 (있으면)
+        // 2. CampaignInfluencerHotelOption 생성 (있으면)
         const hotelOptionInputs = productInput.hotelOptions ?? [];
         savedProduct.hotelOptions =
           hotelOptionInputs.length > 0
-            ? await this.createCampaignHotelOptions(
+            ? await this.createCampaignInfluencerHotelOptions(
                 savedProduct.id,
                 influencerId,
                 hotelOptionInputs
@@ -275,15 +278,15 @@ export class CampaignService {
     );
   }
 
-  private async createCampaignHotelOptions(
+  private async createCampaignInfluencerHotelOptions(
     campaignInfluencerProductId: number,
     influencerId: number,
-    hotelOptions: CampaignHotelOptionInput[]
-  ): Promise<CampaignHotelOptionEntity[]> {
+    hotelOptions: CampaignInfluencerHotelOptionInput[]
+  ): Promise<CampaignInfluencerHotelOptionEntity[]> {
     if (hotelOptions.length === 0) return [];
 
     const entities = hotelOptions.map(optionInput =>
-      this.repositoryProvider.CampaignHotelOptionRepository.create({
+      this.repositoryProvider.CampaignInfluencerHotelOptionRepository.create({
         campaignInfluencerProductId,
         hotelOptionId: optionInput.hotelOptionId,
         influencerId,
@@ -291,7 +294,9 @@ export class CampaignService {
       })
     );
 
-    return this.repositoryProvider.CampaignHotelOptionRepository.save(entities);
+    return this.repositoryProvider.CampaignInfluencerHotelOptionRepository.save(
+      entities
+    );
   }
 
   private buildCampaignResponse(
@@ -349,7 +354,7 @@ export class CampaignService {
 
     // 모든 호텔 옵션을 한 번에 조회
     const allHotelOptions =
-      await this.repositoryProvider.CampaignHotelOptionRepository.createQueryBuilder(
+      await this.repositoryProvider.CampaignInfluencerHotelOptionRepository.createQueryBuilder(
         'option'
       )
         .where('option.campaignInfluencerProductId IN (:...productIds)', {
@@ -362,7 +367,7 @@ export class CampaignService {
       const existing = acc.get(option.campaignInfluencerProductId) ?? [];
       acc.set(option.campaignInfluencerProductId, [...existing, option]);
       return acc;
-    }, new Map<number, CampaignHotelOptionEntity[]>());
+    }, new Map<number, CampaignInfluencerHotelOptionEntity[]>());
 
     // 상품에 호텔 옵션 할당
     allProducts.forEach(product => {
@@ -374,7 +379,7 @@ export class CampaignService {
       const existing = acc.get(product.campaignInfluencerId) ?? [];
       acc.set(product.campaignInfluencerId, [...existing, product]);
       return acc;
-    }, new Map<number, CampaignInfluencerProductEntity[]>());
+    }, new Map<string, CampaignInfluencerProductEntity[]>());
 
     // 인플루언서에 상품 할당
     return influencers.map(influencer => {
@@ -417,7 +422,7 @@ export class CampaignService {
         const productIds = products.map(product => product.id);
 
         // 3. 호텔 옵션 삭제 (가장 하위)
-        await this.repositoryProvider.CampaignHotelOptionRepository.createQueryBuilder()
+        await this.repositoryProvider.CampaignInfluencerHotelOptionRepository.createQueryBuilder()
           .delete()
           .where('campaignInfluencerProductId IN (:...productIds)', {
             productIds,

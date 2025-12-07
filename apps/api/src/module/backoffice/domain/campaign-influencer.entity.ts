@@ -5,10 +5,11 @@ import {
   JoinColumn,
   EntityManager,
   Index,
-  Unique,
   OneToMany,
+  PrimaryColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
 } from 'typeorm';
-import { BaseEntity } from '@src/module/backoffice/domain/base.entity';
 import { CampaignEntity } from '@src/module/backoffice/domain/campaign.entity';
 import { InfluencerEntity } from '@src/module/backoffice/domain/influencer.entity';
 import { TransactionService } from '@src/module/shared/transaction/transaction.service';
@@ -31,7 +32,7 @@ import type {
 
 // Response 타입 (Entity 파일 내에서 정의하여 순환 참조 방지)
 export interface CampaignInfluencerResponse {
-  campaignInfluencerId: number;
+  campaignInfluencerId: string;
   influencerId: number;
   periodType: CampaignPeriodTypeEnumType;
   startAt: Date | null;
@@ -47,12 +48,23 @@ export interface CampaignInfluencerResponse {
  *
  * 캠페인에 참여하는 인플루언서 정보를 관리합니다.
  * 인플루언서 정보는 Influencer를 참조하며, 원본 수정 시 반영됩니다.
+ *
+ * id는 `${campaignId}_${influencerId}` 형식의 composite key입니다.
  */
 @Entity('campaign_influencer')
-@Unique(['campaignId', 'influencerId'])
 @Index(['campaignId'])
 @Index(['influencerId'])
-export class CampaignInfluencerEntity extends BaseEntity {
+export class CampaignInfluencerEntity {
+  // Composite Primary Key: `${campaignId}_${influencerId}`
+  @PrimaryColumn({ type: 'varchar', length: 50 })
+  id: string;
+
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt: Date;
+
+  @UpdateDateColumn({ name: 'updated_at' })
+  updatedAt: Date;
+
   @Column({ name: 'campaign_id', type: 'integer' })
   campaignId: number;
 

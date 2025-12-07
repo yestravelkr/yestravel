@@ -56,8 +56,8 @@ export const campaignProductInputSchema = z.object({
   status: campaignStatusEnumSchema.default('VISIBLE'),
 });
 
-// CampaignHotelOption Input Schema - 호텔 옵션별 수수료
-export const campaignHotelOptionInputSchema = z.object({
+// CampaignInfluencerHotelOption Input Schema - 호텔 옵션별 수수료
+export const campaignInfluencerHotelOptionInputSchema = z.object({
   hotelOptionId: z.number(),
   commissionByDate: z.record(z.string(), z.number()).default({}),
 });
@@ -66,7 +66,7 @@ export const campaignHotelOptionInputSchema = z.object({
 export const campaignInfluencerProductInputSchema = z.object({
   productId: z.number(),
   useCustomCommission: z.boolean().default(false),
-  hotelOptions: z.array(campaignHotelOptionInputSchema).default([]),
+  hotelOptions: z.array(campaignInfluencerHotelOptionInputSchema).default([]),
 });
 
 // CampaignInfluencer Input Schema
@@ -129,9 +129,9 @@ export const campaignProductResponseSchema = z.object({
   status: campaignStatusEnumSchema,
 });
 
-// CampaignHotelOption Response Schema
-export const campaignHotelOptionResponseSchema = z.object({
-  campaignHotelOptionId: z.number(),
+// CampaignInfluencerHotelOption Response Schema
+export const campaignInfluencerHotelOptionResponseSchema = z.object({
+  campaignInfluencerHotelOptionId: z.number(),
   hotelOptionId: z.number(),
   commissionByDate: z.record(z.string(), z.number()),
 });
@@ -141,11 +141,11 @@ export const campaignInfluencerProductResponseSchema = z.object({
   campaignInfluencerProductId: z.number(),
   productId: z.number(),
   useCustomCommission: z.boolean(),
-  hotelOptions: z.array(campaignHotelOptionResponseSchema),
+  hotelOptions: z.array(campaignInfluencerHotelOptionResponseSchema),
 });
 
 export const campaignInfluencerResponseSchema = z.object({
-  campaignInfluencerId: z.number(),
+  campaignInfluencerId: z.string(), // composite key: `${campaignId}_${influencerId}`
   influencerId: z.number(),
   periodType: campaignPeriodTypeEnumSchema,
   startAt: z.date().nullable(),

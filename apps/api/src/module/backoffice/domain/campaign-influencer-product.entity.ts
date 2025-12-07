@@ -16,16 +16,16 @@ import { getEntityManager } from '@src/database/datasources';
 
 // Forward declaration for circular reference
 import type {
-  CampaignHotelOptionEntity,
-  CampaignHotelOptionResponse,
-} from '@src/module/backoffice/domain/campaign-hotel-option.entity';
+  CampaignInfluencerHotelOptionEntity,
+  CampaignInfluencerHotelOptionResponse,
+} from '@src/module/backoffice/domain/campaign-influencer-hotel-option.entity';
 
 // Response 타입 (Entity 파일 내에서 정의하여 순환 참조 방지)
 export interface CampaignInfluencerProductResponse {
   campaignInfluencerProductId: number;
   productId: number;
   useCustomCommission: boolean;
-  hotelOptions: CampaignHotelOptionResponse[];
+  hotelOptions: CampaignInfluencerHotelOptionResponse[];
 }
 
 /**
@@ -39,8 +39,8 @@ export interface CampaignInfluencerProductResponse {
 @Index(['campaignInfluencerId'])
 @Index(['productId'])
 export class CampaignInfluencerProductEntity extends BaseEntity {
-  @Column({ name: 'campaign_influencer_id', type: 'integer' })
-  campaignInfluencerId: number;
+  @Column({ name: 'campaign_influencer_id', type: 'varchar', length: 50 })
+  campaignInfluencerId: string;
 
   @ManyToOne(() => CampaignInfluencerEntity)
   @JoinColumn({ name: 'campaign_influencer_id' })
@@ -59,11 +59,11 @@ export class CampaignInfluencerProductEntity extends BaseEntity {
 
   // 인플루언서별 호텔 옵션 수수료 목록
   @OneToMany(
-    'CampaignHotelOptionEntity',
-    (hotelOption: CampaignHotelOptionEntity) =>
+    'CampaignInfluencerHotelOptionEntity',
+    (hotelOption: CampaignInfluencerHotelOptionEntity) =>
       hotelOption.campaignInfluencerProduct
   )
-  hotelOptions: CampaignHotelOptionEntity[];
+  hotelOptions: CampaignInfluencerHotelOptionEntity[];
 
   toResponse(): CampaignInfluencerProductResponse {
     return {
