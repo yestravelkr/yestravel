@@ -2,35 +2,125 @@
  * CampaignInfluencerSection - 캠페인 인플루언서 섹션
  *
  * 캠페인에 포함될 인플루언서 목록을 관리하는 섹션입니다.
+ * allInfluencers를 Map으로 변환하여 formInfluencers의 id로 데이터를 조회합니다.
  */
 
-import { Button } from '@yestravelkr/min-design-system';
-import { Plus, X } from 'lucide-react';
-import { Control, Controller } from 'react-hook-form';
-import { toast } from 'sonner';
+import {
+  Button,
+  Table,
+  THead,
+  TBody,
+  TR,
+  TH,
+  TD,
+} from '@yestravelkr/min-design-system';
+import { Plus } from 'lucide-react';
+import { useMemo } from 'react';
+import { Control, useWatch } from 'react-hook-form';
+import { UseFormSetValue } from 'react-hook-form';
 import tw from 'tailwind-styled-components';
 
-import type { CampaignFormData } from './types';
+import type {
+  CampaignFormData,
+  CampaignInfluencerDisplay,
+  CampaignInfluencerFormData,
+} from './types';
 
-import { Select } from '@/shared/components';
+import { openInfluencerSelectModal } from '@/components/campaign/InfluencerSelectModal';
+import { trpc } from '@/shared/trpc';
 
 interface CampaignInfluencerSectionProps {
   control: Control<CampaignFormData>;
+  setValue: UseFormSetValue<CampaignFormData>;
 }
 
 export function CampaignInfluencerSection({
   control,
+  setValue,
 }: CampaignInfluencerSectionProps) {
+  // hookForm에 저장된 간소화된 데이터 감시
+  const formInfluencers = useWatch({
+    control,
+    name: 'influencers',
+    defaultValue: [],
+  });
+
+  // 인플루언서 리스트 조회
+  const { data: allInfluencers } = trpc.backofficeInfluencer.findAll.useQuery({
+    page: 1,
+    limit: 100,
+  });
+
+  // allInfluencers를 id를 key로 하는 Map으로 변환
+  const influencersMap = useMemo(() => {
+    if (!allInfluencers) return new Map();
+
+    return new Map(
+      allInfluencers.data.map((influencer) => [
+        influencer.id,
+        {
+          influencerId: influencer.id,
+          name: influencer.name,
+          email: influencer.email,
+          phoneNumber: influencer.phoneNumber,
+        },
+      ]),
+    );
+  }, [allInfluencers]);
+
+  // formInfluencers와 influencersMap을 조합하여 화면 표시용 데이터 생성
+  const displayInfluencers = useMemo(() => {
+    return formInfluencers
+      .map((formInfluencer) => {
+        const influencerInfo = influencersMap.get(formInfluencer.influencerId);
+        if (!influencerInfo) return null;
+
+        return {
+          ...influencerInfo,
+          periodType: formInfluencer.periodType,
+          startAt: formInfluencer.startAt,
+          endAt: formInfluencer.endAt,
+          feeType: formInfluencer.feeType,
+          fee: formInfluencer.fee,
+          status: formInfluencer.status,
+          products: formInfluencer.products,
+        } as CampaignInfluencerDisplay;
+      })
+      .filter(
+        (influencer): influencer is CampaignInfluencerDisplay =>
+          influencer !== null,
+      );
+  }, [formInfluencers, influencersMap]);
+
   const handleAddInfluencer = async () => {
-    // TODO: 인플루언서 선택 모달 열기
-    toast.info('인플루언서 선택 모달 구현 예정');
+    const currentInfluencerIds = formInfluencers.map(
+      (influencer) => influencer.influencerId,
+    );
+    const selectedIds = await openInfluencerSelectModal(currentInfluencerIds);
+
+    if (selectedIds) {
+      // 선택한 ID로 formData 생성 (초기값 설정)
+      const newFormData: CampaignInfluencerFormData[] = selectedIds.map(
+        (id) => ({
+          influencerId: id,
+          periodType: 'DEFAULT' as const,
+          startAt: null,
+          endAt: null,
+          feeType: 'NONE' as const,
+          fee: null,
+          status: 'VISIBLE' as const,
+          products: [],
+        }),
+      );
+
+      setValue('influencers', newFormData, { shouldValidate: true });
+    }
   };
 
-  const statusOptions = [
-    { value: 'VISIBLE', label: '노출' },
-    { value: 'HIDDEN', label: '미노출' },
-    { value: 'SOLD_OUT', label: '품절' },
-  ];
+  const handleRemoveInfluencer = (index: number) => {
+    const updatedForm = formInfluencers.filter((_, i) => i !== index);
+    setValue('influencers', updatedForm, { shouldValidate: true });
+  };
 
   return (
     <FormSection>
@@ -47,71 +137,59 @@ export function CampaignInfluencerSection({
         </Button>
       </SectionHeader>
       <SectionContent>
-        <Controller
-          name="influencers"
-          control={control}
-          rules={{
-            validate: (value) =>
-              value.length > 0 || '최소 1개 이상의 인플루언서를 추가해주세요',
-          }}
-          render={({ field }) => (
-            <>
-              {field.value.length === 0 ? (
-                <EmptyMessage>추가된 인플루언서가 없습니다.</EmptyMessage>
-              ) : (
-                <InfluencerList>
-                  {field.value.map((influencer, index) => (
-                    <InfluencerItem key={influencer.influencerId}>
-                      <InfluencerInfo>
-                        <InfluencerField>
-                          <FieldLabel>인플루언서 ID</FieldLabel>
-                          <FieldValue>{influencer.influencerId}</FieldValue>
-                        </InfluencerField>
-                        <InfluencerField>
-                          <FieldLabel>기간 타입</FieldLabel>
-                          <FieldValue>{influencer.periodType}</FieldValue>
-                        </InfluencerField>
-                        <InfluencerField>
-                          <FieldLabel>수수료 타입</FieldLabel>
-                          <FieldValue>{influencer.feeType}</FieldValue>
-                        </InfluencerField>
-                        <InfluencerField>
-                          <FieldLabel>상태</FieldLabel>
-                          <Select
-                            value={influencer.status}
-                            onChange={(e) => {
-                              const newInfluencers = [...field.value];
-                              newInfluencers[index] = {
-                                ...newInfluencers[index],
-                                status: e.target.value as
-                                  | 'VISIBLE'
-                                  | 'HIDDEN'
-                                  | 'SOLD_OUT',
-                              };
-                              field.onChange(newInfluencers);
-                            }}
-                            options={statusOptions}
-                          />
-                        </InfluencerField>
-                      </InfluencerInfo>
-                      <RemoveButton
+        {displayInfluencers.length === 0 ? (
+          <EmptyMessage>추가된 인플루언서가 없습니다.</EmptyMessage>
+        ) : (
+          <TableContainer>
+            <Table>
+              <THead>
+                <TR>
+                  <TH>이름</TH>
+                  <TH>이메일</TH>
+                  <TH>전화번호</TH>
+                  <TH>&nbsp;</TH>
+                  <TH>&nbsp;</TH>
+                </TR>
+              </THead>
+              <TBody>
+                {displayInfluencers.map((influencer, index) => (
+                  <TR key={influencer.influencerId}>
+                    <TD>{influencer.name}</TD>
+                    <TD>{influencer.email || '-'}</TD>
+                    <TD>{influencer.phoneNumber || '-'}</TD>
+                    <TD>
+                      <SettingButton
                         type="button"
                         onClick={() => {
-                          const newInfluencers = field.value.filter(
-                            (_, i) => i !== index,
+                          console.log(
+                            '판매설정 모달 열기:',
+                            influencer.influencerId,
                           );
-                          field.onChange(newInfluencers);
                         }}
+                        kind="neutral"
+                        variant="outline"
+                        size="small"
+                      >
+                        판매설정
+                      </SettingButton>
+                    </TD>
+                    <TD>
+                      <RemoveButton
+                        type="button"
+                        onClick={() => handleRemoveInfluencer(index)}
+                        kind="critical"
+                        variant="outline"
+                        size="small"
                       >
                         삭제
                       </RemoveButton>
-                    </InfluencerItem>
-                  ))}
-                </InfluencerList>
-              )}
-            </>
-          )}
-        />
+                    </TD>
+                  </TR>
+                ))}
+              </TBody>
+            </Table>
+          </TableContainer>
+        )}
       </SectionContent>
     </FormSection>
   );
@@ -142,7 +220,7 @@ const SectionTitle = tw.h2`
 `;
 
 const SectionContent = tw.div`
-  p-6
+  p-0
 `;
 
 const EmptyMessage = tw.div`
@@ -152,61 +230,21 @@ const EmptyMessage = tw.div`
   text-sm
 `;
 
-const InfluencerList = tw.div`
-  flex
-  flex-col
-  gap-3
-`;
-
-const InfluencerItem = tw.div`
-  border
+const TableContainer = tw.div`
+  border-t
   border-[var(--stroke-neutral)]
-  rounded-lg
-  p-4
-  flex
-  items-start
-  justify-between
-  gap-4
-  bg-[var(--bg-layer)]
 `;
 
-const InfluencerInfo = tw.div`
-  flex-1
-  grid
-  grid-cols-2
-  md:grid-cols-4
-  gap-4
+const RemoveButton = tw(Button)`
+  w-full
 `;
 
-const InfluencerField = tw.div`
-  flex
-  flex-col
-  gap-1
-`;
-
-const FieldLabel = tw.span`
-  text-xs
-  font-medium
-  text-[var(--fg-muted)]
-`;
-
-const FieldValue = tw.span`
-  text-sm
-  text-[var(--fg-neutral)]
-`;
-
-const RemoveButton = tw.button`
-  p-2
-  text-[var(--fg-muted)]
-  hover:text-red-600
-  hover:bg-red-50
-  rounded
-  transition-colors
-  flex-shrink-0
+const SettingButton = tw(Button)`
+  w-full
 `;
 
 /**
  * Usage:
  *
- * <CampaignInfluencerSection control={control} />
+ * <CampaignInfluencerSection control={control} setValue={setValue} />
  */

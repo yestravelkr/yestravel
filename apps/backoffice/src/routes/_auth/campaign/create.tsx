@@ -69,7 +69,7 @@ function CampaignCreatePage() {
       <FormContainer>
         <CampaignBasicInfoSection control={control} />
         <CampaignProductSection control={control} setValue={setValue} />
-        <CampaignInfluencerSection control={control} />
+        <CampaignInfluencerSection control={control} setValue={setValue} />
       </FormContainer>
     </MajorPageLayout>
   );
