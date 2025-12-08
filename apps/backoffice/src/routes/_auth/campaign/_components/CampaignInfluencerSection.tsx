@@ -16,8 +16,7 @@ import {
 } from '@yestravelkr/min-design-system';
 import { Plus } from 'lucide-react';
 import { useMemo } from 'react';
-import { Control, useWatch } from 'react-hook-form';
-import { UseFormSetValue } from 'react-hook-form';
+import { useFormContext, useWatch } from 'react-hook-form';
 import tw from 'tailwind-styled-components';
 
 import type {
@@ -29,15 +28,9 @@ import type {
 import { openInfluencerSelectModal } from '@/components/campaign/InfluencerSelectModal';
 import { trpc } from '@/shared/trpc';
 
-interface CampaignInfluencerSectionProps {
-  control: Control<CampaignFormData>;
-  setValue: UseFormSetValue<CampaignFormData>;
-}
+export function CampaignInfluencerSection() {
+  const { control, setValue } = useFormContext<CampaignFormData>();
 
-export function CampaignInfluencerSection({
-  control,
-  setValue,
-}: CampaignInfluencerSectionProps) {
   // hookForm에 저장된 간소화된 데이터 감시
   const formInfluencers = useWatch({
     control,
@@ -246,5 +239,5 @@ const SettingButton = tw(Button)`
 /**
  * Usage:
  *
- * <CampaignInfluencerSection control={control} setValue={setValue} />
+ * <CampaignInfluencerSection />
  */

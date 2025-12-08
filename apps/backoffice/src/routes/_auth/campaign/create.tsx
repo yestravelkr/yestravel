@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { Button } from '@yestravelkr/min-design-system';
 import dayjs from 'dayjs';
-import { useForm } from 'react-hook-form';
+import { FormProvider, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import tw from 'tailwind-styled-components';
 
@@ -20,12 +20,7 @@ export const Route = createFileRoute('/_auth/campaign/create')({
 function CampaignCreatePage() {
   const navigate = useNavigate();
 
-  const {
-    control,
-    handleSubmit,
-    setValue,
-    formState: { errors },
-  } = useForm<CampaignFormData>({
+  const methods = useForm<CampaignFormData>({
     defaultValues: {
       title: '',
       dateRange: {
@@ -36,6 +31,8 @@ function CampaignCreatePage() {
       influencers: [],
     },
   });
+
+  const { handleSubmit } = methods;
 
   const createMutation = trpc.backofficeCampaign.create.useMutation({
     onSuccess: () => {
@@ -54,24 +51,26 @@ function CampaignCreatePage() {
   };
 
   return (
-    <MajorPageLayout
-      title="캠페인 등록"
-      description="새로운 캠페인을 등록합니다"
-      headerActions={
-        <Button
-          onClick={handleSubmit(onSubmit)}
-          disabled={createMutation.isPending}
-        >
-          {createMutation.isPending ? '등록 중...' : '등록'}
-        </Button>
-      }
-    >
-      <FormContainer>
-        <CampaignBasicInfoSection control={control} />
-        <CampaignProductSection control={control} setValue={setValue} />
-        <CampaignInfluencerSection control={control} setValue={setValue} />
-      </FormContainer>
-    </MajorPageLayout>
+    <FormProvider {...methods}>
+      <MajorPageLayout
+        title="캠페인 등록"
+        description="새로운 캠페인을 등록합니다"
+        headerActions={
+          <Button
+            onClick={handleSubmit(onSubmit)}
+            disabled={createMutation.isPending}
+          >
+            {createMutation.isPending ? '등록 중...' : '등록'}
+          </Button>
+        }
+      >
+        <FormContainer>
+          <CampaignBasicInfoSection />
+          <CampaignProductSection />
+          <CampaignInfluencerSection />
+        </FormContainer>
+      </MajorPageLayout>
+    </FormProvider>
   );
 }
 

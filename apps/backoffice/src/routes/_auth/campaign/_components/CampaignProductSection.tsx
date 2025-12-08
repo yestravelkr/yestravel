@@ -16,8 +16,7 @@ import {
 } from '@yestravelkr/min-design-system';
 import { Plus } from 'lucide-react';
 import { useMemo } from 'react';
-import { Control, useWatch } from 'react-hook-form';
-import { UseFormSetValue } from 'react-hook-form';
+import { useFormContext, useWatch } from 'react-hook-form';
 import tw from 'tailwind-styled-components';
 
 import type {
@@ -30,15 +29,9 @@ import { openProductSelectModal } from '@/components/campaign/ProductSelectModal
 import { Select } from '@/shared/components';
 import { trpc } from '@/shared/trpc';
 
-interface CampaignProductSectionProps {
-  control: Control<CampaignFormData>;
-  setValue: UseFormSetValue<CampaignFormData>;
-}
+export function CampaignProductSection() {
+  const { control, setValue } = useFormContext<CampaignFormData>();
 
-export function CampaignProductSection({
-  control,
-  setValue,
-}: CampaignProductSectionProps) {
   // hookForm에 저장된 간소화된 데이터 감시
   const formProducts = useWatch({
     control,
@@ -62,7 +55,7 @@ export function CampaignProductSection({
         {
           id: product.id,
           name: product.name,
-          brandName: product.brand.name,
+          brand: product.brand.name,
           category: product.type || '-',
         },
       ]),
@@ -237,5 +230,5 @@ const RemoveButton = tw(Button)`
 /**
  * Usage:
  *
- * <CampaignProductSection control={control} setValue={setValue} />
+ * <CampaignProductSection />
  */
