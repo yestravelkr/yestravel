@@ -44,6 +44,7 @@ export class InfluencerRouter extends BaseTrpcRouter {
     input: z.object({
       page: z.number().min(1).default(1),
       limit: z.number().min(1).max(100).default(50),
+      ids: z.array(z.number().int().positive()).nullish(),
     }),
     output: z.object({
       data: z.array(
@@ -60,7 +61,7 @@ export class InfluencerRouter extends BaseTrpcRouter {
   })
   async findAll(
     @Ctx() ctx: BackofficeAuthorizedContext,
-    @Input() input: { page: number; limit: number }
+    @Input() input: { page: number; limit: number; ids?: number[] }
   ) {
     const output = await this.microserviceClient.send(
       'influencer.findAll',

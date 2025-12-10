@@ -384,6 +384,7 @@ const appRouter = t.router({
         name: z.string().nullish(),
         status: z.enum(['VISIBLE', 'HIDDEN', 'SOLD_OUT']).nullish(),
         brandIds: z.array(z.number().int()).nullish(),
+        ids: z.array(z.number().int().positive()).nullish(),
         dateFilterType: z
           .enum(['CREATED_AT', 'UPDATED_AT'])
           .default('CREATED_AT'),
@@ -751,6 +752,7 @@ const appRouter = t.router({
     findAll: publicProcedure.input(z.object({
       page: z.number().min(1).default(1),
       limit: z.number().min(1).max(100).default(50),
+      ids: z.array(z.number().int().positive()).nullish(),
     })).output(z.object({
       data: z.array(
         z.object({

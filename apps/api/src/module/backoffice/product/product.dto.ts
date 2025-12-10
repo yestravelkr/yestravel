@@ -72,6 +72,7 @@ export interface FindAllProductQuery {
   name?: string;
   status?: 'VISIBLE' | 'HIDDEN' | 'SOLD_OUT';
   brandIds?: number[];
+  ids?: number[];
   startDate?: string;
   endDate?: string;
   dateFilterType?: 'CREATED_AT' | 'UPDATED_AT';
