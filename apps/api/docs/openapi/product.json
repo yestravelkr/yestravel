@@ -222,6 +222,7 @@
           "type": { "$ref": "#/components/schemas/ProductType" },
           "name": { "type": "string", "description": "상품명" },
           "brand": { "$ref": "#/components/schemas/Brand" },
+          "thumbnail": { "type": "string", "nullable": true, "description": "썸네일 이미지 URL" },
           "price": { "type": "integer", "description": "가격" },
           "status": { "$ref": "#/components/schemas/ProductStatus" },
           "useStock": { "type": "boolean", "description": "재고 사용 여부" },

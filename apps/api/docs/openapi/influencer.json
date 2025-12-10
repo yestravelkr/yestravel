@@ -459,6 +459,11 @@
             "nullable": true,
             "description": "전화번호"
           },
+          "thumbnail": {
+            "type": "string",
+            "nullable": true,
+            "description": "썸네일 이미지 URL"
+          },
           "createdAt": {
             "type": "string",
             "format": "date-time",

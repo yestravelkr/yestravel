@@ -67,6 +67,7 @@ export class ProductRouter extends BaseTrpcRouter {
             id: z.number(),
             name: z.string(),
           }),
+          thumbnail: z.string().nullish(),
           price: z.number(),
           status: z.enum(['VISIBLE', 'HIDDEN', 'SOLD_OUT']),
           useStock: z.boolean(),

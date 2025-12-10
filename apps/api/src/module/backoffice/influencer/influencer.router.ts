@@ -53,6 +53,7 @@ export class InfluencerRouter extends BaseTrpcRouter {
           name: z.string(),
           email: z.string().nullish(),
           phoneNumber: z.string().nullish(),
+          thumbnail: z.string().nullish(),
           createdAt: z.date(),
         })
       ),

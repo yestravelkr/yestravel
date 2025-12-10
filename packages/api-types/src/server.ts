@@ -402,6 +402,7 @@ const appRouter = t.router({
               id: z.number(),
               name: z.string(),
             }),
+            thumbnail: z.string().nullish(),
             price: z.number(),
             status: z.enum(['VISIBLE', 'HIDDEN', 'SOLD_OUT']),
             useStock: z.boolean(),
@@ -760,6 +761,7 @@ const appRouter = t.router({
           name: z.string(),
           email: z.string().nullish(),
           phoneNumber: z.string().nullish(),
+          thumbnail: z.string().nullish(),
           createdAt: z.date(),
         })
       ),
