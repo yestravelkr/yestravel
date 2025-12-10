@@ -46,7 +46,7 @@ export interface ProductListItem {
     id: number;
     name: string;
   };
-  thumbnail: string | null;
+  thumbnailUrls: string[];
   price: number;
   status: 'VISIBLE' | 'HIDDEN' | 'SOLD_OUT';
   useStock: boolean;

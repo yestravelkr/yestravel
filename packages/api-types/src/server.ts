@@ -402,7 +402,7 @@ const appRouter = t.router({
               id: z.number(),
               name: z.string(),
             }),
-            thumbnail: z.string().nullish(),
+            thumbnailUrls: z.array(z.string()),
             price: z.number(),
             status: z.enum(['VISIBLE', 'HIDDEN', 'SOLD_OUT']),
             useStock: z.boolean(),

@@ -42,7 +42,7 @@ export class ProductService {
         id: product.brand?.id || 0,
         name: product.brand?.name || '',
       },
-      thumbnail: product.thumbnailUrls?.[0] ?? null,
+      thumbnailUrls: product.thumbnailUrls ?? [],
       price: product.price,
       status: product.status,
       useStock: product.useStock,
