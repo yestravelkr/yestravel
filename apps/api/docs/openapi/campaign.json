@@ -471,9 +471,37 @@
       },
       "CampaignProductResponse": {
         "type": "object",
+        "description": "캠페인 상품 응답 (상품 정보 포함)",
         "properties": {
-          "id": { "type": "integer" },
-          "productId": { "type": "integer" },
+          "id": { "type": "integer", "description": "상품 ID" },
+          "name": { "type": "string", "description": "상품명" },
+          "thumbnailUrls": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "상품 썸네일 URL 목록"
+          },
+          "brand": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "integer" },
+              "name": { "type": "string" }
+            },
+            "description": "브랜드 정보"
+          },
+          "categories": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "integer" },
+                "name": { "type": "string" }
+              }
+            },
+            "description": "카테고리 목록"
+          },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" },
+          "campaignProductId": { "type": "integer", "description": "캠페인 상품 연결 ID" },
           "status": { "$ref": "#/components/schemas/CampaignStatus" }
         }
       },
@@ -492,12 +520,14 @@
       },
       "CampaignHotelOptionResponse": {
         "type": "object",
+        "description": "캠페인 인플루언서 호텔 옵션 응답",
         "properties": {
-          "id": { "type": "integer" },
-          "hotelOptionId": { "type": "integer" },
+          "campaignInfluencerHotelOptionId": { "type": "integer", "description": "캠페인 인플루언서 호텔 옵션 ID" },
+          "hotelOptionId": { "type": "integer", "description": "호텔 옵션 ID" },
           "commissionByDate": {
             "type": "object",
-            "additionalProperties": { "type": "number" }
+            "additionalProperties": { "type": "number" },
+            "description": "날짜별 수수료"
           }
         }
       },
@@ -516,13 +546,15 @@
       },
       "CampaignInfluencerProductResponse": {
         "type": "object",
+        "description": "캠페인 인플루언서 상품 응답",
         "properties": {
-          "id": { "type": "integer" },
-          "productId": { "type": "integer" },
-          "useCustomCommission": { "type": "boolean" },
+          "campaignInfluencerProductId": { "type": "integer", "description": "캠페인 인플루언서 상품 ID" },
+          "productId": { "type": "integer", "description": "상품 ID" },
+          "useCustomCommission": { "type": "boolean", "description": "별도 수수료 사용 여부" },
           "hotelOptions": {
             "type": "array",
-            "items": { "$ref": "#/components/schemas/CampaignHotelOptionResponse" }
+            "items": { "$ref": "#/components/schemas/CampaignHotelOptionResponse" },
+            "description": "호텔 옵션 목록"
           }
         }
       },
@@ -547,9 +579,12 @@
       },
       "CampaignInfluencerResponse": {
         "type": "object",
+        "description": "캠페인 인플루언서 응답 (인플루언서 정보 포함)",
         "properties": {
-          "id": { "type": "integer" },
-          "influencerId": { "type": "integer" },
+          "campaignInfluencerId": { "type": "string", "description": "캠페인 인플루언서 ID (복합키: campaignId_influencerId)" },
+          "influencerId": { "type": "integer", "description": "인플루언서 ID" },
+          "name": { "type": "string", "description": "인플루언서 이름" },
+          "thumbnail": { "type": "string", "nullable": true, "description": "인플루언서 썸네일 URL" },
           "periodType": { "$ref": "#/components/schemas/CampaignPeriodType" },
           "startAt": { "type": "string", "format": "date-time", "nullable": true },
           "endAt": { "type": "string", "format": "date-time", "nullable": true },
