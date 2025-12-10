@@ -42,6 +42,7 @@ export class CampaignService {
       }),
       this.repositoryProvider.CampaignInfluencerRepository.find({
         where: { campaignId: id },
+        relations: ['influencer'],
       }),
     ]);
 
@@ -87,28 +88,40 @@ export class CampaignService {
       await this.repositoryProvider.CampaignRepository.save(campaign);
 
     // 3. 상품/인플루언서 연결 (병렬 저장)
-    const [, savedInfluencers] = await Promise.all([
+    await Promise.all([
       this.createCampaignProducts(savedCampaign.id, products),
       this.createCampaignInfluencers(savedCampaign.id, influencers),
     ]);
 
-    // 4. Product relations 로드를 위해 다시 조회
+    // 4. Product/Influencer relations 로드를 위해 다시 조회
     // NOTE: categories는 n:m 관계이므로 DB join 대신 코드 레벨에서 합침
-    const productsWithRelations =
-      await this.repositoryProvider.CampaignProductRepository.find({
-        where: { campaignId: savedCampaign.id },
-        relations: ['product', 'product.brand'],
-      });
+    const [productsWithRelations, influencersWithRelations] = await Promise.all(
+      [
+        this.repositoryProvider.CampaignProductRepository.find({
+          where: { campaignId: savedCampaign.id },
+          relations: ['product', 'product.brand'],
+        }),
+        this.repositoryProvider.CampaignInfluencerRepository.find({
+          where: { campaignId: savedCampaign.id },
+          relations: ['influencer'],
+        }),
+      ]
+    );
 
     // 상품 카테고리 별도 조회 후 합침
     const productsWithCategories = await this.loadCategoriesForCampaignProducts(
       productsWithRelations
     );
 
+    // 인플루언서별 상품 및 호텔 옵션 조회
+    const influencersWithProducts = await this.loadInfluencerProducts(
+      influencersWithRelations
+    );
+
     return this.buildCampaignResponse(
       savedCampaign,
       productsWithCategories,
-      savedInfluencers
+      influencersWithProducts
     );
   }
 
@@ -150,28 +163,40 @@ export class CampaignService {
     await this.deleteRelatedEntities(id);
 
     // 4. 새로운 연결 생성 (병렬)
-    const [, savedInfluencers] = await Promise.all([
+    await Promise.all([
       this.createCampaignProducts(savedCampaign.id, products),
       this.createCampaignInfluencers(savedCampaign.id, influencers),
     ]);
 
-    // 5. Product relations 로드를 위해 다시 조회
+    // 5. Product/Influencer relations 로드를 위해 다시 조회
     // NOTE: categories는 n:m 관계이므로 DB join 대신 코드 레벨에서 합침
-    const productsWithRelations =
-      await this.repositoryProvider.CampaignProductRepository.find({
-        where: { campaignId: savedCampaign.id },
-        relations: ['product', 'product.brand'],
-      });
+    const [productsWithRelations, influencersWithRelations] = await Promise.all(
+      [
+        this.repositoryProvider.CampaignProductRepository.find({
+          where: { campaignId: savedCampaign.id },
+          relations: ['product', 'product.brand'],
+        }),
+        this.repositoryProvider.CampaignInfluencerRepository.find({
+          where: { campaignId: savedCampaign.id },
+          relations: ['influencer'],
+        }),
+      ]
+    );
 
     // 상품 카테고리 별도 조회 후 합침
     const productsWithCategories = await this.loadCategoriesForCampaignProducts(
       productsWithRelations
     );
 
+    // 인플루언서별 상품 및 호텔 옵션 조회
+    const influencersWithProducts = await this.loadInfluencerProducts(
+      influencersWithRelations
+    );
+
     return this.buildCampaignResponse(
       savedCampaign,
       productsWithCategories,
-      savedInfluencers
+      influencersWithProducts
     );
   }
 

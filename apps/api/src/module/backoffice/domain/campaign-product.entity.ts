@@ -21,6 +21,7 @@ import {
 export interface CampaignProductResponse {
   id: number;
   name: string;
+  thumbnailUrls: string[];
   brand: {
     id: number;
     name: string;
@@ -72,6 +73,7 @@ export class CampaignProductEntity extends BaseEntity {
     return {
       id: this.product.id,
       name: this.product.name,
+      thumbnailUrls: this.product.thumbnailUrls ?? [],
       brand: {
         id: this.product.brand.id,
         name: this.product.brand.name,

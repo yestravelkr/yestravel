@@ -6,17 +6,21 @@ import {
   paginationQuerySchema,
   createPaginatedResponseSchema,
   BUSINESS_TYPE_ENUM_VALUE,
-  socialMediaPlatformEnumSchema,
   businessInfoSchema,
   bankInfoSchema,
+} from "./types";
+import {
+  socialMediaPlatformEnumSchema,
+} from "./types/brand";
+import {
   campaignProductInputSchema,
   campaignInfluencerInputSchema,
-} from './types';
+} from "./types/campaign";
 import {
   normalizeTime,
   TIME_FORMAT_REGEX,
   TIME_FORMAT_ERROR_MESSAGE_KO,
-} from './utils';
+} from "./utils";
 
 const t = initTRPC.create();
 const publicProcedure = t.procedure;
@@ -945,6 +949,7 @@ const appRouter = t.router({
         // Product 정보 (flat)
         id: z.number(),
         name: z.string(),
+        thumbnailUrls: z.array(z.string()),
         brand: z.object({
           id: z.number(),
           name: z.string(),
@@ -968,6 +973,8 @@ const appRouter = t.router({
       influencers: z.array(z.object({
         campaignInfluencerId: z.string(), // composite key: `${campaignId}_${influencerId}`
         influencerId: z.number(),
+        name: z.string(),
+        thumbnail: z.string().nullable(),
         periodType: z.enum(
           ['DEFAULT', 'CUSTOM'] as const
         ),
@@ -1017,6 +1024,7 @@ const appRouter = t.router({
         // Product 정보 (flat)
         id: z.number(),
         name: z.string(),
+        thumbnailUrls: z.array(z.string()),
         brand: z.object({
           id: z.number(),
           name: z.string(),
@@ -1040,6 +1048,8 @@ const appRouter = t.router({
       influencers: z.array(z.object({
         campaignInfluencerId: z.string(), // composite key: `${campaignId}_${influencerId}`
         influencerId: z.number(),
+        name: z.string(),
+        thumbnail: z.string().nullable(),
         periodType: z.enum(
           ['DEFAULT', 'CUSTOM'] as const
         ),
@@ -1091,6 +1101,7 @@ const appRouter = t.router({
         // Product 정보 (flat)
         id: z.number(),
         name: z.string(),
+        thumbnailUrls: z.array(z.string()),
         brand: z.object({
           id: z.number(),
           name: z.string(),
@@ -1114,6 +1125,8 @@ const appRouter = t.router({
       influencers: z.array(z.object({
         campaignInfluencerId: z.string(), // composite key: `${campaignId}_${influencerId}`
         influencerId: z.number(),
+        name: z.string(),
+        thumbnail: z.string().nullable(),
         periodType: z.enum(
           ['DEFAULT', 'CUSTOM'] as const
         ),
