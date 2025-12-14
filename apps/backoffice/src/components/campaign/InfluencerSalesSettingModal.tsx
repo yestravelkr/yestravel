@@ -20,7 +20,10 @@ import { useState } from 'react';
 import SnappyModal, { useCurrentModal } from 'react-snappy-modal';
 import tw from 'tailwind-styled-components';
 
-import type { CampaignInfluencerFormData } from '@/routes/_auth/campaign/_components/types';
+import type {
+  CampaignInfluencerFormData,
+  CampaignInfluencerProductFormData,
+} from '@/routes/_auth/campaign/_components/types';
 import { openDateRangePickerModal } from '@/shared/components/DateRangePickerModal';
 
 interface DefaultDateRange {
@@ -28,10 +31,16 @@ interface DefaultDateRange {
   endDate: string;
 }
 
+interface CampaignProduct {
+  id: number;
+  name: string;
+}
+
 interface InfluencerSalesSettingModalProps {
   influencer: CampaignInfluencerFormData;
   influencerName: string;
   defaultDateRange: DefaultDateRange;
+  campaignProducts: CampaignProduct[];
 }
 
 interface InfluencerSalesSettingResult {
@@ -42,65 +51,12 @@ interface InfluencerSalesSettingResult {
   feeType: 'NONE' | 'CUSTOM';
   fee: number | null;
   status: 'VISIBLE' | 'HIDDEN' | 'SOLD_OUT';
-  products: CampaignInfluencerFormData['products'];
+  products: CampaignInfluencerProductFormData[];
 }
 
 const MAIN_TABS = [
   { label: '캠페인 설정', value: 'campaign' as const },
   { label: '상품 판매 설정', value: 'productSales' as const },
-];
-
-// 목업 상품 데이터
-const mockProducts = [
-  { id: 1, name: '상품명 A' },
-  { id: 2, name: '상품명 B' },
-];
-
-// 목업 수수료 테이블 데이터
-interface CommissionRowData {
-  date: string;
-  optionName: string;
-  price: number;
-  commission: number;
-}
-
-const mockCommissionData: CommissionRowData[] = [
-  {
-    date: '2025-02-01',
-    optionName: '3인 패키지',
-    price: 3000,
-    commission: 3000,
-  },
-  {
-    date: '2025-02-01',
-    optionName: '4인 패키지',
-    price: 3000,
-    commission: 3000,
-  },
-  {
-    date: '2025-02-02',
-    optionName: '3인 패키지',
-    price: 3000,
-    commission: 3000,
-  },
-  {
-    date: '2025-02-02',
-    optionName: '4인 패키지',
-    price: 3000,
-    commission: 3000,
-  },
-  {
-    date: '2025-02-03',
-    optionName: '3인 패키지',
-    price: 3000,
-    commission: 3000,
-  },
-  {
-    date: '2025-02-03',
-    optionName: '4인 패키지',
-    price: 3000,
-    commission: 3000,
-  },
 ];
 
 /**
@@ -207,40 +163,78 @@ function CampaignSettingTabContent({
  * 상품 판매 설정 탭 콘텐츠
  */
 function ProductSalesSettingTabContent({
+  campaignProducts,
   selectedProductIndex,
   onSelectProduct,
+  influencerProducts,
+  onInfluencerProductsChange,
 }: {
+  campaignProducts: CampaignProduct[];
   selectedProductIndex: number;
   onSelectProduct: (index: number) => void;
+  influencerProducts: CampaignInfluencerProductFormData[];
+  onInfluencerProductsChange: (
+    products: CampaignInfluencerProductFormData[],
+  ) => void;
 }) {
-  const [visibilityStatus, setVisibilityStatus] = useState<
-    'visible' | 'hidden'
-  >('visible');
-  const [useCustomFee, setUseCustomFee] = useState(true);
-  const [commissionData, setCommissionData] =
-    useState<CommissionRowData[]>(mockCommissionData);
+  // 현재 선택된 상품의 인플루언서 설정 찾기
+  const currentProduct = campaignProducts[selectedProductIndex];
+  const currentInfluencerProduct = influencerProducts.find(
+    (product) => product.productId === currentProduct?.id,
+  );
 
-  const handleCommissionChange = (index: number, value: number) => {
-    const newData = [...commissionData];
-    newData[index] = { ...newData[index], commission: value };
-    setCommissionData(newData);
-  };
+  // 상품 설정 업데이트 헬퍼
+  const updateProductSetting = (
+    updates: Partial<CampaignInfluencerProductFormData>,
+  ) => {
+    if (!currentProduct) return;
 
-  // 날짜별로 그룹화하여 첫 번째 옵션에만 날짜 표시
-  const getDisplayDate = (index: number): string => {
-    if (index === 0) return commissionData[index].date;
-    if (commissionData[index].date !== commissionData[index - 1].date) {
-      return commissionData[index].date;
+    const existingIndex = influencerProducts.findIndex(
+      (product) => product.productId === currentProduct.id,
+    );
+
+    const updatedProducts = [...influencerProducts];
+    if (existingIndex >= 0) {
+      updatedProducts[existingIndex] = {
+        ...updatedProducts[existingIndex],
+        ...updates,
+      };
+    } else {
+      updatedProducts.push({
+        productId: currentProduct.id,
+        status: 'VISIBLE',
+        useCustomCommission: false,
+        hotelOptions: [],
+        ...updates,
+      });
     }
-    return '';
+    onInfluencerProductsChange(updatedProducts);
   };
+
+  const handleStatusChange = (status: 'VISIBLE' | 'HIDDEN' | 'SOLD_OUT') => {
+    updateProductSetting({ status });
+  };
+
+  const handleUseCustomCommissionChange = (useCustom: boolean) => {
+    updateProductSetting({ useCustomCommission: useCustom });
+  };
+
+  if (campaignProducts.length === 0) {
+    return (
+      <ProductSalesContainer>
+        <EmptyProductMessage>
+          캠페인에 추가된 상품이 없습니다.
+        </EmptyProductMessage>
+      </ProductSalesContainer>
+    );
+  }
 
   return (
     <ProductSalesContainer>
       {/* 상품 탭 */}
       <ProductTabsRow>
         <ProductTabs>
-          {mockProducts.map((product, index) => (
+          {campaignProducts.map((product, index) => (
             <ProductChip
               key={product.id}
               $selected={selectedProductIndex === index}
@@ -267,13 +261,16 @@ function ProductSalesSettingTabContent({
             </SettingDescription>
           </SettingInfo>
           <VisibilitySelect
-            value={visibilityStatus}
+            value={currentInfluencerProduct?.status ?? 'VISIBLE'}
             onChange={(event) =>
-              setVisibilityStatus(event.target.value as 'visible' | 'hidden')
+              handleStatusChange(
+                event.target.value as 'VISIBLE' | 'HIDDEN' | 'SOLD_OUT',
+              )
             }
           >
-            <option value="visible">노출</option>
-            <option value="hidden">미노출</option>
+            <option value="VISIBLE">노출</option>
+            <option value="HIDDEN">미노출</option>
+            <option value="SOLD_OUT">품절</option>
           </VisibilitySelect>
         </SettingRow>
 
@@ -286,16 +283,22 @@ function ProductSalesSettingTabContent({
             </SettingDescription>
           </SettingInfo>
           <ToggleSwitch
-            $active={useCustomFee}
-            onClick={() => setUseCustomFee(!useCustomFee)}
+            $active={currentInfluencerProduct?.useCustomCommission ?? false}
+            onClick={() =>
+              handleUseCustomCommissionChange(
+                !currentInfluencerProduct?.useCustomCommission,
+              )
+            }
           >
-            <ToggleKnob $active={useCustomFee} />
+            <ToggleKnob
+              $active={currentInfluencerProduct?.useCustomCommission ?? false}
+            />
           </ToggleSwitch>
         </SettingRow>
       </SettingCard>
 
-      {/* 수수료 테이블 */}
-      {useCustomFee && (
+      {/* 수수료 테이블 - TODO: 호텔 옵션 데이터 연동 필요 */}
+      {currentInfluencerProduct?.useCustomCommission && (
         <CommissionTableContainer>
           <Table>
             <THead>
@@ -307,22 +310,13 @@ function ProductSalesSettingTabContent({
               </TR>
             </THead>
             <TBody>
-              {commissionData.map((row, index) => (
-                <TR key={`${row.date}-${row.optionName}`}>
-                  <TD>{getDisplayDate(index)}</TD>
-                  <TD>{row.optionName}</TD>
-                  <TD>{row.price.toLocaleString()}</TD>
-                  <TD.Input
-                    type="number"
-                    placeholder="0"
-                    value={row.commission || ''}
-                    onChange={(event) =>
-                      handleCommissionChange(index, Number(event.target.value))
-                    }
-                    min={0}
-                  />
-                </TR>
-              ))}
+              <TR>
+                <TD colSpan={4}>
+                  <EmptyProductMessage>
+                    호텔 옵션 데이터 연동이 필요합니다.
+                  </EmptyProductMessage>
+                </TD>
+              </TR>
             </TBody>
           </Table>
         </CommissionTableContainer>
@@ -335,11 +329,10 @@ function InfluencerSalesSettingModal({
   influencer,
   influencerName,
   defaultDateRange,
+  campaignProducts,
 }: InfluencerSalesSettingModalProps) {
   const { resolveModal } = useCurrentModal();
-  const { selectedTab, TabComponents: MainTabComponents } = useTabs(MAIN_TABS, {
-    defaultValue: 'productSales',
-  });
+  const { selectedTab, TabComponents: MainTabComponents } = useTabs(MAIN_TABS);
   const [selectedProductIndex, setSelectedProductIndex] = useState(0);
 
   // 캠페인 설정 상태
@@ -352,6 +345,11 @@ function InfluencerSalesSettingModal({
   });
   const [fee, setFee] = useState<number>(influencer.fee || 0);
 
+  // 인플루언서별 상품 설정 상태
+  const [influencerProducts, setInfluencerProducts] = useState<
+    CampaignInfluencerProductFormData[]
+  >(influencer.products);
+
   const handleConfirm = () => {
     const result: InfluencerSalesSettingResult = {
       influencerId: influencer.influencerId,
@@ -361,7 +359,7 @@ function InfluencerSalesSettingModal({
       feeType: fee > 0 ? 'CUSTOM' : 'NONE',
       fee: fee > 0 ? fee : null,
       status: influencer.status,
-      products: influencer.products,
+      products: influencerProducts,
     };
     resolveModal(result);
   };
@@ -392,8 +390,11 @@ function InfluencerSalesSettingModal({
           />
         ) : (
           <ProductSalesSettingTabContent
+            campaignProducts={campaignProducts}
             selectedProductIndex={selectedProductIndex}
             onSelectProduct={setSelectedProductIndex}
+            influencerProducts={influencerProducts}
+            onInfluencerProductsChange={setInfluencerProducts}
           />
         )}
       </Content>
@@ -415,12 +416,14 @@ export function openInfluencerSalesSettingModal(
   influencer: CampaignInfluencerFormData,
   influencerName: string,
   defaultDateRange: DefaultDateRange,
+  campaignProducts: CampaignProduct[],
 ): Promise<InfluencerSalesSettingResult | null> {
   return SnappyModal.show(
     <InfluencerSalesSettingModal
       influencer={influencer}
       influencerName={influencerName}
       defaultDateRange={defaultDateRange}
+      campaignProducts={campaignProducts}
     />,
     {
       position: 'center',
@@ -611,6 +614,13 @@ const ProductSalesContainer = tw.div`
   flex
   flex-col
   gap-5
+`;
+
+const EmptyProductMessage = tw.div`
+  text-center
+  py-8
+  text-[var(--fg-muted)]
+  text-sm
 `;
 
 const ProductTabsRow = tw.div`

@@ -10,6 +10,7 @@ export type CampaignProductFormData = {
 
 export type CampaignInfluencerProductFormData = {
   productId: number;
+  status: 'VISIBLE' | 'HIDDEN' | 'SOLD_OUT';
   useCustomCommission: boolean;
   hotelOptions: {
     hotelOptionId: number;

@@ -45,11 +45,40 @@ export function CampaignInfluencerSection() {
     name: 'dateRange',
   });
 
+  // 캠페인에 추가된 상품 ID 목록
+  const formProducts = useWatch({
+    control,
+    name: 'products',
+    defaultValue: [],
+  });
+
   // 인플루언서 리스트 조회
   const { data: allInfluencers } = trpc.backofficeInfluencer.findAll.useQuery({
     page: 1,
     limit: 100,
   });
+
+  // 상품 리스트 조회 (상품명 표시용)
+  const { data: allProducts } = trpc.backofficeProduct.findAll.useQuery({
+    page: 1,
+    limit: 100,
+  });
+
+  // 캠페인에 추가된 상품 목록 (id, name)
+  const campaignProducts = useMemo(() => {
+    if (!allProducts) return [];
+
+    const productMap = new Map(
+      allProducts.data.map((product) => [product.id, product.name]),
+    );
+
+    return formProducts
+      .map((formProduct) => ({
+        id: formProduct.id,
+        name: productMap.get(formProduct.id) || `상품 ${formProduct.id}`,
+      }))
+      .filter((product) => product.name);
+  }, [formProducts, allProducts]);
 
   // allInfluencers를 id를 key로 하는 Map으로 변환
   const influencersMap = useMemo(() => {
@@ -141,6 +170,7 @@ export function CampaignInfluencerSection() {
       formData,
       influencer.name,
       dateRange,
+      campaignProducts,
     );
 
     if (result) {
