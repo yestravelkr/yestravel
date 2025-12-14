@@ -52,9 +52,36 @@ function CampaignCreatePage() {
   };
 
   const onSubmit = (data: CampaignFormData) => {
-    // TODO: API 연동
-    console.log('Form data:', data);
-    toast.info('API 연동 예정');
+    // Form 데이터를 API 입력 형식으로 변환
+    const apiInput = {
+      title: data.title,
+      startAt: new Date(data.dateRange.startDate),
+      endAt: new Date(data.dateRange.endDate),
+      // products: id -> productId, status 변환 (ACTIVE -> VISIBLE, INACTIVE -> HIDDEN)
+      products: data.products.map((product) => ({
+        productId: product.id,
+        status: product.status === 'ACTIVE' ? 'VISIBLE' : 'HIDDEN',
+      })),
+      // influencers: string date -> Date 변환
+      influencers: data.influencers.map((influencer) => ({
+        influencerId: influencer.influencerId,
+        periodType: influencer.periodType,
+        startAt: influencer.startAt ? new Date(influencer.startAt) : null,
+        endAt: influencer.endAt ? new Date(influencer.endAt) : null,
+        feeType: influencer.feeType,
+        fee: influencer.fee,
+        status: influencer.status,
+        products: influencer.products.map((product) => ({
+          productId: product.productId,
+          useCustomCommission: product.useCustomCommission,
+          hotelOptions: product.hotelOptions,
+        })),
+      })),
+    };
+
+    createMutation.mutate(
+      apiInput as Parameters<typeof createMutation.mutate>[0],
+    );
   };
 
   return (
