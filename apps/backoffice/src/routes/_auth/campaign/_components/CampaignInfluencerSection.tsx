@@ -25,6 +25,7 @@ import type {
   CampaignInfluencerFormData,
 } from './types';
 
+import { openInfluencerSalesSettingModal } from '@/components/campaign/InfluencerSalesSettingModal';
 import { openInfluencerSelectModal } from '@/components/campaign/InfluencerSelectModal';
 import { trpc } from '@/shared/trpc';
 
@@ -115,6 +116,42 @@ export function CampaignInfluencerSection() {
     setValue('influencers', updatedForm, { shouldValidate: true });
   };
 
+  const handleOpenSalesSetting = async (
+    influencer: CampaignInfluencerDisplay,
+    index: number,
+  ) => {
+    const formData: CampaignInfluencerFormData = {
+      influencerId: influencer.influencerId,
+      periodType: influencer.periodType,
+      startAt: influencer.startAt,
+      endAt: influencer.endAt,
+      feeType: influencer.feeType,
+      fee: influencer.fee,
+      status: influencer.status,
+      products: influencer.products,
+    };
+
+    const result = await openInfluencerSalesSettingModal(
+      formData,
+      influencer.name,
+    );
+
+    if (result) {
+      const updatedInfluencers = [...formInfluencers];
+      updatedInfluencers[index] = {
+        influencerId: result.influencerId,
+        periodType: result.periodType,
+        startAt: result.startAt,
+        endAt: result.endAt,
+        feeType: result.feeType,
+        fee: result.fee,
+        status: result.status,
+        products: result.products,
+      };
+      setValue('influencers', updatedInfluencers, { shouldValidate: true });
+    }
+  };
+
   return (
     <FormSection>
       <SectionHeader>
@@ -153,12 +190,9 @@ export function CampaignInfluencerSection() {
                     <TD>
                       <SettingButton
                         type="button"
-                        onClick={() => {
-                          console.log(
-                            '판매설정 모달 열기:',
-                            influencer.influencerId,
-                          );
-                        }}
+                        onClick={() =>
+                          handleOpenSalesSetting(influencer, index)
+                        }
                         kind="neutral"
                         variant="outline"
                         size="small"
