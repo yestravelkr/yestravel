@@ -6,7 +6,7 @@
 
 import dayjs from 'dayjs';
 import { Calendar as CalendarIcon } from 'lucide-react';
-import { Control, Controller } from 'react-hook-form';
+import { Controller, useFormContext } from 'react-hook-form';
 import tw from 'tailwind-styled-components';
 
 import type { CampaignFormData } from './types';
@@ -14,13 +14,8 @@ import type { CampaignFormData } from './types';
 import { Input, FieldWrapper } from '@/shared/components';
 import { openDateRangePickerModal } from '@/shared/components/DateRangePickerModal';
 
-interface CampaignBasicInfoSectionProps {
-  control: Control<CampaignFormData>;
-}
-
-export function CampaignBasicInfoSection({
-  control,
-}: CampaignBasicInfoSectionProps) {
+export function CampaignBasicInfoSection() {
+  const { control } = useFormContext<CampaignFormData>();
   const handleDateRangeClick = async (
     startDate: string,
     endDate: string,
@@ -151,5 +146,7 @@ const DateRangeButton = tw.button`
 /**
  * Usage:
  *
- * <CampaignBasicInfoSection control={control} />
+ * <FormProvider {...methods}>
+ *   <CampaignBasicInfoSection />
+ * </FormProvider>
  */
