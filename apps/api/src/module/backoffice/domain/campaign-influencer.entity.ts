@@ -34,6 +34,8 @@ import type {
 export interface CampaignInfluencerResponse {
   campaignInfluencerId: string;
   influencerId: number;
+  name: string;
+  thumbnail: string | null;
   periodType: CampaignPeriodTypeEnumType;
   startAt: Date | null;
   endAt: Date | null;
@@ -128,6 +130,8 @@ export class CampaignInfluencerEntity {
     return {
       campaignInfluencerId: this.id,
       influencerId: this.influencerId,
+      name: this.influencer?.name ?? '',
+      thumbnail: this.influencer?.thumbnail ?? null,
       periodType: this.periodType,
       startAt: this.startAt ?? null,
       endAt: this.endAt ?? null,

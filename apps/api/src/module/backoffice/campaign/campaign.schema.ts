@@ -112,6 +112,7 @@ export const campaignProductResponseSchema = z.object({
   // Product 정보 (flat)
   id: z.number(),
   name: z.string(),
+  thumbnailUrls: z.array(z.string()),
   brand: z.object({
     id: z.number(),
     name: z.string(),
@@ -147,6 +148,8 @@ export const campaignInfluencerProductResponseSchema = z.object({
 export const campaignInfluencerResponseSchema = z.object({
   campaignInfluencerId: z.string(), // composite key: `${campaignId}_${influencerId}`
   influencerId: z.number(),
+  name: z.string(),
+  thumbnail: z.string().nullable(),
   periodType: campaignPeriodTypeEnumSchema,
   startAt: z.date().nullable(),
   endAt: z.date().nullable(),
