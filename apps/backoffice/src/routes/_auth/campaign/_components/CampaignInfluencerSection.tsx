@@ -39,6 +39,12 @@ export function CampaignInfluencerSection() {
     defaultValue: [],
   });
 
+  // 캠페인 기간 (기본값으로 사용)
+  const dateRange = useWatch({
+    control,
+    name: 'dateRange',
+  });
+
   // 인플루언서 리스트 조회
   const { data: allInfluencers } = trpc.backofficeInfluencer.findAll.useQuery({
     page: 1,
@@ -134,6 +140,7 @@ export function CampaignInfluencerSection() {
     const result = await openInfluencerSalesSettingModal(
       formData,
       influencer.name,
+      dateRange,
     );
 
     if (result) {

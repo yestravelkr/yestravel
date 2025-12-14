@@ -14,16 +14,24 @@ import {
   TD,
   useTabs,
 } from '@yestravelkr/min-design-system';
-import { FileSpreadsheet } from 'lucide-react';
+import dayjs from 'dayjs';
+import { Calendar, FileSpreadsheet } from 'lucide-react';
 import { useState } from 'react';
 import SnappyModal, { useCurrentModal } from 'react-snappy-modal';
 import tw from 'tailwind-styled-components';
 
 import type { CampaignInfluencerFormData } from '@/routes/_auth/campaign/_components/types';
+import { openDateRangePickerModal } from '@/shared/components/DateRangePickerModal';
+
+interface DefaultDateRange {
+  startDate: string;
+  endDate: string;
+}
 
 interface InfluencerSalesSettingModalProps {
   influencer: CampaignInfluencerFormData;
   influencerName: string;
+  defaultDateRange: DefaultDateRange;
 }
 
 interface InfluencerSalesSettingResult {
@@ -98,11 +106,100 @@ const mockCommissionData: CommissionRowData[] = [
 /**
  * 캠페인 설정 탭 콘텐츠
  */
-function CampaignSettingTabContent() {
+function CampaignSettingTabContent({
+  periodType,
+  onPeriodTypeChange,
+  customDateRange,
+  onCustomDateRangeChange,
+  defaultDateRange,
+  fee,
+  onFeeChange,
+}: {
+  periodType: 'DEFAULT' | 'CUSTOM';
+  onPeriodTypeChange: (type: 'DEFAULT' | 'CUSTOM') => void;
+  customDateRange: {
+    startDate: string;
+    endDate: string;
+  };
+  onCustomDateRangeChange: (range: {
+    startDate: string;
+    endDate: string;
+  }) => void;
+  defaultDateRange: DefaultDateRange;
+  fee: number;
+  onFeeChange: (fee: number) => void;
+}) {
+  const displayDateRange =
+    periodType === 'DEFAULT' ? defaultDateRange : customDateRange;
+
+  const handleDateRangeClick = async () => {
+    const result = await openDateRangePickerModal({
+      startDate: customDateRange.startDate,
+      endDate: customDateRange.endDate,
+    });
+    if (result) {
+      onCustomDateRangeChange({
+        startDate: result.startDate,
+        endDate: result.endDate,
+      });
+      // 날짜를 선택하면 자동으로 직접 입력 모드로 전환
+      onPeriodTypeChange('CUSTOM');
+    }
+  };
+
   return (
-    <TabContentPlaceholder>
-      캠페인 설정 내용이 여기에 표시됩니다.
-    </TabContentPlaceholder>
+    <CampaignSettingContainer>
+      {/* 캠페인 기간 */}
+      <SettingField>
+        <SettingLabel>캠페인 기간</SettingLabel>
+        <RadioGroup>
+          <RadioOption
+            $selected={periodType === 'DEFAULT'}
+            onClick={() => onPeriodTypeChange('DEFAULT')}
+          >
+            <RadioCircle $selected={periodType === 'DEFAULT'} />
+            <RadioLabel>기본값</RadioLabel>
+          </RadioOption>
+          <RadioOption
+            $selected={periodType === 'CUSTOM'}
+            onClick={() => onPeriodTypeChange('CUSTOM')}
+          >
+            <RadioCircle $selected={periodType === 'CUSTOM'} />
+            <RadioLabel>직접 입력</RadioLabel>
+          </RadioOption>
+        </RadioGroup>
+        <DateRangeInput
+          type="button"
+          onClick={handleDateRangeClick}
+          disabled={periodType === 'DEFAULT'}
+          $disabled={periodType === 'DEFAULT'}
+        >
+          <Calendar size={20} />
+          <DateRangeText>
+            {dayjs(displayDateRange.startDate).format('YY.MM.DD')} ~{' '}
+            {dayjs(displayDateRange.endDate).format('YY.MM.DD')}
+          </DateRangeText>
+        </DateRangeInput>
+      </SettingField>
+
+      {/* 진행비 */}
+      <SettingField>
+        <SettingLabel>진행비</SettingLabel>
+        <FeeInputWrapper>
+          <FeeInput
+            type="text"
+            value={fee.toLocaleString()}
+            onChange={(event) => {
+              const value = event.target.value.replace(/,/g, '');
+              const numValue = parseInt(value, 10) || 0;
+              onFeeChange(numValue);
+            }}
+            placeholder="0"
+          />
+          <FeeUnit>원</FeeUnit>
+        </FeeInputWrapper>
+      </SettingField>
+    </CampaignSettingContainer>
   );
 }
 
@@ -237,6 +334,7 @@ function ProductSalesSettingTabContent({
 function InfluencerSalesSettingModal({
   influencer,
   influencerName,
+  defaultDateRange,
 }: InfluencerSalesSettingModalProps) {
   const { resolveModal } = useCurrentModal();
   const { selectedTab, TabComponents: MainTabComponents } = useTabs(MAIN_TABS, {
@@ -244,14 +342,24 @@ function InfluencerSalesSettingModal({
   });
   const [selectedProductIndex, setSelectedProductIndex] = useState(0);
 
+  // 캠페인 설정 상태
+  const [periodType, setPeriodType] = useState<'DEFAULT' | 'CUSTOM'>(
+    influencer.periodType,
+  );
+  const [customDateRange, setCustomDateRange] = useState({
+    startDate: influencer.startAt || defaultDateRange.startDate,
+    endDate: influencer.endAt || defaultDateRange.endDate,
+  });
+  const [fee, setFee] = useState<number>(influencer.fee || 0);
+
   const handleConfirm = () => {
     const result: InfluencerSalesSettingResult = {
       influencerId: influencer.influencerId,
-      periodType: influencer.periodType,
-      startAt: influencer.startAt,
-      endAt: influencer.endAt,
-      feeType: influencer.feeType,
-      fee: influencer.fee,
+      periodType,
+      startAt: periodType === 'CUSTOM' ? customDateRange.startDate : null,
+      endAt: periodType === 'CUSTOM' ? customDateRange.endDate : null,
+      feeType: fee > 0 ? 'CUSTOM' : 'NONE',
+      fee: fee > 0 ? fee : null,
       status: influencer.status,
       products: influencer.products,
     };
@@ -273,7 +381,15 @@ function InfluencerSalesSettingModal({
       {/* 콘텐츠 영역 */}
       <Content>
         {selectedTab === 'campaign' ? (
-          <CampaignSettingTabContent />
+          <CampaignSettingTabContent
+            periodType={periodType}
+            onPeriodTypeChange={setPeriodType}
+            customDateRange={customDateRange}
+            onCustomDateRangeChange={setCustomDateRange}
+            defaultDateRange={defaultDateRange}
+            fee={fee}
+            onFeeChange={setFee}
+          />
         ) : (
           <ProductSalesSettingTabContent
             selectedProductIndex={selectedProductIndex}
@@ -298,11 +414,13 @@ function InfluencerSalesSettingModal({
 export function openInfluencerSalesSettingModal(
   influencer: CampaignInfluencerFormData,
   influencerName: string,
+  defaultDateRange: DefaultDateRange,
 ): Promise<InfluencerSalesSettingResult | null> {
   return SnappyModal.show(
     <InfluencerSalesSettingModal
       influencer={influencer}
       influencerName={influencerName}
+      defaultDateRange={defaultDateRange}
     />,
     {
       position: 'center',
@@ -360,11 +478,132 @@ const Content = tw.div`
   gap-5
 `;
 
-const TabContentPlaceholder = tw.div`
-  text-center
-  py-12
+const CampaignSettingContainer = tw.div`
+  self-stretch
+  flex
+  flex-col
+  gap-5
+`;
+
+const SettingField = tw.div`
+  self-stretch
+  flex
+  flex-col
+  gap-2
+`;
+
+const SettingLabel = tw.div`
   text-[var(--fg-muted)]
-  text-sm
+  text-base
+  font-normal
+  leading-5
+`;
+
+const RadioGroup = tw.div`
+  self-stretch
+  inline-flex
+  justify-start
+  items-center
+  gap-2
+`;
+
+const RadioOption = tw.div<{ $selected: boolean }>`
+  flex-1
+  py-2
+  flex
+  justify-start
+  items-start
+  gap-1
+  cursor-pointer
+`;
+
+const RadioCircle = tw.div<{ $selected: boolean }>`
+  w-5
+  h-5
+  rounded-full
+  border-2
+  flex
+  justify-center
+  items-center
+  ${({ $selected }) =>
+    $selected
+      ? 'border-[var(--fg-primary)] bg-[var(--fg-primary)]'
+      : 'border-[var(--fg-disabled)]'}
+  after:content-['']
+  after:w-2
+  after:h-2
+  after:rounded-full
+  ${({ $selected }) => ($selected ? 'after:bg-white' : 'after:bg-transparent')}
+`;
+
+const RadioLabel = tw.div`
+  text-[var(--fg-neutral)]
+  text-base
+  font-normal
+  leading-5
+`;
+
+const DateRangeInput = tw.button<{ $disabled: boolean }>`
+  self-stretch
+  h-11
+  px-3
+  bg-[var(--bg-field)]
+  rounded-xl
+  outline
+  outline-1
+  outline-offset-[-1px]
+  outline-[var(--stroke-neutral)]
+  inline-flex
+  justify-start
+  items-center
+  gap-2
+  transition-colors
+  ${({ $disabled }) =>
+    $disabled
+      ? 'text-[var(--fg-disabled)] cursor-not-allowed opacity-60'
+      : 'text-[var(--fg-neutral)] cursor-pointer'}
+`;
+
+const DateRangeText = tw.span`
+  flex-1
+  text-left
+  text-base
+  font-normal
+  leading-5
+`;
+
+const FeeInputWrapper = tw.div`
+  self-stretch
+  h-11
+  px-3
+  bg-[var(--bg-field)]
+  rounded-xl
+  outline
+  outline-1
+  outline-offset-[-1px]
+  outline-[var(--stroke-neutral)]
+  inline-flex
+  justify-start
+  items-center
+  gap-1
+`;
+
+const FeeInput = tw.input`
+  flex-1
+  bg-transparent
+  text-[var(--fg-neutral)]
+  text-base
+  font-normal
+  leading-5
+  outline-none
+  text-right
+`;
+
+const FeeUnit = tw.span`
+  text-[var(--fg-muted)]
+  text-base
+  font-normal
+  leading-5
 `;
 
 const ProductSalesContainer = tw.div`
