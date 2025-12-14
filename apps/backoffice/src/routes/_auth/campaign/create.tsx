@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { Button } from '@yestravelkr/min-design-system';
 import dayjs from 'dayjs';
 import { FormProvider, useForm } from 'react-hook-form';
@@ -32,7 +32,10 @@ function CampaignCreatePage() {
     },
   });
 
-  const { handleSubmit } = methods;
+  const {
+    handleSubmit,
+    formState: { isSubmitting },
+  } = methods;
 
   const createMutation = trpc.backofficeCampaign.create.useMutation({
     onSuccess: () => {
@@ -43,6 +46,10 @@ function CampaignCreatePage() {
       toast.error(error.message || '캠페인 등록에 실패했습니다.');
     },
   });
+
+  const handleCancel = () => {
+    navigate({ to: '/campaign' });
+  };
 
   const onSubmit = (data: CampaignFormData) => {
     // TODO: API 연동
@@ -55,19 +62,33 @@ function CampaignCreatePage() {
       <MajorPageLayout
         title="캠페인 등록"
         description="새로운 캠페인을 등록합니다"
-        headerActions={
-          <Button
-            onClick={handleSubmit(onSubmit)}
-            disabled={createMutation.isPending}
-          >
-            {createMutation.isPending ? '등록 중...' : '등록'}
-          </Button>
-        }
+        headerActions={<CancelLink to="/campaign">취소</CancelLink>}
       >
         <FormContainer>
-          <CampaignBasicInfoSection />
-          <CampaignProductSection />
-          <CampaignInfluencerSection />
+          <Form onSubmit={handleSubmit(onSubmit)}>
+            <FormContent>
+              <CampaignBasicInfoSection />
+              <CampaignProductSection />
+              <CampaignInfluencerSection />
+            </FormContent>
+
+            <FormActions>
+              <SecondaryButton type="button" onClick={handleCancel}>
+                취소
+              </SecondaryButton>
+              <Button
+                type="submit"
+                kind="primary"
+                variant="solid"
+                size="large"
+                disabled={createMutation.isPending || isSubmitting}
+              >
+                {createMutation.isPending || isSubmitting
+                  ? '등록 중...'
+                  : '캠페인 등록'}
+              </Button>
+            </FormActions>
+          </Form>
         </FormContainer>
       </MajorPageLayout>
     </FormProvider>
@@ -75,9 +96,59 @@ function CampaignCreatePage() {
 }
 
 const FormContainer = tw.div`
+  w-full
+  mx-auto
+`;
+
+const Form = tw.form`
+  space-y-6
+`;
+
+const FormContent = tw.div`
   max-w-4xl
   mx-auto
   flex
   flex-col
   gap-6
+  pb-24
+`;
+
+const FormActions = tw.div`
+  fixed
+  bottom-0
+  left-0
+  right-0
+  flex
+  justify-end
+  space-x-3
+  p-6
+  border-t
+  border-gray-200
+  bg-white
+`;
+
+const CancelLink = tw(Link)`
+  px-4
+  py-2
+  text-gray-700
+  bg-white
+  border
+  border-gray-300
+  rounded-lg
+  hover:bg-gray-50
+  transition-colors
+  font-medium
+`;
+
+const SecondaryButton = tw.button`
+  px-4
+  py-2
+  text-gray-700
+  bg-white
+  border
+  border-gray-300
+  rounded-lg
+  hover:bg-gray-50
+  transition-colors
+  font-medium
 `;
