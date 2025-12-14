@@ -128,21 +128,28 @@ export function CampaignInfluencerSection() {
     const selectedIds = await openInfluencerSelectModal(currentInfluencerIds);
 
     if (selectedIds) {
-      // 선택한 ID로 formData 생성 (초기값 설정)
-      const newFormData: CampaignInfluencerFormData[] = selectedIds.map(
-        (id) => ({
-          influencerId: id,
-          periodType: 'DEFAULT' as const,
-          startAt: null,
-          endAt: null,
-          feeType: 'NONE' as const,
-          fee: null,
-          status: 'VISIBLE' as const,
-          products: [],
-        }),
+      // 기존 인플루언서 설정을 유지하면서 새 인플루언서 추가
+      const mergedFormData: CampaignInfluencerFormData[] = selectedIds.map(
+        (id) => {
+          const existing = formInfluencers.find(
+            (influencer) => influencer.influencerId === id,
+          );
+          return existing
+            ? existing
+            : {
+                influencerId: id,
+                periodType: 'DEFAULT' as const,
+                startAt: null,
+                endAt: null,
+                feeType: 'NONE' as const,
+                fee: null,
+                status: 'VISIBLE' as const,
+                products: [],
+              };
+        },
       );
 
-      setValue('influencers', newFormData, { shouldValidate: true });
+      setValue('influencers', mergedFormData, { shouldValidate: true });
     }
   };
 

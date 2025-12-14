@@ -82,13 +82,15 @@ export function CampaignProductSection() {
     const selectedIds = await openProductSelectModal(currentProductIds);
 
     if (selectedIds) {
-      // 선택한 ID로 formData 생성
-      const newFormData: CampaignProductFormData[] = selectedIds.map((id) => ({
-        id,
-        status: 'ACTIVE' as const,
-      }));
+      // 기존 상품 상태를 유지하면서 새 상품 추가
+      const mergedFormData: CampaignProductFormData[] = selectedIds.map(
+        (id) => {
+          const existing = formProducts.find((product) => product.id === id);
+          return existing ? existing : { id, status: 'ACTIVE' as const };
+        },
+      );
 
-      setValue('products', newFormData, { shouldValidate: true });
+      setValue('products', mergedFormData, { shouldValidate: true });
     }
   };
 
