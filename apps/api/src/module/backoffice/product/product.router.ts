@@ -48,6 +48,7 @@ export class ProductRouter extends BaseTrpcRouter {
         name: z.string().nullish(),
         status: z.enum(['VISIBLE', 'HIDDEN', 'SOLD_OUT']).nullish(),
         brandIds: z.array(z.number().int()).nullish(),
+        ids: z.array(z.number().int().positive()).nullish(),
         dateFilterType: z
           .enum(['CREATED_AT', 'UPDATED_AT'])
           .default('CREATED_AT'),
@@ -66,6 +67,7 @@ export class ProductRouter extends BaseTrpcRouter {
             id: z.number(),
             name: z.string(),
           }),
+          thumbnailUrls: z.array(z.string()),
           price: z.number(),
           status: z.enum(['VISIBLE', 'HIDDEN', 'SOLD_OUT']),
           useStock: z.boolean(),

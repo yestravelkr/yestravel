@@ -18,16 +18,24 @@ export class InfluencerService {
   async findAll(params: {
     page: number;
     limit: number;
+    ids?: number[];
   }): Promise<InfluencerListResponse> {
-    const { page, limit } = params;
+    const { page, limit, ids } = params;
     const skip = (page - 1) * limit;
 
-    const [data, total] =
-      await this.repositoryProvider.InfluencerRepository.findAndCount({
-        skip,
-        take: limit,
-        order: { createdAt: 'DESC' },
-      });
+    const queryBuilder =
+      this.repositoryProvider.InfluencerRepository.createQueryBuilder(
+        'influencer'
+      );
+
+    // ids 필터가 있으면 해당 ID만 조회
+    if (ids && ids.length > 0) {
+      queryBuilder.where('influencer.id IN (:...ids)', { ids });
+    }
+
+    queryBuilder.orderBy('influencer.createdAt', 'DESC').skip(skip).take(limit);
+
+    const [data, total] = await queryBuilder.getManyAndCount();
 
     return {
       data,

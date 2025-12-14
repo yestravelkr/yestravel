@@ -110,6 +110,7 @@ export interface FindAllProductQuery {
   name?: string;
   status?: 'VISIBLE' | 'HIDDEN' | 'SOLD_OUT';
   brandIds?: number[];
+  ids?: number[];
   startDate?: string;
   endDate?: string;
   dateFilterType?: 'CREATED_AT' | 'UPDATED_AT';
@@ -134,6 +135,7 @@ export const getProductRepository = (
           name,
           status,
           brandIds,
+          ids,
           dateFilterType = 'CREATED_AT',
           startDate,
           endDate,
@@ -160,6 +162,9 @@ export const getProductRepository = (
           queryBuilder.andWhere('product.brandId IN (:...brandIds)', {
             brandIds,
           });
+        }
+        if (ids && ids.length > 0) {
+          queryBuilder.andWhere('product.id IN (:...ids)', { ids });
         }
         if (startDate && endDate) {
           const dateField =
