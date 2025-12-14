@@ -13,3 +13,13 @@ export { Calendar, type CalendarProps } from './calendar';
 export { Dropdown, type DropdownProps, type DropdownOption } from './dropdown';
 export { MenuItem, type MenuItemProps } from './menuitem';
 export { Table, THead, TBody, TR, TH, TD } from './table';
+export {
+  Tabs,
+  Tab,
+  useTabs,
+  type TabsProps,
+  type TabProps,
+  type TabItem,
+  type UseTabsOptions,
+  type UseTabsReturn,
+} from './tab';

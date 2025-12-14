@@ -12,6 +12,7 @@ import {
   TR,
   TH,
   TD,
+  useTabs,
 } from '@yestravelkr/min-design-system';
 import { FileSpreadsheet } from 'lucide-react';
 import { useState } from 'react';
@@ -36,7 +37,10 @@ interface InfluencerSalesSettingResult {
   products: CampaignInfluencerFormData['products'];
 }
 
-type MainTab = 'campaign' | 'productSales';
+const MAIN_TABS = [
+  { label: '캠페인 설정', value: 'campaign' as const },
+  { label: '상품 판매 설정', value: 'productSales' as const },
+];
 
 // 목업 상품 데이터
 const mockProducts = [
@@ -235,7 +239,9 @@ function InfluencerSalesSettingModal({
   influencerName,
 }: InfluencerSalesSettingModalProps) {
   const { resolveModal } = useCurrentModal();
-  const [activeMainTab, setActiveMainTab] = useState<MainTab>('productSales');
+  const { selectedTab, TabComponents: MainTabComponents } = useTabs(MAIN_TABS, {
+    defaultValue: 'productSales',
+  });
   const [selectedProductIndex, setSelectedProductIndex] = useState(0);
 
   const handleConfirm = () => {
@@ -261,25 +267,12 @@ function InfluencerSalesSettingModal({
       {/* 헤더 영역 */}
       <HeaderSection>
         <HeaderTitle>{influencerName}</HeaderTitle>
-        <MainTabs>
-          <MainTab
-            $selected={activeMainTab === 'campaign'}
-            onClick={() => setActiveMainTab('campaign')}
-          >
-            캠페인 설정
-          </MainTab>
-          <MainTab
-            $selected={activeMainTab === 'productSales'}
-            onClick={() => setActiveMainTab('productSales')}
-          >
-            상품 판매 설정
-          </MainTab>
-        </MainTabs>
+        <MainTabComponents />
       </HeaderSection>
 
       {/* 콘텐츠 영역 */}
       <Content>
-        {activeMainTab === 'campaign' ? (
+        {selectedTab === 'campaign' ? (
           <CampaignSettingTabContent />
         ) : (
           <ProductSalesSettingTabContent
@@ -358,31 +351,6 @@ const HeaderTitle = tw.div`
   text-xl
   font-bold
   leading-7
-`;
-
-const MainTabs = tw.div`
-  self-stretch
-  border-b
-  border-[var(--stroke-neutral)]
-  inline-flex
-  justify-start
-  items-start
-  gap-5
-`;
-
-const MainTab = tw.button<{ $selected: boolean }>`
-  py-3
-  flex
-  justify-start
-  items-start
-  gap-2
-  text-base
-  leading-5
-  transition-colors
-  ${({ $selected }) =>
-    $selected
-      ? 'border-b-2 border-[var(--stroke-neutral-strong)] text-[var(--fg-neutral)] font-medium'
-      : 'text-[var(--fg-disabled)] font-normal'}
 `;
 
 const Content = tw.div`
