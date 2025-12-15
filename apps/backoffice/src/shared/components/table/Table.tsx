@@ -39,7 +39,8 @@ export function Table<T>({ columns, data, onRowClick }: TableProps<T>) {
                 <TableHeaderCell
                   key={header.id}
                   style={{
-                    width: header.getSize() !== 150 ? header.getSize() : undefined,
+                    width:
+                      header.getSize() !== 150 ? header.getSize() : undefined,
                   }}
                 >
                   {header.isPlaceholder
