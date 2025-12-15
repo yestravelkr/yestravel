@@ -42,6 +42,7 @@ export type CampaignInfluencerProductDisplay = {
   productId: number;
   productName: string;
   brandName: string;
+  status: 'VISIBLE' | 'HIDDEN' | 'SOLD_OUT';
   useCustomCommission: boolean;
   hotelOptions: {
     hotelOptionId: number;

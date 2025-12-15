@@ -117,7 +117,7 @@ function InfluencerSelectModal({
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                           handleToggle(influencer.id)
                         }
-                        onClick={(e) => e.stopPropagation()}
+                        onClick={(e: React.MouseEvent) => e.stopPropagation()}
                       />
                     </TD>
                     <TD>{influencer.name}</TD>

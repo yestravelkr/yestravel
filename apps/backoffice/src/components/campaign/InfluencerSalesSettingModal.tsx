@@ -145,7 +145,7 @@ function CampaignSettingTabContent({
           <FeeInput
             type="text"
             value={fee.toLocaleString()}
-            onChange={(event) => {
+            onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
               const value = event.target.value.replace(/,/g, '');
               const numValue = parseInt(value, 10) || 0;
               onFeeChange(numValue);
@@ -262,7 +262,7 @@ function ProductSalesSettingTabContent({
           </SettingInfo>
           <VisibilitySelect
             value={currentInfluencerProduct?.status ?? 'VISIBLE'}
-            onChange={(event) =>
+            onChange={(event: React.ChangeEvent<HTMLSelectElement>) =>
               handleStatusChange(
                 event.target.value as 'VISIBLE' | 'HIDDEN' | 'SOLD_OUT',
               )
