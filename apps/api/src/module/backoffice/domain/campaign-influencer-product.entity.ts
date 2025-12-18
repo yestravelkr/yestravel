@@ -13,6 +13,11 @@ import { CampaignInfluencerEntity } from '@src/module/backoffice/domain/campaign
 import { ProductEntity } from '@src/module/backoffice/domain/product/product.entity';
 import { TransactionService } from '@src/module/shared/transaction/transaction.service';
 import { getEntityManager } from '@src/database/datasources';
+import {
+  CAMPAIGN_STATUS_ENUM_VALUE,
+  CampaignStatusEnum,
+  type CampaignStatusEnumType,
+} from '@src/module/backoffice/campaign/campaign.schema';
 
 // Forward declaration for circular reference
 import type {
@@ -24,6 +29,7 @@ import type {
 export interface CampaignInfluencerProductResponse {
   campaignInfluencerProductId: number;
   productId: number;
+  status: CampaignStatusEnumType;
   useCustomCommission: boolean;
   hotelOptions: CampaignInfluencerHotelOptionResponse[];
 }
@@ -53,6 +59,14 @@ export class CampaignInfluencerProductEntity extends BaseEntity {
   @JoinColumn({ name: 'product_id' })
   product: ProductEntity;
 
+  // 판매 페이지 상태 (VISIBLE, HIDDEN, SOLD_OUT)
+  @Column({
+    type: 'enum',
+    enum: CAMPAIGN_STATUS_ENUM_VALUE,
+    default: CampaignStatusEnum.VISIBLE,
+  })
+  status: CampaignStatusEnumType;
+
   // 별도 수수료 사용 여부
   @Column({ name: 'use_custom_commission', type: 'boolean', default: false })
   useCustomCommission: boolean;
@@ -69,6 +83,7 @@ export class CampaignInfluencerProductEntity extends BaseEntity {
     return {
       campaignInfluencerProductId: this.id,
       productId: this.productId,
+      status: this.status,
       useCustomCommission: this.useCustomCommission,
       hotelOptions: (this.hotelOptions ?? []).map(option =>
         option.toResponse()

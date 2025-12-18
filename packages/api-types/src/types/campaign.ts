@@ -27,6 +27,7 @@ export const campaignHotelOptionInputSchema = z.object({
 // CampaignInfluencerProduct Input Schema
 export const campaignInfluencerProductInputSchema = z.object({
   productId: z.number(),
+  status: campaignStatusEnumSchema.default('VISIBLE'),
   useCustomCommission: z.boolean().default(false),
   hotelOptions: z.array(campaignHotelOptionInputSchema).default([]),
 });
