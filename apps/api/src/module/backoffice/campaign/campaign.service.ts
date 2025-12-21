@@ -296,6 +296,7 @@ export class CampaignService {
           this.repositoryProvider.CampaignInfluencerProductRepository.create({
             campaignInfluencerId,
             productId: productInput.productId,
+            status: productInput.status,
             useCustomCommission: productInput.useCustomCommission,
           });
 
