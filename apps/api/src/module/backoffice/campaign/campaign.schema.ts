@@ -65,6 +65,7 @@ export const campaignInfluencerHotelOptionInputSchema = z.object({
 // CampaignInfluencerProduct Input Schema - 인플루언서별 상품 설정
 export const campaignInfluencerProductInputSchema = z.object({
   productId: z.number(),
+  status: campaignStatusEnumSchema.default('VISIBLE'),
   useCustomCommission: z.boolean().default(false),
   hotelOptions: z.array(campaignInfluencerHotelOptionInputSchema).default([]),
 });
@@ -141,6 +142,7 @@ export const campaignInfluencerHotelOptionResponseSchema = z.object({
 export const campaignInfluencerProductResponseSchema = z.object({
   campaignInfluencerProductId: z.number(),
   productId: z.number(),
+  status: campaignStatusEnumSchema,
   useCustomCommission: z.boolean(),
   hotelOptions: z.array(campaignInfluencerHotelOptionResponseSchema),
 });

@@ -995,6 +995,11 @@ const appRouter = t.router({
         products: z.array(z.object({
           campaignInfluencerProductId: z.number(),
           productId: z.number(),
+          status: z.enum([
+            'VISIBLE',
+            'HIDDEN',
+            'SOLD_OUT',
+          ] as const),
           useCustomCommission: z.boolean(),
           hotelOptions: z.array(z.object({
             campaignInfluencerHotelOptionId: z.number(),
@@ -1070,6 +1075,11 @@ const appRouter = t.router({
         products: z.array(z.object({
           campaignInfluencerProductId: z.number(),
           productId: z.number(),
+          status: z.enum([
+            'VISIBLE',
+            'HIDDEN',
+            'SOLD_OUT',
+          ] as const),
           useCustomCommission: z.boolean(),
           hotelOptions: z.array(z.object({
             campaignInfluencerHotelOptionId: z.number(),
@@ -1147,6 +1157,11 @@ const appRouter = t.router({
         products: z.array(z.object({
           campaignInfluencerProductId: z.number(),
           productId: z.number(),
+          status: z.enum([
+            'VISIBLE',
+            'HIDDEN',
+            'SOLD_OUT',
+          ] as const),
           useCustomCommission: z.boolean(),
           hotelOptions: z.array(z.object({
             campaignInfluencerHotelOptionId: z.number(),
