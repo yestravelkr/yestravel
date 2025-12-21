@@ -15,7 +15,7 @@ import {
   TD,
 } from '@yestravelkr/min-design-system';
 import { Plus } from 'lucide-react';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
 import tw from 'tailwind-styled-components';
 
@@ -23,6 +23,7 @@ import type {
   CampaignFormData,
   CampaignInfluencerDisplay,
   CampaignInfluencerFormData,
+  CampaignInfluencerProductFormData,
 } from './types';
 
 import { openInfluencerSalesSettingModal } from '@/components/campaign/InfluencerSalesSettingModal';
@@ -121,6 +122,56 @@ export function CampaignInfluencerSection() {
       );
   }, [formInfluencers, influencersMap]);
 
+  // 캠페인 상품 변경 시 인플루언서별 상품 동기화
+  const prevProductIdsRef = useRef<number[]>([]);
+  useEffect(() => {
+    const currentProductIds = formProducts.map((product) => product.id);
+    const prevProductIds = prevProductIdsRef.current;
+
+    // 초기 렌더링이거나 상품 변경이 없으면 스킵
+    if (prevProductIds.length === 0 && currentProductIds.length === 0) {
+      return;
+    }
+
+    // 상품 변경 감지 (ID 목록 비교)
+    const hasChanged =
+      currentProductIds.length !== prevProductIds.length ||
+      currentProductIds.some((id) => !prevProductIds.includes(id)) ||
+      prevProductIds.some((id) => !currentProductIds.includes(id));
+
+    if (hasChanged && formInfluencers.length > 0) {
+      const updatedInfluencers = formInfluencers.map((influencer) => {
+        // 새 상품 목록 생성: 기존 데이터 유지 + 새 상품 추가 + 삭제된 상품 제거
+        const syncedProducts: CampaignInfluencerProductFormData[] =
+          currentProductIds.map((productId) => {
+            // 기존에 있던 상품이면 데이터 유지
+            const existing = influencer.products.find(
+              (product) => product.productId === productId,
+            );
+            if (existing) {
+              return existing;
+            }
+            // 새로 추가된 상품이면 기본값으로 생성
+            return {
+              productId,
+              status: 'VISIBLE' as const,
+              useCustomCommission: false,
+              hotelOptions: [],
+            };
+          });
+
+        return {
+          ...influencer,
+          products: syncedProducts,
+        };
+      });
+
+      setValue('influencers', updatedInfluencers, { shouldValidate: true });
+    }
+
+    prevProductIdsRef.current = currentProductIds;
+  }, [formProducts, formInfluencers, setValue]);
+
   const handleAddInfluencer = async () => {
     const currentInfluencerIds = formInfluencers.map(
       (influencer) => influencer.influencerId,
@@ -128,6 +179,15 @@ export function CampaignInfluencerSection() {
     const selectedIds = await openInfluencerSelectModal(currentInfluencerIds);
 
     if (selectedIds) {
+      // 현재 캠페인 상품 목록으로 기본 products 생성
+      const defaultProducts: CampaignInfluencerProductFormData[] =
+        formProducts.map((product) => ({
+          productId: product.id,
+          status: 'VISIBLE' as const,
+          useCustomCommission: false,
+          hotelOptions: [],
+        }));
+
       // 기존 인플루언서 설정을 유지하면서 새 인플루언서 추가
       const mergedFormData: CampaignInfluencerFormData[] = selectedIds.map(
         (id) => {
@@ -144,7 +204,7 @@ export function CampaignInfluencerSection() {
                 feeType: 'NONE' as const,
                 fee: null,
                 status: 'VISIBLE' as const,
-                products: [],
+                products: defaultProducts,
               };
         },
       );
