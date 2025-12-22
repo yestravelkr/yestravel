@@ -37,3 +37,25 @@ export interface ShopCampaignListItemResponse {
 export interface ShopCampaignListResponse {
   campaigns: ShopCampaignListItemResponse[];
 }
+
+export interface GetCampaignDetailInput {
+  slug: string;
+  campaignId: number;
+}
+
+export interface ShopCampaignDetailProductResponse {
+  id: number;
+  saleId: number;
+  name: string;
+  thumbnail: string | null;
+  originalPrice: number;
+  price: number;
+}
+
+export interface ShopCampaignDetailResponse {
+  id: number;
+  title: string;
+  startAt: Date;
+  endAt: Date;
+  products: ShopCampaignDetailProductResponse[];
+}

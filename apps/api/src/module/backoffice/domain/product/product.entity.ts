@@ -84,7 +84,11 @@ export class ProductEntity extends SoftDeleteEntity {
   @Column({ name: 'use_options', type: 'boolean', default: false })
   useOptions: boolean;
 
-  // 기본 판매가
+  // 정가 (원가)
+  @Column({ name: 'original_price', type: 'integer', default: 0 })
+  originalPrice: number;
+
+  // 판매가 (할인가)
   @Column({ type: 'integer' })
   price: number;
 

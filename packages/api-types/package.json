@@ -14,8 +14,10 @@
   },
   "private": true,
   "scripts": {
+    "prebuild": "node scripts/inject-definitions.js",
     "build": "tsc",
-    "dev": "tsc --watch"
+    "dev": "tsc --watch",
+    "watch:inject": "node scripts/inject-definitions.js --watch"
   },
   "devDependencies": {
     "typescript": "^5.7.2"

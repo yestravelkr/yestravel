@@ -5,6 +5,8 @@ import type {
   ShopInfluencerResponse,
   ShopCampaignListResponse,
   ShopCampaignListItemResponse,
+  ShopCampaignDetailResponse,
+  ShopCampaignDetailProductResponse,
 } from './shop.influencer.dto';
 
 @Injectable()
@@ -95,5 +97,78 @@ export class ShopInfluencerService {
     );
 
     return { campaigns };
+  }
+
+  /**
+   * 캠페인 상세 정보 조회
+   * - 캠페인 정보: 이름, 기간
+   * - 상품 리스트: 썸네일, 이름, 원가, 할인가
+   */
+  async getCampaignDetail(
+    slug: string,
+    campaignId: number
+  ): Promise<ShopCampaignDetailResponse> {
+    // slug로 인플루언서 조회
+    const influencer =
+      await this.repositoryProvider.InfluencerRepository.findOne({
+        where: { slug },
+        select: ['id'],
+      });
+
+    if (!influencer) {
+      throw new NotFoundException(
+        `인플루언서를 찾을 수 없습니다 (slug: ${slug})`
+      );
+    }
+
+    const influencerId = influencer.id;
+    const now = new Date();
+
+    // CampaignInfluencer를 통해 해당 캠페인 조회
+    const campaignInfluencer =
+      await this.repositoryProvider.CampaignInfluencerRepository.createQueryBuilder(
+        'ci'
+      )
+        .leftJoinAndSelect('ci.campaign', 'campaign')
+        .leftJoinAndSelect('ci.products', 'products')
+        .leftJoinAndSelect('products.product', 'product')
+        .where('ci.influencerId = :influencerId', { influencerId })
+        .andWhere('campaign.id = :campaignId', { campaignId })
+        .andWhere('ci.status = :status', { status: CampaignStatusEnum.VISIBLE })
+        .andWhere('campaign.startAt <= :now', { now })
+        .andWhere('campaign.endAt >= :now', { now })
+        .getOne();
+
+    if (!campaignInfluencer) {
+      throw new NotFoundException(
+        `캠페인을 찾을 수 없습니다 (ID: ${campaignId})`
+      );
+    }
+
+    const campaign = campaignInfluencer.campaign;
+
+    // VISIBLE 상태인 상품만 필터링하고 가격 정보 포함
+    const products: ShopCampaignDetailProductResponse[] = (
+      campaignInfluencer.products ?? []
+    )
+      .filter(
+        campaignProduct => campaignProduct.status === CampaignStatusEnum.VISIBLE
+      )
+      .map(campaignProduct => ({
+        id: campaignProduct.product.id,
+        saleId: campaignProduct.id,
+        name: campaignProduct.product.name,
+        thumbnail: campaignProduct.product.thumbnailUrls?.[0] ?? null,
+        originalPrice: campaignProduct.product.originalPrice,
+        price: campaignProduct.product.price,
+      }));
+
+    return {
+      id: campaign.id,
+      title: campaign.title,
+      startAt: campaign.startAt,
+      endAt: campaign.endAt,
+      products,
+    };
   }
 }

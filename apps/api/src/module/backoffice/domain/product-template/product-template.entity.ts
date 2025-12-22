@@ -54,6 +54,14 @@ export class ProductTemplateEntity extends SoftDeleteEntity {
   @Column({ name: 'use_stock', type: 'boolean', default: false })
   useStock: boolean;
 
+  // 정가 (원가)
+  @Column({ name: 'original_price', type: 'integer', default: 0 })
+  originalPrice: number;
+
+  // 판매가 (할인가)
+  @Column({ type: 'integer', default: 0 })
+  price: number;
+
   // 카테고리 (Many-to-Many 관계)
   @ManyToMany(() => CategoryEntity)
   @JoinTable({

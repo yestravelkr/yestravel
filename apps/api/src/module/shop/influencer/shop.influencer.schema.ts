@@ -45,3 +45,30 @@ export const shopCampaignListResponseSchema = z.object({
 export type ShopCampaignListResponse = z.infer<
   typeof shopCampaignListResponseSchema
 >;
+
+// 캠페인 상세 - 상품 정보 스키마 (가격 정보 포함)
+export const shopCampaignDetailProductSchema = z.object({
+  id: z.number(),
+  saleId: z.number(),
+  name: z.string(),
+  thumbnail: z.string().nullable(),
+  originalPrice: z.number(),
+  price: z.number(),
+});
+
+export type ShopCampaignDetailProduct = z.infer<
+  typeof shopCampaignDetailProductSchema
+>;
+
+// 캠페인 상세 응답 스키마
+export const shopCampaignDetailResponseSchema = z.object({
+  id: z.number(),
+  title: z.string(),
+  startAt: z.date(),
+  endAt: z.date(),
+  products: z.array(shopCampaignDetailProductSchema),
+});
+
+export type ShopCampaignDetailResponse = z.infer<
+  typeof shopCampaignDetailResponseSchema
+>;
