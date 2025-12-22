@@ -5,6 +5,7 @@ import { BaseTrpcRouter } from '@src/module/trpc/baseTrpcRouter';
 import {
   shopInfluencerSchema,
   shopCampaignListResponseSchema,
+  shopCampaignDetailResponseSchema,
 } from './shop.influencer.schema';
 
 @Router({ alias: 'shopInfluencer' })
@@ -34,5 +35,26 @@ export class ShopInfluencerRouter extends BaseTrpcRouter {
   })
   async getCampaigns(@Input() input: { slug: string }) {
     return this.microserviceClient.send('shopInfluencer.getCampaigns', input);
+  }
+
+  /**
+   * 캠페인 상세 정보 조회
+   * - 캠페인 정보: 이름, 기간
+   * - 상품 리스트: 썸네일, 이름, 원가, 할인가
+   */
+  @Query({
+    input: z.object({
+      slug: z.string(),
+      campaignId: z.number(),
+    }),
+    output: shopCampaignDetailResponseSchema,
+  })
+  async getCampaignDetail(
+    @Input() input: { slug: string; campaignId: number }
+  ) {
+    return this.microserviceClient.send(
+      'shopInfluencer.getCampaignDetail',
+      input
+    );
   }
 }

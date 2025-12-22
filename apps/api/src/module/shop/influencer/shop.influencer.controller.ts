@@ -4,12 +4,15 @@ import { ShopInfluencerService } from './shop.influencer.service';
 import {
   shopInfluencerSchema,
   shopCampaignListResponseSchema,
+  shopCampaignDetailResponseSchema,
 } from './shop.influencer.schema';
 import type {
   FindBySlugInput,
   GetCampaignsInput,
+  GetCampaignDetailInput,
   ShopInfluencerResponse,
   ShopCampaignListResponse,
+  ShopCampaignDetailResponse,
 } from './shop.influencer.dto';
 
 @Controller()
@@ -28,5 +31,16 @@ export class ShopInfluencerController {
   ): Promise<ShopCampaignListResponse> {
     const result = await this.shopInfluencerService.getCampaigns(input.slug);
     return shopCampaignListResponseSchema.parse(result);
+  }
+
+  @MessagePattern('shopInfluencer.getCampaignDetail')
+  async getCampaignDetail(
+    input: GetCampaignDetailInput
+  ): Promise<ShopCampaignDetailResponse> {
+    const result = await this.shopInfluencerService.getCampaignDetail(
+      input.slug,
+      input.campaignId
+    );
+    return shopCampaignDetailResponseSchema.parse(result);
   }
 }
