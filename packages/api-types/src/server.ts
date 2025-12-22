@@ -4,6 +4,73 @@ import { z } from "zod";
 const t = initTRPC.create();
 const publicProcedure = t.procedure;
 
+// Inline definitions for auto-generated code
+const PRODUCT_TYPE_ENUM_VALUE = ['HOTEL', 'E-TICKET', 'DELIVERY'] as const;
+const DATE_FILTER_TYPE_ENUM_VALUE = ['CREATED_AT', 'UPDATED_AT'] as const;
+const BUSINESS_TYPE_ENUM_VALUE = ['CORPORATION', 'SOLE_PROPRIETOR', 'INDIVIDUAL'] as const;
+
+const TIME_FORMAT_REGEX = /^([01]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$/;
+const TIME_FORMAT_ERROR_MESSAGE_KO = '시간은 HH:MM 또는 HH:MM:SS 형식이어야 합니다';
+const normalizeTime = (time: string): string => time.length > 5 ? time.substring(0, 5) : time;
+
+const paginationQuerySchema = z.object({
+  page: z.number().int().min(1).default(1),
+  limit: z.number().int().min(1).max(100).default(30),
+  orderBy: z.string().default('createdAt'),
+  order: z.enum(['ASC', 'DESC']).default('DESC'),
+});
+
+const createPaginatedResponseSchema = <T extends z.ZodTypeAny>(itemSchema: T) =>
+  z.object({
+    data: z.array(itemSchema),
+    total: z.number(),
+    page: z.number(),
+    limit: z.number(),
+    totalPages: z.number(),
+  });
+
+const socialMediaPlatformEnumSchema = z.enum(['INSTAGRAM', 'TIKTOK', 'YOUTUBE', 'FACEBOOK', 'TWITTER', 'OTHER']);
+
+const businessInfoSchema = z.object({
+  type: z.enum(BUSINESS_TYPE_ENUM_VALUE).nullish(),
+  name: z.string().nullish(),
+  licenseNumber: z.string().nullish(),
+  ceoName: z.string().nullish(),
+  licenseFileUrl: z.string().nullish(),
+});
+
+const bankInfoSchema = z.object({
+  name: z.string().nullish(),
+  accountNumber: z.string().nullish(),
+  accountHolder: z.string().nullish(),
+});
+
+const campaignProductInputSchema = z.object({
+  productId: z.number().int().positive(),
+  status: z.enum(['VISIBLE', 'HIDDEN', 'SOLD_OUT']).default('VISIBLE'),
+});
+
+const campaignInfluencerProductInputSchema = z.object({
+  productId: z.number().int().positive(),
+  status: z.enum(['VISIBLE', 'HIDDEN', 'SOLD_OUT']).default('VISIBLE'),
+  useCustomCommission: z.boolean().default(false),
+  hotelOptions: z.array(z.object({
+    hotelOptionId: z.number().int().positive(),
+    commissionByDate: z.record(z.string(), z.number()).default({}),
+  })).default([]),
+});
+
+const campaignInfluencerInputSchema = z.object({
+  influencerId: z.number().int().positive(),
+  periodType: z.enum(['DEFAULT', 'CUSTOM']).default('DEFAULT'),
+  startAt: z.coerce.date().nullish(),
+  endAt: z.coerce.date().nullish(),
+  feeType: z.enum(['NONE', 'CUSTOM']).default('NONE'),
+  fee: z.number().nullish(),
+  status: z.enum(['VISIBLE', 'HIDDEN', 'SOLD_OUT']).default('VISIBLE'),
+  products: z.array(campaignInfluencerProductInputSchema).default([]),
+});
+
 const appRouter = t.router({
   shopProduct: t.router({
     getProductDetail: publicProcedure.input(z.object({
