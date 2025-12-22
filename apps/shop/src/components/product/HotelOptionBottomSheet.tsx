@@ -52,6 +52,17 @@ function HotelOptionBottomSheet({
   );
   const [isOptionDropdownOpen, setIsOptionDropdownOpen] = useState(false);
 
+  // 선택 가능한 날짜 계산 (오늘 이후 + config에 있는 날짜)
+  const today = dayjs().format('YYYY-MM-DD');
+  const availableDates = config.skus
+    .filter(sku => sku.quantity > 0)
+    .map(sku => sku.date)
+    .sort();
+  const configMinDate = availableDates[0];
+  const maxDate = availableDates[availableDates.length - 1];
+  // minDate는 config의 첫 날짜와 오늘 중 더 늦은 날짜
+  const minDate = configMinDate > today ? configMinDate : today;
+
   // 숙박 일수 계산
   const stayNights = dayjs(checkOutDate).diff(dayjs(checkInDate), 'day');
 
@@ -142,6 +153,8 @@ function HotelOptionBottomSheet({
             checkInDate={checkInDate}
             checkOutDate={checkOutDate}
             stayNights={stayNights}
+            minDate={minDate}
+            maxDate={maxDate}
             onDateSelect={handleDateSelect}
             onNext={handleDateNext}
           />
@@ -199,6 +212,8 @@ interface DateSelectStepProps {
   checkInDate: string;
   checkOutDate: string;
   stayNights: number;
+  minDate: string;
+  maxDate: string;
   onDateSelect: (checkIn: string | null, checkOut: string | null) => void;
   onNext: () => void;
 }
@@ -207,6 +222,8 @@ function DateSelectStep({
   checkInDate,
   checkOutDate,
   stayNights,
+  minDate,
+  maxDate,
   onDateSelect,
   onNext,
 }: DateSelectStepProps) {
@@ -234,7 +251,8 @@ function DateSelectStep({
             defaultCheckInDate={checkInDate}
             defaultCheckOutDate={checkOutDate}
             onDateSelect={onDateSelect}
-            minDate={dayjs().format('YYYY-MM-DD')}
+            minDate={minDate}
+            maxDate={maxDate}
           />
         </CalendarContainer>
       </StepContent>

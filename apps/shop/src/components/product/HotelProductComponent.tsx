@@ -25,12 +25,19 @@ import { HeaderLayout } from '@/shared/components/HeaderLayout';
 dayjs.locale('ko');
 
 export function HotelProductComponent() {
-  const [checkInDate, setCheckInDate] = useState<string>(
-    dayjs().format('YYYY-MM-DD')
-  );
-  const [checkOutDate, setCheckOutDate] = useState<string>(
-    dayjs().add(1, 'day').format('YYYY-MM-DD')
-  );
+  // SAMPLE_CONFIG의 가용 날짜 중 오늘 이후 날짜를 초기값으로 설정
+  const today = dayjs().format('YYYY-MM-DD');
+  const availableDates = SAMPLE_CONFIG.skus
+    .filter(sku => sku.quantity > 0 && sku.date >= today)
+    .map(sku => sku.date)
+    .sort();
+  const initialCheckIn = availableDates[0] || dayjs().format('YYYY-MM-DD');
+  const initialCheckOut =
+    availableDates[1] ||
+    dayjs(initialCheckIn).add(1, 'day').format('YYYY-MM-DD');
+
+  const [checkInDate, setCheckInDate] = useState<string>(initialCheckIn);
+  const [checkOutDate, setCheckOutDate] = useState<string>(initialCheckOut);
   const [selectedOptionId, setSelectedOptionId] = useState<number | null>(null);
   const [selectedTab, setSelectedTab] = useState<ProductDetailTab>('info');
 
