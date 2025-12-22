@@ -1,26 +1,5 @@
 import { initTRPC } from "@trpc/server";
 import { z } from "zod";
-import {
-  PRODUCT_TYPE_ENUM_VALUE,
-  DATE_FILTER_TYPE_ENUM_VALUE,
-  paginationQuerySchema,
-  createPaginatedResponseSchema,
-  BUSINESS_TYPE_ENUM_VALUE,
-  businessInfoSchema,
-  bankInfoSchema,
-} from "./types";
-import {
-  socialMediaPlatformEnumSchema,
-} from "./types/brand";
-import {
-  campaignProductInputSchema,
-  campaignInfluencerInputSchema,
-} from "./types/campaign";
-import {
-  normalizeTime,
-  TIME_FORMAT_REGEX,
-  TIME_FORMAT_ERROR_MESSAGE_KO,
-} from "./utils";
 
 const t = initTRPC.create();
 const publicProcedure = t.procedure;
@@ -110,6 +89,23 @@ const appRouter = t.router({
           name: z.string(),
           thumbnail: z.string().nullable(),
         })),
+      })),
+    })).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    getCampaignDetail: publicProcedure.input(z.object({
+      slug: z.string(),
+      campaignId: z.number(),
+    })).output(z.object({
+      id: z.number(),
+      title: z.string(),
+      startAt: z.date(),
+      endAt: z.date(),
+      products: z.array(z.object({
+        id: z.number(),
+        saleId: z.number(),
+        name: z.string(),
+        thumbnail: z.string().nullable(),
+        originalPrice: z.number(),
+        price: z.number(),
       })),
     })).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
   }),
