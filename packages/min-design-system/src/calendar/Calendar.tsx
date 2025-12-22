@@ -22,16 +22,20 @@ export interface CalendarProps {
   minDate?: string;
   /** 최대 선택 가능 날짜 (YYYY-MM-DD) */
   maxDate?: string;
+  /** ContainerClassName */
+  containerClassName?: string;
 }
 
-export function Calendar({
-  defaultCheckInDate,
-  defaultCheckOutDate,
-  onDateSelect,
-  disabledDates = [],
-  minDate,
-  maxDate,
-}: CalendarProps) {
+export function Calendar(props: CalendarProps) {
+  const {
+    defaultCheckInDate,
+    defaultCheckOutDate,
+    onDateSelect,
+    disabledDates = [],
+    minDate,
+    maxDate,
+    containerClassName
+  } = props;
   const [checkInDate, setCheckInDate] = useState<string | null>(
     defaultCheckInDate ? dayjs(defaultCheckInDate).format('YYYY-MM-DD') : null
   );
@@ -98,7 +102,7 @@ export function Calendar({
   }, [currentMonth]);
 
   return (
-    <Container>
+    <Container className={containerClassName}>
       <Header>
         <IconButton onClick={handlePrevMonth} type="button">
           <Icon>
