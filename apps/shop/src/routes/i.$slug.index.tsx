@@ -5,7 +5,7 @@ import tw from 'tailwind-styled-components';
 
 import { trpc } from '@/shared';
 
-export const Route = createFileRoute('/$slug/')({
+export const Route = createFileRoute('/i/$slug/')({
   component: InfluencerIndexPage,
 });
 
@@ -79,7 +79,7 @@ function CampaignList({ slug }: { slug: string }) {
             <CampaignHeader>
               <StatusBadge $type={status.type}>{status.label}</StatusBadge>
               <Link
-                to="/$slug/c/$campaignId"
+                to="/i/$slug/c/$campaignId"
                 params={{
                   slug,
                   campaignId: String(campaign.id),
@@ -100,7 +100,7 @@ function CampaignList({ slug }: { slug: string }) {
               {campaign.products.map(product => (
                 <Link
                   key={product.id}
-                  to="/$slug/sale/$saleId"
+                  to="/i/$slug/sale/$saleId"
                   params={{ slug, saleId: String(product.saleId) }}
                 >
                   <ProductCard>

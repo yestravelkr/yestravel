@@ -4,7 +4,7 @@ import tw from 'tailwind-styled-components';
 
 import { trpc } from '@/shared';
 
-export const Route = createFileRoute('/$slug')({
+export const Route = createFileRoute('/i/$slug')({
   component: InfluencerLayout,
 });
 
