@@ -87,6 +87,32 @@ const appRouter = t.router({
       message: z.string(),
     })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
   }),
+  shopInfluencer: t.router({
+    findBySlug: publicProcedure.input(z.object({
+      slug: z.string(),
+    })).output(z.object({
+      id: z.number(),
+      slug: z.string(),
+      name: z.string(),
+      thumbnail: z.string().nullable(),
+    })).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    getCampaigns: publicProcedure.input(z.object({
+      slug: z.string(),
+    })).output(z.object({
+      campaigns: z.array(z.object({
+        id: z.number(),
+        title: z.string(),
+        startAt: z.date(),
+        endAt: z.date(),
+        products: z.array(z.object({
+          id: z.number(),
+          saleId: z.number(),
+          name: z.string(),
+          thumbnail: z.string().nullable(),
+        })),
+      })),
+    })).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
+  }),
   sample: t.router({
     getHello: publicProcedure.input(z.object({
       name: z.string().optional(),

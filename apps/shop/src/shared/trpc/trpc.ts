@@ -1,6 +1,6 @@
 import { httpLink } from '@trpc/client';
 import { createTRPCReact } from '@trpc/react-query';
-import type { AppRouter } from '@yestravelkr/api-types/src/server';
+import type { AppRouter } from '@yestravelkr/api-types';
 
 export const trpc = createTRPCReact<AppRouter>();
 

@@ -1,13 +1,22 @@
-import { Entity, EntityManager, Not, OneToMany } from 'typeorm';
+import { Column, Entity, EntityManager, Index, Not, OneToMany } from 'typeorm';
 import { NotFoundException } from '@nestjs/common';
 import { PartnerEntity } from '@src/module/backoffice/domain/partner-entity.abstract';
 import { SocialMediaEntity } from '@src/module/backoffice/domain/social-media.entity';
 import { InfluencerManagerEntity } from '@src/module/backoffice/domain/influencer-manager.entity';
 import { TransactionService } from '@src/module/shared/transaction/transaction.service';
 import { getEntityManager } from '@src/database/datasources';
+import { Nullish } from '@src/types/utility.type';
 
 @Entity('influencer')
 export class InfluencerEntity extends PartnerEntity {
+  /**
+   * 고유 식별자 (인스타그램 ID 등)
+   * Shop 페이지 URL에 사용: /i/{slug}
+   */
+  @Column({ type: 'varchar', length: 50, nullable: true, unique: true })
+  @Index('IDX_influencer_slug', { unique: true })
+  slug: Nullish<string>;
+
   @OneToMany(() => SocialMediaEntity, socialMedia => socialMedia.influencer, {
     cascade: true,
   })
