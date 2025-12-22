@@ -3,8 +3,10 @@
  *
  * 백엔드에서 받은 HTML을 렌더링합니다.
  * 기본적으로 접혀있고, "더보기" 버튼을 클릭하면 전체 내용이 표시됩니다.
+ * XSS 방지를 위해 DOMPurify로 HTML을 sanitize합니다.
  */
 
+import DOMPurify from 'dompurify';
 import { ChevronDown } from 'lucide-react';
 import { useState } from 'react';
 import tw from 'tailwind-styled-components';
@@ -22,13 +24,16 @@ export function ProductDetailContent({
 }: ProductDetailContentProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
+  // XSS 방지를 위해 HTML sanitize
+  const sanitizedHtml = DOMPurify.sanitize(htmlContent);
+
   return (
     <Container>
       <ContentWrapper
         $isExpanded={isExpanded}
-        $collapsedHeight={collapsedHeight}
+        style={!isExpanded ? { maxHeight: `${collapsedHeight}px` } : undefined}
       >
-        <HtmlContent dangerouslySetInnerHTML={{ __html: htmlContent }} />
+        <HtmlContent dangerouslySetInnerHTML={{ __html: sanitizedHtml }} />
         {!isExpanded && <GradientOverlay />}
       </ContentWrapper>
       {!isExpanded && (
@@ -50,13 +55,10 @@ const Container = tw.div`
 
 const ContentWrapper = tw.div<{
   $isExpanded: boolean;
-  $collapsedHeight: number;
 }>`
   w-full
   relative
   overflow-hidden
-  ${({ $isExpanded, $collapsedHeight }) =>
-    $isExpanded ? '' : `max-h-[${$collapsedHeight}px]`}
 `;
 
 const HtmlContent = tw.div`
