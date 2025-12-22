@@ -5,30 +5,187 @@
  * 체크인/체크아웃 날짜 선택, 호텔 옵션 선택, 가격 계산 등을 처리합니다.
  */
 
-import { HotelOptionSelector } from '@yestravelkr/option-selector';
-import type {
-  HotelOptionSelectorConfig,
-  HotelOptionSelectorState,
-} from '@yestravelkr/option-selector';
+import type { HotelOptionSelectorConfig } from '@yestravelkr/option-selector';
 import dayjs from 'dayjs';
-import { useMemo, useState } from 'react';
+import 'dayjs/locale/ko';
+import { Calendar } from 'lucide-react';
+import { useState } from 'react';
 import tw from 'tailwind-styled-components';
 
-import { openDateRangeSelectModal } from './DateRangeSelectModal';
+import { DeliverySection } from './DeliverySection';
+import { openHotelOptionBottomSheet } from './HotelOptionBottomSheet';
+import { ProductDetailContent } from './ProductDetailContent';
+import { ProductDetailTabs, type ProductDetailTab } from './ProductDetailTabs';
+import { InfluencerProfile, HeaderLoginButton } from './ProductHeader';
+import { ProductThumbnail } from './ProductThumbnail';
+import { ProductTitleSection } from './ProductTitleSection';
+
+import { HeaderLayout } from '@/shared/components/HeaderLayout';
+
+dayjs.locale('ko');
+
+export function HotelProductComponent() {
+  // SAMPLE_CONFIG의 가용 날짜 중 오늘 이후 날짜를 초기값으로 설정
+  const today = dayjs().format('YYYY-MM-DD');
+  const availableDates = SAMPLE_CONFIG.skus
+    .filter(sku => sku.quantity > 0 && sku.date >= today)
+    .map(sku => sku.date)
+    .sort();
+  const initialCheckIn = availableDates[0] || dayjs().format('YYYY-MM-DD');
+  const initialCheckOut =
+    availableDates[1] ||
+    dayjs(initialCheckIn).add(1, 'day').format('YYYY-MM-DD');
+
+  const [checkInDate, setCheckInDate] = useState<string>(initialCheckIn);
+  const [checkOutDate, setCheckOutDate] = useState<string>(initialCheckOut);
+  const [selectedOptionId, setSelectedOptionId] = useState<number | null>(null);
+  const [selectedTab, setSelectedTab] = useState<ProductDetailTab>('info');
+
+  // 바텀시트 열기 (구매하기 버튼 클릭 시)
+  const handleOpenOptionSheet = () => {
+    openHotelOptionBottomSheet({
+      config: SAMPLE_CONFIG,
+      initialCheckInDate: checkInDate,
+      initialCheckOutDate: checkOutDate,
+      initialOptionId: selectedOptionId,
+    }).then(result => {
+      if (result) {
+        setCheckInDate(result.checkInDate);
+        setCheckOutDate(result.checkOutDate);
+        setSelectedOptionId(result.selectedOptionId);
+        // TODO: 실제 구매 처리
+        console.log('구매 완료:', result);
+      }
+    });
+  };
+
+  // 샘플 상품 정보
+  const productInfo = SAMPLE_PRODUCT_INFO;
+
+  return (
+    <HeaderLayout
+      title={
+        <InfluencerProfile
+          avatarUrl={productInfo.influencer.avatarUrl}
+          name={productInfo.influencer.name}
+          handle={productInfo.influencer.handle}
+        />
+      }
+      right={<HeaderLoginButton onClick={() => console.log('로그인 클릭')} />}
+    >
+      <ContentWrapper>
+        {/* 썸네일 */}
+        <ProductThumbnail
+          imageUrl={productInfo.thumbnailUrl}
+          alt={productInfo.name}
+        />
+
+        {/* 상품 정보 섹션 */}
+        <InfoSection>
+          {/* 상품 타이틀 */}
+          <ProductTitleSection
+            name={productInfo.name}
+            originalPrice={productInfo.originalPrice}
+            discountedPrice={productInfo.discountedPrice}
+            badgeText={productInfo.badgeText}
+          />
+
+          {/* 배송/체크인 정보 */}
+          <DeliverySection
+            deliveryFee={0}
+            estimatedDelivery={`체크인 ${dayjs(checkInDate).format('MM.DD(ddd)')} · 체크아웃 ${dayjs(checkOutDate).format('MM.DD(ddd)')}`}
+          />
+        </InfoSection>
+
+        {/* 탭 */}
+        <TabSection>
+          <ProductDetailTabs
+            selectedTab={selectedTab}
+            onTabChange={setSelectedTab}
+          />
+
+          {/* 상품정보 탭 내용 */}
+          {selectedTab === 'info' && (
+            <ProductDetailContent
+              htmlContent={productInfo.detailHtml}
+              collapsedHeight={400}
+            />
+          )}
+
+          {/* 판매정보, 추천 탭은 추후 구현 */}
+          {selectedTab === 'sale' && (
+            <PlaceholderContent>판매정보 (추후 구현)</PlaceholderContent>
+          )}
+          {selectedTab === 'recommend' && (
+            <PlaceholderContent>추천 (추후 구현)</PlaceholderContent>
+          )}
+        </TabSection>
+
+        {/* 하단 고정 버튼 */}
+        <BottomFixedSection>
+          <PurchaseButton onClick={handleOpenOptionSheet}>
+            구매하기
+          </PurchaseButton>
+        </BottomFixedSection>
+
+        {/* 플로팅 날짜 선택 버튼 */}
+        <FloatingDateButton onClick={handleOpenOptionSheet}>
+          <FloatingDateIcon>
+            <Calendar size={16} />
+          </FloatingDateIcon>
+          <FloatingDateText>
+            {dayjs(checkInDate).format('YY.MM.DD(ddd)')} ~{' '}
+            {dayjs(checkOutDate).format('YY.MM.DD(ddd)')}
+          </FloatingDateText>
+        </FloatingDateButton>
+      </ContentWrapper>
+    </HeaderLayout>
+  );
+}
+
+// 샘플 상품 정보
+const SAMPLE_PRODUCT_INFO = {
+  name: '고요하우스 - 제주의 조용한 휴식처',
+  thumbnailUrl: 'https://placehold.co/600x600',
+  originalPrice: 150000,
+  discountedPrice: 135000,
+  badgeText: '3일 후 종료',
+  influencer: {
+    avatarUrl: 'https://placehold.co/32x32',
+    name: '홍영기',
+    handle: 'travel_yg',
+  },
+  detailHtml: `
+    <div style="padding: 20px;">
+      <img src="https://placehold.co/600x400" style="width: 100%; margin-bottom: 20px;" />
+      <h2 style="font-size: 20px; font-weight: bold; margin-bottom: 12px;">고요하우스 소개</h2>
+      <p style="font-size: 14px; line-height: 1.6; color: #666; margin-bottom: 20px;">
+        제주도의 조용한 마을에 위치한 고요하우스는 도심의 소음에서 벗어나
+        진정한 휴식을 즐길 수 있는 공간입니다. 넓은 창을 통해 들어오는
+        자연광과 함께 편안한 시간을 보내세요.
+      </p>
+      <img src="https://placehold.co/600x400" style="width: 100%; margin-bottom: 20px;" />
+      <h2 style="font-size: 20px; font-weight: bold; margin-bottom: 12px;">객실 안내</h2>
+      <p style="font-size: 14px; line-height: 1.6; color: #666; margin-bottom: 20px;">
+        - 기본 객실: 2인 기준, 퀸베드 1개<br/>
+        - 조식 포함: 조식 뷔페 2인 제공<br/>
+        - 조식 + 레이트 체크아웃: 14시까지 체크아웃 가능
+      </p>
+      <img src="https://placehold.co/600x400" style="width: 100%;" />
+    </div>
+  `,
+};
 
 // 샘플 데이터: 호텔 옵션 선택기 설정
 const SAMPLE_CONFIG: HotelOptionSelectorConfig = {
-  // SKU: 2025-11-21부터 30일간의 재고 데이터
   skus: Array.from({ length: 30 }, (_, i) => {
     const date = dayjs('2025-11-21').add(i, 'day');
     return {
       id: i + 1,
-      quantity: Math.floor(Math.random() * 5) + 1, // 1~5개 재고
+      quantity: Math.floor(Math.random() * 5) + 1,
       date: date.format('YYYY-MM-DD'),
     };
   }),
-
-  // 호텔 옵션: 3가지 옵션 제공
   hotelOptions: [
     {
       id: 1,
@@ -37,7 +194,7 @@ const SAMPLE_CONFIG: HotelOptionSelectorConfig = {
         Array.from({ length: 30 }, (_, i) => {
           const date = dayjs('2025-11-21').add(i, 'day');
           const isWeekend = date.day() === 0 || date.day() === 6;
-          return [date.format('YYYY-MM-DD'), isWeekend ? 150000 : 100000]; // 주말/평일 가격 차별화
+          return [date.format('YYYY-MM-DD'), isWeekend ? 150000 : 100000];
         })
       ),
     },
@@ -66,85 +223,6 @@ const SAMPLE_CONFIG: HotelOptionSelectorConfig = {
   ],
 };
 
-export function HotelProductComponent() {
-  const [checkInDate, setCheckInDate] = useState<string>(
-    dayjs().format('YYYY-MM-DD')
-  );
-  const [checkOutDate, setCheckOutDate] = useState<string>(
-    dayjs().add(1, 'day').format('YYYY-MM-DD')
-  );
-  const [selectedOptionId, setSelectedOptionId] = useState<number | null>(null);
-
-  // HotelOptionSelector 인스턴스 생성
-  const hotelSelector = useMemo(() => {
-    const state: HotelOptionSelectorState = {
-      checkInDate,
-      checkOutDate,
-      selectedHotelOptionId: selectedOptionId,
-    };
-    return HotelOptionSelector.fromJSON(SAMPLE_CONFIG, state);
-  }, [checkInDate, checkOutDate, selectedOptionId]);
-
-  const handleOpenDateRangeModal = () => {
-    openDateRangeSelectModal({
-      checkInDate,
-      checkOutDate,
-    }).then(result => {
-      if (result?.checkIn && result?.checkOut) {
-        setCheckInDate(result.checkIn);
-        setCheckOutDate(result.checkOut);
-      }
-    });
-  };
-
-  // 재고 확인
-  const isAvailable = hotelSelector.validateAvailability();
-  // 숙박 일수
-  const stayNights = hotelSelector.getStayNights();
-  // 총 가격
-  const totalPrice = selectedOptionId ? hotelSelector.getTotalPrice() : 0;
-
-  return (
-    <>
-      <SelectedDates onClick={handleOpenDateRangeModal}>
-        체크인: {checkInDate} / 체크아웃: {checkOutDate} ({stayNights}박)
-      </SelectedDates>
-      <Container>
-        <ProductTitle>호텔 상품</ProductTitle>
-
-        {/* 재고 상태 */}
-        <StatusText>
-          {isAvailable ? '예약 가능' : '예약 불가 (재고 부족)'}
-        </StatusText>
-
-        {/* 호텔 옵션 선택 */}
-        <OptionsSection>
-          <SectionTitle>옵션 선택</SectionTitle>
-          {SAMPLE_CONFIG.hotelOptions.map(option => (
-            <OptionButton
-              key={option.id}
-              $selected={selectedOptionId === option.id}
-              onClick={() => setSelectedOptionId(option.id)}
-            >
-              {option.name}
-            </OptionButton>
-          ))}
-        </OptionsSection>
-
-        {/* 가격 표시 */}
-        {selectedOptionId && (
-          <PriceSection>
-            <PriceLabel>총 요금</PriceLabel>
-            <PriceValue>{totalPrice.toLocaleString()}원</PriceValue>
-          </PriceSection>
-        )}
-
-        {/* TODO: 예약하기 버튼 */}
-      </Container>
-    </>
-  );
-}
-
 /**
  * Usage:
  *
@@ -152,80 +230,98 @@ export function HotelProductComponent() {
  */
 
 // Styled Components
-const Container = tw.div`
+const ContentWrapper = tw.div`
+  w-full
+  max-w-[600px]
+  bg-white
   flex
   flex-col
-  gap-4
-  p-5
+  relative
+  pb-24
 `;
 
-const ProductTitle = tw.h1`
-  text-2xl
-  font-bold
-  text-fg-neutral
-`;
-
-const SelectedDates = tw.div`
-  text-base
-  text-fg-neutral
-  p-4
-  bg-bg-neutral
-  rounded-xl
-  cursor-pointer
-  hover:bg-bg-layer-base
-  transition-colors
-`;
-
-const StatusText = tw.div`
-  text-sm
-  text-fg-muted
-  p-3
+const InfoSection = tw.div`
   bg-bg-layer-base
-  rounded-lg
-`;
-
-const OptionsSection = tw.div`
   flex
   flex-col
   gap-2
 `;
 
-const SectionTitle = tw.h2`
-  text-lg
-  font-semibold
-  text-fg-neutral
-  mb-2
-`;
-
-const OptionButton = tw.button<{ $selected: boolean }>`
-  p-4
-  rounded-xl
-  border
-  transition-all
-  ${({ $selected }) =>
-    $selected
-      ? 'bg-bg-neutral-solid text-fg-on-surface border-bg-neutral-solid'
-      : 'bg-white text-fg-neutral border-border-neutral hover:bg-bg-neutral'}
-`;
-
-const PriceSection = tw.div`
-  flex
-  justify-between
-  items-center
-  p-4
+const TabSection = tw.div`
   bg-bg-layer-base
-  rounded-xl
-  mt-4
 `;
 
-const PriceLabel = tw.span`
+const PlaceholderContent = tw.div`
+  p-10
+  text-center
+  text-fg-muted
+  bg-white
+`;
+
+const BottomFixedSection = tw.div`
+  fixed
+  bottom-0
+  left-0
+  right-0
+  p-5
+  bg-white
+  border-t
+  border-stroke-neutral
+  flex
+  justify-center
+`;
+
+const PurchaseButton = tw.button`
+  w-full
+  max-w-[600px]
+  h-12
+  bg-bg-neutral-solid
+  rounded-xl
   text-base
   font-medium
+  text-fg-on-surface
+  disabled:bg-bg-disabled
+  disabled:text-fg-disabled
+  transition-colors
+`;
+
+const FloatingDateButton = tw.button`
+  fixed
+  bottom-[108px]
+  left-1/2
+  -translate-x-1/2
+  z-50
+  h-11
+  min-w-11
+  px-3
+  bg-bg-neutral-subtle
+  rounded-3xl
+  shadow-[0px_0px_2px_0px_rgba(0,0,0,0.12),0px_8px_32px_0px_rgba(0,0,0,0.12)]
+  outline
+  outline-1
+  outline-offset-[-1px]
+  outline-[var(--stroke-neutral)]
+  inline-flex
+  justify-center
+  items-center
+  gap-1
+  hover:bg-bg-neutral
+  transition-colors
+`;
+
+const FloatingDateIcon = tw.div`
+  w-5
+  h-5
+  flex
+  items-center
+  justify-center
   text-fg-neutral
 `;
 
-const PriceValue = tw.span`
-  text-xl
-  font-bold
+const FloatingDateText = tw.span`
+  px-1
   text-fg-neutral
+  text-base
+  font-medium
+  leading-5
 `;

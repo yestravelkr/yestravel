@@ -31,7 +31,5 @@ function ProductDetailPage() {
     }
   };
 
-  return (
-    <HeaderLayout title="캠페인명">{renderProductComponent()}</HeaderLayout>
-  );
+  return <>{renderProductComponent()}</>;
 }
