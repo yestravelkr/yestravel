@@ -100,8 +100,8 @@ function CampaignList({ slug }: { slug: string }) {
               {campaign.products.map(product => (
                 <Link
                   key={product.id}
-                  to="/i/$slug/sale/$saleId"
-                  params={{ slug, saleId: String(product.saleId) }}
+                  to="/sale/$saleId"
+                  params={{ saleId: String(product.saleId) }}
                 >
                   <ProductCard>
                     <ProductThumbnail
