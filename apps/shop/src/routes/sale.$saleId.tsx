@@ -69,9 +69,9 @@ function SaleDetailContent({ saleId }: { saleId: number }) {
     <HeaderLayout
       title={
         <InfluencerProfile
-          avatarUrl={data.influencer.avatarUrl}
+          thumbnail={data.influencer.thumbnail}
           name={data.influencer.name}
-          handle={data.influencer.handle}
+          slug={data.influencer.slug}
         />
       }
     >
@@ -84,20 +84,20 @@ function SaleDetailContent({ saleId }: { saleId: number }) {
  * 헤더에 표시될 인플루언서 프로필
  */
 function InfluencerProfile({
-  avatarUrl,
+  thumbnail,
   name,
-  handle,
+  slug,
 }: {
-  avatarUrl: string | null | undefined;
+  thumbnail: string | null | undefined;
   name: string;
-  handle: string | null | undefined;
+  slug: string | null | undefined;
 }) {
   return (
     <ProfileContainer>
-      <ProfileImage src={avatarUrl || '/default-profile.png'} alt={name} />
+      <ProfileImage src={thumbnail || '/default-profile.png'} alt={name} />
       <ProfileInfo>
         <ProfileName>{name}</ProfileName>
-        {handle && <ProfileHandle>@{handle}</ProfileHandle>}
+        {slug && <ProfileSlug>@{slug}</ProfileSlug>}
       </ProfileInfo>
     </ProfileContainer>
   );
@@ -161,7 +161,7 @@ const ProfileName = tw.span`
   leading-tight
 `;
 
-const ProfileHandle = tw.span`
+const ProfileSlug = tw.span`
   text-xs
   text-fg-muted
   leading-tight

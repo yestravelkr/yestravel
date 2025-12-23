@@ -140,12 +140,12 @@ export class ShopProductService {
         name: product.brand.name,
       },
 
-      // 인플루언서 정보
+      // 인플루언서 정보 (shopInfluencerSchema와 동일한 필드명)
       influencer: {
         id: influencer.id,
         name: influencer.name,
-        avatarUrl: influencer.thumbnail ?? null,
-        handle: influencer.slug ?? null,
+        slug: influencer.slug ?? null,
+        thumbnail: influencer.thumbnail ?? null,
       },
 
       // 옵션 정보

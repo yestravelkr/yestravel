@@ -43,7 +43,7 @@ const appRouter = t.router({
       description: z.string().nullish(),
       detailHtml: z.string().nullish(),
 
-      // 호텔 전용 정보
+      // 호텔 전용 정보 (HOTEL 타입일 때만 값이 있음)
       baseCapacity: z.number().nullish(),
       maxCapacity: z.number().nullish(),
       checkInTime: z.string().nullish(),
@@ -63,33 +63,55 @@ const appRouter = t.router({
         name: z.string(),
       }),
 
-      // 인플루언서 정보
+      // 인플루언서 정보 (shopInfluencerSchema와 동일한 필드명 사용)
       influencer: z.object({
         id: z.number(),
         name: z.string(),
-        avatarUrl: z.string().nullish(),
-        handle: z.string().nullish(), // slug
+        slug: z.string().nullish(),
+        thumbnail: z.string().nullish(),
       }),
 
-      // Hotel 타입 상품의 옵션 구조 (HotelOptionSelectorConfig)
+      // 타입별 옵션 (해당 타입의 옵션만 값이 있음)
       options: z.object({
-        // 날짜별 SKU 재고 정보
+        // HOTEL 타입
         skus: z.array(
           z.object({
             id: z.number(),
             quantity: z.number(),
-            date: z.string(), // YYYY-MM-DD 형식
+            date: z.string(),
           })
         ),
-
-        // 선택 가능한 호텔 옵션 목록 (1개 필수 선택)
         hotelOptions: z.array(
           z.object({
             id: z.number(),
             name: z.string(),
-            priceByDate: z.record(z.number()), // { "2025-11-21": 100000, ... }
+            priceByDate: z.record(z.number()),
           })
         ),
+
+        // E-TICKET 타입 (추후 구현)
+        ticketOptions: z
+          .array(
+            z.object({
+              id: z.number(),
+              name: z.string(),
+              price: z.number(),
+              quantity: z.number(),
+            })
+          )
+          .optional(),
+
+        // DELIVERY 타입 (추후 구현)
+        deliveryOptions: z
+          .array(
+            z.object({
+              id: z.number(),
+              name: z.string(),
+              price: z.number(),
+              quantity: z.number(),
+            })
+          )
+          .optional(),
       }),
     })).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
   }),
