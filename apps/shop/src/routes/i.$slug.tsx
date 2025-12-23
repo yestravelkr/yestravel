@@ -3,6 +3,7 @@ import { Suspense } from 'react';
 import tw from 'tailwind-styled-components';
 
 import { trpc } from '@/shared';
+import { HeaderLayout } from '@/shared/components/HeaderLayout';
 
 export const Route = createFileRoute('/i/$slug')({
   component: InfluencerLayout,
@@ -23,19 +24,16 @@ function InfluencerLayout() {
   }
 
   return (
-    <PageContainer>
-      <Suspense fallback={<HeaderSkeleton />}>
-        <InfluencerHeader slug={slug} />
-      </Suspense>
-      <Outlet />
-    </PageContainer>
+    <Suspense fallback={<LayoutSkeleton />}>
+      <InfluencerLayoutContent slug={slug} />
+    </Suspense>
   );
 }
 
 /**
- * 인플루언서 헤더 컴포넌트
+ * 인플루언서 레이아웃 콘텐츠 (데이터 로딩 후)
  */
-function InfluencerHeader({ slug }: { slug: string }) {
+function InfluencerLayoutContent({ slug }: { slug: string }) {
   const [influencer] = trpc.shopInfluencer.findBySlug.useSuspenseQuery({
     slug,
   });
@@ -46,111 +44,66 @@ function InfluencerHeader({ slug }: { slug: string }) {
   };
 
   return (
-    <Header>
-      <HeaderContent>
-        <ProfileSection>
-          <ProfileImage
-            src={influencer.thumbnail || '/default-profile.png'}
-            alt={influencer.name}
-          />
-          <ProfileInfo>
-            <InfluencerName>{influencer.name}</InfluencerName>
-            <InfluencerSlug>@{influencer.slug}</InfluencerSlug>
-          </ProfileInfo>
-        </ProfileSection>
-        <LoginButton onClick={handleLogin}>로그인</LoginButton>
-      </HeaderContent>
-    </Header>
+    <HeaderLayout
+      title={
+        <InfluencerProfile
+          thumbnail={influencer.thumbnail}
+          name={influencer.name}
+          slug={influencer.slug}
+        />
+      }
+      right={<LoginButton onClick={handleLogin}>로그인</LoginButton>}
+    >
+      <Outlet />
+    </HeaderLayout>
   );
 }
 
 /**
- * 헤더 스켈레톤
+ * 헤더에 표시될 인플루언서 프로필
  */
-export function HeaderSkeleton() {
+function InfluencerProfile({
+  thumbnail,
+  name,
+  slug,
+}: {
+  thumbnail: string | null;
+  name: string;
+  slug: string;
+}) {
   return (
-    <Header>
-      <HeaderContent>
-        <ProfileSection>
-          <SkeletonCircleSmall />
-          <ProfileInfo>
-            <SkeletonText $width="80px" $height="16px" />
-            <SkeletonText $width="60px" $height="14px" />
-          </ProfileInfo>
-        </ProfileSection>
+    <ProfileContainer>
+      <ProfileImage src={thumbnail || '/default-profile.png'} alt={name} />
+      <ProfileInfo>
+        <ProfileName>{name}</ProfileName>
+        <ProfileSlug>@{slug}</ProfileSlug>
+      </ProfileInfo>
+    </ProfileContainer>
+  );
+}
+
+/**
+ * 레이아웃 스켈레톤
+ */
+function LayoutSkeleton() {
+  return (
+    <SkeletonContainer>
+      <SkeletonHeader>
+        <SkeletonProfile>
+          <SkeletonCircle />
+          <SkeletonProfileText>
+            <SkeletonLine $width="80px" />
+            <SkeletonLine $width="60px" $height="12px" />
+          </SkeletonProfileText>
+        </SkeletonProfile>
         <SkeletonButton />
-      </HeaderContent>
-    </Header>
+      </SkeletonHeader>
+      <SkeletonContent />
+    </SkeletonContainer>
   );
 }
 
 // Styled Components
-const PageContainer = tw.div`
-  min-h-screen
-  bg-gray-50
-`;
-
-const Header = tw.header`
-  bg-white
-  border-b
-  border-gray-200
-  py-4
-`;
-
-const HeaderContent = tw.div`
-  max-w-4xl
-  mx-auto
-  px-4
-  flex
-  items-center
-  justify-between
-`;
-
-const ProfileSection = tw.div`
-  flex
-  items-center
-  gap-3
-`;
-
-const ProfileImage = tw.img`
-  w-12
-  h-12
-  rounded-full
-  object-cover
-  border
-  border-gray-200
-`;
-
-const ProfileInfo = tw.div`
-  flex
-  flex-col
-`;
-
-const InfluencerName = tw.h1`
-  text-base
-  font-semibold
-  text-gray-900
-`;
-
-const InfluencerSlug = tw.span`
-  text-sm
-  text-gray-500
-`;
-
-const LoginButton = tw.button`
-  px-4
-  py-2
-  text-sm
-  font-medium
-  text-gray-700
-  bg-white
-  border
-  border-gray-300
-  rounded-lg
-  hover:bg-gray-50
-  transition-colors
-`;
-
 const ErrorContainer = tw.div`
   flex
   justify-center
@@ -163,27 +116,110 @@ const ErrorText = tw.p`
   text-lg
 `;
 
-// Skeleton Components
-const SkeletonCircleSmall = tw.div`
-  w-12
-  h-12
+const ProfileContainer = tw.div`
+  flex
+  items-center
+  gap-2
+`;
+
+const ProfileImage = tw.img`
+  w-8
+  h-8
+  rounded-full
+  object-cover
+`;
+
+const ProfileInfo = tw.div`
+  flex
+  flex-col
+`;
+
+const ProfileName = tw.span`
+  text-sm
+  font-semibold
+  text-fg-neutral
+  leading-tight
+`;
+
+const ProfileSlug = tw.span`
+  text-xs
+  text-fg-muted
+  leading-tight
+`;
+
+const LoginButton = tw.button`
+  px-3
+  py-1.5
+  text-sm
+  font-medium
+  text-fg-neutral
+  bg-white
+  border
+  border-[var(--stroke-neutral)]
+  rounded-lg
+  hover:bg-bg-neutral-subtle
+  transition-colors
+`;
+
+// Skeleton Styles
+const SkeletonContainer = tw.div`
+  min-h-screen
+  bg-bg-layer-base
+  max-w-[600px]
+  mx-auto
+`;
+
+const SkeletonHeader = tw.div`
+  w-full
+  h-16
+  px-5
+  py-4
+  bg-white
+  border-b
+  border-[var(--stroke-neutral)]
+  flex
+  items-center
+  justify-between
+`;
+
+const SkeletonProfile = tw.div`
+  flex
+  items-center
+  gap-2
+`;
+
+const SkeletonCircle = tw.div`
+  w-8
+  h-8
   rounded-full
   bg-gray-200
   animate-pulse
 `;
 
+const SkeletonProfileText = tw.div`
+  flex
+  flex-col
+  gap-1
+`;
+
 const SkeletonButton = tw.div`
   w-16
-  h-9
+  h-8
   rounded-lg
   bg-gray-200
   animate-pulse
 `;
 
-const SkeletonText = tw.div<{ $width?: string; $height?: string }>`
+const SkeletonLine = tw.div<{ $width?: string; $height?: string }>`
   bg-gray-200
   rounded
   animate-pulse
+  h-4
   ${({ $width }) => ($width ? `w-[${$width}]` : 'w-full')}
-  ${({ $height }) => ($height ? `h-[${$height}]` : 'h-4')}
+  ${({ $height }) => $height && `h-[${$height}]`}
+`;
+
+const SkeletonContent = tw.div`
+  flex-1
+  bg-gray-100
 `;

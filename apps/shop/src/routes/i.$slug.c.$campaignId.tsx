@@ -21,10 +21,8 @@ function CampaignDetailPage() {
 }
 
 const PageContainer = tw.div`
-  max-w-4xl
-  mx-auto
-  px-4
-  py-8
+  px-5
+  py-6
 `;
 
 const Content = tw.div`

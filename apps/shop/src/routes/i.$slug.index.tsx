@@ -166,20 +166,17 @@ function CampaignListSkeleton() {
 
 // Styled Components
 const CampaignListContainer = tw.div`
-  max-w-4xl
-  mx-auto
-  px-4
-  py-8
-  space-y-6
+  px-5
+  py-6
+  space-y-4
 `;
 
 const CampaignCard = tw.div`
   bg-white
   rounded-xl
-  shadow-sm
   border
-  border-gray-200
-  p-6
+  border-[var(--stroke-neutral)]
+  p-4
 `;
 
 const CampaignHeader = tw.div`
