@@ -219,6 +219,7 @@ const SkeletonLine = tw.div<{ $width?: string; $height?: string }>`
   rounded
   animate-pulse
   h-4
-  ${({ $width }) => ($width ? `w-[${$width}]` : 'w-full')}
-  ${({ $height }) => $height && `h-[${$height}]`}
+  w-full
+  ${({ $width }) => $width && `width: ${$width};`}
+  ${({ $height }) => $height && `height: ${$height};`}
 `;

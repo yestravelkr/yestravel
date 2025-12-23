@@ -12,3 +12,23 @@ export type ProductDetailResponse = z.infer<typeof shopProductDetailSchema>;
 export interface GetProductDetailInput {
   saleId: number;
 }
+
+/**
+ * 호텔 상품 추가 정보
+ */
+export interface HotelProductDetails {
+  baseCapacity: number | null;
+  maxCapacity: number | null;
+  checkInTime: string | null;
+  checkOutTime: string | null;
+  hotelOptions: Array<{
+    id: number;
+    name: string;
+    priceByDate: Record<string, number>;
+  }>;
+  skus: Array<{
+    id: number;
+    quantity: number;
+    date: string;
+  }>;
+}
