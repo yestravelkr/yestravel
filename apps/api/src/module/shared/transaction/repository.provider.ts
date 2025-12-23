@@ -14,6 +14,7 @@ import { getHotelProductRepository } from '@src/module/backoffice/domain/product
 import { getDeliveryProductRepository } from '@src/module/backoffice/domain/product/delivery-product.entity';
 import { getETicketProductRepository } from '@src/module/backoffice/domain/product/eticket-product.entity';
 import { getSkuRepository } from '@src/module/backoffice/domain/product/sku.entity';
+import { getHotelSkuRepository } from '@src/module/backoffice/domain/product/hotel-sku.entity';
 import { getProductOptionRepository } from '@src/module/backoffice/domain/product/product-option.entity';
 import { getInfluencerRepository } from '@src/module/backoffice/domain/influencer.entity';
 import { getSocialMediaRepository } from '@src/module/backoffice/domain/social-media.entity';
@@ -81,6 +82,10 @@ export class RepositoryProvider {
 
   get SkuRepository() {
     return getSkuRepository(this.transaction);
+  }
+
+  get HotelSkuRepository() {
+    return getHotelSkuRepository(this.transaction);
   }
 
   get ProductOptionRepository() {
