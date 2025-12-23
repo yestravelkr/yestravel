@@ -11,7 +11,7 @@ export class ShopProductRouter extends BaseTrpcRouter {
    * 상품 상세 조회
    *
    * saleId: CampaignInfluencerProduct.id
-   * FE에서 /i/{slug}/sale/{saleId} 형태로 접근
+   * FE에서 /sale/{saleId} 형태로 접근
    */
   @Query({
     input: z.object({
