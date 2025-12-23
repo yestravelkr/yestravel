@@ -35,8 +35,8 @@ export interface HotelProductComponentProps {
   price: number;
   /** 상세 HTML 콘텐츠 */
   detailHtml: string | null | undefined;
-  /** 캠페인 종료일 */
-  campaignEndAt: Date;
+  /** 캠페인 종료일 (API에서 string으로 올 수 있음) */
+  campaignEndAt: Date | string;
   /** 옵션 설정 (HotelOptionSelectorConfig) */
   options: HotelOptionSelectorConfig;
 }
@@ -44,7 +44,7 @@ export interface HotelProductComponentProps {
 /**
  * 캠페인 종료일까지 남은 일수를 계산하여 뱃지 텍스트 반환
  */
-function getBadgeText(endAt: Date): string {
+function getBadgeText(endAt: Date | string): string {
   const now = dayjs();
   const end = dayjs(endAt);
   const daysLeft = end.diff(now, 'day');
