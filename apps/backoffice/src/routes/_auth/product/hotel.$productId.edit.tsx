@@ -100,7 +100,7 @@ function EditProductPage() {
         detailContent: product.detailContent,
         useStock: product.useStock,
         thumbnailUrls: product.thumbnailUrls,
-        hotelOptions: [],
+        hotelOptions: product.hotelOptions || [],
       });
       setThumbnails(product.thumbnailUrls);
     }
@@ -111,6 +111,7 @@ function EditProductPage() {
   };
 
   const onSubmit = async (formData: ProductFormData) => {
+    console.log('formData', formData);
     await updateProductMutation.mutateAsync({
       id: Number(productId),
       type: 'HOTEL',
@@ -141,6 +142,7 @@ function EditProductPage() {
       checkOutTime: formData.checkOutTime,
       bedTypes: formData.bedTypes,
       tags: formData.tags,
+      hotelOptions: formData.hotelOptions,
     });
   };
 

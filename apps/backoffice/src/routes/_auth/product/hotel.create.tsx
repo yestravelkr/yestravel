@@ -113,6 +113,7 @@ function CreateProductPage() {
       checkOutTime: formData.checkOutTime,
       bedTypes: formData.bedTypes,
       tags: formData.tags,
+      hotelOptions: formData.hotelOptions,
     });
   };
 
