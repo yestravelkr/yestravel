@@ -31,89 +31,184 @@ const appRouter = t.router({
   shopProduct: t.router({
     getProductDetail: publicProcedure.input(z.object({
       saleId: z.number(),
-    })).output(z.object({
-      id: z.number(),
-      type: z.enum(PRODUCT_TYPE_ENUM_VALUE),
-
-      // 상품 정보
-      name: z.string(),
-      thumbnailUrl: z.string().nullish(),
-      originalPrice: z.number(),
-      price: z.number(),
-      description: z.string().nullish(),
-      detailHtml: z.string().nullish(),
-
-      // 호텔 전용 정보 (HOTEL 타입일 때만 값이 있음)
-      baseCapacity: z.number().nullish(),
-      maxCapacity: z.number().nullish(),
-      checkInTime: z.string().nullish(),
-      checkOutTime: z.string().nullish(),
-
-      // 캠페인 정보
-      campaign: z.object({
+    })).output(z.discriminatedUnion('type', [
+      z.object({
         id: z.number(),
-        title: z.string(),
-        startAt: z.date(),
-        endAt: z.date(),
-      }),
 
-      // 브랜드 정보
-      brand: z.object({
-        id: z.number(),
+        // 상품 정보
         name: z.string(),
-      }),
+        thumbnailUrl: z.string().nullish(),
+        originalPrice: z.number(),
+        price: z.number(),
+        description: z.string().nullish(),
+        detailHtml: z.string().nullish(),
 
-      // 인플루언서 정보 (shopInfluencerSchema와 동일한 필드명 사용)
-      influencer: z.object({
-        id: z.number(),
-        name: z.string(),
-        slug: z.string().nullish(),
-        thumbnail: z.string().nullish(),
-      }),
+        // 캠페인 정보
+        campaign: z.object({
+          id: z.number(),
+          title: z.string(),
+          startAt: z.date(),
+          endAt: z.date(),
+        }),
 
-      // 타입별 옵션 (해당 타입의 옵션만 값이 있음)
-      options: z.object({
-        // HOTEL 타입
-        skus: z.array(
-          z.object({
-            id: z.number(),
-            quantity: z.number(),
-            date: z.string(),
-          })
-        ),
-        hotelOptions: z.array(
-          z.object({
-            id: z.number(),
-            name: z.string(),
-            priceByDate: z.record(z.number()),
-          })
-        ),
+        // 브랜드 정보
+        brand: z.object({
+          id: z.number(),
+          name: z.string(),
+        }),
 
-        // E-TICKET 타입 (추후 구현)
-        ticketOptions: z
-          .array(
+        // 인플루언서 정보
+        influencer: z.object({
+          id: z.number(),
+          name: z.string(),
+          slug: z.string().nullish(),
+          thumbnail: z.string().nullish(),
+        }),
+      }).extend({
+        type: z.literal('HOTEL'),
+
+        // 호텔 전용 정보
+        baseCapacity: z.number(),
+        maxCapacity: z.number(),
+        checkInTime: z.string(),
+        checkOutTime: z.string(),
+
+        // 호텔 옵션
+        options: z.object({
+          skus: z.array(
+            z.object({
+              id: z.number(),
+              quantity: z.number(),
+              date: z.string(),
+            })
+          ),
+          hotelOptions: z.array(
             z.object({
               id: z.number(),
               name: z.string(),
-              price: z.number(),
-              quantity: z.number(),
+              priceByDate: z.record(z.number()),
             })
-          )
-          .optional(),
+          ),
+        }),
 
-        // DELIVERY 타입 (추후 구현)
-        deliveryOptions: z
-          .array(
-            z.object({
-              id: z.number(),
-              name: z.string(),
-              price: z.number(),
-              quantity: z.number(),
-            })
-          )
-          .optional(),
+        // 호텔 판매정보
+        salesInfo: z.object({
+          seller: z.object({
+            companyName: z.string().nullish(), // 업체명
+            ceoName: z.string().nullish(), // 대표자명
+            address: z.string().nullish(), // 사업장 주소
+            licenseNumber: z.string().nullish(), // 사업자등록번호
+            mailOrderLicenseNumber: z.string().nullish(), // 통신판매업 신고번호
+          }),
+          accommodationInfo: z.object({
+            checkInTime: z.string().nullish(), // 입실시간
+            checkOutTime: z.string().nullish(), // 퇴실시간
+            baseCapacity: z.number().nullish(), // 기준인원
+            maxCapacity: z.number().nullish(), // 최대인원
+            bedTypes: z.array(z.string()).nullish(), // 침대구성
+          }),
+        }),
       }),
-    })).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
+      z.object({
+        id: z.number(),
+
+        // 상품 정보
+        name: z.string(),
+        thumbnailUrl: z.string().nullish(),
+        originalPrice: z.number(),
+        price: z.number(),
+        description: z.string().nullish(),
+        detailHtml: z.string().nullish(),
+
+        // 캠페인 정보
+        campaign: z.object({
+          id: z.number(),
+          title: z.string(),
+          startAt: z.date(),
+          endAt: z.date(),
+        }),
+
+        // 브랜드 정보
+        brand: z.object({
+          id: z.number(),
+          name: z.string(),
+        }),
+
+        // 인플루언서 정보
+        influencer: z.object({
+          id: z.number(),
+          name: z.string(),
+          slug: z.string().nullish(),
+          thumbnail: z.string().nullish(),
+        }),
+      }).extend({
+        type: z.literal('DELIVERY'),
+
+        options: z.object({
+          // TODO: 배송 상품 옵션 추가
+        }),
+
+        // TODO: 배송 판매정보 추가 (deliveryInfo, exchangeReturnInfo, productInfoNotice)
+        salesInfo: z.object({
+          seller: z.object({
+            companyName: z.string().nullish(), // 업체명
+            ceoName: z.string().nullish(), // 대표자명
+            address: z.string().nullish(), // 사업장 주소
+            licenseNumber: z.string().nullish(), // 사업자등록번호
+            mailOrderLicenseNumber: z.string().nullish(), // 통신판매업 신고번호
+          }),
+        }),
+      }),
+      z.object({
+        id: z.number(),
+
+        // 상품 정보
+        name: z.string(),
+        thumbnailUrl: z.string().nullish(),
+        originalPrice: z.number(),
+        price: z.number(),
+        description: z.string().nullish(),
+        detailHtml: z.string().nullish(),
+
+        // 캠페인 정보
+        campaign: z.object({
+          id: z.number(),
+          title: z.string(),
+          startAt: z.date(),
+          endAt: z.date(),
+        }),
+
+        // 브랜드 정보
+        brand: z.object({
+          id: z.number(),
+          name: z.string(),
+        }),
+
+        // 인플루언서 정보
+        influencer: z.object({
+          id: z.number(),
+          name: z.string(),
+          slug: z.string().nullish(),
+          thumbnail: z.string().nullish(),
+        }),
+      }).extend({
+        type: z.literal('E-TICKET'),
+
+        options: z.object({
+          // TODO: E-TICKET 상품 옵션 추가
+        }),
+
+        salesInfo: z.object({
+          seller: z.object({
+            companyName: z.string().nullish(), // 업체명
+            ceoName: z.string().nullish(), // 대표자명
+            address: z.string().nullish(), // 사업장 주소
+            licenseNumber: z.string().nullish(), // 사업자등록번호
+            mailOrderLicenseNumber: z.string().nullish(), // 통신판매업 신고번호
+          }),
+        }),
+      }),
+    ])).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
   }),
   shopPayment: t.router({
     complete: publicProcedure.input(z.object({
