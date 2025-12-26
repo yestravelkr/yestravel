@@ -44,4 +44,20 @@ export class BusinessInfoEntity {
     nullable: true,
   })
   licenseFileUrl?: string;
+
+  @Column({
+    name: 'address',
+    type: 'varchar',
+    length: 500,
+    nullable: true,
+  })
+  address?: string;
+
+  @Column({
+    name: 'mail_order_license_number',
+    type: 'varchar',
+    length: 100,
+    nullable: true,
+  })
+  mailOrderLicenseNumber?: string;
 }
