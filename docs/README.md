@@ -9,6 +9,7 @@
 - [새 기능 추가하기](./adding-features.md) - 새로운 기능 구현 가이드
 - [데이터베이스 가이드](./database.md) - 데이터베이스 설정 및 마이그레이션 가이드
 - [프론트엔드 개발](./frontend.md) - 프론트엔드 스택 및 개발 가이드
+- [Git 워크플로우](./git-workflow.md) - Git 커밋 규칙 및 PR 작성 가이드
 - [Docker 설정](./docker.md) - Docker 환경 설정
 
 ## Claude Code 통합
