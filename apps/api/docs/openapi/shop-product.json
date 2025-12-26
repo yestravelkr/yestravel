@@ -1,0 +1,311 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Shop Product API",
+    "description": "Shop 상품 상세 조회 API (FE용)",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Local Development Server"
+    }
+  ],
+  "paths": {
+    "/trpc/shopProduct.getProductDetail": {
+      "get": {
+        "summary": "상품 상세 조회",
+        "description": "saleId(CampaignInfluencerProduct.id)를 통해 상품 상세 정보를 조회합니다. 상품 타입에 따라 다른 응답 구조를 반환합니다.",
+        "tags": ["Shop Product"],
+        "parameters": [
+          {
+            "name": "input",
+            "in": "query",
+            "description": "tRPC input (JSON)",
+            "required": true,
+            "schema": { "type": "string" },
+            "example": "{\"saleId\":1}"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "상품 상세 조회 성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "oneOf": [
+                            { "$ref": "#/components/schemas/ShopHotelProductDetail" },
+                            { "$ref": "#/components/schemas/ShopDeliveryProductDetail" },
+                            { "$ref": "#/components/schemas/ShopETicketProductDetail" }
+                          ],
+                          "discriminator": {
+                            "propertyName": "type"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "hotel": {
+                    "summary": "호텔 상품 응답 예시",
+                    "value": {
+                      "result": {
+                        "data": {
+                          "id": 1,
+                          "type": "HOTEL",
+                          "name": "제주 신라호텔 디럭스룸",
+                          "thumbnailUrl": "https://cdn.yestravel.kr/products/hotel-1.jpg",
+                          "originalPrice": 350000,
+                          "price": 280000,
+                          "description": "제주 최고급 호텔 객실",
+                          "detailHtml": "<p>상세 설명 HTML</p>",
+                          "baseCapacity": 2,
+                          "maxCapacity": 4,
+                          "checkInTime": "15:00",
+                          "checkOutTime": "11:00",
+                          "campaign": {
+                            "id": 1,
+                            "title": "2025 여름 제주 호텔 특가",
+                            "startAt": "2025-07-01T00:00:00.000Z",
+                            "endAt": "2025-08-31T23:59:59.000Z"
+                          },
+                          "brand": {
+                            "id": 1,
+                            "name": "신라호텔"
+                          },
+                          "influencer": {
+                            "id": 1,
+                            "name": "여행하는민지",
+                            "slug": "travel-minji",
+                            "thumbnail": "https://cdn.yestravel.kr/influencers/minji.jpg"
+                          },
+                          "options": {
+                            "skus": [
+                              { "id": 1, "quantity": 5, "date": "2025-07-01" },
+                              { "id": 2, "quantity": 3, "date": "2025-07-02" },
+                              { "id": 3, "quantity": 7, "date": "2025-07-03" }
+                            ],
+                            "hotelOptions": [
+                              {
+                                "id": 1,
+                                "name": "디럭스 더블",
+                                "priceByDate": {
+                                  "2025-07-01": 280000,
+                                  "2025-07-02": 280000,
+                                  "2025-07-03": 320000
+                                }
+                              },
+                              {
+                                "id": 2,
+                                "name": "디럭스 트윈",
+                                "priceByDate": {
+                                  "2025-07-01": 300000,
+                                  "2025-07-02": 300000,
+                                  "2025-07-03": 350000
+                                }
+                              }
+                            ]
+                          },
+                          "salesInfo": {
+                            "seller": {
+                              "companyName": "(주)신라호텔",
+                              "ceoName": "이부진",
+                              "address": "서울특별시 중구 동호로 249",
+                              "licenseNumber": "104-81-25400",
+                              "mailOrderLicenseNumber": "2020-서울중구-1234"
+                            },
+                            "accommodationInfo": {
+                              "checkInTime": "15:00",
+                              "checkOutTime": "11:00",
+                              "baseCapacity": 2,
+                              "maxCapacity": 4,
+                              "bedTypes": ["킹베드", "싱글베드"]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "판매 상품을 찾을 수 없습니다"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Campaign": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "title": { "type": "string" },
+          "startAt": { "type": "string", "format": "date-time" },
+          "endAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Brand": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "name": { "type": "string" }
+        }
+      },
+      "Influencer": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "name": { "type": "string" },
+          "slug": { "type": "string", "nullable": true },
+          "thumbnail": { "type": "string", "nullable": true }
+        }
+      },
+      "SellerInfo": {
+        "type": "object",
+        "description": "판매자 정보",
+        "properties": {
+          "companyName": { "type": "string", "nullable": true, "description": "업체명" },
+          "ceoName": { "type": "string", "nullable": true, "description": "대표자명" },
+          "address": { "type": "string", "nullable": true, "description": "사업장 주소" },
+          "licenseNumber": { "type": "string", "nullable": true, "description": "사업자등록번호" },
+          "mailOrderLicenseNumber": { "type": "string", "nullable": true, "description": "통신판매업 신고번호" }
+        }
+      },
+      "AccommodationInfo": {
+        "type": "object",
+        "description": "숙박 정보 (HOTEL 타입)",
+        "properties": {
+          "checkInTime": { "type": "string", "nullable": true, "description": "입실시간" },
+          "checkOutTime": { "type": "string", "nullable": true, "description": "퇴실시간" },
+          "baseCapacity": { "type": "integer", "nullable": true, "description": "기준인원" },
+          "maxCapacity": { "type": "integer", "nullable": true, "description": "최대인원" },
+          "bedTypes": {
+            "type": "array",
+            "items": { "type": "string" },
+            "nullable": true,
+            "description": "침대구성"
+          }
+        }
+      },
+      "HotelSalesInfo": {
+        "type": "object",
+        "description": "호텔 판매정보",
+        "properties": {
+          "seller": { "$ref": "#/components/schemas/SellerInfo" },
+          "accommodationInfo": { "$ref": "#/components/schemas/AccommodationInfo" }
+        }
+      },
+      "BaseSalesInfo": {
+        "type": "object",
+        "description": "기본 판매정보 (DELIVERY, E-TICKET)",
+        "properties": {
+          "seller": { "$ref": "#/components/schemas/SellerInfo" }
+        }
+      },
+      "HotelSku": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "quantity": { "type": "integer", "description": "재고 수량" },
+          "date": { "type": "string", "description": "날짜 (YYYY-MM-DD)" }
+        }
+      },
+      "HotelOption": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "name": { "type": "string", "description": "옵션명" },
+          "priceByDate": {
+            "type": "object",
+            "additionalProperties": { "type": "integer" },
+            "description": "날짜별 가격"
+          }
+        }
+      },
+      "ShopHotelProductDetail": {
+        "type": "object",
+        "description": "Shop 호텔 상품 상세",
+        "properties": {
+          "id": { "type": "integer", "description": "CampaignInfluencerProduct ID (saleId)" },
+          "type": { "type": "string", "const": "HOTEL" },
+          "name": { "type": "string" },
+          "thumbnailUrl": { "type": "string", "nullable": true },
+          "originalPrice": { "type": "integer", "description": "원가" },
+          "price": { "type": "integer", "description": "판매가" },
+          "description": { "type": "string", "nullable": true },
+          "detailHtml": { "type": "string", "nullable": true },
+          "baseCapacity": { "type": "integer", "description": "기준인원" },
+          "maxCapacity": { "type": "integer", "description": "최대인원" },
+          "checkInTime": { "type": "string", "description": "입실시간" },
+          "checkOutTime": { "type": "string", "description": "퇴실시간" },
+          "campaign": { "$ref": "#/components/schemas/Campaign" },
+          "brand": { "$ref": "#/components/schemas/Brand" },
+          "influencer": { "$ref": "#/components/schemas/Influencer" },
+          "options": {
+            "type": "object",
+            "properties": {
+              "skus": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/HotelSku" }
+              },
+              "hotelOptions": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/HotelOption" }
+              }
+            }
+          },
+          "salesInfo": { "$ref": "#/components/schemas/HotelSalesInfo" }
+        }
+      },
+      "ShopDeliveryProductDetail": {
+        "type": "object",
+        "description": "Shop 배송 상품 상세 (TODO: 추후 확장)",
+        "properties": {
+          "id": { "type": "integer" },
+          "type": { "type": "string", "const": "DELIVERY" },
+          "name": { "type": "string" },
+          "thumbnailUrl": { "type": "string", "nullable": true },
+          "originalPrice": { "type": "integer" },
+          "price": { "type": "integer" },
+          "description": { "type": "string", "nullable": true },
+          "detailHtml": { "type": "string", "nullable": true },
+          "campaign": { "$ref": "#/components/schemas/Campaign" },
+          "brand": { "$ref": "#/components/schemas/Brand" },
+          "influencer": { "$ref": "#/components/schemas/Influencer" },
+          "options": { "type": "object" },
+          "salesInfo": { "$ref": "#/components/schemas/BaseSalesInfo" }
+        }
+      },
+      "ShopETicketProductDetail": {
+        "type": "object",
+        "description": "Shop E-Ticket 상품 상세 (TODO: 추후 확장)",
+        "properties": {
+          "id": { "type": "integer" },
+          "type": { "type": "string", "const": "E-TICKET" },
+          "name": { "type": "string" },
+          "thumbnailUrl": { "type": "string", "nullable": true },
+          "originalPrice": { "type": "integer" },
+          "price": { "type": "integer" },
+          "description": { "type": "string", "nullable": true },
+          "detailHtml": { "type": "string", "nullable": true },
+          "campaign": { "$ref": "#/components/schemas/Campaign" },
+          "brand": { "$ref": "#/components/schemas/Brand" },
+          "influencer": { "$ref": "#/components/schemas/Influencer" },
+          "options": { "type": "object" },
+          "salesInfo": { "$ref": "#/components/schemas/BaseSalesInfo" }
+        }
+      }
+    }
+  }
+}
