@@ -1,5 +1,8 @@
 import type { z } from 'zod';
-import type { shopProductDetailSchema } from './shop.product.schema';
+import type {
+  shopProductDetailSchema,
+  campaignOtherProductsSchema,
+} from './shop.product.schema';
 
 /**
  * 상품 상세 응답 (Zod 스키마에서 추론)
@@ -74,3 +77,17 @@ export interface BaseSalesInfo {
   // exchangeReturnInfo: ExchangeReturnInfo;
   // productInfoNotice: string | null;
 }
+
+/**
+ * 캠페인 다른 상품 조회 입력
+ */
+export interface GetCampaignOtherProductsInput {
+  saleId: number;
+}
+
+/**
+ * 캠페인 다른 상품 응답 (Zod 스키마에서 추론)
+ */
+export type CampaignOtherProductsResponse = z.infer<
+  typeof campaignOtherProductsSchema
+>;

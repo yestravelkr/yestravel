@@ -8,6 +8,7 @@ import {
   Unique,
   OneToMany,
 } from 'typeorm';
+import { NotFoundException } from '@nestjs/common';
 import { BaseEntity } from '@src/module/backoffice/domain/base.entity';
 import { CampaignInfluencerEntity } from '@src/module/backoffice/domain/campaign-influencer.entity';
 import { ProductEntity } from '@src/module/backoffice/domain/product/product.entity';
@@ -95,3 +96,44 @@ export class CampaignInfluencerProductEntity extends BaseEntity {
 export const getCampaignInfluencerProductRepository = (
   source?: TransactionService | EntityManager
 ) => getEntityManager(source).getRepository(CampaignInfluencerProductEntity);
+
+/**
+ * CampaignInfluencerProduct Custom Repository
+ *
+ * 공통 조회 로직을 제공합니다.
+ */
+export const getCampaignInfluencerProductCustomRepository = (
+  source?: TransactionService | EntityManager
+) => {
+  const repo = getEntityManager(source).getRepository(
+    CampaignInfluencerProductEntity
+  );
+
+  return {
+    ...repo,
+
+    /**
+     * saleId로 판매 상품 조회 (없으면 NotFoundException)
+     *
+     * @param saleId CampaignInfluencerProduct.id
+     * @param relations 조회할 relation 목록
+     */
+    async findBySaleIdOrFail(
+      saleId: number,
+      relations: string[] = []
+    ): Promise<CampaignInfluencerProductEntity> {
+      const product = await repo.findOne({
+        where: { id: saleId },
+        relations,
+      });
+
+      if (!product) {
+        throw new NotFoundException(
+          `판매 상품을 찾을 수 없습니다 (ID: ${saleId})`
+        );
+      }
+
+      return product;
+    },
+  };
+};

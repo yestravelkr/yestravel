@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { RepositoryProvider } from '@src/module/shared/transaction/repository.provider';
 import { ProductTypeEnum } from '@src/module/backoffice/admin/admin.schema';
 import type {
@@ -6,6 +6,8 @@ import type {
   GetProductDetailInput,
   HotelProductDetails,
   SellerInfo,
+  GetCampaignOtherProductsInput,
+  CampaignOtherProductsResponse,
 } from './shop.product.dto';
 import type { BrandEntity } from '@src/module/backoffice/domain/brand.entity';
 
@@ -30,24 +32,16 @@ export class ShopProductService {
 
     // 1. CampaignInfluencerProduct 조회 (with relations)
     const campaignInfluencerProduct =
-      await this.repositoryProvider.CampaignInfluencerProductRepository.findOne(
-        {
-          where: { id: saleId },
-          relations: [
-            'campaignInfluencer',
-            'campaignInfluencer.campaign',
-            'campaignInfluencer.influencer',
-            'product',
-            'product.brand',
-          ],
-        }
+      await this.repositoryProvider.CampaignInfluencerProductCustomRepository.findBySaleIdOrFail(
+        saleId,
+        [
+          'campaignInfluencer',
+          'campaignInfluencer.campaign',
+          'campaignInfluencer.influencer',
+          'product',
+          'product.brand',
+        ]
       );
-
-    if (!campaignInfluencerProduct) {
-      throw new NotFoundException(
-        `판매 상품을 찾을 수 없습니다 (ID: ${saleId})`
-      );
-    }
 
     const { campaignInfluencer, product } = campaignInfluencerProduct;
     const { campaign, influencer } = campaignInfluencer;
@@ -209,6 +203,59 @@ export class ShopProductService {
       address: businessInfo?.address ?? null,
       licenseNumber: businessInfo?.licenseNumber ?? null,
       mailOrderLicenseNumber: businessInfo?.mailOrderLicenseNumber ?? null,
+    };
+  }
+
+  /**
+   * 캠페인 다른 상품 조회
+   *
+   * 현재 상품(saleId)이 포함된 캠페인의 다른 상품들을 조회합니다.
+   *
+   * 조회 흐름:
+   * 1. saleId로 CampaignInfluencerProduct 조회 → campaignId 획득
+   * 2. 같은 캠페인의 다른 CampaignInfluencerProduct 조회 (현재 상품 제외)
+   */
+  async getCampaignOtherProducts(
+    input: GetCampaignOtherProductsInput
+  ): Promise<CampaignOtherProductsResponse> {
+    const { saleId } = input;
+
+    // 1. 현재 상품에서 캠페인 정보 조회
+    const currentProduct =
+      await this.repositoryProvider.CampaignInfluencerProductCustomRepository.findBySaleIdOrFail(
+        saleId,
+        ['campaignInfluencer', 'campaignInfluencer.campaign']
+      );
+
+    const campaign = currentProduct.campaignInfluencer.campaign;
+    const campaignInfluencerId = currentProduct.campaignInfluencerId;
+
+    // 2. 같은 CampaignInfluencer의 다른 상품들 조회 (현재 상품 제외)
+    const otherProducts =
+      await this.repositoryProvider.CampaignInfluencerProductRepository.find({
+        where: { campaignInfluencerId },
+        relations: ['product'],
+      });
+
+    // 현재 상품 제외 및 응답 형식 변환
+    const products = otherProducts
+      .filter(item => item.id !== saleId)
+      .map(item => ({
+        id: item.id,
+        thumbnailUrl: item.product.thumbnailUrls?.[0] ?? null,
+        name: item.product.name,
+        originalPrice: item.product.originalPrice,
+        price: item.product.price,
+      }));
+
+    return {
+      campaign: {
+        id: campaign.id,
+        name: campaign.title,
+        startAt: campaign.startAt,
+        endAt: campaign.endAt,
+      },
+      products,
     };
   }
 }

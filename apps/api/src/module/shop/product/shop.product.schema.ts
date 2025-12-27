@@ -195,3 +195,26 @@ export const shopProductDetailSchema = z.discriminatedUnion('type', [
   deliveryProductDetailSchema,
   eTicketProductDetailSchema,
 ]);
+
+/**
+ * 캠페인 다른 상품 목록 스키마
+ *
+ * 현재 상품이 포함된 캠페인의 다른 상품들을 조회합니다.
+ */
+export const campaignOtherProductsSchema = z.object({
+  campaign: z.object({
+    id: z.number(),
+    name: z.string(),
+    startAt: z.date(),
+    endAt: z.date(),
+  }),
+  products: z.array(
+    z.object({
+      id: z.number(), // CampaignInfluencerProduct.id (saleId)
+      thumbnailUrl: z.string().nullish(),
+      name: z.string(),
+      originalPrice: z.number(),
+      price: z.number(),
+    })
+  ),
+});

@@ -21,7 +21,10 @@ import { getSocialMediaRepository } from '@src/module/backoffice/domain/social-m
 import { getHotelOptionRepository } from '@src/module/backoffice/domain/product/hotel-option.entity';
 import { getCampaignProductRepository } from '@src/module/backoffice/domain/campaign-product.entity';
 import { getCampaignInfluencerRepository } from '@src/module/backoffice/domain/campaign-influencer.entity';
-import { getCampaignInfluencerProductRepository } from '@src/module/backoffice/domain/campaign-influencer-product.entity';
+import {
+  getCampaignInfluencerProductRepository,
+  getCampaignInfluencerProductCustomRepository,
+} from '@src/module/backoffice/domain/campaign-influencer-product.entity';
 import { getCampaignInfluencerHotelOptionRepository } from '@src/module/backoffice/domain/campaign-influencer-hotel-option.entity';
 
 @Injectable()
@@ -114,6 +117,10 @@ export class RepositoryProvider {
 
   get CampaignInfluencerProductRepository() {
     return getCampaignInfluencerProductRepository(this.transaction);
+  }
+
+  get CampaignInfluencerProductCustomRepository() {
+    return getCampaignInfluencerProductCustomRepository(this.transaction);
   }
 
   get CampaignInfluencerHotelOptionRepository() {
