@@ -154,9 +154,7 @@ export const getCampaignInfluencerProductRepository = (
     CampaignInfluencerProductEntity
   );
 
-  return {
-    ...repo,
-
+  return Object.assign(repo, {
     /**
      * saleId로 판매 상품 조회 (없으면 NotFoundException)
      *
@@ -180,5 +178,5 @@ export const getCampaignInfluencerProductRepository = (
 
       return product;
     },
-  };
+  });
 };
