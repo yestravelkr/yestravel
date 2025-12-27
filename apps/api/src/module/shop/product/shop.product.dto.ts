@@ -21,6 +21,7 @@ export interface HotelProductDetails {
   maxCapacity: number | null;
   checkInTime: string | null;
   checkOutTime: string | null;
+  bedTypes: string[];
   hotelOptions: Array<{
     id: number;
     name: string;
@@ -31,4 +32,45 @@ export interface HotelProductDetails {
     quantity: number;
     date: string;
   }>;
+}
+
+/**
+ * 판매자 정보
+ */
+export interface SellerInfo {
+  companyName: string | null;
+  ceoName: string | null;
+  address: string | null;
+  licenseNumber: string | null;
+  mailOrderLicenseNumber: string | null;
+}
+
+/**
+ * 숙박 정보 (HOTEL 타입)
+ */
+export interface AccommodationInfo {
+  checkInTime: string | null;
+  checkOutTime: string | null;
+  baseCapacity: number | null;
+  maxCapacity: number | null;
+  bedTypes: string[] | null;
+}
+
+/**
+ * 호텔 판매정보
+ */
+export interface HotelSalesInfo {
+  seller: SellerInfo;
+  accommodationInfo: AccommodationInfo;
+}
+
+/**
+ * 기본 판매정보 (E-TICKET, DELIVERY 등)
+ */
+export interface BaseSalesInfo {
+  seller: SellerInfo;
+  // TODO: DELIVERY 타입 추가 예정
+  // deliveryInfo: DeliveryInfo;
+  // exchangeReturnInfo: ExchangeReturnInfo;
+  // productInfoNotice: string | null;
 }

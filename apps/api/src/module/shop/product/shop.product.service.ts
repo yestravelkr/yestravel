@@ -5,7 +5,9 @@ import type {
   ProductDetailResponse,
   GetProductDetailInput,
   HotelProductDetails,
+  SellerInfo,
 } from './shop.product.dto';
+import type { BrandEntity } from '@src/module/backoffice/domain/brand.entity';
 
 @Injectable()
 export class ShopProductService {
@@ -86,7 +88,10 @@ export class ShopProductService {
       },
     };
 
-    // 3. 상품 타입별 추가 정보 조회
+    // 3. 판매자 정보 (공통)
+    const sellerInfo = this.getSellerInfo(product.brand);
+
+    // 4. 상품 타입별 추가 정보 조회
     if (product.type === ProductTypeEnum.HOTEL) {
       const hotelDetails = await this.getHotelProductDetails(
         product.id,
@@ -95,57 +100,47 @@ export class ShopProductService {
 
       return {
         ...baseResponse,
-        baseCapacity: hotelDetails.baseCapacity,
-        maxCapacity: hotelDetails.maxCapacity,
-        checkInTime: hotelDetails.checkInTime,
-        checkOutTime: hotelDetails.checkOutTime,
+        type: 'HOTEL' as const,
+        baseCapacity: hotelDetails.baseCapacity ?? 0,
+        maxCapacity: hotelDetails.maxCapacity ?? 0,
+        checkInTime: hotelDetails.checkInTime ?? '',
+        checkOutTime: hotelDetails.checkOutTime ?? '',
         options: {
           skus: hotelDetails.skus,
           hotelOptions: hotelDetails.hotelOptions,
+        },
+        salesInfo: {
+          seller: sellerInfo,
+          accommodationInfo: {
+            checkInTime: hotelDetails.checkInTime,
+            checkOutTime: hotelDetails.checkOutTime,
+            baseCapacity: hotelDetails.baseCapacity,
+            maxCapacity: hotelDetails.maxCapacity,
+            bedTypes: hotelDetails.bedTypes,
+          },
         },
       };
     }
 
     if (product.type === ProductTypeEnum.DELIVERY) {
-      // TODO: 배송 상품 추가 정보 조회
+      // TODO: 배송 상품 salesInfo 추가 (deliveryInfo, exchangeReturnInfo, productInfoNotice)
       return {
         ...baseResponse,
-        baseCapacity: null,
-        maxCapacity: null,
-        checkInTime: null,
-        checkOutTime: null,
-        options: {
-          skus: [],
-          hotelOptions: [],
+        type: 'DELIVERY' as const,
+        options: {},
+        salesInfo: {
+          seller: sellerInfo,
         },
       };
     }
 
-    if (product.type === ProductTypeEnum['E-TICKET']) {
-      // TODO: E-TICKET 상품 추가 정보 조회
-      return {
-        ...baseResponse,
-        baseCapacity: null,
-        maxCapacity: null,
-        checkInTime: null,
-        checkOutTime: null,
-        options: {
-          skus: [],
-          hotelOptions: [],
-        },
-      };
-    }
-
-    // 알 수 없는 타입
+    // E-TICKET 또는 알 수 없는 타입
     return {
       ...baseResponse,
-      baseCapacity: null,
-      maxCapacity: null,
-      checkInTime: null,
-      checkOutTime: null,
-      options: {
-        skus: [],
-        hotelOptions: [],
+      type: 'E-TICKET' as const,
+      options: {},
+      salesInfo: {
+        seller: sellerInfo,
       },
     };
   }
@@ -196,8 +191,24 @@ export class ShopProductService {
       maxCapacity: hotelProduct?.maxCapacity ?? null,
       checkInTime: hotelProduct?.checkInTime ?? null,
       checkOutTime: hotelProduct?.checkOutTime ?? null,
+      bedTypes: hotelProduct?.bedTypes ?? [],
       hotelOptions,
       skus,
+    };
+  }
+
+  /**
+   * 판매자 정보 추출 (브랜드의 businessInfo에서)
+   */
+  private getSellerInfo(brand: BrandEntity): SellerInfo {
+    const businessInfo = brand.businessInfo;
+
+    return {
+      companyName: businessInfo?.name ?? null,
+      ceoName: businessInfo?.ceoName ?? null,
+      address: businessInfo?.address ?? null,
+      licenseNumber: businessInfo?.licenseNumber ?? null,
+      mailOrderLicenseNumber: businessInfo?.mailOrderLicenseNumber ?? null,
     };
   }
 }
