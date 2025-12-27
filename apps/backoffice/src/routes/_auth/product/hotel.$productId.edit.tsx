@@ -100,7 +100,7 @@ function EditProductPage() {
         detailContent: product.detailContent,
         useStock: product.useStock,
         thumbnailUrls: product.thumbnailUrls,
-        hotelOptions: [],
+        hotelOptions: product.hotelOptions || [],
       });
       setThumbnails(product.thumbnailUrls);
     }
@@ -141,6 +141,7 @@ function EditProductPage() {
       checkOutTime: formData.checkOutTime,
       bedTypes: formData.bedTypes,
       tags: formData.tags,
+      hotelOptions: formData.hotelOptions,
     });
   };
 
