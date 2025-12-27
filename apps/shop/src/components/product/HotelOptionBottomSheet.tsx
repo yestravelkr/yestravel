@@ -138,6 +138,11 @@ function HotelOptionBottomSheet({
     setStep('date');
   };
 
+  // Step 2에서 날짜 변경
+  const handleBackToDateSelect = () => {
+    setStep('date');
+  };
+
   // 구매하기
   const handlePurchase = () => {
     if (selectedOptionId) {
@@ -203,6 +208,7 @@ function HotelOptionBottomSheet({
             isDropdownOpen={isOptionDropdownOpen}
             onOpenChange={setIsOptionDropdownOpen}
             onSelectOption={handleOptionSelect}
+            onBackToDateSelect={handleBackToDateSelect}
           />
         )}
 
@@ -293,6 +299,7 @@ interface OptionSelectStepProps {
   isDropdownOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
   onSelectOption: (optionId: number) => void;
+  onBackToDateSelect: () => void;
 }
 
 function OptionSelectStep({
@@ -303,11 +310,15 @@ function OptionSelectStep({
   isDropdownOpen,
   onOpenChange,
   onSelectOption,
+  onBackToDateSelect,
 }: OptionSelectStepProps) {
   return (
     <StepContent>
-      {/* 날짜 표시 (읽기 전용) */}
-      <DateInputField>
+      {/* 날짜 표시 (클릭하면 Step 1로 돌아감) */}
+      <DateInputField
+        onClick={onBackToDateSelect}
+        style={{ cursor: 'pointer' }}
+      >
         <DateInputIcon>
           <CalendarIcon size={16} />
         </DateInputIcon>
@@ -473,6 +484,8 @@ const DateInputField = tw.div<{ $focused?: boolean }>`
     $focused
       ? 'outline-[var(--stroke-primary)]'
       : 'outline-[var(--stroke-neutral)]'}
+  hover:bg-bg-neutral-subtle
+  transition-colors
 `;
 
 const DateInputIcon = tw.div`
