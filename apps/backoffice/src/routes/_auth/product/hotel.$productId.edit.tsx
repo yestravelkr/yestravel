@@ -42,6 +42,10 @@ interface ProductFormData {
       { supplyPrice: number; commission: number }
     >;
   }>;
+  hotelSkus: Array<{
+    checkInDate: string;
+    quantity: number;
+  }>;
 }
 
 function EditProductPage() {
@@ -80,6 +84,7 @@ function EditProductPage() {
       useStock: false,
       thumbnailUrls: [],
       hotelOptions: [],
+      hotelSkus: [],
     },
   });
 
@@ -101,6 +106,7 @@ function EditProductPage() {
         useStock: product.useStock,
         thumbnailUrls: product.thumbnailUrls,
         hotelOptions: product.hotelOptions || [],
+        hotelSkus: [], // TODO: API에서 hotelSkus 데이터 받아오기
       });
       setThumbnails(product.thumbnailUrls);
     }
@@ -142,6 +148,7 @@ function EditProductPage() {
       bedTypes: formData.bedTypes,
       tags: formData.tags,
       hotelOptions: formData.hotelOptions,
+      hotelSkus: formData.hotelSkus,
     });
   };
 

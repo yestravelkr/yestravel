@@ -43,6 +43,10 @@ interface ProductFormData {
       { supplyPrice: number; commission: number }
     >;
   }>;
+  hotelSkus: Array<{
+    checkInDate: string;
+    quantity: number;
+  }>;
 }
 
 function CreateProductPage() {
@@ -74,6 +78,7 @@ function CreateProductPage() {
       useStock: false,
       thumbnailUrls: [],
       hotelOptions: [],
+      hotelSkus: [],
     },
   });
 
@@ -114,6 +119,7 @@ function CreateProductPage() {
       bedTypes: formData.bedTypes,
       tags: formData.tags,
       hotelOptions: formData.hotelOptions,
+      hotelSkus: formData.hotelSkus,
     });
   };
 
