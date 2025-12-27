@@ -36,6 +36,17 @@ export interface CampaignInfluencerProductResponse {
 }
 
 /**
+ * 상품 요약 정보 (Shop 페이지용)
+ */
+export interface ProductSummary {
+  id: number; // saleId (CampaignInfluencerProduct.id)
+  thumbnailUrl: string | null;
+  name: string;
+  originalPrice: number;
+  price: number;
+}
+
+/**
  * CampaignInfluencerProduct Entity
  *
  * 인플루언서별 상품 설정을 관리합니다.
@@ -89,6 +100,21 @@ export class CampaignInfluencerProductEntity extends BaseEntity {
       hotelOptions: (this.hotelOptions ?? []).map(option =>
         option.toResponse()
       ),
+    };
+  }
+
+  /**
+   * 상품 요약 정보 변환 (Shop 페이지용)
+   *
+   * product relation이 로드되어 있어야 합니다.
+   */
+  toProductSummary(): ProductSummary {
+    return {
+      id: this.id,
+      thumbnailUrl: this.product.thumbnailUrls?.[0] ?? null,
+      name: this.product.name,
+      originalPrice: this.product.originalPrice,
+      price: this.product.price,
     };
   }
 }

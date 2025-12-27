@@ -240,13 +240,7 @@ export class ShopProductService {
     // 현재 상품 제외 및 응답 형식 변환
     const products = otherProducts
       .filter(item => item.id !== saleId)
-      .map(item => ({
-        id: item.id,
-        thumbnailUrl: item.product.thumbnailUrls?.[0] ?? null,
-        name: item.product.name,
-        originalPrice: item.product.originalPrice,
-        price: item.product.price,
-      }));
+      .map(item => item.toProductSummary());
 
     return {
       campaign: {
