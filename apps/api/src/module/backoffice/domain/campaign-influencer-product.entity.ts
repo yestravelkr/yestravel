@@ -95,15 +95,6 @@ export class CampaignInfluencerProductEntity extends BaseEntity {
 
 export const getCampaignInfluencerProductRepository = (
   source?: TransactionService | EntityManager
-) => getEntityManager(source).getRepository(CampaignInfluencerProductEntity);
-
-/**
- * CampaignInfluencerProduct Custom Repository
- *
- * 공통 조회 로직을 제공합니다.
- */
-export const getCampaignInfluencerProductCustomRepository = (
-  source?: TransactionService | EntityManager
 ) => {
   const repo = getEntityManager(source).getRepository(
     CampaignInfluencerProductEntity

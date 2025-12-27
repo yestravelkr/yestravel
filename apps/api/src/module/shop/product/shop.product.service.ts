@@ -32,7 +32,7 @@ export class ShopProductService {
 
     // 1. CampaignInfluencerProduct 조회 (with relations)
     const campaignInfluencerProduct =
-      await this.repositoryProvider.CampaignInfluencerProductCustomRepository.findBySaleIdOrFail(
+      await this.repositoryProvider.CampaignInfluencerProductRepository.findBySaleIdOrFail(
         saleId,
         [
           'campaignInfluencer',
@@ -222,7 +222,7 @@ export class ShopProductService {
 
     // 1. 현재 상품에서 캠페인 정보 조회
     const currentProduct =
-      await this.repositoryProvider.CampaignInfluencerProductCustomRepository.findBySaleIdOrFail(
+      await this.repositoryProvider.CampaignInfluencerProductRepository.findBySaleIdOrFail(
         saleId,
         ['campaignInfluencer', 'campaignInfluencer.campaign']
       );
