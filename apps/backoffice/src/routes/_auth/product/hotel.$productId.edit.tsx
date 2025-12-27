@@ -111,7 +111,6 @@ function EditProductPage() {
   };
 
   const onSubmit = async (formData: ProductFormData) => {
-    console.log('formData', formData);
     await updateProductMutation.mutateAsync({
       id: Number(productId),
       type: 'HOTEL',
