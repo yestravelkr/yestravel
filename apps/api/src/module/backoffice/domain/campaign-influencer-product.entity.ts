@@ -36,12 +36,24 @@ export interface CampaignInfluencerProductResponse {
 }
 
 /**
- * 상품 요약 정보 (Shop 페이지용)
+ * 상품 요약 정보 (Shop 상품 상세용)
  */
 export interface ProductSummary {
   id: number; // saleId (CampaignInfluencerProduct.id)
   thumbnailUrl: string | null;
   name: string;
+  originalPrice: number;
+  price: number;
+}
+
+/**
+ * Shop 상품 정보 (인플루언서 페이지용)
+ */
+export interface ShopProductInfo {
+  id: number; // product.id
+  saleId: number; // CampaignInfluencerProduct.id
+  name: string;
+  thumbnail: string | null;
   originalPrice: number;
   price: number;
 }
@@ -104,7 +116,7 @@ export class CampaignInfluencerProductEntity extends BaseEntity {
   }
 
   /**
-   * 상품 요약 정보 변환 (Shop 페이지용)
+   * 상품 요약 정보 변환 (Shop 상품 상세용)
    *
    * product relation이 로드되어 있어야 합니다.
    */
@@ -113,6 +125,22 @@ export class CampaignInfluencerProductEntity extends BaseEntity {
       id: this.id,
       thumbnailUrl: this.product.thumbnailUrls?.[0] ?? null,
       name: this.product.name,
+      originalPrice: this.product.originalPrice,
+      price: this.product.price,
+    };
+  }
+
+  /**
+   * Shop 상품 정보 변환 (인플루언서 페이지용)
+   *
+   * product relation이 로드되어 있어야 합니다.
+   */
+  toShopProduct(): ShopProductInfo {
+    return {
+      id: this.product.id,
+      saleId: this.id,
+      name: this.product.name,
+      thumbnail: this.product.thumbnailUrls?.[0] ?? null,
       originalPrice: this.product.originalPrice,
       price: this.product.price,
     };

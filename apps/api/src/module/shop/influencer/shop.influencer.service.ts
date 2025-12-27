@@ -79,12 +79,15 @@ export class ShopInfluencerService {
         // VISIBLE 상태인 상품만 필터링
         const visibleProducts = (campaignInfluencer.products ?? [])
           .filter(product => product.status === CampaignStatusEnum.VISIBLE)
-          .map(campaignProduct => ({
-            id: campaignProduct.product.id,
-            saleId: campaignProduct.id,
-            name: campaignProduct.product.name,
-            thumbnail: campaignProduct.product.thumbnailUrls?.[0] ?? null,
-          }));
+          .map(campaignProduct => {
+            const shopProduct = campaignProduct.toShopProduct();
+            return {
+              id: shopProduct.id,
+              saleId: shopProduct.saleId,
+              name: shopProduct.name,
+              thumbnail: shopProduct.thumbnail,
+            };
+          });
 
         return {
           id: campaign.id,
@@ -154,14 +157,7 @@ export class ShopInfluencerService {
       .filter(
         campaignProduct => campaignProduct.status === CampaignStatusEnum.VISIBLE
       )
-      .map(campaignProduct => ({
-        id: campaignProduct.product.id,
-        saleId: campaignProduct.id,
-        name: campaignProduct.product.name,
-        thumbnail: campaignProduct.product.thumbnailUrls?.[0] ?? null,
-        originalPrice: campaignProduct.product.originalPrice,
-        price: campaignProduct.product.price,
-      }));
+      .map(campaignProduct => campaignProduct.toShopProduct());
 
     return {
       id: campaign.id,
