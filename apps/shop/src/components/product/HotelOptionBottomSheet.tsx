@@ -10,14 +10,20 @@ import {
   Select,
   type SelectOption,
 } from '@yestravelkr/min-design-system';
-import type { HotelOptionSelectorConfig } from '@yestravelkr/option-selector';
+import {
+  HotelOptionSelector,
+  type HotelOptionSelectorConfig,
+  type HotelOptionSelectorState,
+} from '@yestravelkr/option-selector';
 import dayjs from 'dayjs';
+import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import 'dayjs/locale/ko';
 import { Calendar as CalendarIcon, ChevronDown } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import SnappyModal, { useCurrentModal } from 'react-snappy-modal';
 import tw from 'tailwind-styled-components';
 
+dayjs.extend(isSameOrAfter);
 dayjs.locale('ko');
 
 export interface HotelOptionResult {
@@ -63,29 +69,31 @@ function HotelOptionBottomSheet({
   // minDate는 config의 첫 날짜와 오늘 중 더 늦은 날짜
   const minDate = configMinDate > today ? configMinDate : today;
 
-  // 숙박 일수 계산
-  const stayNights = dayjs(checkOutDate).diff(dayjs(checkInDate), 'day');
+  // HotelOptionSelector 인스턴스 생성
+  const hotelSelector = useMemo(() => {
+    // 체크인이 체크아웃보다 이후인 경우 방어 로직
+    const validCheckIn = checkInDate;
+    let validCheckOut = checkOutDate;
 
-  // 선택된 옵션의 총 가격 계산
-  const calculateTotalPrice = (): number => {
-    if (!selectedOptionId) return 0;
-    const option = config.hotelOptions.find(opt => opt.id === selectedOptionId);
-    if (!option) return 0;
-
-    let total = 0;
-    let currentDate = dayjs(checkInDate);
-    const endDate = dayjs(checkOutDate);
-
-    while (currentDate.isBefore(endDate)) {
-      const dateStr = currentDate.format('YYYY-MM-DD');
-      total += option.priceByDate[dateStr] || 0;
-      currentDate = currentDate.add(1, 'day');
+    if (dayjs(validCheckIn).isSameOrAfter(dayjs(validCheckOut))) {
+      validCheckOut = dayjs(validCheckIn).add(1, 'day').format('YYYY-MM-DD');
     }
 
-    return total;
-  };
+    const state: HotelOptionSelectorState = {
+      checkInDate: validCheckIn,
+      checkOutDate: validCheckOut,
+      selectedHotelOptionId: selectedOptionId,
+    };
+    return HotelOptionSelector.fromJSON(config, state);
+  }, [config, checkInDate, checkOutDate, selectedOptionId]);
 
-  const totalPrice = calculateTotalPrice();
+  // 재고 확인
+  const isAvailable = hotelSelector.validateAvailability();
+  // 숙박 일수
+  const stayNights = hotelSelector.getStayNights();
+  // 총 가격
+  const totalPrice = selectedOptionId ? hotelSelector.getTotalPrice() : 0;
+
   const selectedOption = config.hotelOptions.find(
     opt => opt.id === selectedOptionId
   );
@@ -95,8 +103,18 @@ function HotelOptionBottomSheet({
     checkIn: string | null,
     checkOut: string | null
   ) => {
-    if (checkIn) setCheckInDate(checkIn);
-    if (checkOut) setCheckOutDate(checkOut);
+    if (checkIn) {
+      setCheckInDate(checkIn);
+      // 체크인이 체크아웃보다 이후이면 체크아웃을 체크인 + 1일로 자동 조정
+      if (checkOut && dayjs(checkIn).isSameOrAfter(dayjs(checkOut))) {
+        const newCheckOut = dayjs(checkIn).add(1, 'day').format('YYYY-MM-DD');
+        setCheckOutDate(newCheckOut);
+      } else if (checkOut) {
+        setCheckOutDate(checkOut);
+      }
+    } else if (checkOut) {
+      setCheckOutDate(checkOut);
+    }
   };
 
   // 날짜 선택 완료 후 다음 단계로
@@ -167,18 +185,18 @@ function HotelOptionBottomSheet({
             checkOutDate={checkOutDate}
             stayNights={stayNights}
             selectOptions={config.hotelOptions.map(option => {
-              let total = 0;
-              let currentDate = dayjs(checkInDate);
-              const endDate = dayjs(checkOutDate);
-              while (currentDate.isBefore(endDate)) {
-                const dateStr = currentDate.format('YYYY-MM-DD');
-                total += option.priceByDate[dateStr] || 0;
-                currentDate = currentDate.add(1, 'day');
-              }
+              // 각 옵션별 HotelOptionSelector 생성하여 가격 계산
+              const tempSelector = HotelOptionSelector.fromJSON(config, {
+                checkInDate,
+                checkOutDate,
+                selectedHotelOptionId: option.id,
+              });
+              const optionPrice = tempSelector.getTotalPrice();
+
               return {
                 value: option.id,
                 label: option.name,
-                price: total,
+                price: optionPrice,
                 stockText: '예약 가능',
               };
             })}
