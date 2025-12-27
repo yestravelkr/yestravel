@@ -21,6 +21,14 @@ export const hotelOptionInputSchema = z.object({
     .default({}),
 });
 
+// HotelSku Input 스키마
+export const hotelSkuInputSchema = z.object({
+  checkInDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, '날짜는 YYYY-MM-DD 형식이어야 합니다'),
+  quantity: z.number().int().min(0, '재고는 0 이상이어야 합니다'),
+});
+
 // DeliveryPolicy 스키마
 const deliveryPolicySchema = z.object({
   deliveryFeeType: z.enum(['FREE', 'PAID', 'CONDITIONAL_FREE']),
@@ -69,6 +77,7 @@ const hotelProductInputSchema = baseProductInputSchema.extend({
   bedTypes: z.array(z.string()).default([]),
   tags: z.array(z.string()).default([]),
   hotelOptions: z.array(hotelOptionInputSchema).default([]),
+  hotelSkus: z.array(hotelSkuInputSchema).default([]),
 });
 
 // Delivery Product Input Schema
