@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { RepositoryProvider } from '@src/module/shared/transaction/repository.provider';
 import { ProductTypeEnum } from '@src/module/backoffice/admin/admin.schema';
+import { ShopInfluencerService } from '@src/module/shop/influencer/shop.influencer.service';
 import type {
   ProductDetailResponse,
   GetProductDetailInput,
@@ -8,12 +9,17 @@ import type {
   SellerInfo,
   GetCampaignOtherProductsInput,
   CampaignOtherProductsResponse,
+  GetInfluencerOtherCampaignsInput,
+  InfluencerOtherCampaignsResponse,
 } from './shop.product.dto';
 import type { BrandEntity } from '@src/module/backoffice/domain/brand.entity';
 
 @Injectable()
 export class ShopProductService {
-  constructor(private readonly repositoryProvider: RepositoryProvider) {}
+  constructor(
+    private readonly repositoryProvider: RepositoryProvider,
+    private readonly shopInfluencerService: ShopInfluencerService
+  ) {}
 
   /**
    * 상품 상세 조회
@@ -251,5 +257,33 @@ export class ShopProductService {
       },
       products,
     };
+  }
+
+  /**
+   * 인플루언서 다른 캠페인 조회
+   *
+   * 현재 상품의 인플루언서가 진행하는 다른 캠페인들을 조회합니다.
+   * ShopInfluencerService의 getCampaignsByInfluencerId를 재사용합니다.
+   */
+  async getInfluencerOtherCampaigns(
+    input: GetInfluencerOtherCampaignsInput
+  ): Promise<InfluencerOtherCampaignsResponse> {
+    const { saleId } = input;
+
+    // 1. 현재 상품에서 인플루언서, 캠페인 정보 조회
+    const currentProduct =
+      await this.repositoryProvider.CampaignInfluencerProductRepository.findBySaleIdOrFail(
+        saleId,
+        ['campaignInfluencer', 'campaignInfluencer.campaign']
+      );
+
+    const influencerId = currentProduct.campaignInfluencer.influencerId;
+    const currentCampaignId = currentProduct.campaignInfluencer.campaign.id;
+
+    // 2. ShopInfluencerService를 통해 다른 캠페인들 조회 (현재 캠페인 제외)
+    return this.shopInfluencerService.getCampaignsByInfluencerId(
+      influencerId,
+      currentCampaignId
+    );
   }
 }

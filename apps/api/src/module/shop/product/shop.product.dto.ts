@@ -2,6 +2,7 @@ import type { z } from 'zod';
 import type {
   shopProductDetailSchema,
   campaignOtherProductsSchema,
+  influencerOtherCampaignsSchema,
 } from './shop.product.schema';
 
 /**
@@ -90,4 +91,18 @@ export interface GetCampaignOtherProductsInput {
  */
 export type CampaignOtherProductsResponse = z.infer<
   typeof campaignOtherProductsSchema
+>;
+
+/**
+ * 인플루언서 다른 캠페인 조회 입력
+ */
+export interface GetInfluencerOtherCampaignsInput {
+  saleId: number;
+}
+
+/**
+ * 인플루언서 다른 캠페인 응답 (Zod 스키마에서 추론)
+ */
+export type InfluencerOtherCampaignsResponse = z.infer<
+  typeof influencerOtherCampaignsSchema
 >;

@@ -4,12 +4,15 @@ import { ShopProductService } from './shop.product.service';
 import {
   shopProductDetailSchema,
   campaignOtherProductsSchema,
+  influencerOtherCampaignsSchema,
 } from './shop.product.schema';
 import type {
   GetProductDetailInput,
   ProductDetailResponse,
   GetCampaignOtherProductsInput,
   CampaignOtherProductsResponse,
+  GetInfluencerOtherCampaignsInput,
+  InfluencerOtherCampaignsResponse,
 } from './shop.product.dto';
 
 @Controller()
@@ -31,5 +34,14 @@ export class ShopProductController {
     const result =
       await this.shopProductService.getCampaignOtherProducts(input);
     return campaignOtherProductsSchema.parse(result);
+  }
+
+  @MessagePattern('shopProduct.getInfluencerOtherCampaigns')
+  async getInfluencerOtherCampaigns(
+    input: GetInfluencerOtherCampaignsInput
+  ): Promise<InfluencerOtherCampaignsResponse> {
+    const result =
+      await this.shopProductService.getInfluencerOtherCampaigns(input);
+    return influencerOtherCampaignsSchema.parse(result);
   }
 }
