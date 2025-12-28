@@ -330,7 +330,7 @@ function OptionSelectStep({
       {/* 날짜 표시 (클릭하면 Step 1로 돌아감) */}
       <DateInputField
         onClick={onBackToDateSelect}
-        style={{ cursor: 'pointer' }}
+        className="cursor-pointer"
       >
         <DateInputIcon>
           <CalendarIcon size={16} />
