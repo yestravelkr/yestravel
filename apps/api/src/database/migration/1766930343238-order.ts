@@ -96,9 +96,27 @@ export class Order1766930343238 implements MigrationInterface {
             "check_out_date" DATE NOT NULL
         ) INHERITS ("order")
     `);
+
+    // 4. tmp_order 테이블 생성 (order 테이블 상속)
+    await queryRunner.query(`
+        CREATE TABLE "tmp_order"
+        (
+        ) INHERITS ("order")
+    `);
+
+    // tmp_order 인덱스
+    await queryRunner.query(`
+        CREATE INDEX "IDX_tmp_order_product_id" ON "tmp_order" ("product_id")
+    `);
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
+    // tmp_order 인덱스 삭제
+    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_tmp_order_product_id"`);
+
+    // tmp_order 테이블 삭제
+    await queryRunner.query(`DROP TABLE IF EXISTS "tmp_order"`);
+
     // hotel_order 인덱스 삭제
     await queryRunner.query(`DROP INDEX IF EXISTS "IDX_hotel_order_check_in_date"`);
 

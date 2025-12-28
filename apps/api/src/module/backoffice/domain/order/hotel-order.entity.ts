@@ -28,6 +28,8 @@ export class HotelOrderEntity extends OrderEntity {
  */
 export interface HotelOrderOptionData {
   type: 'HOTEL';
+  checkInDate: string;
+  checkOutDate: string;
   /** 선택한 호텔 옵션 ID */
   hotelOptionId: number;
   /** 호텔 옵션명 (스냅샷) */
