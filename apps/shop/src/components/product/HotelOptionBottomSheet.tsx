@@ -92,6 +92,31 @@ function HotelOptionBottomSheet({
   // 총 가격
   const totalPrice = selectedOptionId ? hotelSelector.getTotalPrice() : 0;
 
+  // 옵션별 가격 캐싱 (렌더링마다 HotelOptionSelector 생성 방지)
+  const optionPrices = useMemo(() => {
+    // 체크아웃이 체크인보다 이후가 아니면 빈 배열 반환 (유효하지 않은 날짜)
+    if (dayjs(checkInDate).isSameOrAfter(dayjs(checkOutDate))) {
+      return config.hotelOptions.map(option => ({
+        id: option.id,
+        name: option.name,
+        price: 0,
+      }));
+    }
+
+    return config.hotelOptions.map(option => {
+      const selector = HotelOptionSelector.fromJSON(config, {
+        checkInDate,
+        checkOutDate,
+        selectedHotelOptionId: option.id,
+      });
+      return {
+        id: option.id,
+        name: option.name,
+        price: selector.getTotalPrice(),
+      };
+    });
+  }, [config, checkInDate, checkOutDate]);
+
   const selectedOption = config.hotelOptions.find(
     opt => opt.id === selectedOptionId
   );
@@ -187,22 +212,12 @@ function HotelOptionBottomSheet({
             checkInDate={checkInDate}
             checkOutDate={checkOutDate}
             stayNights={stayNights}
-            selectOptions={config.hotelOptions.map(option => {
-              // 각 옵션별 HotelOptionSelector 생성하여 가격 계산
-              const tempSelector = HotelOptionSelector.fromJSON(config, {
-                checkInDate,
-                checkOutDate,
-                selectedHotelOptionId: option.id,
-              });
-              const optionPrice = tempSelector.getTotalPrice();
-
-              return {
-                value: option.id,
-                label: option.name,
-                price: optionPrice,
-                stockText: '예약 가능',
-              };
-            })}
+            selectOptions={optionPrices.map(option => ({
+              value: option.id,
+              label: option.name,
+              price: option.price,
+              stockText: '예약 가능',
+            }))}
             isDropdownOpen={isOptionDropdownOpen}
             onOpenChange={setIsOptionDropdownOpen}
             onSelectOption={handleOptionSelect}
