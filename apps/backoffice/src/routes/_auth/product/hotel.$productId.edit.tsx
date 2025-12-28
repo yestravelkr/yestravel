@@ -106,7 +106,7 @@ function EditProductPage() {
         useStock: product.useStock,
         thumbnailUrls: product.thumbnailUrls,
         hotelOptions: product.hotelOptions || [],
-        hotelSkus: [], // TODO: API에서 hotelSkus 데이터 받아오기
+        hotelSkus: product.hotelSkus || [],
       });
       setThumbnails(product.thumbnailUrls);
     }
