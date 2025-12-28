@@ -170,7 +170,7 @@ export class ShopProductService {
       priceByDate: option.priceByDate,
     }));
 
-    // HotelSku 조회 (productTemplateId 기반)
+    // HotelSku 조회 (product 기반)
     const hotelSkuEntities =
       await this.repositoryProvider.HotelSkuRepository.find({
         where: { productId },
