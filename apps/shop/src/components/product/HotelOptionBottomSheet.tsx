@@ -87,8 +87,6 @@ function HotelOptionBottomSheet({
     return HotelOptionSelector.fromJSON(config, state);
   }, [config, checkInDate, checkOutDate, selectedOptionId]);
 
-  // 재고 확인
-  const isAvailable = hotelSelector.validateAvailability();
   // 숙박 일수
   const stayNights = hotelSelector.getStayNights();
   // 총 가격
