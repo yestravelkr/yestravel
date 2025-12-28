@@ -50,6 +50,7 @@ export class ProductController {
   @Transactional
   async update(input: UpdateProductInputDto): Promise<UpdateProductResponse> {
     const validatedInput = updateProductInputSchema.parse(input);
+    console.log(input, validatedInput);
     const result = await this.productService.update(validatedInput as any);
     return updateProductResponseSchema.parse(result);
   }

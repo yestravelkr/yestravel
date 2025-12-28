@@ -44,6 +44,10 @@ interface ProductFormData {
       { supplyPrice: number; commission: number }
     >;
   }>;
+  hotelSkus: Array<{
+    checkInDate: string;
+    quantity: number;
+  }>;
 }
 
 interface ProductFormProps {

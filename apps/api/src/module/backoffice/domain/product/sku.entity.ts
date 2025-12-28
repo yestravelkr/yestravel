@@ -8,15 +8,14 @@ import {
 } from 'typeorm';
 import { ProductSku as IProductSku } from '@yestravelkr/option-selector';
 import { BaseEntity } from '@src/module/backoffice/domain/base.entity';
-import { ProductTemplateEntity } from '@src/module/backoffice/domain/product-template/product-template.entity';
 import { TransactionService } from '@src/module/shared/transaction/transaction.service';
 import { getEntityManager } from '@src/database/datasources';
+import { ProductEntity } from '@src/module/backoffice/domain/product/product.entity';
 
 @Entity('sku')
-@Index('IDX_sku_template_code', ['productTemplateId', 'skuCode'], {
+@Index('IDX_sku_code', ['productId', 'skuCode'], {
   unique: true,
 })
-@Index('IDX_sku_template', ['productTemplateId'])
 export class SkuEntity extends BaseEntity implements IProductSku {
   @Column({ name: 'sku_code' })
   skuCode: string;
@@ -34,12 +33,12 @@ export class SkuEntity extends BaseEntity implements IProductSku {
   attributes: Record<string, string>;
 
   // 품목 템플릿 ID
-  @Column({ name: 'product_template_id', type: 'integer' })
-  productTemplateId: number;
+  @Column({ name: 'product_id', type: 'integer' })
+  productId: number;
 
-  @ManyToOne(() => ProductTemplateEntity)
-  @JoinColumn({ name: 'product_template_id' })
-  productTemplate: ProductTemplateEntity;
+  @ManyToOne(() => ProductEntity)
+  @JoinColumn({ name: 'product_id' })
+  product: ProductEntity;
 }
 
 export const getSkuRepository = (source?: TransactionService | EntityManager) =>

@@ -170,21 +170,18 @@ export class ShopProductService {
       priceByDate: option.priceByDate,
     }));
 
-    // HotelSku 조회 (productTemplateId 기반)
-    let skus: HotelProductDetails['skus'] = [];
-    if (productTemplateId) {
-      const hotelSkuEntities =
-        await this.repositoryProvider.HotelSkuRepository.find({
-          where: { productTemplateId },
-          order: { date: 'ASC' },
-        });
+    // HotelSku 조회 (product 기반)
+    const hotelSkuEntities =
+      await this.repositoryProvider.HotelSkuRepository.find({
+        where: { productId },
+        order: { date: 'ASC' },
+      });
 
-      skus = hotelSkuEntities.map(sku => ({
-        id: sku.id,
-        quantity: sku.quantity,
-        date: sku.date,
-      }));
-    }
+    const skus: HotelProductDetails['skus'] = hotelSkuEntities.map(sku => ({
+      id: sku.id,
+      quantity: sku.quantity,
+      date: sku.date,
+    }));
 
     return {
       baseCapacity: hotelProduct?.baseCapacity ?? null,

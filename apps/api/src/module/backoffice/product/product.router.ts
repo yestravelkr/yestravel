@@ -133,6 +133,12 @@ export class ProductRouter extends BaseTrpcRouter {
             ),
           })
         ),
+        hotelSkus: z.array(
+          z.object({
+            checkInDate: z.string(),
+            quantity: z.number(),
+          })
+        ),
         createdAt: z.date(),
         updatedAt: z.date(),
       }),
@@ -248,6 +254,19 @@ export class ProductRouter extends BaseTrpcRouter {
             })
           )
           .default([]),
+        hotelSkus: z
+          .array(
+            z.object({
+              checkInDate: z
+                .string()
+                .regex(
+                  /^\d{4}-\d{2}-\d{2}$/,
+                  '날짜는 YYYY-MM-DD 형식이어야 합니다'
+                ),
+              quantity: z.number().int().min(0, '재고는 0 이상이어야 합니다'),
+            })
+          )
+          .default([]),
       }),
       // Delivery Product
       z.object({
@@ -356,6 +375,19 @@ export class ProductRouter extends BaseTrpcRouter {
                   })
                 )
                 .default({}),
+            })
+          )
+          .default([]),
+        hotelSkus: z
+          .array(
+            z.object({
+              checkInDate: z
+                .string()
+                .regex(
+                  /^\d{4}-\d{2}-\d{2}$/,
+                  '날짜는 YYYY-MM-DD 형식이어야 합니다'
+                ),
+              quantity: z.number().int().min(0, '재고는 0 이상이어야 합니다'),
             })
           )
           .default([]),

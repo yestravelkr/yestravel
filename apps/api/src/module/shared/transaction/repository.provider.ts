@@ -23,10 +23,20 @@ import { getCampaignProductRepository } from '@src/module/backoffice/domain/camp
 import { getCampaignInfluencerRepository } from '@src/module/backoffice/domain/campaign-influencer.entity';
 import { getCampaignInfluencerProductRepository } from '@src/module/backoffice/domain/campaign-influencer-product.entity';
 import { getCampaignInfluencerHotelOptionRepository } from '@src/module/backoffice/domain/campaign-influencer-hotel-option.entity';
+import { DataSource, EntityManager } from 'typeorm';
+import { getEntityManager } from '@src/database/datasources';
 
 @Injectable()
 export class RepositoryProvider {
   constructor(private transaction: TransactionService) {}
+
+  get entityManager(): EntityManager {
+    const entityManager = this.transaction.getTransaction();
+    if (!entityManager) {
+      return (getEntityManager() as DataSource).manager;
+    }
+    return entityManager;
+  }
 
   get AdminRepository() {
     return getAdminRepository(this.transaction);

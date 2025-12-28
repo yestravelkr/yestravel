@@ -8,11 +8,10 @@ import { HotelSku } from '@yestravelkr/option-selector';
  * Hotel SKU Entity
  *
  * SkuEntity를 상속받아 호텔 전용 SKU 생성
- * 일반 SKU와 달리 attributes 대신 특정 날짜(체크인 날짜)의 재고만 관리
- * HotelSku 인터페이스와 구조를 일치시켜 변환 없이 사용 가능합니다.
+ * Product 단위로 재고 관리
  */
 @Entity('hotel_sku')
-@Index('IDX_hotel_sku_template_date', ['productTemplateId', 'date'], {
+@Index('IDX_hotel_sku_product_date', ['productId', 'date'], {
   unique: true,
 })
 @Index('IDX_hotel_sku_date', ['date'])

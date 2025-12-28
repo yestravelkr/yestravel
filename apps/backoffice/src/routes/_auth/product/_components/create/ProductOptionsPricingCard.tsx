@@ -39,9 +39,15 @@ interface ExtendedHotelOption extends Omit<HotelOption, 'id'> {
   >;
 }
 
+interface HotelSkuData {
+  checkInDate: string;
+  quantity: number;
+}
+
 export function ProductOptionsPricingCard() {
   const { setValue, watch } = useFormContext();
   const hotelOptions = (watch('hotelOptions') as ExtendedHotelOption[]) || [];
+  const hotelSkus = (watch('hotelSkus') as HotelSkuData[]) || [];
 
   const handleOptionSetup = () => {
     // hotelOptions에서 현재 dateRange 계산
@@ -85,7 +91,14 @@ export function ProductOptionsPricingCard() {
           },
         );
 
+        // HotelSku[] 구조로 변환 (날짜별 재고)
+        const newHotelSkus: HotelSkuData[] = dates.map((date) => ({
+          checkInDate: date,
+          quantity: 0, // 기본값 0
+        }));
+
         setValue('hotelOptions', newHotelOptions);
+        setValue('hotelSkus', newHotelSkus);
       }
     });
   };
@@ -98,14 +111,29 @@ export function ProductOptionsPricingCard() {
   const updatePrice = (
     optionIndex: number,
     date: string,
-    field: 'supplyPrice' | 'sellingPrice' | 'commission',
+    field: 'supplyPrice' | 'sellingPrice' | 'commission' | 'stock',
     value: number,
   ) => {
-    const newOptions = [...hotelOptions];
-    const option = newOptions[optionIndex];
+    if (field === 'stock') {
+      // 재고는 hotelSkus에 저장
+      const newSkus = [...hotelSkus];
+      const skuIndex = newSkus.findIndex((sku) => sku.checkInDate === date);
 
-    if (field === 'sellingPrice') {
+      if (skuIndex >= 0) {
+        newSkus[skuIndex] = {
+          ...newSkus[skuIndex],
+          quantity: value,
+        };
+      } else {
+        // 새 SKU 추가
+        newSkus.push({ checkInDate: date, quantity: value });
+      }
+
+      setValue('hotelSkus', newSkus);
+    } else if (field === 'sellingPrice') {
       // 판매가는 priceByDate에 저장
+      const newOptions = [...hotelOptions];
+      const option = newOptions[optionIndex];
       newOptions[optionIndex] = {
         ...option,
         priceByDate: {
@@ -113,8 +141,11 @@ export function ProductOptionsPricingCard() {
           [date]: value,
         },
       };
+      setValue('hotelOptions', newOptions);
     } else {
       // 공급가와 수수료는 anotherPriceByDate에 저장
+      const newOptions = [...hotelOptions];
+      const option = newOptions[optionIndex];
       const anotherPriceByDate = option.anotherPriceByDate || {};
       const currentData = anotherPriceByDate[date] || {
         supplyPrice: 0,
@@ -131,9 +162,9 @@ export function ProductOptionsPricingCard() {
           },
         },
       };
-    }
 
-    setValue('hotelOptions', newOptions);
+      setValue('hotelOptions', newOptions);
+    }
   };
 
   return (
@@ -170,6 +201,7 @@ export function ProductOptionsPricingCard() {
         <div className="overflow-x-auto">
           <PricingTable
             hotelOptions={hotelOptions}
+            hotelSkus={hotelSkus}
             onUpdatePrice={updatePrice}
           />
         </div>
@@ -198,15 +230,29 @@ function generateDateRange(start: string, end: string): string[] {
 
 interface PricingTableProps {
   hotelOptions: ExtendedHotelOption[];
+  hotelSkus: HotelSkuData[];
   onUpdatePrice: (
     optionIndex: number,
     date: string,
-    field: 'supplyPrice' | 'sellingPrice' | 'commission',
+    field: 'supplyPrice' | 'sellingPrice' | 'commission' | 'stock',
     value: number,
   ) => void;
 }
 
-function PricingTable({ hotelOptions, onUpdatePrice }: PricingTableProps) {
+function PricingTable({
+  hotelOptions,
+  hotelSkus,
+  onUpdatePrice,
+}: PricingTableProps) {
+  // SKU를 Map으로 변환하여 빠른 조회
+  const skuMap = useMemo(() => {
+    const map = new Map<string, number>();
+    hotelSkus.forEach((sku) => {
+      map.set(sku.checkInDate, sku.quantity);
+    });
+    return map;
+  }, [hotelSkus]);
+
   // 테이블 행 데이터 생성
   const tableRows = useMemo(() => {
     const rows: TableRowData[] = [];
@@ -228,7 +274,7 @@ function PricingTable({ hotelOptions, onUpdatePrice }: PricingTableProps) {
           date,
           optionIndex,
           optionName: option.name,
-          stock: 0, // TODO: SKU와 연동 필요
+          stock: skuMap.get(date) || 0,
           supplyPrice: anotherPrice.supplyPrice,
           sellingPrice: option.priceByDate[date] || 0,
           commission: anotherPrice.commission,
@@ -237,7 +283,7 @@ function PricingTable({ hotelOptions, onUpdatePrice }: PricingTableProps) {
     });
 
     return rows;
-  }, [hotelOptions]);
+  }, [hotelOptions, skuMap]);
 
   return (
     <div className="w-full overflow-x-auto">
@@ -257,16 +303,15 @@ function PricingTable({ hotelOptions, onUpdatePrice }: PricingTableProps) {
             <TR key={`${row.date}-${row.optionIndex}`}>
               <TD>{row.date}</TD>
               <TD>{row.optionName}</TD>
-              <TD>{row.stock}</TD>
               <TD.Input
                 type="number"
                 placeholder="0"
-                value={row.sellingPrice || ''}
+                value={row.stock || ''}
                 onChange={(e) =>
                   onUpdatePrice(
                     row.optionIndex,
                     row.date,
-                    'sellingPrice',
+                    'stock',
                     Number(e.target.value),
                   )
                 }
@@ -281,6 +326,20 @@ function PricingTable({ hotelOptions, onUpdatePrice }: PricingTableProps) {
                     row.optionIndex,
                     row.date,
                     'supplyPrice',
+                    Number(e.target.value),
+                  )
+                }
+                min={0}
+              />
+              <TD.Input
+                type="number"
+                placeholder="0"
+                value={row.sellingPrice || ''}
+                onChange={(e) =>
+                  onUpdatePrice(
+                    row.optionIndex,
+                    row.date,
+                    'sellingPrice',
                     Number(e.target.value),
                   )
                 }
