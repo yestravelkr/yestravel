@@ -1,4 +1,4 @@
-import type { PaymentRequest } from '@portone/browser-sdk/dist/v2/request/PaymentRequest';
+import type { PaymentRequest } from '@portone/browser-sdk/v2';
 import * as PortOne from '@portone/browser-sdk/v2';
 import { createFileRoute } from '@tanstack/react-router';
 import axios from 'axios';
