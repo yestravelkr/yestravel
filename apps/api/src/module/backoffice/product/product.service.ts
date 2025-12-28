@@ -75,7 +75,7 @@ export class ProductService {
     // NOTE: categories는 n:m 관계이므로 DB join 대신 코드 레벨에서 합침
     switch (baseProduct.type) {
       case 'HOTEL': {
-        const [hotel, categories, hotelOptions] = await Promise.all([
+        const [hotel, categories, hotelOptions, hotelSkus] = await Promise.all([
           this.repositoryProvider.HotelProductRepository.findOneOrFail({
             where: { id },
             relations: ['brand', 'productTemplate'],
@@ -89,6 +89,10 @@ export class ProductService {
             where: { productId: id },
             order: { id: 'ASC' },
           }),
+          this.repositoryProvider.HotelSkuRepository.find({
+            where: { productId: id },
+            order: { date: 'ASC'}
+          })
         ]);
 
         // categories를 entity에 할당 후 spread로 포함
@@ -104,6 +108,10 @@ export class ProductService {
             priceByDate: opt.priceByDate,
             anotherPriceByDate: opt.anotherPriceByDate,
           })),
+          hotelSkus: hotelSkus.map(sku => ({
+            checkInDate: sku.date,
+            quantity: sku.quantity,
+          }))
         };
       }
 

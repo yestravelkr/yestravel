@@ -133,6 +133,12 @@ export class ProductRouter extends BaseTrpcRouter {
             ),
           })
         ),
+        hotelSkus: z.array(
+          z.object({
+            checkInDate: z.string(),
+            quantity: z.number(),
+          })
+        ),
         createdAt: z.date(),
         updatedAt: z.date(),
       }),

@@ -171,6 +171,12 @@ const hotelProductSchema = z.object({
   bedTypes: z.array(z.string()),
   tags: z.array(z.string()),
   hotelOptions: z.array(hotelOptionResponseSchema),
+  hotelSkus: z.array(
+    z.object({
+      checkInDate: z.string(),
+      quantity: z.number(),
+    })
+  ),
   createdAt: z.date(),
   updatedAt: z.date(),
 });
