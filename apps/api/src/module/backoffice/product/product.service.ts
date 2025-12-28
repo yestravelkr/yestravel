@@ -191,29 +191,23 @@ export class ProductService {
       case 'HOTEL': {
         const hotelInput = input;
         const hotelProduct = HotelProductEntity.createFromInput(hotelInput);
-        savedProduct =
+        const savedHotelProduct =
           await this.repositoryProvider.HotelProductRepository.save(
             hotelProduct
           );
+        savedProduct = savedHotelProduct;
 
         // 호텔 옵션 저장
         if (hotelInput.hotelOptions && hotelInput.hotelOptions.length > 0) {
           await this.repositoryProvider.HotelOptionRepository.saveOptions(
-            savedProduct.id,
+            savedHotelProduct.id,
             hotelInput.hotelOptions
           );
         }
 
-        // 호텔 SKU 저장 (productTemplateId 기준)
-        if (
-          hotelInput.hotelSkus &&
-          hotelInput.hotelSkus.length > 0 &&
-          savedProduct.productTemplateId
-        ) {
-          await this.saveHotelSkus(
-            savedProduct.productTemplateId,
-            hotelInput.hotelSkus
-          );
+        // 호텔 SKU 저장 (Product ID 기준)
+        if (hotelInput.hotelSkus && hotelInput.hotelSkus.length > 0) {
+          await this.saveHotelSkus(savedHotelProduct.id, hotelInput.hotelSkus);
         }
         break;
       }
@@ -316,10 +310,11 @@ export class ProductService {
         // 헬퍼 메서드로 필드 업데이트
         hotelProduct.updateFromInput(input);
 
-        updatedProduct =
+        const updatedHotelProduct =
           await this.repositoryProvider.HotelProductRepository.save(
             hotelProduct
           );
+        updatedProduct = updatedHotelProduct;
 
         // 호텔 옵션 업데이트 (PUT 방식: 기존 삭제 후 새로 저장)
         await this.repositoryProvider.HotelOptionRepository.updateOptions(
@@ -327,16 +322,10 @@ export class ProductService {
           input.hotelOptions || []
         );
 
-        // 호텔 SKU 업데이트 (productTemplateId 기준)
-        if (
-          input.hotelSkus &&
-          input.hotelSkus.length > 0 &&
-          updatedProduct.productTemplateId
-        ) {
-          await this.saveHotelSkus(
-            updatedProduct.productTemplateId,
-            input.hotelSkus
-          );
+        console.log('updatedHotelProduct', input.hotelSkus);
+        // 호텔 SKU 업데이트 (Product ID 기준)
+        if (input.hotelSkus && input.hotelSkus.length > 0) {
+          await this.saveHotelSkus(updatedHotelProduct.id, input.hotelSkus);
         }
         break;
       }
@@ -458,7 +447,7 @@ export class ProductService {
 
   /**
    * HotelSku 저장/업데이트 헬퍼 메서드
-   * productTemplateId 기준으로 SKU를 관리 (동일 템플릿의 Product들은 SKU를 공유)
+   * Product 기준으로 SKU를 관리 (각 Product가 독립적인 재고를 가짐)
    *
    * checkInDate 기준으로:
    * - 기존에 있고 새 데이터에도 있음 → UPDATE
@@ -468,12 +457,12 @@ export class ProductService {
    * quantity = 0도 유효한 값으로 저장됨 (재고 없음을 의미)
    */
   private async saveHotelSkus(
-    productTemplateId: number,
+    productId: number,
     hotelSkus: Array<{ checkInDate: string; quantity: number }>
   ): Promise<void> {
     // 1. 기존 SKU 조회 (비관적 락 적용 - 동시성 제어)
     const existingSkus = await this.repositoryProvider.HotelSkuRepository.find({
-      where: { productTemplateId },
+      where: { productId },
       lock: { mode: 'pessimistic_write' },
     });
 
@@ -503,9 +492,12 @@ export class ProductService {
       .filter(([checkInDate]) => !existingSkuMap.has(checkInDate))
       .map(([checkInDate, quantity]) => {
         const skuEntity = new HotelSkuEntity();
-        skuEntity.productTemplateId = productTemplateId;
+        skuEntity.productId = productId;
+        skuEntity.skuCode = checkInDate; // SKU 코드를 체크인 날짜와 동일하게 설정
+        skuEntity.name = checkInDate; // SKU 이름도 체크인 날짜와 동일하게 설정
         skuEntity.date = checkInDate;
         skuEntity.quantity = quantity;
+        skuEntity.attributes = {}; // 빈 객체로 초기화
         return skuEntity;
       });
 
