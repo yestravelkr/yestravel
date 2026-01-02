@@ -34,6 +34,31 @@ type PortOneConfigType = {
   apiSecret: string;
 };
 
+type AlrimtalkConfigType = {
+  smtnt: {
+    apiUrl: string;
+    userId: string;
+    senderNumber: string;
+  };
+  kakao?: {
+    senderKey?: string;
+  };
+  shopUrl: string;
+};
+
+type SocialProviderConfigType = {
+  clientId: string;
+  clientSecret: string;
+  tokenUrl: string;
+  userInfoUrl: string;
+};
+
+type SocialConfigType = {
+  kakao: SocialProviderConfigType;
+  naver: SocialProviderConfigType;
+  google: SocialProviderConfigType;
+};
+
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export const ConfigProvider = {
   stage: config.get<string>('stage'),
@@ -59,4 +84,10 @@ export const ConfigProvider = {
   portone: config.has('portone')
     ? config.get<PortOneConfigType>('portone')
     : { apiSecret: '' },
+  alrimtalk: config.has('alrimtalk')
+    ? config.get<AlrimtalkConfigType>('alrimtalk')
+    : undefined,
+  social: config.has('social')
+    ? config.get<SocialConfigType>('social')
+    : undefined,
 } as const;

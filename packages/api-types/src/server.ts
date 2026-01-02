@@ -264,6 +264,71 @@ const appRouter = t.router({
       })),
     })).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
   }),
+  shopAuth: t.router({
+    requestVerification: publicProcedure.input(z.object({
+      phoneNumber: z
+        .string()
+        .regex(/^01[0-9]{8,9}$/, '올바른 전화번호 형식이 아닙니다'),
+    })).output(z.object({
+      success: z.boolean(),
+      message: z.string(),
+      expiresAt: z.date(),
+    })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    verifyCode: publicProcedure.input(z.object({
+      phoneNumber: z.string(),
+      code: z.string().length(6, '인증번호는 6자리입니다'),
+    })).output(z.object({
+      accessToken: z.string(),
+      isNewMember: z.boolean(),
+    })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    socialLogin: publicProcedure.input(z.object({
+      provider: z.enum(['KAKAO', 'NAVER', 'GOOGLE'] as const),
+      code: z.string(),
+      redirectUri: z.string(),
+    })).output(z.object({
+      accessToken: z.string(),
+      isNewMember: z.boolean(),
+    })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    refresh: publicProcedure.output(z.object({
+      accessToken: z.string(),
+    })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    me: publicProcedure.output(z.object({
+      id: z.number(),
+      phoneNumber: z.string(),
+      name: z.string().nullish(),
+      email: z.string().email().nullish(),
+      address: z.object({
+        zipCode: z.string(),
+        address1: z.string(),
+        address2: z.string().nullish(),
+      }).nullish(),
+      isGuest: z.boolean(),
+      createdAt: z.date(),
+    })).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    updateMe: publicProcedure.input(z.object({
+      name: z.string().min(1, '이름은 필수입니다').nullish(),
+      email: z.string().email('올바른 이메일 형식이 아닙니다').nullish(),
+      address: z.object({
+        zipCode: z.string(),
+        address1: z.string(),
+        address2: z.string().nullish(),
+      }).nullish(),
+    })).output(z.object({
+      success: z.boolean(),
+      message: z.string(),
+    })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    linkSocialAccount: publicProcedure.input(z.object({
+      provider: z.enum(['KAKAO', 'NAVER', 'GOOGLE'] as const),
+      code: z.string(),
+      redirectUri: z.string(),
+    })).output(z.object({
+      success: z.boolean(),
+      message: z.string(),
+    })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    logout: publicProcedure.output(z.object({
+      success: z.boolean(),
+    })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
+  }),
   sample: t.router({
     getHello: publicProcedure.input(z.object({
       name: z.string().optional(),
