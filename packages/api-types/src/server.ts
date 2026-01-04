@@ -221,6 +221,16 @@ const appRouter = t.router({
       message: z.string(),
     })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
   }),
+  shopOrder: t.router({
+    createHotelOrder: publicProcedure.input(z.object({
+      saleId: z.number(),
+      checkInDate: z.string(),
+      checkOutDate: z.string(),
+      optionId: z.number(),
+    })).output(z.object({
+      orderId: z.number(),
+    })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
+  }),
   shopInfluencer: t.router({
     findBySlug: publicProcedure.input(z.object({
       slug: z.string(),
