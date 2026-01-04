@@ -21,7 +21,10 @@ import 'dayjs/locale/ko';
 import { Calendar as CalendarIcon, ChevronDown } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import SnappyModal, { useCurrentModal } from 'react-snappy-modal';
+import { toast } from 'sonner';
 import tw from 'tailwind-styled-components';
+
+import { trpc } from '@/shared/trpc';
 
 dayjs.extend(isSameOrAfter);
 dayjs.locale('ko');
@@ -31,9 +34,11 @@ export interface HotelOptionResult {
   checkOutDate: string;
   selectedOptionId: number;
   totalPrice: number;
+  orderId: number;
 }
 
 interface HotelOptionBottomSheetProps {
+  saleId: number;
   config: HotelOptionSelectorConfig;
   initialCheckInDate: string;
   initialCheckOutDate: string;
@@ -43,12 +48,14 @@ interface HotelOptionBottomSheetProps {
 type Step = 'date' | 'option' | 'confirm';
 
 function HotelOptionBottomSheet({
+  saleId,
   config,
   initialCheckInDate,
   initialCheckOutDate,
   initialOptionId,
 }: HotelOptionBottomSheetProps) {
   const { resolveModal } = useCurrentModal();
+  const createOrderMutation = trpc.shopOrder.createHotelOrder.useMutation();
 
   const [step, setStep] = useState<Step>('date');
   const [checkInDate, setCheckInDate] = useState(initialCheckInDate);
@@ -167,14 +174,28 @@ function HotelOptionBottomSheet({
   };
 
   // 구매하기
-  const handlePurchase = () => {
-    if (selectedOptionId) {
+  const handlePurchase = async () => {
+    if (!selectedOptionId) return;
+
+    try {
+      const result = await createOrderMutation.mutateAsync({
+        saleId,
+        checkInDate,
+        checkOutDate,
+        optionId: selectedOptionId,
+      });
+
+      toast.success('주문이 생성되었습니다.');
       resolveModal({
         checkInDate,
         checkOutDate,
         selectedOptionId,
         totalPrice,
+        orderId: result.orderId,
       });
+    } catch (error) {
+      toast.error('주문 생성에 실패했습니다.');
+      console.error('주문 생성 실패:', error);
     }
   };
 
@@ -328,10 +349,7 @@ function OptionSelectStep({
   return (
     <StepContent>
       {/* 날짜 표시 (클릭하면 Step 1로 돌아감) */}
-      <DateInputField
-        onClick={onBackToDateSelect}
-        className="cursor-pointer"
-      >
+      <DateInputField onClick={onBackToDateSelect} className="cursor-pointer">
         <DateInputIcon>
           <CalendarIcon size={16} />
         </DateInputIcon>

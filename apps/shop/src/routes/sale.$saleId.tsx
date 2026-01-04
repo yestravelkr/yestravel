@@ -39,6 +39,7 @@ function SaleDetailContent({ saleId }: { saleId: number }) {
     switch (data.type) {
       case 'HOTEL': {
         const props: HotelProductComponentProps = {
+          saleId,
           name: data.name,
           thumbnailUrl: data.thumbnailUrl,
           originalPrice: data.originalPrice,
