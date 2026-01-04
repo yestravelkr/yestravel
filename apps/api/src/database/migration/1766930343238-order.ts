@@ -97,38 +97,49 @@ export class Order1766930343238 implements MigrationInterface {
         ) INHERITS ("order")
     `);
 
-    // 4. tmp_order 테이블 생성 (order 테이블 상속)
+    // 3. product_type_enum 타입 생성 (이미 존재하면 건너뜀)
     await queryRunner.query(`
-        CREATE TABLE "tmp_order"
-        (
-        ) INHERITS ("order")
+      DO $$ BEGIN
+        CREATE TYPE "product_type_enum" AS ENUM ('HOTEL', 'E-TICKET', 'DELIVERY');
+      EXCEPTION
+        WHEN duplicate_object THEN null;
+      END $$;
     `);
 
-    // tmp_order 인덱스
+    // 4. 새로운 tmp_order 테이블 생성 (독립 테이블)
     await queryRunner.query(`
-        CREATE INDEX "IDX_tmp_order_product_id" ON "tmp_order" ("product_id")
+      CREATE TABLE "tmp_order"
+      (
+        "id"         SERIAL PRIMARY KEY,
+        "created_at" TIMESTAMP NOT NULL DEFAULT now(),
+        "updated_at" TIMESTAMP NOT NULL DEFAULT now(),
+        "type"       "product_type_enum" NOT NULL,
+        "raw"        JSONB NOT NULL
+      )
+    `);
+
+    // 5. 인덱스 생성
+    await queryRunner.query(`
+      CREATE INDEX "IDX_tmp_order_type" ON "tmp_order" ("type")
     `);
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    // tmp_order 인덱스 삭제
-    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_tmp_order_product_id"`);
+    // 1. tmp_order 인덱스 삭제
+    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_tmp_order_type"`);
 
-    // tmp_order 테이블 삭제
+    // 2. tmp_order 테이블 삭제
     await queryRunner.query(`DROP TABLE IF EXISTS "tmp_order"`);
 
-    // hotel_order 인덱스 삭제
-    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_hotel_order_check_in_date"`);
-
-    // hotel_order 테이블 삭제
+    // 3. hotel_order 테이블 삭제
     await queryRunner.query(`DROP TABLE IF EXISTS "hotel_order"`);
 
-    // payment FK 삭제
+    // 4. payment FK 삭제
     await queryRunner.query(`
         ALTER TABLE "payment" DROP CONSTRAINT IF EXISTS "FK_payment_order_id"
     `);
 
-    // order FK 삭제
+    // 5. order FK 삭제
     await queryRunner.query(`
         ALTER TABLE "order" DROP CONSTRAINT IF EXISTS "FK_order_campaign_id"
     `);
@@ -139,20 +150,20 @@ export class Order1766930343238 implements MigrationInterface {
         ALTER TABLE "order" DROP CONSTRAINT IF EXISTS "FK_order_product_id"
     `);
 
-    // order 인덱스 삭제
+    // 6. order 인덱스 삭제
     await queryRunner.query(`DROP INDEX IF EXISTS "IDX_order_campaign_id"`);
     await queryRunner.query(`DROP INDEX IF EXISTS "IDX_order_influencer_id"`);
     await queryRunner.query(`DROP INDEX IF EXISTS "IDX_order_product_id"`);
     await queryRunner.query(`DROP INDEX IF EXISTS "IDX_order_status"`);
 
-    // order 테이블 삭제
+    // 7. order 테이블 삭제
     await queryRunner.query(`DROP TABLE IF EXISTS "order"`);
 
-    // payment 인덱스 삭제
+    // 8. payment 인덱스 삭제
     await queryRunner.query(`DROP INDEX IF EXISTS "IDX_payment_paid_at"`);
     await queryRunner.query(`DROP INDEX IF EXISTS "IDX_payment_imp_uid"`);
 
-    // payment 테이블 삭제
+    // 9. payment 테이블 삭제
     await queryRunner.query(`DROP TABLE IF EXISTS "payment"`);
   }
 }

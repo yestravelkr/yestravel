@@ -17,6 +17,7 @@ import type { Nullish } from '@src/types/utility.type';
 import Sqids from 'sqids';
 import {PaymentEntity} from "@src/module/backoffice/domain/order/payment.entity";
 import {HotelOrderOptionData} from "@src/module/backoffice/domain/order/hotel-order.entity";
+import type { TmpOrderRawData } from "./tmp-order.entity";
 
 /**
  * 주문 상태 Enum
@@ -58,6 +59,36 @@ export const orderNumberParser = new Sqids({ minLength: 8 });
 @Index('IDX_order_influencer_id', ['influencerId'])
 @Index('IDX_order_campaign_id', ['campaignId'])
 export class OrderEntity extends BaseEntity {
+  /**
+   * TmpOrderRawData에서 OrderEntity 인스턴스 생성
+   */
+  static from(raw: TmpOrderRawData): OrderEntity {
+    const order = new OrderEntity();
+
+    order.customerName = raw.customerName;
+    order.customerPhone = raw.customerPhone;
+    order.productId = raw.productId;
+    order.totalAmount = raw.totalAmount;
+    order.influencerId = raw.influencerId;
+    order.campaignId = raw.campaignId;
+    order.orderOptionSnapshot = raw.orderOptionSnapshot;
+    order.status = OrderStatusEnum.PENDING;
+
+    // 배송지 정보 설정
+    order.shippingAddress = new AddressEntity();
+    if (raw.shippingAddress) {
+      order.shippingAddress.address = raw.shippingAddress.address;
+      order.shippingAddress.detail = raw.shippingAddress.detail;
+      order.shippingAddress.postalCode = raw.shippingAddress.postalCode;
+    } else {
+      order.shippingAddress.address = null;
+      order.shippingAddress.detail = null;
+      order.shippingAddress.postalCode = null;
+    }
+
+    return order;
+  }
+
   get orderNumber(): string {
     const [number] = orderNumberParser.encode([this.id])
     return number;
