@@ -25,6 +25,8 @@ dayjs.locale('ko');
  * 호텔 상품 컴포넌트 Props
  */
 export interface HotelProductComponentProps {
+  /** 판매 ID */
+  saleId: number;
   /** 상품명 */
   name: string;
   /** 썸네일 URL */
@@ -57,6 +59,7 @@ function getBadgeText(endAt: Date | string): string {
 
 export function HotelProductComponent(props: HotelProductComponentProps) {
   const {
+    saleId,
     name,
     thumbnailUrl,
     originalPrice,
@@ -87,6 +90,7 @@ export function HotelProductComponent(props: HotelProductComponentProps) {
   // 바텀시트 열기 (구매하기 버튼 클릭 시)
   const handleOpenOptionSheet = () => {
     openHotelOptionBottomSheet({
+      saleId,
       config: options,
       initialCheckInDate: checkInDate,
       initialCheckOutDate: checkOutDate,
@@ -96,8 +100,7 @@ export function HotelProductComponent(props: HotelProductComponentProps) {
         setCheckInDate(result.checkInDate);
         setCheckOutDate(result.checkOutDate);
         setSelectedOptionId(result.selectedOptionId);
-        // TODO: 실제 구매 처리
-        console.log('구매 완료:', result);
+        console.log('주문 생성 완료:', result.orderId);
       }
     });
   };
@@ -178,6 +181,7 @@ export function HotelProductComponent(props: HotelProductComponentProps) {
  * Usage:
  *
  * <HotelProductComponent
+ *   saleId={123}
  *   name="호텔 상품명"
  *   thumbnailUrl="https://example.com/image.jpg"
  *   originalPrice={150000}
