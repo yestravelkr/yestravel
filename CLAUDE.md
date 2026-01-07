@@ -54,6 +54,7 @@ module/
 | **for 루프 내 await 금지** | `Promise.all()` + `map()` 패턴 사용 |
 | **한 글자 변수명 금지** | `i`, `p`, `x` 대신 `item`, `product` 등 사용 |
 | **함수형 메서드 사용** | `for` 대신 `map`, `filter`, `reduce` 사용 |
+| **Early Return 패턴** | 중첩 조건문 대신 조기 반환으로 가독성 향상 |
 
 ### 백엔드 패턴
 
@@ -68,6 +69,7 @@ module/
 | **트랜잭션** | mutation 메서드에 `@Transactional`, Controller에 `TransactionService` 주입 필수 |
 | **Entity 위치** | 모든 Entity는 `apps/api/src/module/backoffice/domain/`에 생성 |
 | **tRPC 데코레이터** | 반드시 `'nestjs-trpc'` 패키지에서 import |
+| **날짜/시간 처리** | `new Date()` 금지, `dayjs` 라이브러리 사용 필수 |
 
 ### 프론트엔드 패턴
 
@@ -99,7 +101,21 @@ export const roleEnumSchema = z.enum(ROLE_ENUM_VALUE);
 
 ## 공통 유틸리티
 
-**시간 관련 (`@src/utils/time.util.ts`):**
+**날짜/시간 처리 (dayjs):**
+```typescript
+import dayjs from 'dayjs';
+
+// 현재 시간
+dayjs().toDate();
+
+// 시간 더하기
+dayjs().add(3, 'minute').toDate();
+
+// 비교
+dayjs(expiresAt).isBefore(dayjs());
+```
+
+**시간 포맷 (`@src/utils/time.util.ts`):**
 ```typescript
 import { normalizeTime, TIME_FORMAT_REGEX, TIME_FORMAT_ERROR_MESSAGE_KO } from '@src/utils/time.util';
 ```
