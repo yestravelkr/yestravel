@@ -1,0 +1,254 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "YesTravel Shop Auth API",
+    "version": "1.0.0",
+    "description": "SMS 인증 기반 Shop 회원 인증 API"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Local Development"
+    }
+  ],
+  "paths": {
+    "/trpc/shopAuth.requestVerification": {
+      "post": {
+        "summary": "인증번호 요청",
+        "description": "휴대폰 번호로 인증번호를 발송합니다. 개발환경에서는 서버 콘솔에 인증번호가 출력됩니다.",
+        "tags": ["Shop Auth"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "json": {
+                    "type": "object",
+                    "properties": {
+                      "phone": {
+                        "type": "string",
+                        "pattern": "^01[0-9]{8,9}$",
+                        "example": "01012345678",
+                        "description": "휴대폰 번호 (하이픈 없이)"
+                      }
+                    },
+                    "required": ["phone"]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "인증번호 발송 성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "json": {
+                              "type": "null"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "잘못된 휴대폰 번호 형식"
+          }
+        }
+      }
+    },
+    "/trpc/shopAuth.verifyCode": {
+      "post": {
+        "summary": "인증번호 확인 및 로그인",
+        "description": "인증번호를 검증하고 JWT 토큰을 발급합니다. 회원이 없으면 자동 가입됩니다.",
+        "tags": ["Shop Auth"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "json": {
+                    "type": "object",
+                    "properties": {
+                      "phone": {
+                        "type": "string",
+                        "example": "01012345678",
+                        "description": "휴대폰 번호"
+                      },
+                      "code": {
+                        "type": "string",
+                        "minLength": 6,
+                        "maxLength": 6,
+                        "example": "123456",
+                        "description": "6자리 인증번호"
+                      }
+                    },
+                    "required": ["phone", "code"]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "인증 성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "json": {
+                              "type": "object",
+                              "properties": {
+                                "accessToken": {
+                                  "type": "string",
+                                  "description": "JWT Access Token"
+                                },
+                                "refreshToken": {
+                                  "type": "string",
+                                  "description": "JWT Refresh Token"
+                                },
+                                "member": {
+                                  "type": "object",
+                                  "properties": {
+                                    "id": {
+                                      "type": "integer",
+                                      "description": "회원 ID"
+                                    },
+                                    "phone": {
+                                      "type": "string",
+                                      "description": "휴대폰 번호"
+                                    },
+                                    "name": {
+                                      "type": "string",
+                                      "nullable": true,
+                                      "description": "회원 이름"
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "인증번호가 올바르지 않거나 만료됨"
+          }
+        }
+      }
+    },
+    "/trpc/shopAuth.refreshToken": {
+      "post": {
+        "summary": "토큰 갱신",
+        "description": "Refresh Token으로 새로운 Access Token을 발급받습니다.",
+        "tags": ["Shop Auth"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "json": {
+                    "type": "object",
+                    "properties": {
+                      "refreshToken": {
+                        "type": "string",
+                        "description": "Refresh Token"
+                      }
+                    },
+                    "required": ["refreshToken"]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "토큰 갱신 성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "json": {
+                              "type": "object",
+                              "properties": {
+                                "accessToken": {
+                                  "type": "string"
+                                },
+                                "refreshToken": {
+                                  "type": "string"
+                                },
+                                "member": {
+                                  "type": "object",
+                                  "properties": {
+                                    "id": {
+                                      "type": "integer"
+                                    },
+                                    "phone": {
+                                      "type": "string"
+                                    },
+                                    "name": {
+                                      "type": "string",
+                                      "nullable": true
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "유효하지 않은 Refresh Token"
+          }
+        }
+      }
+    }
+  }
+}
