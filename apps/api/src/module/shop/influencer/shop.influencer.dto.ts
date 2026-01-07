@@ -24,6 +24,8 @@ export interface ShopCampaignProductResponse {
   saleId: number;
   name: string;
   thumbnail: string | null;
+  price: number;
+  saleStartAt: Date | null;
 }
 
 export interface ShopCampaignListItemResponse {

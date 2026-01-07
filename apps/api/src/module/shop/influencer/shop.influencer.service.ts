@@ -38,7 +38,7 @@ export class ShopInfluencerService {
   }
 
   /**
-   * 인플루언서가 진행 중인 캠페인 목록 조회
+   * 인플루언서가 진행 중이거나 오픈 예정인 캠페인 목록 조회
    */
   async getCampaigns(slug: string): Promise<ShopCampaignListResponse> {
     // slug로 인플루언서 조회
@@ -57,7 +57,7 @@ export class ShopInfluencerService {
     const influencerId = influencer.id;
     const now = new Date();
 
-    // CampaignInfluencer를 통해 인플루언서의 캠페인 조회
+    // CampaignInfluencer를 통해 인플루언서의 캠페인 조회 (진행 중 + 오픈 예정)
     const campaignInfluencers =
       await this.repositoryProvider.CampaignInfluencerRepository.createQueryBuilder(
         'ci'
@@ -67,7 +67,6 @@ export class ShopInfluencerService {
         .leftJoinAndSelect('products.product', 'product')
         .where('ci.influencerId = :influencerId', { influencerId })
         .andWhere('ci.status = :status', { status: CampaignStatusEnum.VISIBLE })
-        .andWhere('campaign.startAt <= :now', { now })
         .andWhere('campaign.endAt >= :now', { now })
         .orderBy('campaign.startAt', 'DESC')
         .getMany();
@@ -76,7 +75,7 @@ export class ShopInfluencerService {
       campaignInfluencer => {
         const campaign = campaignInfluencer.campaign;
 
-        // VISIBLE 상태인 상품만 필터링
+        // VISIBLE 상태인 상품만 필터링 (가격 + 판매시작일 포함)
         const visibleProducts = (campaignInfluencer.products ?? [])
           .filter(product => product.status === CampaignStatusEnum.VISIBLE)
           .map(campaignProduct => ({
@@ -84,6 +83,8 @@ export class ShopInfluencerService {
             saleId: campaignProduct.id,
             name: campaignProduct.product.name,
             thumbnail: campaignProduct.product.thumbnailUrls?.[0] ?? null,
+            price: campaignProduct.product.price,
+            saleStartAt: campaign.startAt,
           }));
 
         return {
