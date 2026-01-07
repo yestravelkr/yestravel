@@ -16,6 +16,8 @@
 
 import tw from 'tailwind-styled-components';
 
+import { Button } from '@/components/common';
+
 export interface LoginStepProps {
   phoneNumber: string;
   onPhoneNumberChange: (value: string) => void;
@@ -44,25 +46,32 @@ export function LoginStep({
 
   return (
     <StepContent>
+      {/* 상단 라운드 여백 */}
+      <TopSpacer />
+
+      {/* 로그인 타이틀 */}
+      <Title>로그인</Title>
+
       {/* 비회원 로그인 섹션 */}
       <Section>
-        <SectionTitle>비회원으로 시작하기</SectionTitle>
+        <SectionLabel>비회원으로 시작하기</SectionLabel>
         <PhoneInput
           type="tel"
           inputMode="numeric"
-          placeholder="01012345678"
+          placeholder="연락처를 입력해 주세요."
           value={phoneNumber}
           onChange={handlePhoneChange}
           maxLength={11}
         />
         {error && <ErrorMessage>{error}</ErrorMessage>}
-        <PrimaryButton
-          onClick={onRequestOTP}
-          disabled={!isValidPhoneNumber || isLoading}
-        >
-          {isLoading ? '발송 중...' : '연락처 인증'}
-        </PrimaryButton>
       </Section>
+
+      <Button
+        onClick={onRequestOTP}
+        disabled={!isValidPhoneNumber || isLoading}
+      >
+        {isLoading ? '발송 중...' : '연락처 인증'}
+      </Button>
 
       {/* 구분선 */}
       <Divider>
@@ -73,15 +82,15 @@ export function LoginStep({
 
       {/* SNS 로그인 섹션 */}
       <Section>
-        <SectionTitle>SNS 로그인</SectionTitle>
-        <SocialButton $provider="kakao" onClick={() => onSocialLogin('kakao')}>
+        <SectionLabel>SNS 로그인</SectionLabel>
+        <Button variant="kakao" onClick={() => onSocialLogin('kakao')}>
           <KakaoIcon />
           카카오로 시작하기
-        </SocialButton>
-        <SocialButton $provider="naver" onClick={() => onSocialLogin('naver')}>
+        </Button>
+        <Button variant="naver" onClick={() => onSocialLogin('naver')}>
           <NaverIcon />
           네이버로 시작하기
-        </SocialButton>
+        </Button>
       </Section>
     </StepContent>
   );
@@ -113,29 +122,41 @@ function NaverIcon() {
 
 // Styled Components
 const StepContent = tw.div`
-  p-5
+  px-5
+  pb-5
   bg-white
   flex
   flex-col
-  gap-4
+  gap-5
+`;
+
+const TopSpacer = tw.div`
+  h-3
+`;
+
+const Title = tw.h2`
+  text-fg-neutral
+  text-[21px]
+  font-bold
+  leading-7
 `;
 
 const Section = tw.div`
   flex
   flex-col
-  gap-3
+  gap-2
 `;
 
-const SectionTitle = tw.h3`
-  text-fg-neutral
-  text-base
-  font-semibold
+const SectionLabel = tw.p`
+  text-fg-muted
+  text-[15px]
+  font-normal
   leading-5
 `;
 
 const PhoneInput = tw.input`
-  h-12
-  px-4
+  h-[44px]
+  px-3
   bg-bg-field
   rounded-xl
   outline
@@ -143,33 +164,16 @@ const PhoneInput = tw.input`
   outline-offset-[-1px]
   outline-[var(--stroke-neutral)]
   text-fg-neutral
-  text-base
+  text-[16.5px]
   font-normal
-  placeholder:text-fg-muted
+  placeholder:text-fg-placeholder
   focus:outline-[var(--stroke-primary)]
-`;
-
-const PrimaryButton = tw.button`
-  w-full
-  h-12
-  px-4
-  bg-bg-neutral-solid
-  rounded-xl
-  text-fg-on-surface
-  text-base
-  font-medium
-  leading-5
-  hover:opacity-90
-  transition-opacity
-  disabled:opacity-50
-  disabled:cursor-not-allowed
 `;
 
 const Divider = tw.div`
   flex
   items-center
-  gap-4
-  py-2
+  gap-3
 `;
 
 const DividerLine = tw.div`
@@ -180,26 +184,8 @@ const DividerLine = tw.div`
 
 const DividerText = tw.span`
   text-fg-muted
-  text-sm
-  font-medium
-`;
-
-const SocialButton = tw.button<{ $provider: 'kakao' | 'naver' }>`
-  w-full
-  h-12
-  px-4
-  rounded-xl
-  flex
-  items-center
-  justify-center
-  gap-2
-  font-medium
-  transition-opacity
-  hover:opacity-90
-  ${({ $provider }) =>
-    $provider === 'kakao'
-      ? 'bg-[#FEE500] text-[#191919]'
-      : 'bg-[#03C75A] text-white'}
+  text-[15px]
+  font-normal
 `;
 
 const ErrorMessage = tw.p`

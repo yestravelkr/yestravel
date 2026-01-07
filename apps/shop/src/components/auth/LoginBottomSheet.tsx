@@ -106,10 +106,6 @@ function LoginBottomSheet() {
         onClick={(e: React.MouseEvent) => e.stopPropagation()}
         style={{ marginBottom: keyboardHeight }}
       >
-        <HandleWrapper>
-          <Handle />
-        </HandleWrapper>
-
         {step === 'login' && (
           <LoginStep
             phoneNumber={phoneNumber}
@@ -171,21 +167,4 @@ const BottomSheetContainer = tw.div`
   overflow-hidden
   transition-all
   duration-200
-`;
-
-const HandleWrapper = tw.div`
-  px-5
-  pt-3
-  pb-2
-  bg-white
-  flex
-  flex-col
-  items-center
-`;
-
-const Handle = tw.div`
-  w-12
-  h-1
-  bg-[var(--stroke-neutral)]
-  rounded-sm
 `;

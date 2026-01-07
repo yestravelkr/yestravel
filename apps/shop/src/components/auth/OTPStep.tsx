@@ -5,21 +5,19 @@
  *
  * Usage:
  * <OTPStep
- *   phoneNumber={phoneNumber}
  *   otpCode={otpCode}
  *   onOtpChange={handleOtpChange}
  *   onVerify={handleVerifyOTP}
- *   onResend={handleResendOTP}
- *   onBack={handleBack}
  *   countdown={countdown}
  *   isLoading={isLoading}
  *   error={error}
  * />
  */
 
-import { ArrowLeft } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 import tw from 'tailwind-styled-components';
+
+import { Button } from '@/components/common';
 
 export interface OTPStepProps {
   phoneNumber: string;
@@ -34,28 +32,22 @@ export interface OTPStepProps {
 }
 
 export function OTPStep({
-  phoneNumber,
   otpCode,
   onOtpChange,
   onVerify,
-  onResend,
-  onBack,
   countdown,
   isLoading,
   error,
 }: OTPStepProps) {
-  const otpInputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const otpValue = otpCode.join('');
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      otpInputRefs.current[0]?.focus();
+      inputRef.current?.focus();
     }, 100);
     return () => clearTimeout(timer);
   }, []);
-
-  const maskedPhone = phoneNumber
-    ? `${phoneNumber.slice(0, 3)}****${phoneNumber.slice(-4)}`
-    : '';
 
   const formatCountdown = (seconds: number) => {
     const min = Math.floor(seconds / 60);
@@ -63,192 +55,109 @@ export function OTPStep({
     return `${min}:${sec.toString().padStart(2, '0')}`;
   };
 
-  const handleOtpInputChange = (index: number, value: string) => {
-    if (!/^\d*$/.test(value)) return;
-
-    const newOtp = [...otpCode];
-    newOtp[index] = value.slice(-1);
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/\D/g, '').slice(0, 6);
+    const newOtp = value.split('').concat(Array(6).fill('')).slice(0, 6);
     onOtpChange(newOtp);
-
-    if (value && index < 5) {
-      otpInputRefs.current[index + 1]?.focus();
-    }
-  };
-
-  const handleOtpKeyDown = (
-    index: number,
-    e: React.KeyboardEvent<HTMLInputElement>
-  ) => {
-    if (e.key === 'Backspace' && !otpCode[index] && index > 0) {
-      otpInputRefs.current[index - 1]?.focus();
-    }
   };
 
   return (
-    <>
-      <OTPHeader>
-        <BackButton onClick={onBack}>
-          <ArrowLeft size={20} />
-        </BackButton>
-        <OTPHeaderTitle>인증번호 입력</OTPHeaderTitle>
-        <BackButtonPlaceholder />
-      </OTPHeader>
+    <StepContent>
+      {/* 상단 라운드 여백 */}
+      <TopSpacer />
 
-      <StepContent>
-        <OTPDescription>
-          {maskedPhone}로 발송된 인증번호를 입력해주세요
-        </OTPDescription>
+      {/* 타이틀 */}
+      <Title>인증번호를 입력해 주세요.</Title>
 
-        <OTPInputContainer>
-          {otpCode.map((digit, index) => (
-            <OTPDigitInput
-              key={index}
-              ref={el => {
-                otpInputRefs.current[index] = el;
-              }}
-              type="tel"
-              inputMode="numeric"
-              maxLength={1}
-              value={digit}
-              onChange={e => handleOtpInputChange(index, e.target.value)}
-              onKeyDown={e => handleOtpKeyDown(index, e)}
-            />
-          ))}
-        </OTPInputContainer>
-
+      {/* 인증번호 입력 섹션 */}
+      <Section>
+        <SectionLabel>인증번호</SectionLabel>
+        <InputWrapper>
+          <OTPInput
+            ref={inputRef}
+            type="tel"
+            inputMode="numeric"
+            placeholder="숫자만 입력해 주세요."
+            value={otpValue}
+            onChange={handleInputChange}
+            maxLength={6}
+          />
+          <TimerText>{formatCountdown(countdown)}</TimerText>
+        </InputWrapper>
         {error && <ErrorMessage>{error}</ErrorMessage>}
+      </Section>
 
-        <TimerContainer>
-          <TimerText>{formatCountdown(countdown)} 남음</TimerText>
-          <ResendButton onClick={onResend} disabled={countdown > 0}>
-            재발송
-          </ResendButton>
-        </TimerContainer>
-      </StepContent>
-
-      <StepFooter>
-        <PrimaryButton
-          onClick={onVerify}
-          disabled={otpCode.join('').length !== 6 || isLoading}
-        >
-          {isLoading ? '확인 중...' : '확인'}
-        </PrimaryButton>
-      </StepFooter>
-    </>
+      <Button onClick={onVerify} disabled={otpValue.length !== 6 || isLoading}>
+        {isLoading ? '확인 중...' : '확인'}
+      </Button>
+    </StepContent>
   );
 }
 
 // Styled Components
-const OTPHeader = tw.div`
-  px-5
-  py-4
-  bg-white
-  flex
-  items-center
-  justify-between
-`;
-
-const BackButton = tw.button`
-  w-10
-  h-10
-  flex
-  items-center
-  justify-center
-  text-fg-neutral
-  hover:bg-bg-neutral-subtle
-  rounded-xl
-  transition-colors
-`;
-
-const BackButtonPlaceholder = tw.div`
-  w-10
-  h-10
-`;
-
-const OTPHeaderTitle = tw.h2`
-  text-fg-neutral
-  text-lg
-  font-bold
-`;
-
 const StepContent = tw.div`
-  p-5
+  px-5
+  pb-5
   bg-white
   flex
   flex-col
-  gap-4
+  gap-5
 `;
 
-const StepFooter = tw.div`
-  p-5
-  bg-white
-  border-t
-  border-[var(--stroke-neutral)]
+const TopSpacer = tw.div`
+  h-3
 `;
 
-const OTPDescription = tw.p`
-  text-fg-muted
-  text-sm
-  text-center
-`;
-
-const OTPInputContainer = tw.div`
-  flex
-  gap-2
-  justify-center
-  py-4
-`;
-
-const OTPDigitInput = tw.input`
-  w-12
-  h-14
-  text-center
-  text-2xl
+const Title = tw.h2`
+  text-fg-neutral
+  text-[21px]
   font-bold
+  leading-7
+`;
+
+const Section = tw.div`
+  flex
+  flex-col
+  gap-2
+`;
+
+const SectionLabel = tw.p`
+  text-fg-muted
+  text-[15px]
+  font-normal
+  leading-5
+`;
+
+const InputWrapper = tw.div`
+  h-[44px]
+  px-3
   bg-bg-field
   rounded-xl
   outline
   outline-1
   outline-offset-[-1px]
   outline-[var(--stroke-neutral)]
-  text-fg-neutral
-  focus:outline-[var(--stroke-primary)]
-`;
-
-const TimerContainer = tw.div`
   flex
   items-center
-  justify-center
-  gap-3
+  gap-2
+  focus-within:outline-[var(--stroke-primary)]
+`;
+
+const OTPInput = tw.input`
+  flex-1
+  bg-transparent
+  text-fg-neutral
+  text-[16.5px]
+  font-normal
+  placeholder:text-fg-placeholder
+  outline-none
 `;
 
 const TimerText = tw.span`
   text-fg-muted
-  text-sm
-`;
-
-const ResendButton = tw.button`
-  text-fg-primary
-  text-sm
-  font-medium
-  disabled:text-fg-muted
-  disabled:cursor-not-allowed
-`;
-
-const PrimaryButton = tw.button`
-  w-full
-  h-12
-  px-4
-  bg-bg-neutral-solid
-  rounded-xl
-  text-fg-on-surface
-  text-base
-  font-medium
-  leading-5
-  hover:opacity-90
-  transition-opacity
-  disabled:opacity-50
-  disabled:cursor-not-allowed
+  text-[16.5px]
+  font-normal
+  shrink-0
 `;
 
 const ErrorMessage = tw.p`
