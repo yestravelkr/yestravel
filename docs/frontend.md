@@ -1,6 +1,82 @@
 # 프론트엔드 개발 가이드
 
-이 가이드는 React 19와 최신 도구로 구축된 YesTravel 백오피스 애플리케이션의 프론트엔드 개발을 다룹니다.
+이 가이드는 React 19와 최신 도구로 구축된 YesTravel 프론트엔드 애플리케이션(backoffice, shop)의 개발을 다룹니다.
+
+## 핵심 원칙: 컴포넌트 구조 및 제한
+
+가장 중요한 원칙은 **단일 책임 원칙(SRP)**과 **파일 길이 최소화**입니다.
+
+### 파일 라인 수 제한
+
+| 구분 | 제한 |
+|------|------|
+| **로직 코드** | 150줄 이하 (import ~ return 끝) |
+| **스타일 코드** | 제한 없음 (단, 10개 이상이면 분리 검토) |
+| **전체 파일** | 300줄 이상이면 분리 필수 |
+
+> **참고**: tailwind-styled-components 사용 시 스타일 정의가 파일 하단에 추가되므로, 로직 코드와 스타일 코드를 분리해서 평가합니다.
+
+### 컴포넌트 분리 기준
+
+- **조건부 렌더링이 복잡해지면** → 해당 블록을 별도 컴포넌트로 추출
+- **반복되는 `.map()` 렌더링** → 반드시 별도 컴포넌트로 분리
+- **3개 이상의 useState** → Custom Hook으로 분리 검토
+- **useEffect 내 복잡한 로직** → Custom Hook으로 분리
+
+### 로직과 UI 분리
+
+```
+컴포넌트 파일 (ui)     → 오직 렌더링 관련 코드만
+Custom Hook (hooks/)  → useEffect, 상태 관리, 데이터 페칭
+유틸 함수 (utils/)     → 순수 함수, 포맷팅, 데이터 변환
+```
+
+**예시:**
+```typescript
+// ❌ 잘못된 방법 - 컴포넌트에 로직이 섞임
+function ProductList() {
+  const [products, setProducts] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    setIsLoading(true);
+    fetch('/api/products')
+      .then(res => res.json())
+      .then(data => {
+        setProducts(data);
+        setIsLoading(false);
+      });
+  }, []);
+
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('ko-KR').format(price) + '원';
+  };
+
+  return <div>...</div>;
+}
+
+// ✅ 올바른 방법 - 로직 분리
+// hooks/useProducts.ts
+export function useProducts() {
+  const [products, setProducts] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => { /* 데이터 페칭 */ }, []);
+
+  return { products, isLoading };
+}
+
+// utils/format.ts
+export function formatPrice(price: number) {
+  return new Intl.NumberFormat('ko-KR').format(price) + '원';
+}
+
+// components/ProductList.tsx
+function ProductList() {
+  const { products, isLoading } = useProducts();
+  return <div>...</div>;
+}
+```
 
 ## 기술 스택
 
@@ -1315,11 +1391,55 @@ components/
 
 ## Claude Code 사용자를 위한 안내
 
-- **스타일링**: tailwind-styled-components를 사용하여 스타일 컴포넌트 생성
-- **아이콘**: lucide-react 사용 (폰트 이모지나 직접 SVG 작성 금지)
-- **레이아웃**: 포스타입/인스타그램 스타일의 미니멀한 디자인 적용
-- **타입 안전성**: 모든 컴포넌트에 TypeScript 사용
-- **파일 구조**: 기능별로 그룹화된 컴포넌트 구조 유지
-- **라우팅**: TanStack Router의 파일 기반 라우팅 활용
-- **Modal**: react-snappy-modal + useCurrentModal().resolveModal() 패턴 필수
-- **색상 변수**: `stroke` 관련 변수는 `var()` 함수로 사용
+### 코드 작성 전 체크리스트
+
+1. **파일 길이 확인**: 150줄 이상이면 분리 계획 먼저 제안
+2. **로직 분리 여부**: useState 3개 이상, useEffect 복잡한 경우 → hooks/ 분리
+3. **순수 함수 분리**: 포맷팅, 계산 로직 → utils/ 분리
+
+### 필수 규칙 요약
+
+| 항목 | 규칙 |
+|------|------|
+| **로직 코드** | 150줄 이하 (import ~ return 끝) |
+| **스타일 코드** | 제한 없음 (10개 이상이면 분리 검토) |
+| **전체 파일** | 300줄 이상이면 분리 필수 |
+| **스타일링** | tailwind-styled-components 필수, className 금지 |
+| **아이콘** | lucide-react 사용 (폰트 이모지, 직접 SVG 금지) |
+| **로직 분리** | useEffect/복잡한 상태 → hooks/, 순수 함수 → utils/ |
+| **Modal** | react-snappy-modal + useCurrentModal().resolveModal() |
+| **색상 변수** | `stroke` 관련 → `var()` 함수 필수 |
+
+### 파일 분리 제안 시점
+
+다음 상황에서는 코드 작성 전 **분리 계획을 먼저 제안**하세요:
+
+```
+컴포넌트가 길어질 것 같은 경우:
+├── UI가 복잡한가? → 하위 컴포넌트 분리 제안
+├── 상태 관리가 많은가? → Custom Hook 분리 제안
+├── 비즈니스 로직이 있는가? → utils/ 분리 제안
+└── 타입이 길어지는가? → types.ts 분리 제안
+```
+
+### 폴더 구조 가이드
+
+```
+components/{feature}/
+├── {Feature}.tsx           # 메인 컴포넌트 (UI만)
+├── {Sub}Component.tsx      # 하위 컴포넌트
+├── use{Feature}.ts         # Custom Hook (상태/로직)
+├── {feature}.utils.ts      # 순수 함수
+└── {feature}.types.ts      # 타입 정의 (필요시)
+```
+
+### 예시: LoginBottomSheet 분리
+
+```
+components/auth/
+├── LoginBottomSheet.tsx    # 컨테이너 (상태 관리)
+├── LoginStep.tsx           # Step 1 UI
+├── OTPStep.tsx             # Step 2 UI
+├── useLogin.ts             # 로그인 로직 훅 (향후)
+└── auth.utils.ts           # 포맷팅 함수 (향후)
+```
