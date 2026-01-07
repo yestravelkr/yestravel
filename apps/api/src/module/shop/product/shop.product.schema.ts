@@ -195,3 +195,50 @@ export const shopProductDetailSchema = z.discriminatedUnion('type', [
   deliveryProductDetailSchema,
   eTicketProductDetailSchema,
 ]);
+
+/**
+ * 캠페인 다른 상품 목록 스키마
+ *
+ * 현재 상품이 포함된 캠페인의 다른 상품들을 조회합니다.
+ */
+export const campaignOtherProductsSchema = z.object({
+  campaign: z.object({
+    id: z.number(),
+    name: z.string(),
+    startAt: z.date(),
+    endAt: z.date(),
+  }),
+  products: z.array(
+    z.object({
+      id: z.number(), // CampaignInfluencerProduct.id (saleId)
+      thumbnailUrl: z.string().nullish(),
+      name: z.string(),
+      originalPrice: z.number(),
+      price: z.number(),
+    })
+  ),
+});
+
+/**
+ * 인플루언서 다른 캠페인 목록 스키마
+ *
+ * 현재 상품의 인플루언서가 진행하는 다른 캠페인들을 조회합니다.
+ */
+export const influencerOtherCampaignsSchema = z.object({
+  campaigns: z.array(
+    z.object({
+      id: z.number(),
+      title: z.string(),
+      startAt: z.date(),
+      endAt: z.date(),
+      products: z.array(
+        z.object({
+          id: z.number(), // product.id
+          saleId: z.number(), // CampaignInfluencerProduct.id
+          name: z.string(),
+          thumbnail: z.string().nullish(),
+        })
+      ),
+    })
+  ),
+});

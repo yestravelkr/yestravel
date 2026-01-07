@@ -54,12 +54,24 @@ export class ShopInfluencerService {
       );
     }
 
-    const influencerId = influencer.id;
+    return this.getCampaignsByInfluencerId(influencer.id);
+  }
+
+  /**
+   * 인플루언서 ID로 진행 중인 캠페인 목록 조회
+   *
+   * @param influencerId 인플루언서 ID
+   * @param excludeCampaignId 제외할 캠페인 ID (상품 상세에서 현재 캠페인 제외용)
+   */
+  async getCampaignsByInfluencerId(
+    influencerId: number,
+    excludeCampaignId?: number
+  ): Promise<ShopCampaignListResponse> {
     const now = new Date();
 
     // CampaignInfluencer를 통해 인플루언서의 캠페인 조회
-    const campaignInfluencers =
-      await this.repositoryProvider.CampaignInfluencerRepository.createQueryBuilder(
+    const queryBuilder =
+      this.repositoryProvider.CampaignInfluencerRepository.createQueryBuilder(
         'ci'
       )
         .leftJoinAndSelect('ci.campaign', 'campaign')
@@ -69,8 +81,16 @@ export class ShopInfluencerService {
         .andWhere('ci.status = :status', { status: CampaignStatusEnum.VISIBLE })
         .andWhere('campaign.startAt <= :now', { now })
         .andWhere('campaign.endAt >= :now', { now })
-        .orderBy('campaign.startAt', 'DESC')
-        .getMany();
+        .orderBy('campaign.startAt', 'DESC');
+
+    // 제외할 캠페인이 있으면 필터링
+    if (excludeCampaignId !== undefined) {
+      queryBuilder.andWhere('campaign.id != :excludeCampaignId', {
+        excludeCampaignId,
+      });
+    }
+
+    const campaignInfluencers = await queryBuilder.getMany();
 
     const campaigns: ShopCampaignListItemResponse[] = campaignInfluencers.map(
       campaignInfluencer => {
@@ -79,12 +99,15 @@ export class ShopInfluencerService {
         // VISIBLE 상태인 상품만 필터링
         const visibleProducts = (campaignInfluencer.products ?? [])
           .filter(product => product.status === CampaignStatusEnum.VISIBLE)
-          .map(campaignProduct => ({
-            id: campaignProduct.product.id,
-            saleId: campaignProduct.id,
-            name: campaignProduct.product.name,
-            thumbnail: campaignProduct.product.thumbnailUrls?.[0] ?? null,
-          }));
+          .map(campaignProduct => {
+            const shopProduct = campaignProduct.toShopProduct();
+            return {
+              id: shopProduct.id,
+              saleId: shopProduct.saleId,
+              name: shopProduct.name,
+              thumbnail: shopProduct.thumbnail,
+            };
+          });
 
         return {
           id: campaign.id,
@@ -154,14 +177,7 @@ export class ShopInfluencerService {
       .filter(
         campaignProduct => campaignProduct.status === CampaignStatusEnum.VISIBLE
       )
-      .map(campaignProduct => ({
-        id: campaignProduct.product.id,
-        saleId: campaignProduct.id,
-        name: campaignProduct.product.name,
-        thumbnail: campaignProduct.product.thumbnailUrls?.[0] ?? null,
-        originalPrice: campaignProduct.product.originalPrice,
-        price: campaignProduct.product.price,
-      }));
+      .map(campaignProduct => campaignProduct.toShopProduct());
 
     return {
       id: campaign.id,

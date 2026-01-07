@@ -1,5 +1,9 @@
 import type { z } from 'zod';
-import type { shopProductDetailSchema } from './shop.product.schema';
+import type {
+  shopProductDetailSchema,
+  campaignOtherProductsSchema,
+  influencerOtherCampaignsSchema,
+} from './shop.product.schema';
 
 /**
  * 상품 상세 응답 (Zod 스키마에서 추론)
@@ -74,3 +78,31 @@ export interface BaseSalesInfo {
   // exchangeReturnInfo: ExchangeReturnInfo;
   // productInfoNotice: string | null;
 }
+
+/**
+ * 캠페인 다른 상품 조회 입력
+ */
+export interface GetCampaignOtherProductsInput {
+  saleId: number;
+}
+
+/**
+ * 캠페인 다른 상품 응답 (Zod 스키마에서 추론)
+ */
+export type CampaignOtherProductsResponse = z.infer<
+  typeof campaignOtherProductsSchema
+>;
+
+/**
+ * 인플루언서 다른 캠페인 조회 입력
+ */
+export interface GetInfluencerOtherCampaignsInput {
+  saleId: number;
+}
+
+/**
+ * 인플루언서 다른 캠페인 응답 (Zod 스키마에서 추론)
+ */
+export type InfluencerOtherCampaignsResponse = z.infer<
+  typeof influencerOtherCampaignsSchema
+>;

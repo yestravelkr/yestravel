@@ -208,7 +208,46 @@ const appRouter = t.router({
           }),
         }),
       }),
-    ])).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
+    ])).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    getCampaignOtherProducts: publicProcedure.input(z.object({
+      saleId: z.number(),
+    })).output(z.object({
+      campaign: z.object({
+        id: z.number(),
+        name: z.string(),
+        startAt: z.date(),
+        endAt: z.date(),
+      }),
+      products: z.array(
+        z.object({
+          id: z.number(), // CampaignInfluencerProduct.id (saleId)
+          thumbnailUrl: z.string().nullish(),
+          name: z.string(),
+          originalPrice: z.number(),
+          price: z.number(),
+        })
+      ),
+    })).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    getInfluencerOtherCampaigns: publicProcedure.input(z.object({
+      saleId: z.number(),
+    })).output(z.object({
+      campaigns: z.array(
+        z.object({
+          id: z.number(),
+          title: z.string(),
+          startAt: z.date(),
+          endAt: z.date(),
+          products: z.array(
+            z.object({
+              id: z.number(), // product.id
+              saleId: z.number(), // CampaignInfluencerProduct.id
+              name: z.string(),
+              thumbnail: z.string().nullish(),
+            })
+          ),
+        })
+      ),
+    })).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
   }),
   shopPayment: t.router({
     complete: publicProcedure.input(z.object({

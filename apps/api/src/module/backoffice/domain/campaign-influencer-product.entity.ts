@@ -8,6 +8,7 @@ import {
   Unique,
   OneToMany,
 } from 'typeorm';
+import { NotFoundException } from '@nestjs/common';
 import { BaseEntity } from '@src/module/backoffice/domain/base.entity';
 import { CampaignInfluencerEntity } from '@src/module/backoffice/domain/campaign-influencer.entity';
 import { ProductEntity } from '@src/module/backoffice/domain/product/product.entity';
@@ -32,6 +33,29 @@ export interface CampaignInfluencerProductResponse {
   status: CampaignStatusEnumType;
   useCustomCommission: boolean;
   hotelOptions: CampaignInfluencerHotelOptionResponse[];
+}
+
+/**
+ * 상품 요약 정보 (Shop 상품 상세용)
+ */
+export interface ProductSummary {
+  id: number; // saleId (CampaignInfluencerProduct.id)
+  thumbnailUrl: string | null;
+  name: string;
+  originalPrice: number;
+  price: number;
+}
+
+/**
+ * Shop 상품 정보 (인플루언서 페이지용)
+ */
+export interface ShopProductInfo {
+  id: number; // product.id
+  saleId: number; // CampaignInfluencerProduct.id
+  name: string;
+  thumbnail: string | null;
+  originalPrice: number;
+  price: number;
 }
 
 /**
@@ -90,8 +114,66 @@ export class CampaignInfluencerProductEntity extends BaseEntity {
       ),
     };
   }
+
+  /**
+   * 상품 요약 정보 변환 (Shop 상품 상세용)
+   *
+   * product relation이 로드되어 있어야 합니다.
+   */
+  toProductSummary(): ProductSummary {
+    return {
+      id: this.id,
+      thumbnailUrl: this.product.thumbnailUrls?.[0] ?? null,
+      name: this.product.name,
+      originalPrice: this.product.originalPrice,
+      price: this.product.price,
+    };
+  }
+
+  /**
+   * Shop 상품 정보 변환 (인플루언서 페이지용)
+   *
+   * product relation이 로드되어 있어야 합니다.
+   */
+  toShopProduct(): ShopProductInfo {
+    return {
+      id: this.product.id,
+      saleId: this.id,
+      name: this.product.name,
+      thumbnail: this.product.thumbnailUrls?.[0] ?? null,
+      originalPrice: this.product.originalPrice,
+      price: this.product.price,
+    };
+  }
 }
 
 export const getCampaignInfluencerProductRepository = (
   source?: TransactionService | EntityManager
-) => getEntityManager(source).getRepository(CampaignInfluencerProductEntity);
+) =>
+  getEntityManager(source)
+    .getRepository(CampaignInfluencerProductEntity)
+    .extend({
+      /**
+       * saleId로 판매 상품 조회 (없으면 NotFoundException)
+       *
+       * @param saleId CampaignInfluencerProduct.id
+       * @param relations 조회할 relation 목록
+       */
+      async findBySaleIdOrFail(
+        saleId: number,
+        relations: string[] = []
+      ): Promise<CampaignInfluencerProductEntity> {
+        const product = await this.findOne({
+          where: { id: saleId },
+          relations,
+        });
+
+        if (!product) {
+          throw new NotFoundException(
+            `판매 상품을 찾을 수 없습니다 (ID: ${saleId})`
+          );
+        }
+
+        return product;
+      },
+    });
