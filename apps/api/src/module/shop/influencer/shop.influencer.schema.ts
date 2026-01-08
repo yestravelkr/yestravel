@@ -22,6 +22,8 @@ export const shopCampaignProductSchema = z.object({
   saleId: z.number(),
   name: z.string(),
   thumbnail: z.string().nullable(),
+  price: z.number(),
+  saleStartAt: z.date().nullable(),
 });
 
 export type ShopCampaignProduct = z.infer<typeof shopCampaignProductSchema>;

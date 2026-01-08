@@ -253,6 +253,8 @@ const appRouter = t.router({
           saleId: z.number(),
           name: z.string(),
           thumbnail: z.string().nullable(),
+          price: z.number(),
+          saleStartAt: z.date().nullable(),
         })),
       })),
     })).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
