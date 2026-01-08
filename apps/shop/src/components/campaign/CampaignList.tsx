@@ -8,58 +8,23 @@
  */
 
 import { Link } from '@tanstack/react-router';
-import dayjs from 'dayjs';
-import 'dayjs/locale/ko';
 import { Bell } from 'lucide-react';
 import { toast } from 'sonner';
 import tw from 'tailwind-styled-components';
 
 import { ChevronRightIcon } from '@/components/icons';
 import {
+  type CampaignStatusType,
   formatDateWithDay,
   formatPrice,
   formatShortDate,
+  getCampaignStatus,
+  isProductUpcoming,
   trpc,
 } from '@/shared';
 
-dayjs.locale('ko');
-
 export interface CampaignListProps {
   slug: string;
-}
-
-type CampaignStatusType = 'upcoming' | 'ongoing' | 'ending';
-
-/** 캠페인 상태 계산 */
-function getCampaignStatus(
-  startAt: Date | string,
-  endAt: Date | string
-): { type: CampaignStatusType; label: string } {
-  const now = dayjs();
-  const start = dayjs(startAt);
-  const end = dayjs(endAt);
-
-  if (now.isBefore(start)) {
-    return { type: 'upcoming', label: '오픈 예정' };
-  }
-
-  const daysUntilEnd = end.diff(now, 'day') + 1;
-
-  if (daysUntilEnd <= 3) {
-    return { type: 'ending', label: `${daysUntilEnd}일 후 종료` };
-  }
-
-  return { type: 'ongoing', label: `${daysUntilEnd}일 후 종료` };
-}
-
-/** 상품 오픈 예정 여부 체크 */
-function isProductUpcoming(
-  saleStartAt: Date | string | null | undefined,
-  campaignStartAt: Date | string
-): boolean {
-  const now = dayjs();
-  const startDate = dayjs(saleStartAt ?? campaignStartAt);
-  return now.isBefore(startDate);
 }
 
 // ============================================================================
