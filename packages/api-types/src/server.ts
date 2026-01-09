@@ -290,14 +290,18 @@ const appRouter = t.router({
       code: z.string().length(6, '인증번호 6자리를 입력해주세요'),
     })).output(z.object({
       accessToken: z.string(),
+      refreshToken: z.string(),
       member: z.object({
         id: z.number(),
         phone: z.string(),
         name: z.string().nullable(),
       }),
     })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
-    refreshToken: publicProcedure.output(z.object({
+    refreshToken: publicProcedure.input(z.object({
+      refreshToken: z.string(),
+    })).output(z.object({
       accessToken: z.string(),
+      refreshToken: z.string(),
       member: z.object({
         id: z.number(),
         phone: z.string(),

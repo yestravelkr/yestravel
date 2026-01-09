@@ -18,3 +18,8 @@ export const verifyCodeSchema = z.object({
   phone: z.string(),
   code: z.string().length(6, '인증번호 6자리를 입력해주세요'),
 });
+
+/** 토큰 갱신 스키마 */
+export const refreshTokenSchema = z.object({
+  refreshToken: z.string(),
+});

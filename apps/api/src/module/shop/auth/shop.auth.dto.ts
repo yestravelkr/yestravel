@@ -31,13 +31,7 @@ export interface MemberResponse {
   name: string | null;
 }
 
-/** 토큰 응답 (accessToken만 body로, refreshToken은 httpOnly 쿠키) */
-export interface TokenResponse {
-  accessToken: string;
-  member: MemberResponse;
-}
-
-/** 내부용 토큰 생성 결과 */
+/** 토큰 응답 */
 export interface TokenGenerationResult {
   accessToken: string;
   refreshToken: string;
