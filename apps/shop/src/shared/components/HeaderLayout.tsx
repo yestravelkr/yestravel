@@ -43,7 +43,7 @@ export function HeaderLayout({
 
 const Container = tw.main`
   min-h-screen
-  bg-bg-layer-base
+  bg-white
   max-w-[600px]
   mx-auto
 `;
