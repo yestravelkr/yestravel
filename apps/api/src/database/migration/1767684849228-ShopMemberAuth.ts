@@ -8,15 +8,12 @@ export class ShopMemberAuth1767684849228 implements MigrationInterface {
     await queryRunner.query(`
       CREATE TABLE "member"
       (
-        "id"             SERIAL PRIMARY KEY,
-        "created_at"     TIMESTAMP   NOT NULL DEFAULT now(),
-        "updated_at"     TIMESTAMP   NOT NULL DEFAULT now(),
-        "deleted_at"     TIMESTAMP,
-        "phone"          VARCHAR(20) NOT NULL UNIQUE,
-        "name"           VARCHAR(100),
-        "address"        VARCHAR(500),
-        "address_detail" VARCHAR(200),
-        "postal_code"    VARCHAR(10)
+        "id"         SERIAL PRIMARY KEY,
+        "created_at" TIMESTAMP   NOT NULL DEFAULT now(),
+        "updated_at" TIMESTAMP   NOT NULL DEFAULT now(),
+        "deleted_at" TIMESTAMP,
+        "phone"      VARCHAR(20) NOT NULL UNIQUE,
+        "name"       VARCHAR(100)
       )
     `);
 
@@ -25,7 +22,31 @@ export class ShopMemberAuth1767684849228 implements MigrationInterface {
       CREATE UNIQUE INDEX "IDX_member_phone" ON "member" ("phone")
     `);
 
-    // 2. phone_verification 테이블 생성
+    // 2. member_address 테이블 생성
+    await queryRunner.query(`
+      CREATE TABLE "member_address"
+      (
+        "id"              SERIAL PRIMARY KEY,
+        "created_at"      TIMESTAMP   NOT NULL DEFAULT now(),
+        "updated_at"      TIMESTAMP   NOT NULL DEFAULT now(),
+        "deleted_at"      TIMESTAMP,
+        "member_id"       INT         NOT NULL REFERENCES "member" ("id"),
+        "label"           VARCHAR(50),
+        "address"         VARCHAR(500),
+        "address_detail"  VARCHAR(200),
+        "postal_code"     VARCHAR(10),
+        "recipient_name"  VARCHAR(100),
+        "recipient_phone" VARCHAR(20),
+        "is_default"      BOOLEAN     NOT NULL DEFAULT false
+      )
+    `);
+
+    // member_address 인덱스
+    await queryRunner.query(`
+      CREATE INDEX "IDX_member_address_member_id" ON "member_address" ("member_id")
+    `);
+
+    // 3. phone_verification 테이블 생성
     await queryRunner.query(`
       CREATE TABLE "phone_verification"
       (
@@ -54,6 +75,12 @@ export class ShopMemberAuth1767684849228 implements MigrationInterface {
 
     // phone_verification 테이블 삭제
     await queryRunner.query(`DROP TABLE IF EXISTS "phone_verification"`);
+
+    // member_address 인덱스 삭제
+    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_member_address_member_id"`);
+
+    // member_address 테이블 삭제
+    await queryRunner.query(`DROP TABLE IF EXISTS "member_address"`);
 
     // member 인덱스 삭제
     await queryRunner.query(`DROP INDEX IF EXISTS "IDX_member_phone"`);

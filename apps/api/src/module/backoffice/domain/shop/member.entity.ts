@@ -1,9 +1,9 @@
-import { Column, Entity, EntityManager, Index } from 'typeorm';
+import { Column, Entity, EntityManager, Index, OneToMany } from 'typeorm';
 import { SoftDeleteEntity } from '@src/module/backoffice/domain/base.entity';
-import { AddressEntity } from '@src/module/backoffice/domain/order/address.entity';
 import { TransactionService } from '@src/module/shared/transaction/transaction.service';
 import { getEntityManager } from '@src/database/datasources';
 import { Nullish } from '@src/types/utility.type';
+import { MemberAddressEntity } from './member-address.entity';
 
 /**
  * MemberEntity - Shop 회원 엔티티
@@ -22,9 +22,9 @@ export class MemberEntity extends SoftDeleteEntity {
   @Column({ type: 'varchar', length: 100, nullable: true })
   name: Nullish<string>;
 
-  /** 배송지 정보 (Embedded, nullable) */
-  @Column(() => AddressEntity, { prefix: false })
-  address: Nullish<AddressEntity>;
+  /** 배송지 목록 */
+  @OneToMany(() => MemberAddressEntity, (address) => address.member)
+  addresses: MemberAddressEntity[];
 }
 
 export const getMemberRepository = (source?: TransactionService | EntityManager) =>
