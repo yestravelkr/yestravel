@@ -80,12 +80,22 @@ export const getPhoneVerificationRepository = (
       },
 
       /**
-       * 만료된 인증번호 삭제 (정리용)
+       * 해당 번호의 미사용 인증번호 삭제
+       * @param phone 휴대폰 번호
+       */
+      async deleteUnverifiedByPhone(phone: string): Promise<void> {
+        await this.delete({
+          phone,
+          verifiedAt: IsNull(),
+        });
+      },
+
+      /**
+       * 만료되었거나 사용 완료된 인증번호 삭제 (정리용)
        */
       async deleteExpired(): Promise<void> {
         await this.delete({
           expiresAt: LessThan(dayjs().toDate()),
-          verifiedAt: IsNull(),
         });
       },
     });

@@ -36,6 +36,11 @@ export class ShopAuthService {
   async requestVerification(
     input: RequestVerificationInput
   ): Promise<RequestVerificationResponse> {
+    // 기존 미사용 인증번호 삭제
+    await this.repositoryProvider.PhoneVerificationRepository.deleteUnverifiedByPhone(
+      input.phone
+    );
+
     const code = this.generateCode();
     const expiresAt = dayjs().add(3, 'minute').toDate();
 
