@@ -34,7 +34,7 @@ export interface HotelOptionResult {
   checkOutDate: string;
   selectedOptionId: number;
   totalPrice: number;
-  orderId: number;
+  orderNumber: string;
 }
 
 interface HotelOptionBottomSheetProps {
@@ -191,7 +191,7 @@ function HotelOptionBottomSheet({
         checkOutDate,
         selectedOptionId,
         totalPrice,
-        orderId: result.orderId,
+        orderNumber: result.orderNumber,
       });
     } catch (error) {
       toast.error('주문 생성에 실패했습니다.');

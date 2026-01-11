@@ -100,7 +100,7 @@ export function HotelProductComponent(props: HotelProductComponentProps) {
         setCheckInDate(result.checkInDate);
         setCheckOutDate(result.checkOutDate);
         setSelectedOptionId(result.selectedOptionId);
-        console.log('주문 생성 완료:', result.orderId);
+        console.log('주문 생성 완료:', result.orderNumber);
       }
     });
   };

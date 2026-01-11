@@ -1,13 +1,14 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { RepositoryProvider } from '@src/module/shared/transaction/repository.provider';
 import { ProductTypeEnum } from '@src/module/backoffice/admin/admin.schema';
-import { CreateHotelOrderInput } from './shop.order.dto';
+import { CreateHotelOrderInput, CreateHotelOrderOutput, GetTmpOrderInput, GetTmpOrderOutput } from './shop.order.dto';
 import { CampaignInfluencerProductEntity } from '@src/module/backoffice/domain/campaign-influencer-product.entity';
 import { HotelOptionEntity } from '@src/module/backoffice/domain/product/hotel-option.entity';
 import { HotelSkuEntity } from '@src/module/backoffice/domain/product/hotel-sku.entity';
 import { HotelOrderOptionData } from '@src/module/backoffice/domain/order/hotel-order.entity';
-import {TmpOrderEntity, TmpOrderRawData} from "@src/module/backoffice/domain/order/tmp-order.entity";
-import {HotelOptionSelector, HotelOptionSelectorConfig} from "@yestravelkr/option-selector";
+import { TmpOrderEntity, TmpOrderRawData } from '@src/module/backoffice/domain/order/tmp-order.entity';
+import { orderNumberParser } from '@src/module/backoffice/domain/order/order.entity';
+import { HotelOptionSelector, HotelOptionSelectorConfig } from '@yestravelkr/option-selector';
 
 interface SaleInfo {
   campaignInfluencerProduct: CampaignInfluencerProductEntity;
@@ -25,7 +26,7 @@ interface HotelPriceResult {
 export class ShopOrderService {
   constructor(private readonly repositoryProvider: RepositoryProvider) {}
 
-  async createHotelOrder(input: CreateHotelOrderInput): Promise<TmpOrderEntity> {
+  async createHotelOrder(input: CreateHotelOrderInput): Promise<CreateHotelOrderOutput> {
     const { saleId, checkInDate, checkOutDate, optionId } = input;
 
     // 1. saleId 기반으로 campaign, product, influencer 가져옴
@@ -73,7 +74,50 @@ export class ShopOrderService {
       raw,
     });
 
-    return this.repositoryProvider.TmpOrderRepository.save(tmpOrder);
+    const savedTmpOrder = await this.repositoryProvider.TmpOrderRepository.save(tmpOrder);
+    const orderNumber = orderNumberParser.encode([savedTmpOrder.id]);
+
+    return { orderNumber };
+  }
+
+  /**
+   * 임시 주문 조회
+   */
+  async getTmpOrder(input: GetTmpOrderInput): Promise<GetTmpOrderOutput> {
+    const { orderNumber } = input;
+    const [orderId] = orderNumberParser.decode(orderNumber);
+
+    if (!orderId) {
+      throw new BadRequestException(`유효하지 않은 주문번호입니다 (orderNumber: ${orderNumber})`);
+    }
+
+    const tmpOrder = await this.repositoryProvider.TmpOrderRepository.findOne({
+      where: { id: orderId },
+    });
+
+    if (!tmpOrder) {
+      throw new NotFoundException(`주문을 찾을 수 없습니다 (orderNumber: ${orderNumber})`);
+    }
+
+    const hotelProduct = await this.repositoryProvider.HotelProductRepository.findOne({
+      where: { id: tmpOrder.raw.productId },
+    });
+
+    if (!hotelProduct) {
+      throw new NotFoundException(`상품을 찾을 수 없습니다 (productId: ${tmpOrder.raw.productId})`);
+    }
+
+    return {
+      type: tmpOrder.type,
+      totalAmount: tmpOrder.raw.totalAmount,
+      product: {
+        name: hotelProduct.name,
+        thumbnailUrl: hotelProduct.thumbnailUrls[0] ?? null,
+        checkInTime: hotelProduct.checkInTime,
+        checkOutTime: hotelProduct.checkOutTime,
+      },
+      orderOptionSnapshot: tmpOrder.raw.orderOptionSnapshot,
+    };
   }
 
   /**
