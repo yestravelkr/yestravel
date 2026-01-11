@@ -11,9 +11,6 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background: var(--bg-layer-base, #F4F4F5);
-}
-
-button {
   border: 0;
   outline: none;
 }

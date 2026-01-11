@@ -228,8 +228,28 @@ const appRouter = t.router({
       checkOutDate: z.string(),
       optionId: z.number(),
     })).output(z.object({
-      orderId: z.number(),
-    })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
+      orderNumber: z.string(),
+    })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    getTmpOrder: publicProcedure.input(z.object({
+      orderNumber: z.string(),
+    })).output(z.object({
+      type: productTypeEnumSchema,
+      totalAmount: z.number(),
+      product: z.object({
+        name: z.string(),
+        thumbnailUrl: z.string().nullish(),
+        checkInTime: z.string(),
+        checkOutTime: z.string(),
+      }),
+      orderOptionSnapshot: z.object({
+        type: z.literal('HOTEL'),
+        checkInDate: z.string(),
+        checkOutDate: z.string(),
+        hotelOptionId: z.number(),
+        hotelOptionName: z.string(),
+        priceByDate: z.record(z.string(), z.number()),
+      }),
+    })).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
   }),
   shopInfluencer: t.router({
     findBySlug: publicProcedure.input(z.object({
