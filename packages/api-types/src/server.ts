@@ -233,7 +233,7 @@ const appRouter = t.router({
     getTmpOrder: publicProcedure.input(z.object({
       orderNumber: z.string(),
     })).output(z.object({
-      type: productTypeEnumSchema,
+      type: z.enum(PRODUCT_TYPE_ENUM_VALUE),
       totalAmount: z.number(),
       product: z.object({
         name: z.string(),
