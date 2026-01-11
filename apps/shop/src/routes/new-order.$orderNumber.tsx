@@ -81,7 +81,7 @@ function NewOrderContent({ orderNumber }: { orderNumber: string }) {
 
         <ContentWrapper>
           <HotelProductSection
-            thumbnailUrl={data.product.thumbnailUrl}
+            thumbnailUrl={data.product.thumbnailUrl ?? null}
             productName={data.product.name}
             optionName={data.orderOptionSnapshot.hotelOptionName}
             checkInDate={data.orderOptionSnapshot.checkInDate}

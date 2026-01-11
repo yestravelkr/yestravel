@@ -215,9 +215,9 @@ const MOCK_SHIPPING_ORDER: ShippingOrderData = {
  */
 function fetchOrderDetail(orderNumber: string): OrderData {
   if (orderNumber.includes('ship')) {
-    return { ...MOCK_SHIPPING_ORDER, orderId, orderNumber };
+    return { ...MOCK_SHIPPING_ORDER, orderNumber };
   }
-  return { ...MOCK_ACCOMMODATION_ORDER, orderId, orderNumber };
+  return { ...MOCK_ACCOMMODATION_ORDER, orderNumber };
 }
 
 // ============================================================================
