@@ -5,6 +5,7 @@
  * 체크인/체크아웃 날짜 선택, 호텔 옵션 선택, 가격 계산 등을 처리합니다.
  */
 
+import { useNavigate } from '@tanstack/react-router';
 import type { HotelOptionSelectorConfig } from '@yestravelkr/option-selector';
 import dayjs from 'dayjs';
 import 'dayjs/locale/ko';
@@ -82,6 +83,8 @@ export function HotelProductComponent(props: HotelProductComponentProps) {
     return { initialCheckIn: checkIn, initialCheckOut: checkOut };
   }, [options.skus]);
 
+  const navigate = useNavigate();
+
   const [checkInDate, setCheckInDate] = useState<string>(initialCheckIn);
   const [checkOutDate, setCheckOutDate] = useState<string>(initialCheckOut);
   const [selectedOptionId, setSelectedOptionId] = useState<number | null>(null);
@@ -100,7 +103,11 @@ export function HotelProductComponent(props: HotelProductComponentProps) {
         setCheckInDate(result.checkInDate);
         setCheckOutDate(result.checkOutDate);
         setSelectedOptionId(result.selectedOptionId);
-        console.log('주문 생성 완료:', result.orderNumber);
+        // 주문서 작성 페이지로 이동
+        navigate({
+          to: '/new-order/$orderNumber',
+          params: { orderNumber: result.orderNumber },
+        });
       }
     });
   };
