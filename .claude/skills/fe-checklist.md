@@ -1,4 +1,13 @@
+---
+name: fe-checklist
+description: 프론트엔드 PR 리뷰 체크리스트. 프론트엔드 코드 리뷰, 스타일링 검증, 컴포넌트 패턴 확인 시 사용.
+estimated_tokens: ~800
+---
+
 # Frontend PR Checklist
+
+> 개발 방법: `.claude/skills/fe-development/`
+> 프로젝트 정보: `.claude/context/frontend/INDEX.md`
 
 ## React Components
 

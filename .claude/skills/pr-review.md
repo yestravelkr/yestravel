@@ -1,9 +1,12 @@
 ---
 name: pr-review
-description: Systematic PR (Pull Request) code review with structured checklist approach. Use when reviewing GitHub/GitLab PR diffs, code changes, merge requests, or when user asks to review code changes with phrases like "review this PR", "check this code change", "review my merge request", or provides diff/patch content.
+description: PR 코드 리뷰 스킬. GitHub PR 리뷰, 코드 변경 검토, 머지 리퀘스트 확인 시 사용.
+estimated_tokens: ~400
 ---
 
 # PR Review Skill
+
+> 체크리스트 참조: `.claude/skills/fe-checklist.md`, `.claude/skills/be-checklist.md`
 
 Systematic Pull Request review using checklist methodology.
 
