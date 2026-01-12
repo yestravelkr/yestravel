@@ -276,6 +276,41 @@ const appRouter = t.router({
       })),
     })).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
   }),
+  shopAuth: t.router({
+    requestVerification: publicProcedure.input(z.object({
+      phone: z
+        .string()
+        .regex(/^01[0-9]{8,9}$/, '올바른 휴대폰 번호를 입력해주세요'),
+    })).output(z.object({
+      id: z.number(),
+      phone: z.string(),
+      expiresAt: z.date(),
+      code: z.string().optional(), // 개발환경에서만 노출
+    })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    verifyCode: publicProcedure.input(z.object({
+      phone: z.string(),
+      code: z.string().length(6, '인증번호 6자리를 입력해주세요'),
+    })).output(z.object({
+      accessToken: z.string(),
+      refreshToken: z.string(),
+      member: z.object({
+        id: z.number(),
+        phone: z.string(),
+        name: z.string().nullable(),
+      }),
+    })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    refreshToken: publicProcedure.input(z.object({
+      refreshToken: z.string(),
+    })).output(z.object({
+      accessToken: z.string(),
+      refreshToken: z.string(),
+      member: z.object({
+        id: z.number(),
+        phone: z.string(),
+        name: z.string().nullable(),
+      }),
+    })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
+  }),
   sample: t.router({
     getHello: publicProcedure.input(z.object({
       name: z.string().optional(),

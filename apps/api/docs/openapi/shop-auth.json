@@ -1,0 +1,320 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "YesTravel Shop Auth API",
+    "version": "1.0.0",
+    "description": "SMS 인증 기반 Shop 회원 인증 API. refreshToken은 httpOnly 쿠키로 관리됩니다."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Local Development"
+    }
+  ],
+  "paths": {
+    "/trpc/shopAuth.requestVerification": {
+      "post": {
+        "summary": "인증번호 요청",
+        "description": "휴대폰 번호로 인증번호를 발송합니다. 개발환경에서는 응답에 code가 포함됩니다.",
+        "tags": ["Shop Auth"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "json": {
+                    "type": "object",
+                    "properties": {
+                      "phone": {
+                        "type": "string",
+                        "pattern": "^01[0-9]{8,9}$",
+                        "example": "01055925555",
+                        "description": "휴대폰 번호 (하이픈 없이)"
+                      }
+                    },
+                    "required": ["phone"]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "인증번호 발송 성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "json": {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "integer",
+                                  "description": "인증 요청 ID"
+                                },
+                                "phone": {
+                                  "type": "string",
+                                  "description": "휴대폰 번호"
+                                },
+                                "expiresAt": {
+                                  "type": "string",
+                                  "format": "date-time",
+                                  "description": "인증번호 만료 시간"
+                                },
+                                "code": {
+                                  "type": "string",
+                                  "nullable": true,
+                                  "description": "인증번호 (개발환경에서만 포함)"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "result": {
+                    "data": {
+                      "json": {
+                        "id": 1,
+                        "phone": "01055925555",
+                        "expiresAt": "2024-01-15T10:05:00.000Z",
+                        "code": "123456"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "잘못된 휴대폰 번호 형식"
+          }
+        }
+      }
+    },
+    "/trpc/shopAuth.verifyCode": {
+      "post": {
+        "summary": "인증번호 확인 및 로그인",
+        "description": "인증번호를 검증하고 JWT 토큰을 발급합니다. 회원이 없으면 자동 가입됩니다. refreshToken은 httpOnly 쿠키로 설정됩니다.",
+        "tags": ["Shop Auth"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "json": {
+                    "type": "object",
+                    "properties": {
+                      "phone": {
+                        "type": "string",
+                        "example": "01055925555",
+                        "description": "휴대폰 번호"
+                      },
+                      "code": {
+                        "type": "string",
+                        "minLength": 6,
+                        "maxLength": 6,
+                        "example": "123456",
+                        "description": "6자리 인증번호"
+                      }
+                    },
+                    "required": ["phone", "code"]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "인증 성공. refreshToken은 httpOnly 쿠키로 설정됨",
+            "headers": {
+              "Set-Cookie": {
+                "description": "refreshToken httpOnly 쿠키",
+                "schema": {
+                  "type": "string",
+                  "example": "refreshToken=eyJ...; HttpOnly; Secure; SameSite=Lax; Max-Age=604800"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "json": {
+                              "type": "object",
+                              "properties": {
+                                "accessToken": {
+                                  "type": "string",
+                                  "description": "JWT Access Token"
+                                },
+                                "member": {
+                                  "type": "object",
+                                  "properties": {
+                                    "id": {
+                                      "type": "integer",
+                                      "description": "회원 ID"
+                                    },
+                                    "phone": {
+                                      "type": "string",
+                                      "description": "휴대폰 번호"
+                                    },
+                                    "name": {
+                                      "type": "string",
+                                      "nullable": true,
+                                      "description": "회원 이름"
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "result": {
+                    "data": {
+                      "json": {
+                        "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                        "member": {
+                          "id": 1,
+                          "phone": "01055925555",
+                          "name": null
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "인증번호가 올바르지 않거나 만료됨"
+          }
+        }
+      }
+    },
+    "/trpc/shopAuth.refreshToken": {
+      "post": {
+        "summary": "토큰 갱신",
+        "description": "httpOnly 쿠키의 Refresh Token으로 새로운 Access Token을 발급받습니다. 요청 시 쿠키가 자동으로 전송됩니다.",
+        "tags": ["Shop Auth"],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "json": {
+                    "type": "object",
+                    "description": "빈 객체 (refreshToken은 쿠키에서 읽음)"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "토큰 갱신 성공. 새로운 refreshToken이 httpOnly 쿠키로 설정됨",
+            "headers": {
+              "Set-Cookie": {
+                "description": "새로운 refreshToken httpOnly 쿠키",
+                "schema": {
+                  "type": "string",
+                  "example": "refreshToken=eyJ...; HttpOnly; Secure; SameSite=Lax; Max-Age=604800"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "json": {
+                              "type": "object",
+                              "properties": {
+                                "accessToken": {
+                                  "type": "string",
+                                  "description": "새로운 JWT Access Token"
+                                },
+                                "member": {
+                                  "type": "object",
+                                  "properties": {
+                                    "id": {
+                                      "type": "integer"
+                                    },
+                                    "phone": {
+                                      "type": "string"
+                                    },
+                                    "name": {
+                                      "type": "string",
+                                      "nullable": true
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "result": {
+                    "data": {
+                      "json": {
+                        "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                        "member": {
+                          "id": 1,
+                          "phone": "01055925555",
+                          "name": "홍길동"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "유효하지 않은 Refresh Token 또는 쿠키 없음"
+          }
+        }
+      }
+    }
+  }
+}
