@@ -10,6 +10,7 @@
  */
 export { Button, type ButtonProps } from './button';
 export { Calendar, type CalendarProps } from './calendar';
+export { Checkbox, type CheckboxProps } from './checkbox';
 export { Dropdown, type DropdownProps, type DropdownOption } from './dropdown';
 export { MenuItem, type MenuItemProps } from './menuitem';
 export { Select, type SelectProps, type SelectOption } from './select';
