@@ -9,7 +9,7 @@ estimated_tokens: ~400
 
 ```bash
 # ⚠️ AI가 타임스탬프 생성 금지, 반드시 CLI 사용
-yarn migration:create src/migration/CreateModuleMigration
+yarn migration:create CreateSomeMigration
 ```
 
 ## 실행 명령
