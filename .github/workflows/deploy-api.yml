@@ -15,9 +15,6 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [22.16]
     outputs:
       TAG_NAME: ${{ steps.vars.outputs.TAG_NAME }}
       STAGE: ${{ steps.vars.outputs.STAGE }}
@@ -29,13 +26,13 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v1
+      - name: Use Node.js 22.16.x
+        uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: 22.16.x
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -43,10 +40,10 @@ jobs:
 
       - name: Get yarn cache directory path
         id: yarn-cache-dir-path
-        run: echo "::set-output name=dir::$(yarn cache dir)"
+        run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
 
-      - uses: actions/cache@v3
-        id: yarn-cache # use this to check for `cache-hit` (`steps.yarn-cache.outputs.cache-hit != 'true'`)
+      - uses: actions/cache@v4
+        id: yarn-cache
         with:
           path: |
             ${{ steps.yarn-cache-dir-path.outputs.dir }}
@@ -54,11 +51,10 @@ jobs:
           key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
           restore-keys: |
             ${{ runner.os }}-yarn-
-            ${{ runner.os }}-
 
       - name: Install Dependencies
         working-directory: apps/api
-        run: yarn install
+        run: yarn install --frozen-lockfile
 
       - name: Build Service
         working-directory: apps/api
@@ -66,20 +62,20 @@ jobs:
 
       - name: Login to Amazon ECR
         id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v1
+        uses: aws-actions/amazon-ecr-login@v2
 
       - name: Set Environment Vars
         id: vars
         run: |
           if [[ "${GITHUB_REF}" =~ ^refs/tags/ ]]; then
-            echo "::set-output name=TAG_NAME::${GITHUB_REF#refs/tags/}"
-            echo "::set-output name=STAGE::staging"
-            echo "::set-output name=ELB_ENV_NAME::yestravel-api-none"
-
+            echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+            echo "STAGE=staging" >> $GITHUB_OUTPUT
+            echo "ELB_ENV_NAME=yestravel-api-none" >> $GITHUB_OUTPUT
           else
-            echo "::set-output name=TAG_NAME::$(git rev-parse --short HEAD)"
-            echo "::set-output name=STAGE::develop"
-            echo "::set-output name=ELB_ENV_NAME::yestravel-api-development "
+            # 👇 타임스탬프 추가로 버전 중복 방지
+            echo "TAG_NAME=$(git rev-parse --short HEAD)-$(date +%Y%m%d%H%M%S)" >> $GITHUB_OUTPUT
+            echo "STAGE=develop" >> $GITHUB_OUTPUT
+            echo "ELB_ENV_NAME=yestravel-api-development" >> $GITHUB_OUTPUT
           fi
 
       - name: Build and push Docker Image
@@ -89,10 +85,10 @@ jobs:
           API_SECRET_ACCESS_KEY: ${{ secrets.API_SECRET_ACCESS_KEY }}
         run: |
           echo "Building Docker Image with TAG_NAME: ${{ steps.vars.outputs.TAG_NAME }}"
-          echo $ECR_REGISTRY
-          echo $ECR_REPOSITORY
-          echo ${{ steps.vars.outputs.TAG_NAME }}
-          docker build -f apps/api/Dockerfile --platform linux/amd64 -t $ECR_REGISTRY/$ECR_REPOSITORY:${{ steps.vars.outputs.TAG_NAME }} . --build-arg AWS_ACCESS_KEY_ID=$API_ACCESS_KEY_ID --build-arg AWS_SECRET_ACCESS_KEY=$API_SECRET_ACCESS_KEY
+          docker build -f apps/api/Dockerfile --platform linux/amd64 \
+            -t $ECR_REGISTRY/$ECR_REPOSITORY:${{ steps.vars.outputs.TAG_NAME }} . \
+            --build-arg AWS_ACCESS_KEY_ID=$API_ACCESS_KEY_ID \
+            --build-arg AWS_SECRET_ACCESS_KEY=$API_SECRET_ACCESS_KEY
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:${{ steps.vars.outputs.TAG_NAME }}
 
       - name: Upload Dockerrun.aws.json
@@ -106,27 +102,28 @@ jobs:
         env:
           DOCKER_RUN_FILE: ${{ steps.vars.outputs.TAG_NAME }}-YestravelAPI-Dockerrun.aws.json
         run: |
-          echo "${{ steps.vars.outputs.TAG_NAME }}-YestravelAPI-Dockerrun.aws.json"
-          aws elasticbeanstalk create-application-version --region ap-northeast-2 --application-name $APP_NAME --version-label ${{ steps.vars.outputs.TAG_NAME }} --source-bundle S3Bucket="$S3BUCKET",S3Key="$DOCKER_RUN_FILE"
+          aws elasticbeanstalk create-application-version \
+            --region ap-northeast-2 \
+            --application-name $APP_NAME \
+            --version-label ${{ steps.vars.outputs.TAG_NAME }} \
+            --source-bundle S3Bucket="$S3BUCKET",S3Key="$DOCKER_RUN_FILE"
 
   deploy:
     needs: build
     runs-on: ubuntu-latest
     if: ${{ needs.build.outputs.STAGE == 'develop' }}
     steps:
-      - name: Checkout the current branch
-        uses: actions/checkout@v2
-
-      - name: Commit Hash
-        id: commit
-        uses: pr-mpt/actions-commit-hash@v2
-
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-northeast-2
 
       - name: Deploy Environment
-        run: aws elasticbeanstalk update-environment --region ap-northeast-2 --application-name $APP_NAME --environment-name ${{ needs.build.outputs.ELB_ENV_NAME }} --version-label ${{ needs.build.outputs.TAG_NAME }}
+        run: |
+          aws elasticbeanstalk update-environment \
+            --region ap-northeast-2 \
+            --application-name $APP_NAME \
+            --environment-name ${{ needs.build.outputs.ELB_ENV_NAME }} \
+            --version-label ${{ needs.build.outputs.TAG_NAME }}
