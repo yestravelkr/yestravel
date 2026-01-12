@@ -1,6 +1,7 @@
 ---
 name: pr-review
 description: Systematic PR (Pull Request) code review with structured checklist approach. Use when reviewing GitHub/GitLab PR diffs, code changes, merge requests, or when user asks to review code changes with phrases like "review this PR", "check this code change", "review my merge request", or provides diff/patch content.
+user-invocable: true
 ---
 
 # PR Review Skill
