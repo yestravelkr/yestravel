@@ -5,9 +5,12 @@
  * URL: /new-order/{orderNumber}
  */
 
+import type { PaymentRequest } from '@portone/browser-sdk/v2';
+import * as PortOne from '@portone/browser-sdk/v2';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import axios from 'axios';
 import { ArrowLeft } from 'lucide-react';
-import { Suspense } from 'react';
+import { Suspense, useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import tw from 'tailwind-styled-components';
@@ -21,6 +24,7 @@ import {
   type PaymentType,
   type PaymentMethod,
 } from '@/components/new-order';
+import { API_BASEURL } from '@/constants';
 import { trpc } from '@/shared';
 
 export interface NewOrderFormData {
@@ -48,6 +52,7 @@ function NewOrderPage() {
 function NewOrderContent({ orderNumber }: { orderNumber: string }) {
   const navigate = useNavigate();
   const [data] = trpc.shopOrder.getTmpOrder.useSuspenseQuery({ orderNumber });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const methods = useForm<NewOrderFormData>({
     defaultValues: {
@@ -63,9 +68,63 @@ function NewOrderContent({ orderNumber }: { orderNumber: string }) {
     navigate({ to: '/' });
   };
 
-  const handleSubmit = () => {
-    // TODO: 실제 결제 처리
-    toast.success('결제를 진행합니다.');
+  const paymentComplete = async (paymentResult: unknown) => {
+    await axios.post(
+      `${API_BASEURL}/trpc/shopPayment.complete`,
+      paymentResult,
+      {
+        withCredentials: true,
+      }
+    );
+  };
+
+  const handleSubmit = async () => {
+    const formData = methods.getValues();
+
+    if (!formData.userName.trim() || !formData.userPhone.trim()) {
+      toast.error('예약자 정보를 입력해주세요.');
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const paymentMethod: PaymentRequest = {
+        storeId: 'store-225e8f7c-301b-421e-bd54-189066bbb97e',
+        channelKey: 'channel-key-be836e0a-6537-4a86-bf9d-f99211e0be6c',
+        paymentId: orderNumber,
+        orderName: `YesTravel - ${data.product.name}`,
+        totalAmount: data.totalAmount,
+        currency: 'KRW',
+        payMethod: 'CARD',
+        customer: {
+          customerId: orderNumber,
+          fullName: formData.userName,
+          phoneNumber: formData.userPhone.replace(/-/g, ''),
+        },
+        redirectUrl: `${API_BASEURL}/payment/complete-redirect?origin=${window.location.origin}`,
+      };
+
+      const response = await PortOne.requestPayment(paymentMethod);
+
+      if (!response || response.code === 'FAILURE_TYPE_PG') {
+        toast.error('결제가 실패했습니다.');
+        setIsSubmitting(false);
+        return;
+      }
+
+      // 결제 승인 요청
+      await paymentComplete(response);
+
+      toast.success('결제가 완료되었습니다.');
+
+      // 주문 상세 페이지로 이동
+      navigate({ to: '/order/$orderNumber', params: { orderNumber } });
+    } catch (error) {
+      console.error('결제 오류:', error);
+      toast.error('결제 중 오류가 발생했습니다.');
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -102,7 +161,7 @@ function NewOrderContent({ orderNumber }: { orderNumber: string }) {
           <PaymentAgreementSection
             totalAmount={data.totalAmount}
             onSubmit={handleSubmit}
-            isSubmitting={false}
+            isSubmitting={isSubmitting}
           />
         </ContentWrapper>
       </Container>
