@@ -100,13 +100,20 @@ const Title = tw.h1`
 
 ```typescript
 // ✅ var() 함수 사용 필수
+// stroke-* 토큰은 CSS 변수(--stroke-*)로만 선언하고,
+// border-color / outline-color 등에서 `var(--stroke-*)`로 소비한다.
+// 이렇게 하면 Tailwind의 SVG용 `stroke-*` 유틸리티와 역할이 분리되어,
+// 아이콘 stroke 색상이 border 토큰에 잘못 매핑되는 문제를 피할 수 있다.
 const Card = tw.div`
   border
   border-[var(--stroke-neutral)]
   outline-[var(--stroke-hover)]
 `;
 
-// ❌ 직접 사용 금지 (SVG stroke와 충돌)
+// ❌ 직접 사용 금지:
+// `border-stroke-neutral`처럼 stroke-* 토큰을 그대로 유틸리티 클래스화하면
+// Tailwind의 SVG stroke 유틸리티(`stroke-*`)와 네이밍이 겹쳐
+// SVG 아이콘에 stroke 색상이 의도치 않게 border 색상 토큰으로 바인딩될 수 있다.
 <div className="border-stroke-neutral" />
 ```
 
