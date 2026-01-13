@@ -9,6 +9,7 @@ import type { PaymentRequest } from '@portone/browser-sdk/v2';
 import * as PortOne from '@portone/browser-sdk/v2';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import axios from 'axios';
+import dayjs from 'dayjs';
 import { ArrowLeft } from 'lucide-react';
 import { Suspense, useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
@@ -59,13 +60,43 @@ function NewOrderContent({ orderNumber }: { orderNumber: string }) {
       userName: '',
       userPhone: '',
       useSameAsMe: false,
-      paymentType: 'simple',
-      paymentMethod: 'kakaopay',
+      paymentType: 'general',
+      paymentMethod: 'card',
     },
   });
 
   const handleBack = () => {
     navigate({ to: '/' });
+  };
+
+  const getPortOnePayMethod = (
+    method: PaymentMethod
+  ): Pick<PaymentRequest, 'payMethod' | 'easyPay' | 'virtualAccount'> => {
+    switch (method) {
+      // TODO: 간편결제 추후 활성화
+      // case 'kakaopay':
+      //   return { payMethod: 'EASY_PAY', easyPay: { provider: 'KAKAOPAY' } };
+      // case 'naverpay':
+      //   return { payMethod: 'EASY_PAY', easyPay: { provider: 'NAVERPAY' } };
+      // case 'toss':
+      //   return { payMethod: 'EASY_PAY', easyPay: { provider: 'TOSSPAY' } };
+      case 'card':
+        return { payMethod: 'CARD' };
+      case 'vbank':
+        return {
+          payMethod: 'VIRTUAL_ACCOUNT',
+          virtualAccount: {
+            accountExpiry: {
+              dueDate: dayjs().add(1, 'day').endOf('day').toISOString(),
+            },
+          },
+        };
+      // TODO: 계좌이체 추후 활성화
+      // case 'bank':
+      //   return { payMethod: 'TRANSFER' };
+      default:
+        return { payMethod: 'CARD' };
+    }
   };
 
   const paymentComplete = async (paymentResult: unknown) => {
@@ -89,23 +120,26 @@ function NewOrderContent({ orderNumber }: { orderNumber: string }) {
     setIsSubmitting(true);
 
     try {
-      const paymentMethod: PaymentRequest = {
+      const payMethodConfig = getPortOnePayMethod(formData.paymentMethod);
+
+      const paymentRequest: PaymentRequest = {
         storeId: 'store-225e8f7c-301b-421e-bd54-189066bbb97e',
         channelKey: 'channel-key-be836e0a-6537-4a86-bf9d-f99211e0be6c',
         paymentId: orderNumber,
         orderName: `YesTravel - ${data.product.name}`,
         totalAmount: data.totalAmount,
         currency: 'KRW',
-        payMethod: 'CARD',
+        ...payMethodConfig,
         customer: {
           customerId: orderNumber,
           fullName: formData.userName,
+          email: 'info@yestravel.co.kr',
           phoneNumber: formData.userPhone.replace(/-/g, ''),
         },
         redirectUrl: `${API_BASEURL}/payment/complete-redirect?origin=${window.location.origin}`,
       };
 
-      const response = await PortOne.requestPayment(paymentMethod);
+      const response = await PortOne.requestPayment(paymentRequest);
 
       if (!response || response.code === 'FAILURE_TYPE_PG') {
         toast.error('결제가 실패했습니다.');
