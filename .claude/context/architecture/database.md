@@ -31,7 +31,7 @@ product_template (부모)
 
 | 제약 | 이유 |
 |-----|------|
-| TypeORM 상속 데코레이터 금지 | `@TableInheritance`, `@ChildEntity` 충돌 |
+| TypeORM 상속 데코레이터 금지 | PostgreSQL INHERITS가 테이블 상속을 담당하므로 TypeORM `@TableInheritance`, `@ChildEntity`를 함께 사용하면 상속 계층과 스키마 정의가 이중 관리되어 마이그레이션·DDL 생성·SELECT 결과가 서로 불일치/충돌할 수 있음 |
 | 부모 테이블 QueryBuilder 금지 | INHERITS는 QueryBuilder 미지원 |
 | 부모 테이블 FK 참조 금지 | INHERITS 특성상 FK 불가 |
 
