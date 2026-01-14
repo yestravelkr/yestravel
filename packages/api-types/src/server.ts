@@ -333,6 +333,27 @@ const appRouter = t.router({
     kakaoLogin: publicProcedure.input(z.object({
       code: z.string().min(1, 'Authorization code is required'),
       redirectUri: z.string().url('Valid redirect URI is required'),
+    })).output(z.discriminatedUnion('status', [
+      z.object({
+        status: z.literal('complete'),
+        accessToken: z.string(),
+        refreshToken: z.string(),
+        member: z.object({
+          id: z.number(),
+          phone: z.string(),
+          name: z.string().nullable(),
+        }),
+      }),
+      z.object({
+        status: z.literal('pending'),
+        pendingToken: z.string(),
+        name: z.string().nullable(),
+      }),
+    ])).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    completeSocialRegistration: publicProcedure.input(z.object({
+      pendingToken: z.string(),
+      phone: z.string().regex(/^01[0-9]{8,9}$/, '올바른 휴대폰 번호를 입력해주세요'),
+      code: z.string().length(6, '인증번호 6자리를 입력해주세요'),
     })).output(z.object({
       accessToken: z.string(),
       refreshToken: z.string(),
