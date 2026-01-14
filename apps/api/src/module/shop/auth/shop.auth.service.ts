@@ -15,7 +15,10 @@ import {
   VerifyCodeInput,
   TokenGenerationResult,
   JwtPayload,
+  KakaoLoginInput,
 } from './shop.auth.dto';
+import { KakaoService } from './kakao/kakao.service';
+import { SocialProviderEnum } from '@src/module/backoffice/domain/shop/social-account.entity';
 
 const jwtService = new JwtService();
 
@@ -27,7 +30,10 @@ const jwtService = new JwtService();
  */
 @Injectable()
 export class ShopAuthService {
-  constructor(private readonly repositoryProvider: RepositoryProvider) {}
+  constructor(
+    private readonly repositoryProvider: RepositoryProvider,
+    private readonly kakaoService: KakaoService
+  ) {}
 
   /**
    * 인증번호 요청
@@ -130,6 +136,72 @@ export class ShopAuthService {
       throw new UnauthorizedException('Member not found');
     }
 
+    return this.generateTokens(member);
+  }
+
+  /**
+   * 카카오 로그인
+   * Authorization Code로 카카오 인증 후 JWT 토큰 발급
+   * @param input code: Authorization Code, redirectUri: Redirect URI
+   */
+  async kakaoLogin(input: KakaoLoginInput): Promise<TokenGenerationResult> {
+    // 1. Authorization Code로 Access Token 발급
+    const tokenResponse = await this.kakaoService.getToken(
+      input.code,
+      input.redirectUri
+    );
+
+    // 2. 사용자 정보 조회
+    const userInfo = await this.kakaoService.getUserInfo(
+      tokenResponse.access_token
+    );
+
+    // 3. 휴대폰 번호 확인
+    const kakaoPhone = userInfo.kakao_account?.phone_number;
+    if (!kakaoPhone) {
+      throw new BadRequestException('휴대폰 번호 동의가 필요합니다');
+    }
+
+    const phone = this.kakaoService.normalizePhoneNumber(kakaoPhone);
+    const kakaoId = userInfo.id.toString();
+    const name = userInfo.kakao_account?.profile?.nickname;
+    const email = userInfo.kakao_account?.email;
+
+    // 4. 소셜 계정으로 기존 회원 조회
+    const existingSocialAccount =
+      await this.repositoryProvider.SocialAccountRepository.findByProviderAccount(
+        SocialProviderEnum.KAKAO,
+        kakaoId
+      );
+
+    let member: MemberEntity;
+
+    if (existingSocialAccount) {
+      // 이미 연동된 소셜 계정이 있으면 해당 회원으로 로그인
+      member = existingSocialAccount.member;
+    } else {
+      // 5. 휴대폰 번호로 기존 회원 조회 또는 생성
+      member =
+        await this.repositoryProvider.MemberRepository.findOrCreateByPhone(
+          phone
+        );
+
+      // 이름이 없으면 카카오 닉네임으로 설정
+      if (!member.name && name) {
+        member.name = name;
+        await this.repositoryProvider.MemberRepository.save(member);
+      }
+
+      // 6. 소셜 계정 연동
+      await this.repositoryProvider.SocialAccountRepository.linkAccount(
+        member.id,
+        SocialProviderEnum.KAKAO,
+        kakaoId,
+        email
+      );
+    }
+
+    // 7. JWT 토큰 생성 및 반환
     return this.generateTokens(member);
   }
 

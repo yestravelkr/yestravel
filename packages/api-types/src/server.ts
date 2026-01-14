@@ -329,13 +329,19 @@ const appRouter = t.router({
         phone: z.string(),
         name: z.string().nullable(),
       }),
+    })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    kakaoLogin: publicProcedure.input(z.object({
+      code: z.string().min(1, 'Authorization code is required'),
+      redirectUri: z.string().url('Valid redirect URI is required'),
+    })).output(z.object({
+      accessToken: z.string(),
+      refreshToken: z.string(),
+      member: z.object({
+        id: z.number(),
+        phone: z.string(),
+        name: z.string().nullable(),
+      }),
     })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
-  }),
-  sample: t.router({
-    getHello: publicProcedure.input(z.object({
-      name: z.string().optional(),
-    })).output(z.string()).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
-    getSample: publicProcedure.output(z.string()).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
   }),
   backofficeUpload: t.router({
     generatePresignedUrl: publicProcedure.input(z.object({

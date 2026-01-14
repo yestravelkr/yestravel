@@ -2,6 +2,7 @@ import { z } from 'zod';
 import {
   requestVerificationSchema,
   verifyCodeSchema,
+  kakaoLoginSchema,
 } from './shop.auth.schema';
 
 /**
@@ -43,3 +44,6 @@ export interface JwtPayload {
   sub: number; // member.id
   type: 'access' | 'refresh';
 }
+
+/** 카카오 로그인 입력 */
+export type KakaoLoginInput = z.infer<typeof kakaoLoginSchema>;

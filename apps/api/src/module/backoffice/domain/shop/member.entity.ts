@@ -4,6 +4,7 @@ import { TransactionService } from '@src/module/shared/transaction/transaction.s
 import { getEntityManager } from '@src/database/datasources';
 import { Nullish } from '@src/types/utility.type';
 import { MemberAddressEntity } from './member-address.entity';
+import { SocialAccountEntity } from './social-account.entity';
 
 /**
  * MemberEntity - Shop 회원 엔티티
@@ -25,6 +26,10 @@ export class MemberEntity extends SoftDeleteEntity {
   /** 배송지 목록 */
   @OneToMany(() => MemberAddressEntity, (address) => address.member)
   addresses: MemberAddressEntity[];
+
+  /** 소셜 계정 목록 */
+  @OneToMany(() => SocialAccountEntity, (socialAccount) => socialAccount.member)
+  socialAccounts: SocialAccountEntity[];
 }
 
 export const getMemberRepository = (source?: TransactionService | EntityManager) =>

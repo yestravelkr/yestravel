@@ -34,6 +34,11 @@ type PortOneConfigType = {
   apiSecret: string;
 };
 
+type KakaoConfigType = {
+  clientId: string;
+  clientSecret: string;
+};
+
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export const ConfigProvider = {
   stage: config.get<string>('stage'),
@@ -59,4 +64,7 @@ export const ConfigProvider = {
   portone: config.has('portone')
     ? config.get<PortOneConfigType>('portone')
     : { apiSecret: '' },
+  kakao: config.has('kakao')
+    ? config.get<KakaoConfigType>('kakao')
+    : { clientId: '', clientSecret: '' },
 } as const;

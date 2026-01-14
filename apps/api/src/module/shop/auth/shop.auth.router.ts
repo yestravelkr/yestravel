@@ -6,6 +6,7 @@ import {
   requestVerificationSchema,
   verifyCodeSchema,
   refreshTokenSchema,
+  kakaoLoginSchema,
 } from './shop.auth.schema';
 import type {
   RequestVerificationResponse,
@@ -76,5 +77,19 @@ export class ShopAuthRouter extends BaseTrpcRouter {
     @Input() input: z.infer<typeof refreshTokenSchema>
   ): Promise<TokenGenerationResult> {
     return this.microserviceClient.send('shopAuth.refreshToken', input.refreshToken);
+  }
+
+  /**
+   * 카카오 로그인
+   * Authorization Code로 카카오 인증 후 토큰을 발급합니다.
+   */
+  @Mutation({
+    input: kakaoLoginSchema,
+    output: tokenResponseSchema,
+  })
+  async kakaoLogin(
+    @Input() input: z.infer<typeof kakaoLoginSchema>
+  ): Promise<TokenGenerationResult> {
+    return this.microserviceClient.send('shopAuth.kakaoLogin', input);
   }
 }

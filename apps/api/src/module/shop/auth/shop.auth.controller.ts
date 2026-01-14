@@ -8,6 +8,7 @@ import type {
   RequestVerificationResponse,
   VerifyCodeInput,
   TokenGenerationResult,
+  KakaoLoginInput,
 } from './shop.auth.dto';
 
 /**
@@ -39,5 +40,11 @@ export class ShopAuthController {
   @MessagePattern('shopAuth.refreshToken')
   async refreshToken(refreshToken: string): Promise<TokenGenerationResult> {
     return this.shopAuthService.refreshToken(refreshToken);
+  }
+
+  @MessagePattern('shopAuth.kakaoLogin')
+  @Transactional
+  async kakaoLogin(input: KakaoLoginInput): Promise<TokenGenerationResult> {
+    return this.shopAuthService.kakaoLogin(input);
   }
 }

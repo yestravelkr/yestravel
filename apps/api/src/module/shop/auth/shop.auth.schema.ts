@@ -23,3 +23,9 @@ export const verifyCodeSchema = z.object({
 export const refreshTokenSchema = z.object({
   refreshToken: z.string(),
 });
+
+/** 카카오 로그인 스키마 */
+export const kakaoLoginSchema = z.object({
+  code: z.string().min(1, 'Authorization code is required'),
+  redirectUri: z.string().url('Valid redirect URI is required'),
+});
