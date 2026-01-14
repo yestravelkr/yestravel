@@ -14,9 +14,9 @@ import tw from 'tailwind-styled-components';
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   /** 버튼 스타일 variant */
-  variant?: 'primary' | 'kakao' | 'naver';
+  variant?: 'primary' | 'outline' | 'kakao' | 'naver';
   /** 버튼 크기 */
-  size?: 'medium' | 'large';
+  size?: 'medium' | 'large' | 'xlarge';
 }
 
 /**
@@ -43,6 +43,14 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       );
     }
 
+    if (variant === 'outline') {
+      return (
+        <OutlineButton ref={ref} $size={size} {...props}>
+          {children}
+        </OutlineButton>
+      );
+    }
+
     return (
       <PrimaryButton ref={ref} $size={size} {...props}>
         {children}
@@ -54,7 +62,22 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 Button.displayName = 'Button';
 
 // Styled Components
-const PrimaryButton = tw.button<{ $size: 'medium' | 'large' }>`
+type ButtonSize = 'medium' | 'large' | 'xlarge';
+
+const getButtonHeight = (size: ButtonSize) => {
+  switch (size) {
+    case 'xlarge':
+      return 'h-[52px]';
+    case 'large':
+      return 'h-[52px]';
+    case 'medium':
+      return 'h-[44px]';
+    default:
+      return 'h-[52px]';
+  }
+};
+
+const PrimaryButton = tw.button<{ $size: ButtonSize }>`
   w-full
   px-4
   rounded-xl
@@ -72,10 +95,33 @@ const PrimaryButton = tw.button<{ $size: 'medium' | 'large' }>`
   text-fg-on-surface
   disabled:bg-bg-disabled
   disabled:text-fg-disabled
-  ${({ $size }) => ($size === 'large' ? 'h-[52px]' : 'h-[44px]')}
+  ${({ $size }) => getButtonHeight($size)}
 `;
 
-const KakaoButton = tw.button<{ $size: 'medium' | 'large' }>`
+const OutlineButton = tw.button<{ $size: ButtonSize }>`
+  px-3
+  rounded-xl
+  flex
+  items-center
+  justify-center
+  gap-1
+  text-[16.5px]
+  font-medium
+  leading-[22px]
+  transition-colors
+  hover:bg-bg-neutral-subtle
+  disabled:cursor-not-allowed
+  bg-white
+  text-fg-neutral
+  border
+  border-[var(--stroke-neutral)]
+  disabled:bg-bg-disabled
+  disabled:text-fg-disabled
+  disabled:border-transparent
+  ${({ $size }) => getButtonHeight($size)}
+`;
+
+const KakaoButton = tw.button<{ $size: ButtonSize }>`
   w-full
   px-4
   rounded-xl
@@ -93,10 +139,10 @@ const KakaoButton = tw.button<{ $size: 'medium' | 'large' }>`
   text-fg-neutral
   disabled:bg-bg-disabled
   disabled:text-fg-disabled
-  ${({ $size }) => ($size === 'large' ? 'h-[52px]' : 'h-[44px]')}
+  ${({ $size }) => getButtonHeight($size)}
 `;
 
-const NaverButton = tw.button<{ $size: 'medium' | 'large' }>`
+const NaverButton = tw.button<{ $size: ButtonSize }>`
   w-full
   px-4
   rounded-xl
@@ -114,5 +160,5 @@ const NaverButton = tw.button<{ $size: 'medium' | 'large' }>`
   text-white
   disabled:bg-bg-disabled
   disabled:text-fg-disabled
-  ${({ $size }) => ($size === 'large' ? 'h-[52px]' : 'h-[44px]')}
+  ${({ $size }) => getButtonHeight($size)}
 `;
