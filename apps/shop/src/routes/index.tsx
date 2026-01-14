@@ -1,14 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router';
 
-import { trpc } from '@/shared';
-
 export const Route = createFileRoute('/')({
   component: HomePage,
 });
 
 function HomePage() {
-  const { data: sampleData, isLoading } = trpc.sample.getSample.useQuery();
-
   return (
     <div className="min-h-screen">
       {/* Header */}
@@ -94,24 +90,6 @@ function HomePage() {
                 24시간 고객 지원과 완벽한 여행 보험으로 안심하고 떠나세요
               </p>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* API Test Section */}
-      <section className="py-16 bg-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h3 className="text-2xl font-bold text-gray-900 mb-4">
-              API 연결 테스트
-            </h3>
-            {isLoading ? (
-              <p className="text-gray-600">로딩 중...</p>
-            ) : (
-              <p className="text-gray-600">
-                샘플 데이터: {sampleData || '데이터를 불러올 수 없습니다'}
-              </p>
-            )}
           </div>
         </div>
       </section>
