@@ -8,6 +8,9 @@ import type {
   RequestVerificationResponse,
   VerifyCodeInput,
   TokenGenerationResult,
+  KakaoLoginInput,
+  SocialLoginResult,
+  CompleteSocialRegistrationInput,
 } from './shop.auth.dto';
 
 /**
@@ -39,5 +42,19 @@ export class ShopAuthController {
   @MessagePattern('shopAuth.refreshToken')
   async refreshToken(refreshToken: string): Promise<TokenGenerationResult> {
     return this.shopAuthService.refreshToken(refreshToken);
+  }
+
+  @MessagePattern('shopAuth.kakaoLogin')
+  @Transactional
+  async kakaoLogin(input: KakaoLoginInput): Promise<SocialLoginResult> {
+    return this.shopAuthService.kakaoLogin(input);
+  }
+
+  @MessagePattern('shopAuth.completeSocialRegistration')
+  @Transactional
+  async completeSocialRegistration(
+    input: CompleteSocialRegistrationInput
+  ): Promise<TokenGenerationResult> {
+    return this.shopAuthService.completeSocialRegistration(input);
   }
 }

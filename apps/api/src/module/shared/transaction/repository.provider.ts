@@ -27,6 +27,7 @@ import { getTmpOrderRepository } from '@src/module/backoffice/domain/order/tmp-o
 import { getMemberRepository } from '@src/module/backoffice/domain/shop/member.entity';
 import { getMemberAddressRepository } from '@src/module/backoffice/domain/shop/member-address.entity';
 import { getPhoneVerificationRepository } from '@src/module/backoffice/domain/shop/phone-verification.entity';
+import { getSocialAccountRepository } from '@src/module/backoffice/domain/shop/social-account.entity';
 import { DataSource, EntityManager } from 'typeorm';
 import { getEntityManager } from '@src/database/datasources';
 
@@ -148,5 +149,9 @@ export class RepositoryProvider {
 
   get PhoneVerificationRepository() {
     return getPhoneVerificationRepository(this.transaction);
+  }
+
+  get SocialAccountRepository() {
+    return getSocialAccountRepository(this.transaction);
   }
 }

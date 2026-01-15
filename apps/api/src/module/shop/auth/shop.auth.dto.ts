@@ -2,7 +2,11 @@ import { z } from 'zod';
 import {
   requestVerificationSchema,
   verifyCodeSchema,
+  kakaoLoginSchema,
+  socialLoginResponseSchema,
+  completeSocialRegistrationSchema,
 } from './shop.auth.schema';
+import { SocialProviderEnumType } from '@src/module/backoffice/domain/shop/social-account.entity';
 
 /**
  * Shop Auth DTO
@@ -42,4 +46,23 @@ export interface TokenGenerationResult {
 export interface JwtPayload {
   sub: number; // member.id
   type: 'access' | 'refresh';
+}
+
+/** 카카오 로그인 입력 */
+export type KakaoLoginInput = z.infer<typeof kakaoLoginSchema>;
+
+/** 소셜 로그인 응답 */
+export type SocialLoginResult = z.infer<typeof socialLoginResponseSchema>;
+
+/** 소셜 가입 완료 입력 */
+export type CompleteSocialRegistrationInput = z.infer<
+  typeof completeSocialRegistrationSchema
+>;
+
+/** Pending Token Payload */
+export interface PendingTokenPayload {
+  provider: SocialProviderEnumType;
+  providerId: string;
+  email?: string;
+  name?: string;
 }

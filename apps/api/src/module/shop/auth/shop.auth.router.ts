@@ -6,22 +6,16 @@ import {
   requestVerificationSchema,
   verifyCodeSchema,
   refreshTokenSchema,
+  kakaoLoginSchema,
+  tokenResponseSchema,
+  socialLoginResponseSchema,
+  completeSocialRegistrationSchema,
 } from './shop.auth.schema';
 import type {
   RequestVerificationResponse,
   TokenGenerationResult,
+  SocialLoginResult,
 } from './shop.auth.dto';
-
-/** 토큰 응답 스키마 */
-const tokenResponseSchema = z.object({
-  accessToken: z.string(),
-  refreshToken: z.string(),
-  member: z.object({
-    id: z.number(),
-    phone: z.string(),
-    name: z.string().nullable(),
-  }),
-});
 
 /**
  * ShopAuthRouter - Shop 인증 tRPC 라우터
@@ -76,5 +70,36 @@ export class ShopAuthRouter extends BaseTrpcRouter {
     @Input() input: z.infer<typeof refreshTokenSchema>
   ): Promise<TokenGenerationResult> {
     return this.microserviceClient.send('shopAuth.refreshToken', input.refreshToken);
+  }
+
+  /**
+   * 카카오 로그인
+   * Authorization Code로 카카오 인증 후 토큰 또는 pendingToken을 발급합니다.
+   */
+  @Mutation({
+    input: kakaoLoginSchema,
+    output: socialLoginResponseSchema,
+  })
+  async kakaoLogin(
+    @Input() input: z.infer<typeof kakaoLoginSchema>
+  ): Promise<SocialLoginResult> {
+    return this.microserviceClient.send('shopAuth.kakaoLogin', input);
+  }
+
+  /**
+   * 소셜 가입 완료
+   * pendingToken과 SMS 인증을 통해 회원가입을 완료합니다.
+   */
+  @Mutation({
+    input: completeSocialRegistrationSchema,
+    output: tokenResponseSchema,
+  })
+  async completeSocialRegistration(
+    @Input() input: z.infer<typeof completeSocialRegistrationSchema>
+  ): Promise<TokenGenerationResult> {
+    return this.microserviceClient.send(
+      'shopAuth.completeSocialRegistration',
+      input
+    );
   }
 }
