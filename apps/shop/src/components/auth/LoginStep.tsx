@@ -17,12 +17,13 @@
 import tw from 'tailwind-styled-components';
 
 import { Button } from '@/components/common';
+import { isValidPhoneNumber, type SocialProvider } from '@/shared/auth';
 
 export interface LoginStepProps {
   phoneNumber: string;
   onPhoneNumberChange: (value: string) => void;
   onRequestOTP: () => void;
-  onSocialLogin: (provider: 'kakao' | 'naver') => void;
+  onSocialLogin: (provider: SocialProvider) => void;
   isLoading: boolean;
   error: string | null;
   onErrorClear: () => void;
@@ -37,7 +38,7 @@ export function LoginStep({
   error,
   onErrorClear,
 }: LoginStepProps) {
-  const isValidPhoneNumber = /^01[0-9]{8,9}$/.test(phoneNumber);
+  const isPhoneValid = isValidPhoneNumber(phoneNumber);
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onPhoneNumberChange(e.target.value.replace(/\D/g, ''));
@@ -46,9 +47,6 @@ export function LoginStep({
 
   return (
     <StepContent>
-      {/* 상단 라운드 여백 */}
-      <TopSpacer />
-
       {/* 로그인 타이틀 */}
       <Title>로그인</Title>
 
@@ -66,10 +64,7 @@ export function LoginStep({
         {error && <ErrorMessage>{error}</ErrorMessage>}
       </Section>
 
-      <Button
-        onClick={onRequestOTP}
-        disabled={!isValidPhoneNumber || isLoading}
-      >
+      <Button onClick={onRequestOTP} disabled={!isPhoneValid || isLoading}>
         {isLoading ? '발송 중...' : '연락처 인증'}
       </Button>
 
@@ -122,16 +117,12 @@ function NaverIcon() {
 
 // Styled Components
 const StepContent = tw.div`
-  px-5
-  pb-5
+  p-5
   bg-white
   flex
   flex-col
   gap-5
-`;
-
-const TopSpacer = tw.div`
-  h-3
+  rounded-t-[32px]
 `;
 
 const Title = tw.h2`

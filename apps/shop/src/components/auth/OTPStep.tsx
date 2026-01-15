@@ -8,26 +8,31 @@
  *   otpCode={otpCode}
  *   onOtpChange={handleOtpChange}
  *   onVerify={handleVerifyOTP}
+ *   onResend={handleResendOTP}
+ *   onClose={handleClose}
  *   countdown={countdown}
  *   isLoading={isLoading}
  *   error={error}
  * />
  */
 
+import { X } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 import tw from 'tailwind-styled-components';
 
 import { Button } from '@/components/common';
 
 export interface OTPStepProps {
-  phoneNumber: string;
+  phoneNumber?: string;
   otpCode: string[];
   onOtpChange: (newOtp: string[]) => void;
   onVerify: () => void;
   onResend: () => void;
-  onBack: () => void;
+  onBack?: () => void;
+  onClose?: () => void;
   countdown: number;
   isLoading: boolean;
+  isResending?: boolean;
   error: string | null;
 }
 
@@ -35,8 +40,11 @@ export function OTPStep({
   otpCode,
   onOtpChange,
   onVerify,
+  onResend,
+  onClose,
   countdown,
   isLoading,
+  isResending = false,
   error,
 }: OTPStepProps) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -63,31 +71,49 @@ export function OTPStep({
 
   return (
     <StepContent>
-      {/* 상단 라운드 여백 */}
-      <TopSpacer />
-
-      {/* 타이틀 */}
-      <Title>인증번호를 입력해 주세요.</Title>
+      {/* 타이틀 + 닫기 버튼 */}
+      <TitleRow>
+        <Title>인증번호를 입력해 주세요.</Title>
+        {onClose && (
+          <CloseButton onClick={onClose}>
+            <X size={24} />
+          </CloseButton>
+        )}
+      </TitleRow>
 
       {/* 인증번호 입력 섹션 */}
       <Section>
         <SectionLabel>인증번호</SectionLabel>
-        <InputWrapper>
-          <OTPInput
-            ref={inputRef}
-            type="tel"
-            inputMode="numeric"
-            placeholder="숫자만 입력해 주세요."
-            value={otpValue}
-            onChange={handleInputChange}
-            maxLength={6}
-          />
-          <TimerText>{formatCountdown(countdown)}</TimerText>
-        </InputWrapper>
+        <InputRow>
+          <InputWrapper>
+            <OTPInput
+              ref={inputRef}
+              type="tel"
+              inputMode="numeric"
+              placeholder="숫자만 입력해 주세요."
+              value={otpValue}
+              onChange={handleInputChange}
+              maxLength={6}
+            />
+            <TimerText>{formatCountdown(countdown)}</TimerText>
+          </InputWrapper>
+          <ResendButton
+            variant="outline"
+            size="medium"
+            onClick={onResend}
+            disabled={isResending}
+          >
+            재전송
+          </ResendButton>
+        </InputRow>
         {error && <ErrorMessage>{error}</ErrorMessage>}
       </Section>
 
-      <Button onClick={onVerify} disabled={otpValue.length !== 6 || isLoading}>
+      <Button
+        size="xlarge"
+        onClick={onVerify}
+        disabled={otpValue.length !== 6 || isLoading}
+      >
         {isLoading ? '확인 중...' : '확인'}
       </Button>
     </StepContent>
@@ -96,16 +122,19 @@ export function OTPStep({
 
 // Styled Components
 const StepContent = tw.div`
-  px-5
-  pb-5
+  p-5
   bg-white
   flex
   flex-col
   gap-5
+  rounded-t-[32px]
 `;
 
-const TopSpacer = tw.div`
-  h-3
+const TitleRow = tw.div`
+  flex
+  items-center
+  justify-between
+  gap-2
 `;
 
 const Title = tw.h2`
@@ -113,6 +142,19 @@ const Title = tw.h2`
   text-[21px]
   font-bold
   leading-7
+  flex-1
+`;
+
+const CloseButton = tw.button`
+  w-11
+  h-11
+  flex
+  items-center
+  justify-center
+  bg-bg-neutral
+  rounded-full
+  text-fg-neutral
+  shrink-0
 `;
 
 const Section = tw.div`
@@ -128,7 +170,14 @@ const SectionLabel = tw.p`
   leading-5
 `;
 
+const InputRow = tw.div`
+  flex
+  items-center
+  gap-2
+`;
+
 const InputWrapper = tw.div`
+  flex-1
   h-[44px]
   px-3
   bg-bg-field
@@ -157,6 +206,10 @@ const TimerText = tw.span`
   text-fg-muted
   text-[16.5px]
   font-normal
+  shrink-0
+`;
+
+const ResendButton = tw(Button)`
   shrink-0
 `;
 
