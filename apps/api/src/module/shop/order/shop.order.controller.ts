@@ -1,8 +1,13 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
 import { ShopOrderService } from './shop.order.service';
-import { createHotelOrderOutputSchema } from './shop.order.schema';
-import type { CreateHotelOrderInput, CreateHotelOrderOutput } from './shop.order.dto';
+import { createHotelOrderOutputSchema, getTmpOrderOutputSchema } from './shop.order.schema';
+import type {
+  CreateHotelOrderInput,
+  CreateHotelOrderOutput,
+  GetTmpOrderInput,
+  GetTmpOrderOutput,
+} from './shop.order.dto';
 
 @Controller()
 export class ShopOrderController {
@@ -12,7 +17,13 @@ export class ShopOrderController {
   async createHotelOrder(
     input: CreateHotelOrderInput
   ): Promise<CreateHotelOrderOutput> {
-    const tmpOrder = await this.shopOrderService.createHotelOrder(input);
-    return createHotelOrderOutputSchema.parse({ orderId: tmpOrder.id });
+    const result = await this.shopOrderService.createHotelOrder(input);
+    return createHotelOrderOutputSchema.parse(result);
+  }
+
+  @MessagePattern('shopOrder.getTmpOrder')
+  async getTmpOrder(input: GetTmpOrderInput): Promise<GetTmpOrderOutput> {
+    const result = await this.shopOrderService.getTmpOrder(input);
+    return getTmpOrderOutputSchema.parse(result);
   }
 }

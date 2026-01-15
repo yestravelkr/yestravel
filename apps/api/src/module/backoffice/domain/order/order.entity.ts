@@ -45,7 +45,7 @@ export const OrderStatusEnum = {
   REFUNDED: 'REFUNDED',
 } as const;
 
-export const orderNumberParser = new Sqids({ minLength: 8 });
+export const orderNumberParser = new Sqids({ minLength: 8, alphabet: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ' });
 
 /**
  * OrderEntity - 주문 엔티티 (Base)

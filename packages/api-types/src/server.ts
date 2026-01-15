@@ -228,8 +228,28 @@ const appRouter = t.router({
       checkOutDate: z.string(),
       optionId: z.number(),
     })).output(z.object({
-      orderId: z.number(),
-    })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
+      orderNumber: z.string(),
+    })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    getTmpOrder: publicProcedure.input(z.object({
+      orderNumber: z.string(),
+    })).output(z.object({
+      type: z.enum(PRODUCT_TYPE_ENUM_VALUE),
+      totalAmount: z.number(),
+      product: z.object({
+        name: z.string(),
+        thumbnailUrl: z.string().nullish(),
+        checkInTime: z.string(),
+        checkOutTime: z.string(),
+      }),
+      orderOptionSnapshot: z.object({
+        type: z.literal('HOTEL'),
+        checkInDate: z.string(),
+        checkOutDate: z.string(),
+        hotelOptionId: z.number(),
+        hotelOptionName: z.string(),
+        priceByDate: z.record(z.string(), z.number()),
+      }),
+    })).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
   }),
   shopInfluencer: t.router({
     findBySlug: publicProcedure.input(z.object({
@@ -275,6 +295,41 @@ const appRouter = t.router({
         price: z.number(),
       })),
     })).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
+  }),
+  shopAuth: t.router({
+    requestVerification: publicProcedure.input(z.object({
+      phone: z
+        .string()
+        .regex(/^01[0-9]{8,9}$/, '올바른 휴대폰 번호를 입력해주세요'),
+    })).output(z.object({
+      id: z.number(),
+      phone: z.string(),
+      expiresAt: z.date(),
+      code: z.string().optional(), // 개발환경에서만 노출
+    })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    verifyCode: publicProcedure.input(z.object({
+      phone: z.string(),
+      code: z.string().length(6, '인증번호 6자리를 입력해주세요'),
+    })).output(z.object({
+      accessToken: z.string(),
+      refreshToken: z.string(),
+      member: z.object({
+        id: z.number(),
+        phone: z.string(),
+        name: z.string().nullable(),
+      }),
+    })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    refreshToken: publicProcedure.input(z.object({
+      refreshToken: z.string(),
+    })).output(z.object({
+      accessToken: z.string(),
+      refreshToken: z.string(),
+      member: z.object({
+        id: z.number(),
+        phone: z.string(),
+        name: z.string().nullable(),
+      }),
+    })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
   }),
   sample: t.router({
     getHello: publicProcedure.input(z.object({

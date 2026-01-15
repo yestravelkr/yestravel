@@ -29,7 +29,7 @@ import {
 // Route Definition
 // ============================================================================
 
-export const Route = createFileRoute('/order/$orderId')({
+export const Route = createFileRoute('/order/$orderNumber')({
   component: OrderDetailPage,
 });
 
@@ -213,11 +213,11 @@ const MOCK_SHIPPING_ORDER: ShippingOrderData = {
  * orderId에 'ship'이 포함되면 배송 주문, 그 외에는 숙박 주문 반환
  * TODO: 실제 API 연동 시 교체 필요
  */
-function fetchOrderDetail(orderId: string): OrderData {
-  if (orderId.includes('ship')) {
-    return { ...MOCK_SHIPPING_ORDER, orderId, orderNumber: orderId };
+function fetchOrderDetail(orderNumber: string): OrderData {
+  if (orderNumber.includes('ship')) {
+    return { ...MOCK_SHIPPING_ORDER, orderNumber };
   }
-  return { ...MOCK_ACCOMMODATION_ORDER, orderId, orderNumber: orderId };
+  return { ...MOCK_ACCOMMODATION_ORDER, orderNumber };
 }
 
 // ============================================================================
@@ -225,11 +225,11 @@ function fetchOrderDetail(orderId: string): OrderData {
 // ============================================================================
 
 function OrderDetailPage() {
-  const { orderId } = Route.useParams();
+  const { orderNumber } = Route.useParams();
   const navigate = useNavigate();
 
   // API에서 주문 데이터 조회 (현재는 Mock)
-  const orderData = fetchOrderDetail(orderId);
+  const orderData = fetchOrderDetail(orderNumber);
 
   const handleClose = () => {
     navigate({ to: '/' });
