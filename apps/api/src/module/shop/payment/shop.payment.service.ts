@@ -1,6 +1,17 @@
-import { Injectable, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import axios from 'axios';
 import { ConfigProvider } from '@src/config';
+import { RepositoryProvider } from '@src/module/shared/transaction/repository.provider';
+import {
+  OrderEntity,
+  OrderStatusEnum,
+  orderNumberParser,
+} from '@src/module/backoffice/domain/order/order.entity';
 import type {
   ShopPaymentCompleteInput,
   ShopPaymentCompleteOutput,
@@ -22,23 +33,70 @@ export class ShopPaymentService {
     expiredAt: dayjs().add(-1, 'h'), // 처음에 바로 accessToken 발급하도록 처리
   };
 
+  constructor(private readonly repositoryProvider: RepositoryProvider) {}
+
   async handlePaymentComplete(
     data: ShopPaymentCompleteInput
   ): Promise<ShopPaymentCompleteOutput> {
     this.logger.log('Payment complete webhook received');
     this.logger.log(JSON.stringify(data, null, 2));
 
-    // 1. Purchase 생성
-    // 2. PurchaseLog 생성
-    // 3. Order 상태 업데이트
+    const { paymentId } = data;
+
+    // 1. TmpOrder 조회 (paymentId = orderNumber)
+    const tmpOrder = await this.getTmpOrderByOrderNumber(paymentId);
+
+    // 2. TmpOrder → Order 변환
+    const order = OrderEntity.from(tmpOrder.raw);
+
+    // 3. Order 상태를 PAID로 업데이트 및 저장
+    order.status = OrderStatusEnum.PAID;
+    await this.saveOrder(order);
+
+    // 4. TmpOrder 삭제 (임시 데이터이므로 hard delete)
+    await this.repositoryProvider.TmpOrderRepository.delete(tmpOrder.id);
+
+    this.logger.log(`Order created successfully: ${order.id}`);
 
     // 마지막. 내부로직 문제 없을 시 PortOne 결제 수동 승인
     await this.confirmPayment(data);
 
     return {
       success: true,
-      message: 'Payment webhook processed',
+      message: 'Payment completed and order created',
     };
+  }
+
+  /**
+   * orderNumber로 TmpOrder 조회
+   */
+  private async getTmpOrderByOrderNumber(orderNumber: string) {
+    const [orderId] = orderNumberParser.decode(orderNumber);
+
+    if (!orderId) {
+      throw new BadRequestException(
+        `유효하지 않은 주문번호입니다 (orderNumber: ${orderNumber})`
+      );
+    }
+
+    const tmpOrder = await this.repositoryProvider.TmpOrderRepository.findOne({
+      where: { id: orderId },
+    });
+
+    if (!tmpOrder) {
+      throw new NotFoundException(
+        `임시 주문을 찾을 수 없습니다 (orderNumber: ${orderNumber})`
+      );
+    }
+
+    return tmpOrder;
+  }
+
+  /**
+   * Order 저장
+   */
+  private async saveOrder(order: OrderEntity): Promise<void> {
+    await this.repositoryProvider.OrderRepository.save(order);
   }
 
   // Portone 결제 승인

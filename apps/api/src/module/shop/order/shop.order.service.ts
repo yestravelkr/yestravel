@@ -1,14 +1,26 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { RepositoryProvider } from '@src/module/shared/transaction/repository.provider';
 import { ProductTypeEnum } from '@src/module/backoffice/admin/admin.schema';
-import { CreateHotelOrderInput, CreateHotelOrderOutput, GetTmpOrderInput, GetTmpOrderOutput } from './shop.order.dto';
+import {
+  CreateHotelOrderInput,
+  CreateHotelOrderOutput,
+  GetTmpOrderInput,
+  GetTmpOrderOutput,
+} from './shop.order.dto';
 import { CampaignInfluencerProductEntity } from '@src/module/backoffice/domain/campaign-influencer-product.entity';
 import { HotelOptionEntity } from '@src/module/backoffice/domain/product/hotel-option.entity';
 import { HotelSkuEntity } from '@src/module/backoffice/domain/product/hotel-sku.entity';
 import { HotelOrderOptionData } from '@src/module/backoffice/domain/order/hotel-order.entity';
-import { TmpOrderEntity, TmpOrderRawData } from '@src/module/backoffice/domain/order/tmp-order.entity';
+import { TmpOrderRawData } from '@src/module/backoffice/domain/order/tmp-order.entity';
 import { orderNumberParser } from '@src/module/backoffice/domain/order/order.entity';
-import { HotelOptionSelector, HotelOptionSelectorConfig } from '@yestravelkr/option-selector';
+import {
+  HotelOptionSelector,
+  HotelOptionSelectorConfig,
+} from '@yestravelkr/option-selector';
 
 interface SaleInfo {
   campaignInfluencerProduct: CampaignInfluencerProductEntity;
@@ -26,7 +38,9 @@ interface HotelPriceResult {
 export class ShopOrderService {
   constructor(private readonly repositoryProvider: RepositoryProvider) {}
 
-  async createHotelOrder(input: CreateHotelOrderInput): Promise<CreateHotelOrderOutput> {
+  async createHotelOrder(
+    input: CreateHotelOrderInput
+  ): Promise<CreateHotelOrderOutput> {
     const { saleId, checkInDate, checkOutDate, optionId } = input;
 
     // 1. saleId 기반으로 campaign, product, influencer 가져옴
@@ -36,10 +50,17 @@ export class ShopOrderService {
     this.validateHotelProduct(saleInfo.campaignInfluencerProduct.product.type);
 
     // 3. option이 해당 product에 해당하는 option인지 검증
-    const hotelOption = await this.getValidatedHotelOption(optionId, saleInfo.productId);
+    const hotelOption = await this.getValidatedHotelOption(
+      optionId,
+      saleInfo.productId
+    );
 
     // 4. 남은 재고 수량 확인
-    await this.validateHotelSkuQuantity(saleInfo.productId, checkInDate, checkOutDate);
+    await this.validateHotelSkuQuantity(
+      saleInfo.productId,
+      checkInDate,
+      checkOutDate
+    );
 
     // 5. HotelOptionSelector로 해당 옵션, checkInDate, checkOutDate로 가격 조회
     const priceResult = await this.calculateHotelPrice(
@@ -74,7 +95,8 @@ export class ShopOrderService {
       raw,
     });
 
-    const savedTmpOrder = await this.repositoryProvider.TmpOrderRepository.save(tmpOrder);
+    const savedTmpOrder =
+      await this.repositoryProvider.TmpOrderRepository.save(tmpOrder);
     const orderNumber = orderNumberParser.encode([savedTmpOrder.id]);
 
     return { orderNumber };
@@ -88,7 +110,9 @@ export class ShopOrderService {
     const [orderId] = orderNumberParser.decode(orderNumber);
 
     if (!orderId) {
-      throw new BadRequestException(`유효하지 않은 주문번호입니다 (orderNumber: ${orderNumber})`);
+      throw new BadRequestException(
+        `유효하지 않은 주문번호입니다 (orderNumber: ${orderNumber})`
+      );
     }
 
     const tmpOrder = await this.repositoryProvider.TmpOrderRepository.findOne({
@@ -96,15 +120,20 @@ export class ShopOrderService {
     });
 
     if (!tmpOrder) {
-      throw new NotFoundException(`주문을 찾을 수 없습니다 (orderNumber: ${orderNumber})`);
+      throw new NotFoundException(
+        `주문을 찾을 수 없습니다 (orderNumber: ${orderNumber})`
+      );
     }
 
-    const hotelProduct = await this.repositoryProvider.HotelProductRepository.findOne({
-      where: { id: tmpOrder.raw.productId },
-    });
+    const hotelProduct =
+      await this.repositoryProvider.HotelProductRepository.findOne({
+        where: { id: tmpOrder.raw.productId },
+      });
 
     if (!hotelProduct) {
-      throw new NotFoundException(`상품을 찾을 수 없습니다 (productId: ${tmpOrder.raw.productId})`);
+      throw new NotFoundException(
+        `상품을 찾을 수 없습니다 (productId: ${tmpOrder.raw.productId})`
+      );
     }
 
     return {
@@ -125,18 +154,22 @@ export class ShopOrderService {
    */
   private async getSaleInfo(saleId: number): Promise<SaleInfo> {
     const campaignInfluencerProduct =
-      await this.repositoryProvider.CampaignInfluencerProductRepository.findOne({
-        where: { id: saleId },
-        relations: [
-          'campaignInfluencer',
-          'campaignInfluencer.campaign',
-          'campaignInfluencer.influencer',
-          'product',
-        ],
-      });
+      await this.repositoryProvider.CampaignInfluencerProductRepository.findOne(
+        {
+          where: { id: saleId },
+          relations: [
+            'campaignInfluencer',
+            'campaignInfluencer.campaign',
+            'campaignInfluencer.influencer',
+            'product',
+          ],
+        }
+      );
 
     if (!campaignInfluencerProduct) {
-      throw new NotFoundException(`판매 상품을 찾을 수 없습니다 (saleId: ${saleId})`);
+      throw new NotFoundException(
+        `판매 상품을 찾을 수 없습니다 (saleId: ${saleId})`
+      );
     }
 
     const { campaignInfluencer, product } = campaignInfluencerProduct;
@@ -165,9 +198,10 @@ export class ShopOrderService {
     optionId: number,
     productId: number
   ): Promise<HotelOptionEntity> {
-    const hotelOption = await this.repositoryProvider.HotelOptionRepository.findOne({
-      where: { id: optionId, productId },
-    });
+    const hotelOption =
+      await this.repositoryProvider.HotelOptionRepository.findOne({
+        where: { id: optionId, productId },
+      });
 
     if (!hotelOption) {
       throw new BadRequestException(
@@ -186,7 +220,11 @@ export class ShopOrderService {
     checkInDate: string,
     checkOutDate: string
   ): Promise<void> {
-    const skus = await this.getHotelSkusInRange(productId, checkInDate, checkOutDate);
+    const skus = await this.getHotelSkusInRange(
+      productId,
+      checkInDate,
+      checkOutDate
+    );
 
     // 체크인부터 체크아웃 전날까지 모든 날짜에 재고가 있어야 함
     const requiredDates = this.getDateRange(checkInDate, checkOutDate);
@@ -210,7 +248,9 @@ export class ShopOrderService {
   ): Promise<HotelPriceResult> {
     // 호텔 옵션과 SKU 조회
     const [hotelOptions, hotelSkus] = await Promise.all([
-      this.repositoryProvider.HotelOptionRepository.find({ where: { productId } }),
+      this.repositoryProvider.HotelOptionRepository.find({
+        where: { productId },
+      }),
       this.repositoryProvider.HotelSkuRepository.find({ where: { productId } }),
     ]);
 
