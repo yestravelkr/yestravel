@@ -62,6 +62,8 @@ export const socialLoginResponseSchema = z.discriminatedUnion('status', [
 /** 소셜 가입 완료 스키마 */
 export const completeSocialRegistrationSchema = z.object({
   pendingToken: z.string(),
-  phone: z.string().regex(/^01[0-9]{8,9}$/, '올바른 휴대폰 번호를 입력해주세요'),
+  phone: z
+    .string()
+    .regex(/^01[0-9]{8,9}$/, '올바른 휴대폰 번호를 입력해주세요'),
   code: z.string().length(6, '인증번호 6자리를 입력해주세요'),
 });

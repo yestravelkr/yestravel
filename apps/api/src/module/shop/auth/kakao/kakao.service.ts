@@ -27,7 +27,10 @@ export class KakaoService {
    * @param code 카카오 인증 후 받은 Authorization Code
    * @param redirectUri 카카오 앱에 등록한 Redirect URI
    */
-  async getToken(code: string, redirectUri: string): Promise<KakaoTokenResponse> {
+  async getToken(
+    code: string,
+    redirectUri: string
+  ): Promise<KakaoTokenResponse> {
     const params: Record<string, string> = {
       grant_type: 'authorization_code',
       client_id: ConfigProvider.kakao.clientId,

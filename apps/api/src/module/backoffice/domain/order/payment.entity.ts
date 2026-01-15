@@ -1,9 +1,16 @@
-import {Entity, Column, EntityManager, Index, ManyToOne, JoinColumn} from 'typeorm';
+import {
+  Entity,
+  Column,
+  EntityManager,
+  Index,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
 import { BaseEntity } from '@src/module/backoffice/domain/base.entity';
 import { TransactionService } from '@src/module/shared/transaction/transaction.service';
 import { getEntityManager } from '@src/database/datasources';
 import type { Nullish } from '@src/types/utility.type';
-import {OrderEntity} from "@src/module/backoffice/domain/order/order.entity";
+import { OrderEntity } from '@src/module/backoffice/domain/order/order.entity';
 
 /**
  * PaymentEntity - 결제 엔티티
@@ -46,5 +53,6 @@ export class PaymentEntity extends BaseEntity {
   order: OrderEntity;
 }
 
-export const getPaymentRepository = (source?: TransactionService | EntityManager) =>
-  getEntityManager(source).getRepository(PaymentEntity);
+export const getPaymentRepository = (
+  source?: TransactionService | EntityManager
+) => getEntityManager(source).getRepository(PaymentEntity);

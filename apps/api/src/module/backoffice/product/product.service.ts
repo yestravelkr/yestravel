@@ -91,8 +91,8 @@ export class ProductService {
           }),
           this.repositoryProvider.HotelSkuRepository.find({
             where: { productId: id },
-            order: { date: 'ASC'}
-          })
+            order: { date: 'ASC' },
+          }),
         ]);
 
         // categories를 entity에 할당 후 spread로 포함
@@ -111,7 +111,7 @@ export class ProductService {
           hotelSkus: hotelSkus.map(sku => ({
             checkInDate: sku.date,
             quantity: sku.quantity,
-          }))
+          })),
         };
       }
 

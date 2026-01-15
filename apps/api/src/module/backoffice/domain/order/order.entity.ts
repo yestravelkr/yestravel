@@ -4,7 +4,8 @@ import {
   ManyToOne,
   JoinColumn,
   EntityManager,
-  Index, OneToMany,
+  Index,
+  OneToMany,
 } from 'typeorm';
 import { BaseEntity } from '@src/module/backoffice/domain/base.entity';
 import { ProductEntity } from '@src/module/backoffice/domain/product/product.entity';
@@ -13,11 +14,14 @@ import { CampaignEntity } from '@src/module/backoffice/domain/campaign.entity';
 import { TransactionService } from '@src/module/shared/transaction/transaction.service';
 import { getEntityManager } from '@src/database/datasources';
 import { AddressEntity } from './address.entity';
-import type { Nullish } from '@src/types/utility.type';
 import Sqids from 'sqids';
-import {PaymentEntity} from "@src/module/backoffice/domain/order/payment.entity";
-import {HotelOrderOptionData} from "@src/module/backoffice/domain/order/hotel-order.entity";
-import type { TmpOrderRawData } from "./tmp-order.entity";
+import { PaymentEntity } from '@src/module/backoffice/domain/order/payment.entity';
+import { HotelOrderOptionData } from '@src/module/backoffice/domain/order/hotel-order.entity';
+import type { TmpOrderRawData } from './tmp-order.entity';
+import {
+  PRODUCT_TYPE_ENUM_VALUE,
+  ProductTypeEnumType,
+} from '@src/module/backoffice/admin/admin.schema';
 
 /**
  * 주문 상태 Enum
@@ -45,16 +49,20 @@ export const OrderStatusEnum = {
   REFUNDED: 'REFUNDED',
 } as const;
 
-export const orderNumberParser = new Sqids({ minLength: 8, alphabet: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ' });
+export const orderNumberParser = new Sqids({
+  minLength: 8,
+  alphabet: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+});
 
 /**
- * OrderEntity - 주문 엔티티 (Base)
+ * OrderEntity - 주문 엔티티
  *
  * 호텔/배송/E-Ticket 상품의 주문 정보를 저장합니다.
- * 상품 타입별로 HotelOrderEntity 등 자식 엔티티로 확장됩니다.
+ * type 컬럼으로 상품 종류를 구분합니다.
  */
 @Entity('order')
 @Index('IDX_order_status', ['status'])
+@Index('IDX_order_type', ['type'])
 @Index('IDX_order_product_id', ['productId'])
 @Index('IDX_order_influencer_id', ['influencerId'])
 @Index('IDX_order_campaign_id', ['campaignId'])
@@ -65,6 +73,7 @@ export class OrderEntity extends BaseEntity {
   static from(raw: TmpOrderRawData): OrderEntity {
     const order = new OrderEntity();
 
+    order.type = raw.orderOptionSnapshot.type;
     order.customerName = raw.customerName;
     order.customerPhone = raw.customerPhone;
     order.productId = raw.productId;
@@ -90,9 +99,16 @@ export class OrderEntity extends BaseEntity {
   }
 
   get orderNumber(): string {
-    const [number] = orderNumberParser.encode([this.id])
+    const [number] = orderNumberParser.encode([this.id]);
     return number;
   }
+
+  /** 주문 타입 (HOTEL, E-TICKET, DELIVERY) */
+  @Column({
+    type: 'enum',
+    enum: PRODUCT_TYPE_ENUM_VALUE,
+  })
+  type: ProductTypeEnumType;
 
   /** 주문 상태 */
   @Column({
@@ -162,8 +178,8 @@ export class OrderEntity extends BaseEntity {
 
   @OneToMany(() => PaymentEntity, payment => payment.order)
   payments: PaymentEntity[];
-
 }
 
-export const getOrderRepository = (source?: TransactionService | EntityManager) =>
-  getEntityManager(source).getRepository(OrderEntity);
+export const getOrderRepository = (
+  source?: TransactionService | EntityManager
+) => getEntityManager(source).getRepository(OrderEntity);

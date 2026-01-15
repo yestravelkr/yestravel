@@ -60,7 +60,7 @@ export class SocialAccountEntity extends BaseEntity {
   email: Nullish<string>;
 
   /** 회원 정보 */
-  @ManyToOne(() => MemberEntity, (member) => member.socialAccounts)
+  @ManyToOne(() => MemberEntity, member => member.socialAccounts)
   @JoinColumn({ name: 'member_id' })
   member: MemberEntity;
 }

@@ -70,14 +70,20 @@ export class ShopMemberAuth1767684849228 implements MigrationInterface {
 
   public async down(queryRunner: QueryRunner): Promise<void> {
     // phone_verification 인덱스 삭제
-    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_phone_verification_expires_at"`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_phone_verification_phone"`);
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "IDX_phone_verification_expires_at"`
+    );
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "IDX_phone_verification_phone"`
+    );
 
     // phone_verification 테이블 삭제
     await queryRunner.query(`DROP TABLE IF EXISTS "phone_verification"`);
 
     // member_address 인덱스 삭제
-    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_member_address_member_id"`);
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "IDX_member_address_member_id"`
+    );
 
     // member_address 테이블 삭제
     await queryRunner.query(`DROP TABLE IF EXISTS "member_address"`);
