@@ -11,39 +11,50 @@ import tw from 'tailwind-styled-components';
 import type { NewOrderFormData } from '@/routes/new-order.$orderNumber';
 
 export type PaymentType = 'simple' | 'general';
-export type PaymentMethod = 'kakaopay' | 'naverpay' | 'toss' | 'card' | 'bank';
+export type PaymentMethod =
+  | 'kakaopay'
+  | 'naverpay'
+  | 'toss'
+  | 'card'
+  | 'vbank'
+  | 'bank';
 
-const SIMPLE_PAYMENT_METHODS = [
-  { value: 'kakaopay' as const, label: '카카오페이' },
-  { value: 'naverpay' as const, label: '네이버페이' },
-  { value: 'toss' as const, label: '토스' },
-];
+// TODO: 간편결제 추후 활성화
+// const SIMPLE_PAYMENT_METHODS = [
+//   { value: 'kakaopay' as const, label: '카카오페이' },
+//   { value: 'naverpay' as const, label: '네이버페이' },
+//   { value: 'toss' as const, label: '토스' },
+// ];
 
 const GENERAL_PAYMENT_METHODS = [
   { value: 'card' as const, label: '신용/체크카드' },
-  { value: 'bank' as const, label: '계좌이체' },
+  { value: 'vbank' as const, label: '가상계좌' },
+  // TODO: 계좌이체 추후 활성화
+  // { value: 'bank' as const, label: '계좌이체' },
 ];
 
 export function PaymentMethodSection() {
   const { watch, setValue } = useFormContext<NewOrderFormData>();
 
-  const paymentType = watch('paymentType');
+  // TODO: 간편결제 추후 활성화
+  // const paymentType = watch('paymentType');
   const paymentMethod = watch('paymentMethod');
 
-  const handlePaymentTypeChange = (type: PaymentType) => {
-    setValue('paymentType', type);
-    // 결제 타입 변경 시 기본 결제수단으로 초기화
-    setValue('paymentMethod', type === 'simple' ? 'kakaopay' : 'card');
-  };
+  // TODO: 간편결제 추후 활성화
+  // const handlePaymentTypeChange = (type: PaymentType) => {
+  //   setValue('paymentType', type);
+  //   // 결제 타입 변경 시 기본 결제수단으로 초기화
+  //   setValue('paymentMethod', type === 'simple' ? 'kakaopay' : 'card');
+  // };
 
-  const methods =
-    paymentType === 'simple' ? SIMPLE_PAYMENT_METHODS : GENERAL_PAYMENT_METHODS;
+  const methods = GENERAL_PAYMENT_METHODS;
 
   return (
     <Section>
       <SectionTitle>결제수단</SectionTitle>
 
-      <TabContainer>
+      {/* TODO: 간편결제 탭 추후 활성화 */}
+      {/* <TabContainer>
         <Tab
           $selected={paymentType === 'simple'}
           onClick={() => handlePaymentTypeChange('simple')}
@@ -56,7 +67,7 @@ export function PaymentMethodSection() {
         >
           일반결제
         </Tab>
-      </TabContainer>
+      </TabContainer> */}
 
       <MethodList>
         {methods.map(method => (
