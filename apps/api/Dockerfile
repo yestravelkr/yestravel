@@ -16,9 +16,12 @@ RUN yarn install --frozen-lockfile
 COPY apps/api ./apps/api
 COPY packages/option-selector ./packages/option-selector
 
-# Generate environment variables and build
-WORKDIR /app/apps/api
+# Build option-selector package first
+WORKDIR /app/packages/option-selector
+RUN yarn build
 
+# Build API
+WORKDIR /app/apps/api
 RUN yarn build
 
 FROM node:22.16-alpine
