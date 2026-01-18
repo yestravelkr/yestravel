@@ -18,6 +18,7 @@ import type {
   ShopPaymentCompleteInput,
   ShopPaymentCompleteOutput,
 } from './shop.payment.type';
+import { PaymentEntity } from '@src/module/backoffice/domain/order/payment.entity';
 import dayjs from 'dayjs';
 
 @Injectable()
@@ -60,8 +61,8 @@ export class ShopPaymentService {
 
     this.logger.log(`Order created successfully: ${order.id}`);
 
-    // 마지막. 내부로직 문제 없을 시 PortOne 결제 수동 승인
-    await this.confirmPayment(data);
+    // 마지막. 내부로직 문제 없을 시 PortOne 결제 수동 승인 및 Payment 저장
+    await this.confirmPayment(data, order);
 
     return {
       success: true,
@@ -122,35 +123,63 @@ export class ShopPaymentService {
     }
   }
 
-  // Portone 결제 승인
-  async confirmPayment(data: ShopPaymentCompleteInput): Promise<void> {
+  /**
+   * PortOne 결제 승인 및 Payment 저장
+   */
+  private async confirmPayment(
+    data: ShopPaymentCompleteInput,
+    order: OrderEntity
+  ): Promise<void> {
     const { paymentId, paymentToken, txId } = data;
     await this.generatePortoneAccessToken();
-    await axios
-      .post(
+
+    try {
+      const response = await axios.post(
         `${this.PORTONE_API_URL}/payments/${paymentId}/confirm`,
-        {
-          paymentToken,
-          txId,
-        },
+        { paymentToken, txId },
         {
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${this.portoneToken.accessToken}`,
           },
         }
-      )
-      .then(response => {
-        this.logger.log('Payment confirmed successfully');
-      })
-      .catch(error => {
-        if (error.response?.data.type === 'ALREADY_PAID') {
-          this.logger.log('이미 결제된 요청은 에러 없이 처리');
-          return;
-        }
-        this.logger.error('Payment confirmation failed', error);
-        throw error;
-      });
+      );
+
+      this.logger.log('Payment confirmed successfully');
+
+      // Payment 저장
+      await this.savePayment(order, response.data, txId);
+    } catch (error: any) {
+      if (error.response?.data?.type === 'ALREADY_PAID') {
+        this.logger.log('이미 결제된 요청은 에러 없이 처리');
+        // 이미 결제된 경우에도 Payment 저장 시도
+        await this.savePayment(order, error.response.data, txId);
+        return;
+      }
+      this.logger.error('Payment confirmation failed', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Payment 엔티티 저장
+   */
+  private async savePayment(
+    order: OrderEntity,
+    pgRawData: Record<string, any>,
+    txId: string
+  ): Promise<void> {
+    const payment = new PaymentEntity();
+    payment.orderId = order.id;
+    payment.paidAt = new Date();
+    payment.pgProvider = 'portone';
+    payment.pgRawData = pgRawData;
+    payment.paidAmount = order.totalAmount;
+    payment.nowAmount = order.totalAmount;
+    payment.impUid = txId;
+
+    await this.repositoryProvider.PaymentRepository.save(payment);
+    this.logger.log(`Payment saved: ${payment.id}`);
   }
 
   async generatePortoneAccessToken() {
