@@ -45,11 +45,11 @@ export class HotelOrderEntity extends OrderEntity {
   }
 
   /** 체크인 날짜 (YYYY-MM-DD) */
-  @Column({ name: 'check_in_date', type: 'date', nullable: true })
+  @Column({ type: 'date', nullable: true })
   checkInDate: Nullish<string>;
 
   /** 체크아웃 날짜 (YYYY-MM-DD) */
-  @Column({ name: 'check_out_date', type: 'date', nullable: true })
+  @Column({ type: 'date', nullable: true })
   checkOutDate: Nullish<string>;
 }
 

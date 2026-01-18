@@ -24,7 +24,14 @@ export interface UpdateETicketProductInput extends CreateETicketProductInput {
   id: number;
 }
 
-@Entity('eticket_product')
+/**
+ * ETicketProductEntity - E-Ticket 상품 엔티티
+ *
+ * ProductEntity를 상속받습니다.
+ * 같은 'product' 테이블을 사용하며, type='E-TICKET'인 상품을 조회합니다.
+ * E-Ticket은 부모(ProductEntity)의 필드만 사용합니다.
+ */
+@Entity('product')
 export class ETicketProductEntity extends ProductEntity {
   constructor() {
     super();

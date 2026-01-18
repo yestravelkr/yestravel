@@ -29,7 +29,13 @@ export interface UpdateHotelProductInput extends CreateHotelProductInput {
   id: number;
 }
 
-@Entity('hotel_product')
+/**
+ * HotelProductEntity - 호텔 상품 엔티티
+ *
+ * ProductEntity를 상속받아 호텔 상품에 필요한 추가 컬럼을 정의합니다.
+ * 같은 'product' 테이블을 사용하며, type='HOTEL'인 상품을 조회합니다.
+ */
+@Entity('product')
 export class HotelProductEntity extends ProductEntity {
   constructor() {
     super();
@@ -38,28 +44,28 @@ export class HotelProductEntity extends ProductEntity {
   }
 
   // 기준인원
-  @Column({ name: 'base_capacity', type: 'integer' })
-  baseCapacity: number;
+  @Column({ type: 'integer', nullable: true })
+  baseCapacity: Nullish<number>;
 
   // 최대인원
-  @Column({ name: 'max_capacity', type: 'integer' })
-  maxCapacity: number;
+  @Column({ type: 'integer', nullable: true })
+  maxCapacity: Nullish<number>;
 
   // 입실 시간
-  @Column({ name: 'check_in_time', type: 'time' })
-  checkInTime: string;
+  @Column({ type: 'time', nullable: true })
+  checkInTime: Nullish<string>;
 
   // 퇴실시간
-  @Column({ name: 'check_out_time', type: 'time' })
-  checkOutTime: string;
+  @Column({ type: 'time', nullable: true })
+  checkOutTime: Nullish<string>;
 
   // 침대구성 (리스트)
-  @Column('jsonb', { default: [] })
-  bedTypes: string[];
+  @Column('jsonb', { default: [], nullable: true })
+  bedTypes: Nullish<string[]>;
 
   // 태그 (리스트)
-  @Column('jsonb', { default: [] })
-  tags: string[];
+  @Column('jsonb', { default: [], nullable: true })
+  tags: Nullish<string[]>;
 
   // 헬퍼 메서드: Entity 생성
   static createFromInput(input: CreateHotelProductInput): HotelProductEntity {

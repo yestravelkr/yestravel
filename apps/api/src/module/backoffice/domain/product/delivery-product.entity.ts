@@ -42,7 +42,13 @@ export interface UpdateDeliveryProductInput extends CreateDeliveryProductInput {
   id: number;
 }
 
-@Entity('delivery_product')
+/**
+ * DeliveryProductEntity - 배송 상품 엔티티
+ *
+ * ProductEntity를 상속받아 배송 상품에 필요한 추가 컬럼을 정의합니다.
+ * 같은 'product' 테이블을 사용하며, type='DELIVERY'인 상품을 조회합니다.
+ */
+@Entity('product')
 export class DeliveryProductEntity extends ProductEntity {
   constructor() {
     super();
@@ -51,15 +57,15 @@ export class DeliveryProductEntity extends ProductEntity {
 
   // 배송 정책 (임베디드 컬럼)
   @Column(() => DeliveryPolicyEntity, { prefix: 'delivery' })
-  delivery: DeliveryPolicyEntity;
+  delivery: Nullish<DeliveryPolicyEntity>;
 
   // 교환 및 반품 안내
-  @Column('text', { default: '' })
-  exchangeReturnInfo: string;
+  @Column('text', { default: '', nullable: true })
+  exchangeReturnInfo: Nullish<string>;
 
   // 상품 정보 제공 고시
-  @Column('text', { default: '' })
-  productInfoNotice: string;
+  @Column('text', { default: '', nullable: true })
+  productInfoNotice: Nullish<string>;
 
   // 헬퍼 메서드: Entity 생성
   static createFromInput(
