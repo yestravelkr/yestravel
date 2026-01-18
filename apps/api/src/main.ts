@@ -25,6 +25,11 @@ async function bootstrap() {
   const expressApp = trpcApp.getHttpAdapter().getInstance();
   expressApp.set('trust proxy', true);
 
+  // Health check endpoint (CORS 전체 허용)
+  expressApp.get('/health', (req: any, res: any) => {
+    res.status(200).json({ status: 'ok' });
+  });
+
   // Debug: Log incoming headers
   expressApp.use((req: any, res: any, next: any) => {
     console.log('=== Incoming Request ===');
