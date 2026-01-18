@@ -12,6 +12,8 @@ import {
   OrderStatusEnum,
   orderNumberParser,
 } from '@src/module/backoffice/domain/order/order.entity';
+import { HotelOrderEntity } from '@src/module/backoffice/domain/order/hotel-order.entity';
+import { ProductTypeEnum } from '@src/module/backoffice/admin/admin.schema';
 import type {
   ShopPaymentCompleteInput,
   ShopPaymentCompleteOutput,
@@ -46,15 +48,15 @@ export class ShopPaymentService {
     // 1. TmpOrder 조회 (paymentId = orderNumber)
     const tmpOrder = await this.getTmpOrderByOrderNumber(paymentId);
 
-    // 2. TmpOrder → Order 변환
-    const order = OrderEntity.from(tmpOrder.raw);
+    // 2. TmpOrder → Order 변환 (타입별로 적절한 엔티티 사용)
+    const order = this.createOrderFromTmpOrder(tmpOrder);
 
     // 3. Order 상태를 PAID로 업데이트 및 저장
     order.status = OrderStatusEnum.PAID;
     await this.saveOrder(order);
 
     // 4. TmpOrder 삭제 (임시 데이터이므로 hard delete)
-    await this.repositoryProvider.TmpOrderRepository.delete(tmpOrder.id);
+    await this.repositoryProvider.TmpOrderRepository.delete({id: tmpOrder.id});
 
     this.logger.log(`Order created successfully: ${order.id}`);
 
@@ -97,6 +99,27 @@ export class ShopPaymentService {
    */
   private async saveOrder(order: OrderEntity): Promise<void> {
     await this.repositoryProvider.OrderRepository.save(order);
+  }
+
+  /**
+   * TmpOrder → Order 변환 (타입별로 적절한 엔티티 사용)
+   */
+  private createOrderFromTmpOrder(
+    tmpOrder: Awaited<ReturnType<typeof this.getTmpOrderByOrderNumber>>
+  ): OrderEntity {
+    switch (tmpOrder.type) {
+      case ProductTypeEnum.HOTEL:
+        return HotelOrderEntity.fromHotel(tmpOrder.raw);
+
+      case ProductTypeEnum.DELIVERY:
+      case ProductTypeEnum['E-TICKET']:
+        return OrderEntity.from(tmpOrder.raw);
+
+      default:
+        throw new BadRequestException(
+          `지원하지 않는 주문 타입입니다: ${tmpOrder.type}`
+        );
+    }
   }
 
   // Portone 결제 승인

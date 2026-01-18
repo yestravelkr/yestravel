@@ -16,11 +16,12 @@ import { getEntityManager } from '@src/database/datasources';
 import { AddressEntity } from './address.entity';
 import Sqids from 'sqids';
 import { PaymentEntity } from '@src/module/backoffice/domain/order/payment.entity';
-import { HotelOrderOptionData } from '@src/module/backoffice/domain/order/hotel-order.entity';
+import type { HotelOrderOptionData } from '@src/module/backoffice/domain/order/hotel-order.entity';
 import type { TmpOrderRawData } from './tmp-order.entity';
 import {
   PRODUCT_TYPE_ENUM_VALUE,
   ProductTypeEnumType,
+  ProductTypeEnum,
 } from '@src/module/backoffice/admin/admin.schema';
 
 /**
