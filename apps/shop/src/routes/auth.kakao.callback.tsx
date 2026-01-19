@@ -11,8 +11,9 @@ import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import tw from 'tailwind-styled-components';
 
-import { redirectToSocialLogin, saveTokens } from '@/shared/auth';
+import { redirectToSocialLogin } from '@/shared/auth';
 import { trpc } from '@/shared/trpc/trpc';
+import { useAuthStore } from '@/store/authStore';
 
 export const Route = createFileRoute('/auth/kakao/callback')({
   component: KakaoCallbackPage,
@@ -34,7 +35,12 @@ function KakaoCallbackPage() {
 
       if (data.status === 'complete') {
         // 기존 회원 - 토큰 저장 후 원래 페이지로 이동
-        saveTokens(data);
+        useAuthStore
+          .getState()
+          .login(
+            { accessToken: data.accessToken, refreshToken: data.refreshToken },
+            data.member
+          );
         toast.success('로그인 성공!');
 
         const returnUrl = state || '/';
