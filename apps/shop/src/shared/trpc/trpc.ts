@@ -24,50 +24,66 @@ const getApiUrl = () => {
 };
 
 /**
+ * Race condition 방지를 위한 refresh promise 캐시
+ * 여러 요청이 동시에 401을 받아도 한 번만 refresh 실행
+ */
+let refreshPromise: Promise<boolean> | null = null;
+
+/**
  * Refresh token을 사용해서 새 access token 발급
  */
 const refreshAccessToken = async (): Promise<boolean> => {
-  const { refreshToken } = useAuthStore.getState();
-
-  if (!refreshToken) {
-    useAuthStore.getState().logout();
-    return false;
+  // 이미 refresh 진행 중이면 기존 Promise 재사용
+  if (refreshPromise) {
+    return refreshPromise;
   }
 
-  try {
-    const response = await fetch(`${getApiUrl()}/shopAuth.refreshToken`, {
-      method: 'POST',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ json: { refreshToken } }),
-    });
+  refreshPromise = (async () => {
+    const { refreshToken } = useAuthStore.getState();
 
-    if (!response.ok) {
-      throw new Error('Token refresh failed');
+    if (!refreshToken) {
+      useAuthStore.getState().logout();
+      return false;
     }
 
-    const data = await response.json();
-    const result = data.result?.data?.json ?? data.result?.data;
-
-    if (result?.accessToken) {
-      useAuthStore.getState().login(
-        {
-          accessToken: result.accessToken,
-          refreshToken: result.refreshToken,
+    try {
+      const response = await fetch(`${getApiUrl()}/shopAuth.refreshToken`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
         },
-        result.member
-      );
-      return true;
-    }
+        body: JSON.stringify({ json: { refreshToken } }),
+      });
 
-    return false;
-  } catch (error) {
-    console.error('Token refresh error:', error);
-    useAuthStore.getState().logout();
-    return false;
-  }
+      if (!response.ok) {
+        throw new Error('Token refresh failed');
+      }
+
+      const data = await response.json();
+      const result = data.result?.data?.json ?? data.result?.data;
+
+      if (result?.accessToken) {
+        useAuthStore.getState().login(
+          {
+            accessToken: result.accessToken,
+            refreshToken: result.refreshToken,
+          },
+          result.member
+        );
+        return true;
+      }
+
+      return false;
+    } catch {
+      useAuthStore.getState().logout();
+      return false;
+    } finally {
+      refreshPromise = null;
+    }
+  })();
+
+  return refreshPromise;
 };
 
 export const trpcClient = trpc.createClient({
@@ -94,16 +110,11 @@ export const trpcClient = trpc.createClient({
 
         // 401 에러인 경우 토큰 refresh 시도
         if (response.status === 401 && token) {
-          console.log('토큰 만료 감지, refresh 시도 중...');
-
           const success = await refreshAccessToken();
 
           if (success) {
-            console.log('토큰 refresh 성공, 재시도 중...');
             const newToken = useAuthStore.getState().accessToken;
             return makeRequest(newToken);
-          } else {
-            console.log('토큰 refresh 실패');
           }
         }
 
