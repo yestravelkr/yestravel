@@ -1,7 +1,10 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
 import { ShopOrderService } from './shop.order.service';
-import { createHotelOrderOutputSchema, getTmpOrderOutputSchema } from './shop.order.schema';
+import {
+  createHotelOrderOutputSchema,
+  getTmpOrderOutputSchema,
+} from './shop.order.schema';
 import type {
   CreateHotelOrderInput,
   CreateHotelOrderOutput,

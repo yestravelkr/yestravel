@@ -39,11 +39,21 @@ export class MemberAddressEntity extends SoftDeleteEntity {
   address: AddressEntity;
 
   /** 수령인 이름 */
-  @Column({ name: 'recipient_name', type: 'varchar', length: 100, nullable: true })
+  @Column({
+    name: 'recipient_name',
+    type: 'varchar',
+    length: 100,
+    nullable: true,
+  })
   recipientName: string | null;
 
   /** 수령인 연락처 */
-  @Column({ name: 'recipient_phone', type: 'varchar', length: 20, nullable: true })
+  @Column({
+    name: 'recipient_phone',
+    type: 'varchar',
+    length: 20,
+    nullable: true,
+  })
   recipientPhone: string | null;
 
   /** 기본 배송지 여부 */

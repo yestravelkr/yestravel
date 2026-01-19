@@ -69,7 +69,10 @@ export class ShopAuthRouter extends BaseTrpcRouter {
   async refreshToken(
     @Input() input: z.infer<typeof refreshTokenSchema>
   ): Promise<TokenGenerationResult> {
-    return this.microserviceClient.send('shopAuth.refreshToken', input.refreshToken);
+    return this.microserviceClient.send(
+      'shopAuth.refreshToken',
+      input.refreshToken
+    );
   }
 
   /**

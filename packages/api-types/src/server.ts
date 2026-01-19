@@ -352,7 +352,9 @@ const appRouter = t.router({
     ])).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
     completeSocialRegistration: publicProcedure.input(z.object({
       pendingToken: z.string(),
-      phone: z.string().regex(/^01[0-9]{8,9}$/, '올바른 휴대폰 번호를 입력해주세요'),
+      phone: z
+        .string()
+        .regex(/^01[0-9]{8,9}$/, '올바른 휴대폰 번호를 입력해주세요'),
       code: z.string().length(6, '인증번호 6자리를 입력해주세요'),
     })).output(z.object({
       accessToken: z.string(),

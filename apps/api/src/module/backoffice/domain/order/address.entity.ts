@@ -12,7 +12,12 @@ export class AddressEntity {
   address: string | null;
 
   /** 상세 주소 */
-  @Column({ name: 'address_detail', type: 'varchar', length: 200, nullable: true })
+  @Column({
+    name: 'address_detail',
+    type: 'varchar',
+    length: 200,
+    nullable: true,
+  })
   detail: string | null;
 
   /** 우편번호 */

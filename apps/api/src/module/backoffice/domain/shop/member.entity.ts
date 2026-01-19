@@ -24,15 +24,17 @@ export class MemberEntity extends SoftDeleteEntity {
   name: Nullish<string>;
 
   /** 배송지 목록 */
-  @OneToMany(() => MemberAddressEntity, (address) => address.member)
+  @OneToMany(() => MemberAddressEntity, address => address.member)
   addresses: MemberAddressEntity[];
 
   /** 소셜 계정 목록 */
-  @OneToMany(() => SocialAccountEntity, (socialAccount) => socialAccount.member)
+  @OneToMany(() => SocialAccountEntity, socialAccount => socialAccount.member)
   socialAccounts: SocialAccountEntity[];
 }
 
-export const getMemberRepository = (source?: TransactionService | EntityManager) =>
+export const getMemberRepository = (
+  source?: TransactionService | EntityManager
+) =>
   getEntityManager(source)
     .getRepository(MemberEntity)
     .extend({

@@ -4,7 +4,8 @@ import {
   ManyToOne,
   JoinColumn,
   EntityManager,
-  Index, OneToMany,
+  Index,
+  OneToMany,
 } from 'typeorm';
 import { BaseEntity } from '@src/module/backoffice/domain/base.entity';
 import { ProductEntity } from '@src/module/backoffice/domain/product/product.entity';
@@ -13,11 +14,10 @@ import { CampaignEntity } from '@src/module/backoffice/domain/campaign.entity';
 import { TransactionService } from '@src/module/shared/transaction/transaction.service';
 import { getEntityManager } from '@src/database/datasources';
 import { AddressEntity } from './address.entity';
-import type { Nullish } from '@src/types/utility.type';
 import Sqids from 'sqids';
-import {PaymentEntity} from "@src/module/backoffice/domain/order/payment.entity";
-import {HotelOrderOptionData} from "@src/module/backoffice/domain/order/hotel-order.entity";
-import type { TmpOrderRawData } from "./tmp-order.entity";
+import { PaymentEntity } from '@src/module/backoffice/domain/order/payment.entity';
+import { HotelOrderOptionData } from '@src/module/backoffice/domain/order/hotel-order.entity';
+import type { TmpOrderRawData } from './tmp-order.entity';
 
 /**
  * 주문 상태 Enum
@@ -45,7 +45,10 @@ export const OrderStatusEnum = {
   REFUNDED: 'REFUNDED',
 } as const;
 
-export const orderNumberParser = new Sqids({ minLength: 8, alphabet: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ' });
+export const orderNumberParser = new Sqids({
+  minLength: 8,
+  alphabet: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+});
 
 /**
  * OrderEntity - 주문 엔티티 (Base)
@@ -90,7 +93,7 @@ export class OrderEntity extends BaseEntity {
   }
 
   get orderNumber(): string {
-    const [number] = orderNumberParser.encode([this.id])
+    const [number] = orderNumberParser.encode([this.id]);
     return number;
   }
 
@@ -162,8 +165,8 @@ export class OrderEntity extends BaseEntity {
 
   @OneToMany(() => PaymentEntity, payment => payment.order)
   payments: PaymentEntity[];
-
 }
 
-export const getOrderRepository = (source?: TransactionService | EntityManager) =>
-  getEntityManager(source).getRepository(OrderEntity);
+export const getOrderRepository = (
+  source?: TransactionService | EntityManager
+) => getEntityManager(source).getRepository(OrderEntity);

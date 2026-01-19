@@ -59,5 +59,5 @@ export class TmpOrderEntity extends BaseEntity {
 }
 
 export const getTmpOrderRepository = (
-  source?: TransactionService | EntityManager,
+  source?: TransactionService | EntityManager
 ) => getEntityManager(source).getRepository(TmpOrderEntity);

@@ -1,10 +1,7 @@
-import { Entity, Column, ManyToOne, JoinColumn, EntityManager, Index } from 'typeorm';
+import { Entity, Column, EntityManager } from 'typeorm';
 import { OrderEntity } from './order.entity';
-import { HotelOptionEntity } from '@src/module/backoffice/domain/product/hotel-option.entity';
 import { TransactionService } from '@src/module/shared/transaction/transaction.service';
 import { getEntityManager } from '@src/database/datasources';
-import type { Nullish } from '@src/types/utility.type';
-import {ProductTypeEnumType} from "@src/module/backoffice/admin/admin.schema";
 
 /**
  * HotelOrderEntity - 호텔 주문 엔티티
@@ -38,5 +35,6 @@ export interface HotelOrderOptionData {
   priceByDate: Record<string, number>;
 }
 
-export const getHotelOrderRepository = (source?: TransactionService | EntityManager) =>
-  getEntityManager(source).getRepository(HotelOrderEntity);
+export const getHotelOrderRepository = (
+  source?: TransactionService | EntityManager
+) => getEntityManager(source).getRepository(HotelOrderEntity);

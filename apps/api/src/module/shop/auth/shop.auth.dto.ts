@@ -15,7 +15,9 @@ import { SocialProviderEnumType } from '@src/module/backoffice/domain/shop/socia
  */
 
 /** 인증번호 요청 입력 */
-export type RequestVerificationInput = z.infer<typeof requestVerificationSchema>;
+export type RequestVerificationInput = z.infer<
+  typeof requestVerificationSchema
+>;
 
 /** 인증번호 요청 응답 */
 export interface RequestVerificationResponse {

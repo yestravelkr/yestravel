@@ -22,7 +22,9 @@ const jwtService = new JwtService();
  */
 @Injectable()
 export class ShopAuthMiddleware implements TRPCMiddleware {
-  use(opts: MiddlewareOptions): MiddlewareResponse | Promise<MiddlewareResponse> {
+  use(
+    opts: MiddlewareOptions
+  ): MiddlewareResponse | Promise<MiddlewareResponse> {
     const { next, ctx } = opts;
     const req: Request = (opts.ctx as ContextOptions).req;
 
