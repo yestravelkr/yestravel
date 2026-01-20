@@ -23,9 +23,9 @@ import {
   OTP_COUNTDOWN_SECONDS,
   OTP_LENGTH,
   redirectToSocialLogin,
-  saveTokens,
 } from '@/shared/auth';
 import { trpc } from '@/shared/trpc/trpc';
+import { useAuthStore } from '@/store/authStore';
 
 export const Route = createFileRoute('/auth/complete-profile')({
   component: CompleteProfilePage,
@@ -48,7 +48,12 @@ function CompleteProfilePage() {
   const completeSocialRegistrationMutation =
     trpc.shopAuth.completeSocialRegistration.useMutation({
       onSuccess: data => {
-        saveTokens(data);
+        useAuthStore
+          .getState()
+          .login(
+            { accessToken: data.accessToken, refreshToken: data.refreshToken },
+            data.member
+          );
         toast.success('회원가입이 완료되었습니다!');
         window.location.href = returnUrl;
       },

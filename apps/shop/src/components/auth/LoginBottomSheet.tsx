@@ -27,10 +27,10 @@ import {
   OTP_LENGTH,
   codeToArray,
   redirectToSocialLogin,
-  saveTokens,
   type SocialProvider,
 } from '@/shared/auth';
 import { trpc } from '@/shared/trpc/trpc';
+import { useAuthStore } from '@/store/authStore';
 
 export interface LoginResult {
   success: boolean;
@@ -58,7 +58,12 @@ function LoginBottomSheet() {
   // SMS 인증번호 확인 및 로그인
   const verifyCodeMutation = trpc.shopAuth.verifyCode.useMutation({
     onSuccess: data => {
-      saveTokens(data);
+      useAuthStore
+        .getState()
+        .login(
+          { accessToken: data.accessToken, refreshToken: data.refreshToken },
+          data.member
+        );
       toast.success('로그인 성공!');
       resolveModal({ success: true, isNewMember: false });
     },
