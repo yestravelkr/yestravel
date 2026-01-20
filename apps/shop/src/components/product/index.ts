@@ -8,9 +8,11 @@ export {
   ProductHeader,
   InfluencerProfile,
   HeaderLoginButton,
+  HeaderLoggedInButtons,
   type ProductHeaderProps,
   type InfluencerProfileProps,
   type HeaderLoginButtonProps,
+  type HeaderLoggedInButtonsProps,
 } from './ProductHeader';
 export {
   ProductThumbnail,
