@@ -10,13 +10,15 @@ import * as PortOne from '@portone/browser-sdk/v2';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import axios from 'axios';
 import dayjs from 'dayjs';
-import { ArrowLeft } from 'lucide-react';
+import { X } from 'lucide-react';
 import { Suspense, useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import tw from 'tailwind-styled-components';
 
+import { openLoginBottomSheet } from '@/components/auth/LoginBottomSheet';
 import {
+  AuthPromptSection,
   HotelProductSection,
   UserInputSection,
   PaymentMethodSection,
@@ -27,6 +29,7 @@ import {
 } from '@/components/new-order';
 import { API_BASEURL } from '@/constants';
 import { trpc } from '@/shared';
+import { useAuthStore } from '@/store/authStore';
 
 export interface NewOrderFormData {
   userName: string;
@@ -52,6 +55,7 @@ function NewOrderPage() {
 
 function NewOrderContent({ orderNumber }: { orderNumber: string }) {
   const navigate = useNavigate();
+  const { isLoggedIn } = useAuthStore();
   const [data] = trpc.shopOrder.getTmpOrder.useSuspenseQuery({ orderNumber });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -65,8 +69,15 @@ function NewOrderContent({ orderNumber }: { orderNumber: string }) {
     },
   });
 
-  const handleBack = () => {
-    navigate({ to: '/' });
+  const handleAuthClick = async () => {
+    const result = await openLoginBottomSheet();
+    if (result?.success) {
+      window.location.reload();
+    }
+  };
+
+  const handleClose = () => {
+    window.history.back();
   };
 
   const getPortOnePayMethod = (
@@ -165,14 +176,16 @@ function NewOrderContent({ orderNumber }: { orderNumber: string }) {
     <FormProvider {...methods}>
       <Container>
         <Header>
-          <BackButton onClick={handleBack}>
-            <ArrowLeft size={24} />
-          </BackButton>
+          <CloseButton onClick={handleClose}>
+            <X size={24} />
+          </CloseButton>
           <HeaderTitle>주문</HeaderTitle>
           <HeaderSpacer />
         </Header>
 
         <ContentWrapper>
+          {!isLoggedIn && <AuthPromptSection onAuthClick={handleAuthClick} />}
+
           <HotelProductSection
             thumbnailUrl={data.product.thumbnailUrl ?? null}
             productName={data.product.name}
@@ -183,20 +196,25 @@ function NewOrderContent({ orderNumber }: { orderNumber: string }) {
             checkOutTime={data.product.checkOutTime}
           />
 
-          <UserInputSection />
-
-          <PaymentMethodSection />
+          {isLoggedIn && (
+            <>
+              <UserInputSection />
+              <PaymentMethodSection />
+            </>
+          )}
 
           <PaymentAmountSection
             productAmount={data.totalAmount}
             totalAmount={data.totalAmount}
           />
 
-          <PaymentAgreementSection
-            totalAmount={data.totalAmount}
-            onSubmit={handleSubmit}
-            isSubmitting={isSubmitting}
-          />
+          {isLoggedIn && (
+            <PaymentAgreementSection
+              totalAmount={data.totalAmount}
+              onSubmit={handleSubmit}
+              isSubmitting={isSubmitting}
+            />
+          )}
         </ContentWrapper>
       </Container>
     </FormProvider>
@@ -245,7 +263,7 @@ const Header = tw.header`
   gap-5
 `;
 
-const BackButton = tw.button`
+const CloseButton = tw.button`
   w-6
   h-6
   flex
