@@ -1,14 +1,17 @@
 import { createFileRoute, Outlet } from '@tanstack/react-router';
 import { Suspense } from 'react';
+import { toast } from 'sonner';
 import tw from 'tailwind-styled-components';
 
 import { openLoginBottomSheet } from '@/components/auth/LoginBottomSheet';
 import {
   HeaderLoginButton,
+  HeaderLoggedInButtons,
   InfluencerProfile,
 } from '@/components/product/ProductHeader';
 import { trpc } from '@/shared';
 import { HeaderLayout } from '@/shared/components/HeaderLayout';
+import { useAuthStore } from '@/store/authStore';
 
 export const Route = createFileRoute('/i/$slug')({
   component: InfluencerLayout,
@@ -40,6 +43,7 @@ function InfluencerLayout() {
  * 인플루언서 레이아웃 콘텐츠 - 데이터 로딩 후 렌더링
  */
 function InfluencerLayoutContent({ slug }: { slug: string }) {
+  const { isLoggedIn, logout } = useAuthStore();
   const [influencer] = trpc.shopInfluencer.findBySlug.useSuspenseQuery({
     slug,
   });
@@ -47,12 +51,19 @@ function InfluencerLayoutContent({ slug }: { slug: string }) {
   const handleLogin = async () => {
     const result = await openLoginBottomSheet();
     if (result?.success) {
-      console.log(
-        '로그인 성공:',
-        result.isNewMember ? '신규 회원' : '기존 회원'
-      );
-      // TODO: 로그인 성공 후 처리 (토스트 알림, 상태 업데이트 등)
+      // 로그인 성공 시 페이지 새로고침하여 상태 반영
+      window.location.reload();
     }
+  };
+
+  const handleOrderHistory = () => {
+    // TODO: 주문내역 페이지 구현 후 연결
+    toast.info('주문내역 페이지 준비 중입니다.');
+  };
+
+  const handleLogout = () => {
+    logout();
+    window.location.reload();
   };
 
   return (
@@ -64,7 +75,16 @@ function InfluencerLayoutContent({ slug }: { slug: string }) {
           handle={influencer.slug}
         />
       }
-      right={<HeaderLoginButton onClick={handleLogin} />}
+      right={
+        isLoggedIn ? (
+          <HeaderLoggedInButtons
+            onOrderHistoryClick={handleOrderHistory}
+            onLogoutClick={handleLogout}
+          />
+        ) : (
+          <HeaderLoginButton onClick={handleLogin} />
+        )
+      }
     >
       <Outlet />
     </HeaderLayout>
