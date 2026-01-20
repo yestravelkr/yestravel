@@ -65,16 +65,69 @@ function HotelOptionBottomSheet({
   );
   const [isOptionDropdownOpen, setIsOptionDropdownOpen] = useState(false);
 
-  // 선택 가능한 날짜 계산 (오늘 이후 + config에 있는 날짜)
+  // 선택 가능한 날짜 계산 (오늘 이후 + config에 있는 날짜 + 가격이 설정된 날짜)
   const today = dayjs().format('YYYY-MM-DD');
-  const availableDates = config.skus
-    .filter(sku => sku.quantity > 0)
-    .map(sku => sku.date)
-    .sort();
+
+  // SKU에서 재고가 있는 날짜
+  const skuAvailableDates = new Set(
+    config.skus.filter(sku => sku.quantity > 0).map(sku => sku.date)
+  );
+
+  // 모든 옵션에 공통으로 가격이 설정된 날짜
+  const priceAvailableDates = useMemo(() => {
+    if (config.hotelOptions.length === 0) return new Set<string>();
+
+    // 첫 번째 옵션의 날짜들로 시작
+    const firstOptionDates = new Set(
+      Object.keys(config.hotelOptions[0].priceByDate)
+    );
+
+    // 나머지 옵션들과 교집합
+    for (let i = 1; i < config.hotelOptions.length; i++) {
+      const optionDates = new Set(
+        Object.keys(config.hotelOptions[i].priceByDate)
+      );
+      for (const date of firstOptionDates) {
+        if (!optionDates.has(date)) {
+          firstOptionDates.delete(date);
+        }
+      }
+    }
+
+    return firstOptionDates;
+  }, [config.hotelOptions]);
+
+  // SKU 재고 + 가격 설정 모두 충족하는 날짜만 선택 가능
+  const availableDates = useMemo(() => {
+    return Array.from(skuAvailableDates)
+      .filter(date => priceAvailableDates.has(date))
+      .sort();
+  }, [skuAvailableDates, priceAvailableDates]);
+
   const configMinDate = availableDates[0];
   const maxDate = availableDates[availableDates.length - 1];
   // minDate는 config의 첫 날짜와 오늘 중 더 늦은 날짜
   const minDate = configMinDate > today ? configMinDate : today;
+
+  // 선택 불가능한 날짜 목록 (minDate ~ maxDate 범위 내에서 availableDates에 없는 날짜)
+  const disabledDates = useMemo(() => {
+    if (!minDate || !maxDate) return [];
+
+    const disabled: string[] = [];
+    let current = dayjs(minDate);
+    const end = dayjs(maxDate);
+    const availableSet = new Set(availableDates);
+
+    while (current.isBefore(end) || current.isSame(end, 'day')) {
+      const dateStr = current.format('YYYY-MM-DD');
+      if (!availableSet.has(dateStr)) {
+        disabled.push(dateStr);
+      }
+      current = current.add(1, 'day');
+    }
+
+    return disabled;
+  }, [minDate, maxDate, availableDates]);
 
   // HotelOptionSelector 인스턴스 생성
   const hotelSelector = useMemo(() => {
@@ -96,8 +149,15 @@ function HotelOptionBottomSheet({
 
   // 숙박 일수
   const stayNights = hotelSelector.getStayNights();
-  // 총 가격
-  const totalPrice = selectedOptionId ? hotelSelector.getTotalPrice() : 0;
+  // 총 가격 (가격 데이터가 없는 날짜가 포함되면 undefined)
+  const totalPrice = useMemo(() => {
+    if (!selectedOptionId) return 0;
+    try {
+      return hotelSelector.getTotalPrice();
+    } catch {
+      return undefined;
+    }
+  }, [hotelSelector, selectedOptionId]);
 
   // 옵션별 가격 캐싱 (렌더링마다 HotelOptionSelector 생성 방지)
   const optionPrices = useMemo(() => {
@@ -106,21 +166,30 @@ function HotelOptionBottomSheet({
       return config.hotelOptions.map(option => ({
         id: option.id,
         name: option.name,
-        price: 0,
+        price: undefined as number | undefined,
       }));
     }
 
     return config.hotelOptions.map(option => {
-      const selector = HotelOptionSelector.fromJSON(config, {
-        checkInDate,
-        checkOutDate,
-        selectedHotelOptionId: option.id,
-      });
-      return {
-        id: option.id,
-        name: option.name,
-        price: selector.getTotalPrice(),
-      };
+      try {
+        const selector = HotelOptionSelector.fromJSON(config, {
+          checkInDate,
+          checkOutDate,
+          selectedHotelOptionId: option.id,
+        });
+        return {
+          id: option.id,
+          name: option.name,
+          price: selector.getTotalPrice() as number | undefined,
+        };
+      } catch {
+        // 해당 날짜에 가격 데이터가 없는 경우
+        return {
+          id: option.id,
+          name: option.name,
+          price: undefined as number | undefined,
+        };
+      }
     });
   }, [config, checkInDate, checkOutDate]);
 
@@ -222,6 +291,7 @@ function HotelOptionBottomSheet({
             stayNights={stayNights}
             minDate={minDate}
             maxDate={maxDate}
+            disabledDates={disabledDates}
             onDateSelect={handleDateSelect}
             onNext={handleDateNext}
           />
@@ -272,6 +342,7 @@ interface DateSelectStepProps {
   stayNights: number;
   minDate: string;
   maxDate: string;
+  disabledDates: string[];
   onDateSelect: (checkIn: string | null, checkOut: string | null) => void;
   onNext: () => void;
 }
@@ -282,6 +353,7 @@ function DateSelectStep({
   stayNights,
   minDate,
   maxDate,
+  disabledDates,
   onDateSelect,
   onNext,
 }: DateSelectStepProps) {
@@ -311,6 +383,7 @@ function DateSelectStep({
             onDateSelect={onDateSelect}
             minDate={minDate}
             maxDate={maxDate}
+            disabledDates={disabledDates}
           />
         </CalendarContainer>
       </StepContent>
@@ -382,7 +455,7 @@ interface ConfirmStepProps {
   checkOutDate: string;
   stayNights: number;
   optionName: string;
-  totalPrice: number;
+  totalPrice: number | undefined;
   onChangeOption: () => void;
   onPurchase: () => void;
 }
@@ -421,9 +494,15 @@ function ConfirmStep({
       <StepFooter>
         <PriceRow>
           <PriceLabel>상품금액</PriceLabel>
-          <PriceValue>{totalPrice.toLocaleString()}원</PriceValue>
+          <PriceValue>
+            {totalPrice !== undefined
+              ? `${totalPrice.toLocaleString()}원`
+              : '가격 정보 없음'}
+          </PriceValue>
         </PriceRow>
-        <PrimaryButton onClick={onPurchase}>구매하기</PrimaryButton>
+        <PrimaryButton onClick={onPurchase} disabled={totalPrice === undefined}>
+          구매하기
+        </PrimaryButton>
       </StepFooter>
     </>
   );
