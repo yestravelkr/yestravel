@@ -39,6 +39,7 @@ estimated_tokens: ~600
 | Repository 패턴 | `repository.md` |
 | Entity 상속 (STI) | `entity-inheritance.md` |
 | Migration | `migration.md` |
+| 로컬 DB 접근/디버깅 | `database.md` |
 
 ## 새 모듈 생성 순서
 

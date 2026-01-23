@@ -48,6 +48,7 @@ Step 2 - Skill 활성화: YES로 표시된 모든 Skill에 대해 Skill(skill-na
 - schema-dto: DTO/Schema 정의 규칙
 - entity-inheritance: Entity 상속 (STI 패턴)
 - module-creation: 새 모듈 생성 가이드
+- database: 로컬 PostgreSQL 접근 및 디버깅
 
 **Frontend Sub-Skills:**
 - checklist: 프론트엔드 코드 품질 체크리스트
