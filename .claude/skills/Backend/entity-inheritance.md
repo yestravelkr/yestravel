@@ -1,5 +1,7 @@
 ---
-title: Entity 상속 패턴 (Single Table Inheritance)
+name: Backend-entity-inheritance
+description: Entity 상속 패턴 가이드. Single Table Inheritance(STI), 부모/자식 Entity, 타입별 분기.
+keywords: [STI, 상속, Entity, TableInheritance, ChildEntity, 타입분기, Product, Order]
 estimated_tokens: ~400
 ---
 

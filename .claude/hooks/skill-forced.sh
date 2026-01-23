@@ -2,6 +2,8 @@
 
 # .claude/hooks/skill-forced-eval-hook.sh
 
+echo "✅ [Hook] Skill/Agent 평가 프로토콜 실행됨"
+
 cat << 'EOF'
 MANDATORY SKILL & AGENT EVALUATION PROTOCOL
 

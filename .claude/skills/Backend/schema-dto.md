@@ -1,5 +1,7 @@
 ---
-title: Schema & DTO 패턴
+name: Backend-schema-dto
+description: Zod Schema & DTO 패턴 가이드. 스키마 작성, DTO 분리, Enum 네이밍, Nullish 타입.
+keywords: [Zod, Schema, DTO, Enum, nullish, 타입추론, 입력검증, 응답포맷팅]
 estimated_tokens: ~500
 ---
 

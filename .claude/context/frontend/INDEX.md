@@ -1,5 +1,7 @@
 ---
-title: 프론트엔드 기술 스택
+name: frontend-index
+description: YesTravel 프론트엔드 기술 스택 및 스타일링 규칙. React, TanStack Router, Zustand, tailwind-styled-components.
+keywords: [프론트엔드, React, TanStack, Zustand, tRPC, tailwind, lucide, sonner, className금지]
 estimated_tokens: ~200
 ---
 

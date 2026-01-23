@@ -1,5 +1,7 @@
 ---
-title: Repository 패턴
+name: Backend-repository
+description: Repository 패턴 가이드. RepositoryProvider 사용, Entity 조회, 트랜잭션 관리.
+keywords: [Repository, RepositoryProvider, findOneOrFail, 트랜잭션, TransactionService, SoftDelete]
 estimated_tokens: ~400
 ---
 

@@ -1,6 +1,7 @@
 ---
 name: pr-review
-description: PR 코드 리뷰. 체크리스트 기반 구조적 리뷰 수행.
+description: PR 코드 리뷰 스킬. Frontend/Backend 체크리스트 기반 구조적 리뷰 수행.
+keywords: [PR리뷰, 코드리뷰, MR, 머지리퀘스트, 체크리스트, Critical, Warning, Approved]
 estimated_tokens: ~300
 user-invocable: true
 ---

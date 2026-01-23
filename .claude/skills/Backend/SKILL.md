@@ -1,6 +1,7 @@
 ---
 name: Backend
-description: YesTravel 백엔드 개발 스킬. Hybrid tRPC + NestJS 아키텍처, Repository 패턴, Migration.
+description: YesTravel 백엔드 개발 스킬. Hybrid tRPC + NestJS 마이크로서비스 아키텍처, Repository 패턴, TypeORM, Migration.
+keywords: [백엔드, API, Router, Controller, Service, Repository, Migration, Entity, tRPC, NestJS, TypeORM, Zod, DTO]
 estimated_tokens: ~600
 ---
 

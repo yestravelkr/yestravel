@@ -1,5 +1,7 @@
 ---
-title: YesTravel 시스템 아키텍처
+name: architecture-index
+description: YesTravel 시스템 아키텍처 개요. 기술 스택, 통신 흐름, 디렉토리 구조, 모듈 파일 구조.
+keywords: [아키텍처, 기술스택, React, NestJS, tRPC, TypeORM, PostgreSQL, 통신흐름, 디렉토리구조]
 estimated_tokens: ~250
 ---
 

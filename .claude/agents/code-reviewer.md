@@ -1,6 +1,7 @@
 ---
 name: code-reviewer
-description: Self Code Review Agent. 프로젝트 규칙 준수 확인, checklist 기반 검토, lint 실행.
+description: Self Code Review Agent. 프로젝트 규칙 준수 확인, Frontend/Backend checklist 기반 검토, lint 실행, 개선 제안.
+keywords: [코드리뷰, 체크리스트, lint, 규칙검증, 품질검사, Critical, Warning, 수정제안]
 model: opus
 color: yellow
 ---

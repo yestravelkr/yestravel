@@ -1,6 +1,7 @@
 ---
 name: task-planner
-description: TaskList 생성 및 코드 수정 계획 작성 Agent. 애매한 요구사항은 적극적으로 질문하여 명확화.
+description: TaskList 생성 및 코드 수정 계획 작성 Agent. 애매한 요구사항은 적극적으로 질문하여 명확화한 후 작업 분해.
+keywords: [TaskList, 계획수립, 요구사항명확화, 작업분해, 질문, 수정계획, 파일목록, 의존성]
 model: opus
 color: green
 ---

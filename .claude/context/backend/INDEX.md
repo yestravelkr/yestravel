@@ -1,5 +1,7 @@
 ---
-title: 백엔드 기술 스택
+name: backend-index
+description: YesTravel 백엔드 기술 스택 및 코딩 규칙. NestJS, tRPC, TypeORM, Zod.
+keywords: [백엔드, NestJS, tRPC, TypeORM, Zod, DTO분리, Repository, 트랜잭션, awaitFor금지]
 estimated_tokens: ~200
 ---
 

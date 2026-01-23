@@ -1,6 +1,7 @@
 ---
 name: Frontend
-description: YesTravel 프론트엔드 개발 스킬. 컴포넌트 작성, 스타일링, 폼 처리 방법.
+description: YesTravel 프론트엔드 개발 스킬. React 컴포넌트, tailwind-styled-components 스타일링, React Hook Form 폼 처리.
+keywords: [프론트엔드, 컴포넌트, 스타일링, 폼, React, tailwind-styled-components, Modal, Toast, tRPC, Zustand, TanStack]
 estimated_tokens: ~300
 ---
 

@@ -1,6 +1,7 @@
 ---
 name: Backend-checklist
-description: 백엔드 PR 리뷰 체크리스트. API 설계, 데이터베이스, 보안, 성능 검증 시 사용.
+description: 백엔드 PR 리뷰 체크리스트. API 설계, 데이터베이스, 보안, 성능, YesTravel 컨벤션 검증.
+keywords: [체크리스트, 코드리뷰, API설계, 데이터베이스, 보안, 성능, 트랜잭션, Repository, DTO, tRPC]
 estimated_tokens: ~600
 ---
 

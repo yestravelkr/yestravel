@@ -1,6 +1,7 @@
 ---
 name: Frontend-checklist
-description: 프론트엔드 PR 리뷰 체크리스트. 프론트엔드 코드 리뷰, 스타일링 검증, 컴포넌트 패턴 확인 시 사용.
+description: 프론트엔드 PR 리뷰 체크리스트. React 컴포넌트, 스타일링, 상태관리, YesTravel 컨벤션 검증.
+keywords: [체크리스트, 코드리뷰, React, 스타일링, tailwind, lucide, toast, Modal, Zustand, tRPC]
 estimated_tokens: ~800
 ---
 

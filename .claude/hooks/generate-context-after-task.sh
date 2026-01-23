@@ -2,6 +2,8 @@
 
 # .claude/hooks/generate-context-after-task.sh
 
+echo "✅ [Hook] Context 생성 프로토콜 실행됨"
+
 cat << 'EOF'
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 CONTEXT GENERATION PROTOCOL (작업 완료 후)

@@ -2,14 +2,22 @@
   "hooks": {
     "UserPromptSubmit": [
       {
-        "type": "command",
-        "command": ".claude/hooks/skill-forced.sh"
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/skill-forced.sh"
+          }
+        ]
       }
     ],
     "Stop": [
       {
-        "type": "command",
-        "command": ".claude/hooks/generate-context-after-task.sh"
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/generate-context-after-task.sh"
+          }
+        ]
       }
     ]
   }
