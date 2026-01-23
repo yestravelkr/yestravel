@@ -1,5 +1,7 @@
 ---
-title: React Hook Form 패턴
+name: Frontend-form-patterns
+description: React Hook Form 패턴 가이드. FormProvider, useFormContext, Controller, zodResolver 검증.
+keywords: [폼, ReactHookForm, FormProvider, useFormContext, Controller, zodResolver, 유효성검사]
 estimated_tokens: ~500
 ---
 

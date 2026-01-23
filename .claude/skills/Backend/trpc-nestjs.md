@@ -1,5 +1,7 @@
 ---
-title: tRPC + NestJS 통합 가이드
+name: Backend-trpc-nestjs
+description: tRPC + NestJS Hybrid 아키텍처 가이드. Router, Controller, Service 작성 규칙.
+keywords: [tRPC, NestJS, Router, Controller, Service, MessagePattern, Transactional, MicroserviceClient]
 estimated_tokens: ~800
 ---
 

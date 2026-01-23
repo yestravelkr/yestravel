@@ -1,5 +1,7 @@
 ---
-title: 모듈 생성 방법
+name: Backend-module-creation
+description: 새 모듈 생성 순서 가이드. Schema → DTO → Entity → Repository → Service → Controller → Router → Module.
+keywords: [모듈생성, Schema, DTO, Entity, Repository, Service, Controller, Router, Module]
 estimated_tokens: ~300
 ---
 
