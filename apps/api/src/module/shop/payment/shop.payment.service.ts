@@ -152,7 +152,19 @@ export class ShopPaymentService {
     } catch (error: any) {
       if (error.response?.data?.type === 'ALREADY_PAID') {
         this.logger.log('이미 결제된 요청은 에러 없이 처리');
-        // 이미 결제된 경우에도 Payment 저장 시도
+
+        // 기존 Payment 존재 여부 확인
+        const existingPayment =
+          await this.repositoryProvider.PaymentRepository.findOne({
+            where: { impUid: txId },
+          });
+
+        if (existingPayment) {
+          this.logger.log(`이미 저장된 Payment 존재. impUid=${txId}`);
+          return;
+        }
+
+        // 기존 Payment가 없으면 저장 (이전에 저장 실패한 경우)
         await this.savePaymentSafely(order, error.response.data, txId);
         return;
       }
