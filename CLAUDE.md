@@ -10,17 +10,79 @@
 클라이언트 → tRPC Router → MicroserviceClient → EventBus → NestJS Controller → Service
 ```
 
-## 빠른 시작
+## 작업 워크플로우 (필수)
 
-```bash
-# 1. Docker 서비스 시작
-cd docker && ./startDocker.sh
+모든 코드 작업은 아래 순서를 따릅니다:
 
-# 2. API 환경 설정 및 마이그레이션
-cd ../apps/api && yarn generateEnv && yarn migration:run
+### Phase 1: 계획 (Planning)
 
-# 3. 개발 서버 시작 (3000 포트)
-yarn dev
+```
+1. Context 수집
+   - EnterPlanMode 진입
+   - 관련 Context 문서 확인 (.claude/context/)
+   - 필요한 Skill 활성화 (.claude/skills/)
+   - 기존 코드 탐색 (Explore Agent)
+
+2. TaskList 생성
+   - 작업을 작은 단위로 분해
+   - 각 Task에 명확한 완료 조건 정의
+   - Task 간 의존성 설정
+
+3. 코드 수정 계획 작성
+   - 수정할 파일 목록
+   - 각 파일의 변경 내용 요약
+   - 예상되는 영향 범위
+```
+
+### Phase 2: 검증 (Validation)
+
+```
+4. 사이드이펙트 검증
+   - 코드 Flow 분석: 변경이 다른 모듈에 미치는 영향
+   - UI/UX UserFlow 분석: 사용자 경험에 미치는 영향
+   - Breaking Change 여부 확인
+```
+
+### Phase 3: 구현 (Implementation)
+
+```
+5. 작은 단위로 코드 수정
+   - 독립적으로 빌드 가능한 단위로 작업
+   - 한 번에 하나의 기능/수정만 진행
+   - 빌드 에러가 발생하지 않는 상태 유지
+
+6. 단위별 커밋
+   - 수정한 파일만 git add (git add -A 금지)
+   - 명확한 커밋 메시지 작성
+   - 커밋 단위: 하나의 논리적 변경
+```
+
+### Phase 4: 리뷰 (Review)
+
+```
+7. Self Code Review
+   - 작성한 코드가 프로젝트 규칙을 준수하는지 확인
+   - fe-checklist.md / be-checklist.md 기준 검토
+   - yarn lint 실행
+
+8. Task 완료 검증
+   - 원래 요청사항이 모두 충족되었는지 확인
+   - 예상한 동작이 구현되었는지 확인
+   - 누락된 엣지케이스 없는지 점검
+```
+
+### 워크플로우 요약
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  1. Context 수집 → 2. TaskList → 3. 수정 계획              │
+│                        ↓                                    │
+│  4. 사이드이펙트 검증 (Code Flow, UserFlow)                 │
+│                        ↓                                    │
+│  5. 코드 수정 (작은 단위) → 6. git add & commit (단위별)    │
+│                        ↓                                    │
+│  7. Self Code Review → 8. Task 완료 검증                    │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ## 문서 참조
