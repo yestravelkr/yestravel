@@ -18,7 +18,7 @@ Git 관련 모든 작업을 담당하는 전문 Agent입니다.
 
 ## 참조 문서
 
-> **필수 참조**: `.claude/skills/git.md` - Commit/PR 작성 규칙
+> **필수 참조**: `.claude/skills/Git/git.md` - Commit/PR 작성 규칙
 
 ---
 

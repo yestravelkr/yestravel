@@ -31,7 +31,7 @@ color: yellow
 | `tailwind-styled-components` 사용 | ☐ |
 | 조건부 props `$` 접두사 | ☐ |
 | `stroke-*` 색상 `var()` 사용 | ☐ |
-| 아이콘 `lucide-react` 사용 | ☐ |
+| 아이콘 `@minim/icon` 1순위, `lucide-react` 2순위 | ☐ |
 | `alert()` 금지, `toast` 사용 | ☐ |
 | JSDoc 주석 작성 | ☐ |
 | Usage 예시 포함 | ☐ |

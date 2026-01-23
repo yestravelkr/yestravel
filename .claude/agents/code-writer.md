@@ -20,8 +20,8 @@ color: cyan
 ## 참조 문서
 
 > **필수 참조**:
-> - `.claude/skills/be-development/` - 백엔드 개발 규칙
-> - `.claude/skills/fe-development/` - 프론트엔드 개발 규칙
+> - `.claude/skills/Backend/` - 백엔드 개발 규칙
+> - `.claude/skills/Frontend/` - 프론트엔드 개발 규칙
 > - `CLAUDE.md` - 프로젝트 전체 규칙
 
 ---
@@ -217,8 +217,9 @@ toast.error('에러 발생');
 // ❌ 이모지/폰트 아이콘 금지
 <span>🔍</span>
 
-// ✅ lucide-react 사용
-import { Search } from 'lucide-react';
+// ✅ @minim/icon 1순위, lucide-react 2순위
+import { Search } from '@minim/icon';
+// 없으면: import { Search } from 'lucide-react';
 <Search />
 ```
 
@@ -281,7 +282,7 @@ task-planner에서 작성한 계획 확인:
 
 ## 규칙 준수 확인
 - [x] 백엔드: DTO 분리, @Transactional, RepositoryProvider
-- [x] 프론트엔드: tailwind-styled-components, $prefix, lucide-react
+- [x] 프론트엔드: tailwind-styled-components, $prefix, @minim/icon
 - [x] 공통: 네이밍 컨벤션, 타입 안전성
 
 ## 다음 단계

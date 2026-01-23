@@ -22,8 +22,8 @@ color: blue
 ### Step 1: 요청 분석
 
 ```
-- 백엔드 작업인가? → backend/INDEX.md, be-development Skill
-- 프론트엔드 작업인가? → frontend/INDEX.md, fe-development Skill
+- 백엔드 작업인가? → backend/INDEX.md, Backend Skill
+- 프론트엔드 작업인가? → frontend/INDEX.md, Frontend Skill
 - DB 변경이 필요한가? → architecture/database.md
 - 도메인 로직인가? → context/domain/ 확인
 ```

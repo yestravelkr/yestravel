@@ -239,3 +239,112 @@ EOF
 - [ ] Summary가 변경 내용을 명확히 설명
 - [ ] 영향 범위 분석 완료
 - [ ] Breaking change 명시 (해당시)
+
+---
+
+## PR 생성 후 워크플로우
+
+PR 생성 후 아래 단계를 순서대로 진행합니다.
+
+### Step 6: Self PR Review
+
+PR 생성 직후 본인이 먼저 리뷰합니다.
+
+```bash
+# PR diff 확인
+gh pr diff <PR번호>
+
+# PR 상세 확인
+gh pr view <PR번호>
+```
+
+**Self Review 체크리스트:**
+
+| 항목 | 확인 |
+|------|------|
+| 불필요한 코드/주석 제거 | ☐ |
+| 디버그 코드 제거 (console.log 등) | ☐ |
+| 하드코딩된 값 없음 | ☐ |
+| 타입 안전성 확인 | ☐ |
+| 에러 핸들링 적절함 | ☐ |
+| 네이밍 컨벤션 준수 | ☐ |
+
+> 상세 체크리스트: `.claude/skills/Git/pr-review.md`
+
+**Self Review 이슈 발견 시:**
+
+```bash
+# 수정 후 추가 커밋
+git add <수정파일>
+git commit -m "$(cat <<'EOF'
+FIX: Self review 피드백 반영
+
+- 수정 내용 1
+- 수정 내용 2
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+EOF
+)"
+git push
+```
+
+### Step 7: PR Apply Mode (리뷰 피드백 적용)
+
+팀원 리뷰 후 피드백이 있으면 pr-apply 모드로 진입합니다.
+
+```bash
+# 리뷰 코멘트 확인
+gh pr view <PR번호> --comments
+
+# 피드백 분류
+# 🔴 Critical - 반드시 수정
+# 🟡 Suggestion - 검토 후 결정
+# 🔵 Question - 답변 필요
+```
+
+**피드백 반영:**
+
+```bash
+# 코드 수정 후 커밋
+git add <수정파일>
+git commit -m "$(cat <<'EOF'
+FIX: PR 리뷰 피드백 반영
+
+- [Critical] 피드백1 반영
+- [Suggestion] 피드백2 반영
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+EOF
+)"
+git push
+
+# 리뷰어에게 알림
+gh pr comment <PR번호> --body "리뷰 피드백 반영 완료. 재확인 부탁드립니다."
+```
+
+> 상세 가이드: `.claude/skills/Git/pr-apply.md`
+
+---
+
+## 전체 PR 워크플로우 요약
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  1. 변경사항 분석 → 2. 영향 범위 분석 → 3. 영향 판단       │
+│                          ↓                                   │
+│  4. PR 본문 작성 → 5. PR 생성 (gh pr create)                │
+│                          ↓                                   │
+│  6. Self PR Review → 이슈 발견 시 수정 → push               │
+│                          ↓                                   │
+│  7. 팀원 리뷰 대기 → 피드백 있으면 PR Apply Mode            │
+│                          ↓                                   │
+│  8. Approve → Merge                                          │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 관련 Skill 참조
+
+| 단계 | Skill |
+|------|-------|
+| PR Review | `.claude/skills/Git/pr-review.md` |
+| PR Apply | `.claude/skills/Git/pr-apply.md` |
