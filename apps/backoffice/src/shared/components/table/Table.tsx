@@ -75,7 +75,7 @@ export function Table<T>({ columns, data, onRowClick }: TableProps<T>) {
 }
 
 const TableContainer = tw.div`
-  overflow-hidden
+  overflow-x-auto
   bg-white
 `;
 
