@@ -53,6 +53,7 @@ export function MajorPageLayout({
 // 전체 페이지 컨테이너 - 기본 패딩 적용
 const Container = tw.div`
   p-6
+  bg-[var(--bg-layer-base,#F4F4F5)]
 `;
 
 // 페이지 헤더 영역 - 제목과 설명을 포함, 액션 버튼이 있으면 플렉스 레이아웃
