@@ -7,8 +7,8 @@
 
 import { createFileRoute } from '@tanstack/react-router';
 import { createColumnHelper } from '@tanstack/react-table';
+import { Button } from '@yestravelkr/min-design-system';
 import { toast } from 'sonner';
-import tw from 'tailwind-styled-components';
 
 import {
   OrderFilters,
@@ -146,7 +146,11 @@ const columns = [
   columnHelper.display({
     id: 'actions',
     header: '',
-    cell: () => <ActionButton>상세보기</ActionButton>,
+    cell: () => (
+      <Button kind="neutral" variant="solid" size="small">
+        상세보기
+      </Button>
+    ),
     size: 100,
   }),
 ];
@@ -298,14 +302,3 @@ function HotelOrderListPage() {
     </MajorPageLayout>
   );
 }
-
-const ActionButton = tw.button`
-  px-3
-  py-1.5
-  text-sm
-  text-blue-600
-  hover:text-blue-800
-  hover:bg-blue-50
-  rounded
-  transition-colors
-`;
