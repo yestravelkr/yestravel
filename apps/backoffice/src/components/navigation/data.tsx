@@ -33,6 +33,19 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
+    title: '주문 관리',
+    items: [
+      {
+        title: '숙박 주문',
+        url: '/order/hotel',
+      },
+      {
+        title: '배송 주문',
+        url: '/order/delivery',
+      },
+    ],
+  },
+  {
     title: '관리',
     items: [
       {
