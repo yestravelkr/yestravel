@@ -102,6 +102,13 @@ export class ProductService {
           ...hotel,
           type: 'HOTEL',
           brandName: hotel.brand.name,
+          // nullable 필드에 기본값 제공
+          baseCapacity: hotel.baseCapacity ?? 0,
+          maxCapacity: hotel.maxCapacity ?? 0,
+          checkInTime: hotel.checkInTime ?? '15:00:00',
+          checkOutTime: hotel.checkOutTime ?? '11:00:00',
+          bedTypes: hotel.bedTypes ?? [],
+          tags: hotel.tags ?? [],
           hotelOptions: hotelOptions.map(opt => ({
             id: opt.id,
             name: opt.name,
@@ -135,6 +142,20 @@ export class ProductService {
           ...delivery,
           type: 'DELIVERY',
           brandName: delivery.brand.name,
+          // nullable 필드에 기본값 제공
+          delivery: delivery.delivery ?? {
+            deliveryFeeType: 'PAID' as const,
+            deliveryFee: 0,
+            freeDeliveryMinAmount: 0,
+            returnDeliveryFee: 0,
+            exchangeDeliveryFee: 0,
+            remoteAreaExtraFee: 0,
+            jejuExtraFee: 0,
+            isJejuRestricted: false,
+            isRemoteIslandRestricted: false,
+          },
+          exchangeReturnInfo: delivery.exchangeReturnInfo ?? '',
+          productInfoNotice: delivery.productInfoNotice ?? '',
         };
       }
 

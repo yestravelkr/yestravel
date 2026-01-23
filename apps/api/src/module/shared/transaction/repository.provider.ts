@@ -24,6 +24,9 @@ import { getCampaignInfluencerRepository } from '@src/module/backoffice/domain/c
 import { getCampaignInfluencerProductRepository } from '@src/module/backoffice/domain/campaign-influencer-product.entity';
 import { getCampaignInfluencerHotelOptionRepository } from '@src/module/backoffice/domain/campaign-influencer-hotel-option.entity';
 import { getTmpOrderRepository } from '@src/module/backoffice/domain/order/tmp-order.entity';
+import { getOrderRepository } from '@src/module/backoffice/domain/order/order.entity';
+import { getHotelOrderRepository } from '@src/module/backoffice/domain/order/hotel-order.entity';
+import { getPaymentRepository } from '@src/module/backoffice/domain/order/payment.entity';
 import { getMemberRepository } from '@src/module/backoffice/domain/shop/member.entity';
 import { getMemberAddressRepository } from '@src/module/backoffice/domain/shop/member-address.entity';
 import { getPhoneVerificationRepository } from '@src/module/backoffice/domain/shop/phone-verification.entity';
@@ -137,6 +140,18 @@ export class RepositoryProvider {
 
   get TmpOrderRepository() {
     return getTmpOrderRepository(this.transaction);
+  }
+
+  get OrderRepository() {
+    return getOrderRepository(this.transaction);
+  }
+
+  get HotelOrderRepository() {
+    return getHotelOrderRepository(this.transaction);
+  }
+
+  get PaymentRepository() {
+    return getPaymentRepository(this.transaction);
   }
 
   get MemberRepository() {

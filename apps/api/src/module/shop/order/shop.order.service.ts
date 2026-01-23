@@ -142,8 +142,8 @@ export class ShopOrderService {
       product: {
         name: hotelProduct.name,
         thumbnailUrl: hotelProduct.thumbnailUrls[0] ?? null,
-        checkInTime: hotelProduct.checkInTime,
-        checkOutTime: hotelProduct.checkOutTime,
+        checkInTime: hotelProduct.checkInTime ?? '15:00:00',
+        checkOutTime: hotelProduct.checkOutTime ?? '11:00:00',
       },
       orderOptionSnapshot: tmpOrder.raw.orderOptionSnapshot,
     };
