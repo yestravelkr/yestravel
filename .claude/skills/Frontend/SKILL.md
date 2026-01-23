@@ -29,6 +29,30 @@ estimated_tokens: ~300
 3. Usage 주석 추가
 4. Styled components 정의 (파일 최하단)
 
+## 필수 준수 사항
+
+| 규칙 | 설명 |
+|-----|------|
+| **className 금지** | `tailwind-styled-components` 필수 사용 |
+| **$prefix 패턴** | 조건부 props는 `$primary`, `$active` 형식 |
+| **stroke-* 색상** | `var()` 함수로 사용 (예: `border-[var(--stroke-neutral)]`) |
+| **아이콘** | `@minim/icon` 1순위, 없으면 `lucide-react` 사용 |
+| **알림** | `alert()` 금지, `toast` from `sonner` 사용 |
+| **폰트 이모지** | 금지 |
+
+### 아이콘 사용 우선순위
+
+1. **@minim/icon** (1순위): https://github.com/poposnail61/minim-icon
+2. **lucide-react** (2순위): minim-icon에 없는 경우에만 사용
+
+```typescript
+// 1순위: @minim/icon
+import { IconName } from '@minim/icon';
+
+// 2순위: lucide-react (minim-icon에 없는 경우)
+import { IconName } from 'lucide-react';
+```
+
 ## 필수 체크리스트
 
 - [ ] `className` 사용하지 않았는가?
@@ -36,6 +60,8 @@ estimated_tokens: ~300
 - [ ] 조건부 props에 `$` 접두사 사용했는가?
 - [ ] styled components가 파일 최하단에 있는가?
 - [ ] JSDoc 주석과 Usage 예시 작성했는가?
+- [ ] 아이콘은 `@minim/icon` 먼저 확인했는가?
+- [ ] `alert()` 대신 `toast` 사용했는가?
 
 ## 빠른 참조
 

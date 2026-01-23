@@ -103,29 +103,9 @@
 |-----|------|
 | 프론트엔드 개발 | `.claude/skills/Frontend/SKILL.md` |
 | 백엔드 개발 | `.claude/skills/Backend/SKILL.md` |
-| PR 리뷰 | `.claude/skills/pr-review.md` |
-
-## 즉시 알아야 할 규칙
-
-### 프론트엔드 (⚠️ 필수)
-
-| 규칙 | 설명 |
-|-----|------|
-| **className 금지** | `tailwind-styled-components` 필수 사용 |
-| **$prefix 패턴** | 조건부 props는 `$primary`, `$active` 형식 |
-| **stroke-* 색상** | `var()` 함수로 사용 (예: `border-[var(--stroke-neutral)]`) |
-| **아이콘** | `lucide-react`만 사용, 폰트 이모지 금지 |
-| **알림** | `alert()` 금지, `toast` from `sonner` 사용 |
-
-### 백엔드 (⚠️ 필수)
-
-| 규칙 | 설명 |
-|-----|------|
-| **for 루프 await 금지** | `Promise.all()` + `map()` 패턴 사용 |
-| **DTO 분리** | Service 내 interface 금지, `*.dto.ts` 분리 |
-| **Repository** | `TypeOrmModule.forFeature()` 금지, `RepositoryProvider` 사용 |
-| **트랜잭션** | mutation에 `@Transactional`, Controller에 `TransactionService` 주입 |
-| **Entity 위치** | `apps/api/src/module/backoffice/domain/` |
+| Git 커밋/PR 생성 | `.claude/skills/Git/git.md` |
+| PR 리뷰 | `.claude/skills/Git/pr-review.md` |
+| PR 피드백 적용 | `.claude/skills/Git/pr-apply.md` |
 
 ## 주요 디렉토리
 
