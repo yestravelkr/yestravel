@@ -1,5 +1,5 @@
 ---
-name: fe-development
+name: Frontend
 description: YesTravel 프론트엔드 개발 스킬. 컴포넌트 작성, 스타일링, 폼 처리 방법.
 estimated_tokens: ~300
 ---

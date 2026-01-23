@@ -127,6 +127,51 @@ async findOne(id: number): Promise<Module> {
 }
 ```
 
+## Enum 네이밍 규칙
+
+```typescript
+// 1. Enum 값 배열 (as const 필수)
+export const ROLE_ENUM_VALUE = ['ADMIN_SUPER', 'ADMIN_STAFF'] as const;
+
+// 2. Enum 타입
+export type RoleEnumType = typeof ROLE_ENUM_VALUE[number];
+
+// 3. Enum 객체
+export const RoleEnum: EnumType<RoleEnumType> = {
+  ADMIN_SUPER: 'ADMIN_SUPER',
+  ADMIN_STAFF: 'ADMIN_STAFF'
+};
+
+// 4. Zod 스키마
+export const roleEnumSchema = z.enum(ROLE_ENUM_VALUE);
+```
+
+## Nullish 타입 사용
+
+```typescript
+// Entity에서
+import { Nullish } from '@src/types/utility.type';
+
+@Column({ type: 'varchar', nullable: true })
+email: Nullish<string>;
+
+// Zod 스키마에서
+export const moduleSchema = z.object({
+  email: z.string().email().nullish(), // undefined 또는 null 허용
+});
+```
+
+## TypeScript Import 규칙
+
+```typescript
+// ✅ 타입 전용 import는 import type 사용
+import type { CreateModuleInput } from './module.dto';
+import type { FC } from 'react';
+
+// ✅ 혼합 import
+import React, { type FC } from 'react';
+```
+
 ## 참고 파일
 
 - Schema 예시: `apps/api/src/module/shop/order/shop.order.schema.ts`

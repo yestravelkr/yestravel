@@ -62,7 +62,7 @@
 ```
 7. Self Code Review
    - 작성한 코드가 프로젝트 규칙을 준수하는지 확인
-   - fe-checklist.md / be-checklist.md 기준 검토
+   - Frontend/checklist.md / Backend/checklist.md 기준 검토
    - yarn lint 실행
 
 8. Task 완료 검증
@@ -101,8 +101,8 @@
 
 | 작업 | 위치 |
 |-----|------|
-| 프론트엔드 개발 | `.claude/skills/fe-development/SKILL.md` |
-| 백엔드 개발 | `.claude/skills/be-development/SKILL.md` |
+| 프론트엔드 개발 | `.claude/skills/Frontend/SKILL.md` |
+| 백엔드 개발 | `.claude/skills/Backend/SKILL.md` |
 | PR 리뷰 | `.claude/skills/pr-review.md` |
 
 ## 즉시 알아야 할 규칙
