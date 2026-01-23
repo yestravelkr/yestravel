@@ -3,10 +3,12 @@
  *
  * InfluencerProfile: 인플루언서 프로필(아바타, 이름, 핸들) 표시
  * HeaderLoginButton: 헤더용 로그인 버튼
+ * HeaderLoggedInButtons: 로그인 상태용 버튼 (주문내역 + 로그아웃)
  *
  * HeaderLayout과 함께 사용할 수 있도록 분리된 컴포넌트들입니다.
  */
 
+import { LogOut } from 'lucide-react';
 import { ReactNode } from 'react';
 import tw from 'tailwind-styled-components';
 
@@ -59,6 +61,41 @@ export function HeaderLoginButton({
   children = '로그인',
 }: HeaderLoginButtonProps) {
   return <LoginButton onClick={onClick}>{children}</LoginButton>;
+}
+
+/**
+ * HeaderLoggedInButtons - 로그인 상태용 버튼 그룹
+ *
+ * 주문내역 버튼과 로그아웃 아이콘 버튼을 함께 표시합니다.
+ * HeaderLayout의 right prop으로 사용할 수 있습니다.
+ *
+ * Usage:
+ * <HeaderLoggedInButtons
+ *   onOrderHistoryClick={() => navigate('/orders')}
+ *   onLogoutClick={() => logout()}
+ * />
+ */
+export interface HeaderLoggedInButtonsProps {
+  /** 주문내역 버튼 클릭 핸들러 */
+  onOrderHistoryClick?: () => void;
+  /** 로그아웃 버튼 클릭 핸들러 */
+  onLogoutClick?: () => void;
+}
+
+export function HeaderLoggedInButtons({
+  onOrderHistoryClick,
+  onLogoutClick,
+}: HeaderLoggedInButtonsProps) {
+  return (
+    <ButtonGroup>
+      <OrderHistoryButton onClick={onOrderHistoryClick}>
+        주문내역
+      </OrderHistoryButton>
+      <LogoutIconButton onClick={onLogoutClick} aria-label="로그아웃">
+        <LogOut size={20} />
+      </LogoutIconButton>
+    </ButtonGroup>
+  );
 }
 
 /**
@@ -160,6 +197,43 @@ const LoginButton = tw.button`
   font-medium
   text-fg-neutral
   leading-5
+  hover:bg-bg-neutral
+  transition-colors
+`;
+
+const ButtonGroup = tw.div`
+  flex
+  items-center
+  gap-2
+`;
+
+const OrderHistoryButton = tw.button`
+  h-9
+  px-2
+  bg-bg-neutral-subtle
+  rounded-xl
+  outline
+  outline-1
+  outline-[var(--stroke-neutral)]
+  text-[15px]
+  font-medium
+  text-fg-neutral
+  leading-5
+  hover:bg-bg-neutral
+  transition-colors
+`;
+
+const LogoutIconButton = tw.button`
+  size-9
+  flex
+  items-center
+  justify-center
+  bg-bg-neutral-subtle
+  rounded-xl
+  outline
+  outline-1
+  outline-[var(--stroke-neutral)]
+  text-fg-neutral
   hover:bg-bg-neutral
   transition-colors
 `;

@@ -13,12 +13,24 @@
 
 import { useState } from 'react';
 import SnappyModal, { useCurrentModal } from 'react-snappy-modal';
+import { toast } from 'sonner';
 import tw from 'tailwind-styled-components';
 
 import { LoginStep } from './LoginStep';
 import { OTPStep } from './OTPStep';
 
 import { useKeyboardHeight } from '@/hooks/useKeyboardHeight';
+import {
+  EMPTY_OTP_CODE,
+  isValidPhoneNumber,
+  OTP_COUNTDOWN_SECONDS,
+  OTP_LENGTH,
+  codeToArray,
+  redirectToSocialLogin,
+  type SocialProvider,
+} from '@/shared/auth';
+import { trpc } from '@/shared/trpc/trpc';
+import { useAuthStore } from '@/store/authStore';
 
 export interface LoginResult {
   success: boolean;
@@ -33,66 +45,112 @@ function LoginBottomSheet() {
 
   const [step, setStep] = useState<Step>('login');
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [otpCode, setOtpCode] = useState(['', '', '', '', '', '']);
-  const [isLoading, setIsLoading] = useState(false);
+  const [otpCode, setOtpCode] = useState<string[]>(EMPTY_OTP_CODE);
   const [error, setError] = useState<string | null>(null);
-  const [countdown, setCountdown] = useState(180);
+  const [countdown, setCountdown] = useState(OTP_COUNTDOWN_SECONDS);
 
-  const isValidPhoneNumber = /^01[0-9]{8,9}$/.test(phoneNumber);
+  const isPhoneValid = isValidPhoneNumber(phoneNumber);
+
+  // SMS 인증번호 요청
+  const requestVerificationMutation =
+    trpc.shopAuth.requestVerification.useMutation();
+
+  // SMS 인증번호 확인 및 로그인
+  const verifyCodeMutation = trpc.shopAuth.verifyCode.useMutation({
+    onSuccess: data => {
+      useAuthStore
+        .getState()
+        .login(
+          { accessToken: data.accessToken, refreshToken: data.refreshToken },
+          data.member
+        );
+      toast.success('로그인 성공!');
+      resolveModal({ success: true, isNewMember: false });
+    },
+  });
 
   const handleClose = () => {
     resolveModal(null);
   };
 
-  const handleRequestOTP = () => {
-    if (!isValidPhoneNumber) {
+  const handleRequestOTP = async () => {
+    if (!isPhoneValid) {
       setError('올바른 전화번호 형식이 아닙니다');
       return;
     }
 
     setError(null);
-    setIsLoading(true);
 
-    // TODO: API 연동 - shopAuth.requestVerification
-    setTimeout(() => {
-      setIsLoading(false);
-      setCountdown(180);
+    try {
+      const result = await requestVerificationMutation.mutateAsync({
+        phone: phoneNumber,
+      });
+
+      setCountdown(OTP_COUNTDOWN_SECONDS);
       setStep('otp');
-    }, 500);
+
+      // 개발환경에서 인증번호 자동 입력
+      if (result.code) {
+        setOtpCode(codeToArray(result.code));
+      }
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : '인증번호 발송에 실패했습니다'
+      );
+    }
   };
 
-  const handleVerifyOTP = () => {
+  const handleVerifyOTP = async () => {
     const code = otpCode.join('');
-    if (code.length !== 6) {
-      setError('인증번호 6자리를 입력해주세요');
+    if (code.length !== OTP_LENGTH) {
+      setError(`인증번호 ${OTP_LENGTH}자리를 입력해주세요`);
       return;
     }
 
     setError(null);
-    setIsLoading(true);
 
-    // TODO: API 연동 - shopAuth.verifyCode
-    setTimeout(() => {
-      setIsLoading(false);
-      resolveModal({ success: true, isNewMember: false });
-    }, 500);
+    try {
+      await verifyCodeMutation.mutateAsync({
+        phone: phoneNumber,
+        code,
+      });
+      // 성공 시 onSuccess에서 처리됨
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '인증에 실패했습니다');
+    }
   };
 
-  const handleResendOTP = () => {
-    setOtpCode(['', '', '', '', '', '']);
-    setCountdown(180);
+  const handleResendOTP = async () => {
+    setOtpCode(EMPTY_OTP_CODE);
     setError(null);
-    // TODO: API 연동 - shopAuth.requestVerification
+
+    try {
+      const result = await requestVerificationMutation.mutateAsync({
+        phone: phoneNumber,
+      });
+
+      setCountdown(OTP_COUNTDOWN_SECONDS);
+
+      // 개발환경에서 인증번호 자동 입력
+      if (result.code) {
+        setOtpCode(codeToArray(result.code));
+      }
+
+      toast.success('인증번호가 재발송되었습니다');
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : '인증번호 발송에 실패했습니다'
+      );
+    }
   };
 
-  const handleSocialLogin = (provider: 'kakao' | 'naver') => {
-    // TODO: OAuth 연동
-    console.log(`${provider} 로그인 시작`);
+  const handleSocialLogin = (provider: SocialProvider) => {
+    redirectToSocialLogin(provider);
   };
 
   const handleBack = () => {
     setStep('login');
-    setOtpCode(['', '', '', '', '', '']);
+    setOtpCode(EMPTY_OTP_CODE);
     setError(null);
   };
 
@@ -112,7 +170,7 @@ function LoginBottomSheet() {
             onPhoneNumberChange={setPhoneNumber}
             onRequestOTP={handleRequestOTP}
             onSocialLogin={handleSocialLogin}
-            isLoading={isLoading}
+            isLoading={requestVerificationMutation.isPending}
             error={error}
             onErrorClear={handleErrorClear}
           />
@@ -126,8 +184,10 @@ function LoginBottomSheet() {
             onVerify={handleVerifyOTP}
             onResend={handleResendOTP}
             onBack={handleBack}
+            onClose={handleClose}
             countdown={countdown}
-            isLoading={isLoading}
+            isLoading={verifyCodeMutation.isPending}
+            isResending={requestVerificationMutation.isPending}
             error={error}
           />
         )}
@@ -160,8 +220,6 @@ const Overlay = tw.div`
 const BottomSheetContainer = tw.div`
   w-full
   max-w-[600px]
-  bg-bg-layer
-  rounded-t-[32px]
   flex
   flex-col
   overflow-hidden

@@ -1,13 +1,21 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { Suspense } from 'react';
+import { toast } from 'sonner';
 import tw from 'tailwind-styled-components';
 
+import { openLoginBottomSheet } from '@/components/auth/LoginBottomSheet';
 import {
   HotelProductComponent,
   type HotelProductComponentProps,
 } from '@/components/product/HotelProductComponent';
+import {
+  HeaderLoginButton,
+  HeaderLoggedInButtons,
+  InfluencerProfile,
+} from '@/components/product/ProductHeader';
 import { trpc } from '@/shared';
 import { HeaderLayout } from '@/shared/components/HeaderLayout';
+import { useAuthStore } from '@/store/authStore';
 
 export const Route = createFileRoute('/sale/$saleId')({
   component: SaleDetailPage,
@@ -31,9 +39,26 @@ function SaleDetailPage() {
  * 상품 상세 콘텐츠
  */
 function SaleDetailContent({ saleId }: { saleId: number }) {
+  const { isLoggedIn, logout } = useAuthStore();
   const [data] = trpc.shopProduct.getProductDetail.useSuspenseQuery({
     saleId,
   });
+
+  const handleLogin = async () => {
+    const result = await openLoginBottomSheet();
+    if (result?.success) {
+      window.location.reload();
+    }
+  };
+
+  const handleOrderHistory = () => {
+    toast.info('주문내역 페이지 준비 중입니다.');
+  };
+
+  const handleLogout = () => {
+    logout();
+    window.location.reload();
+  };
 
   const renderProductComponent = () => {
     switch (data.type) {
@@ -70,37 +95,24 @@ function SaleDetailContent({ saleId }: { saleId: number }) {
     <HeaderLayout
       title={
         <InfluencerProfile
-          thumbnail={data.influencer.thumbnail}
+          avatarUrl={data.influencer.thumbnail || '/default-profile.png'}
           name={data.influencer.name}
-          slug={data.influencer.slug}
+          handle={data.influencer.slug || ''}
         />
+      }
+      right={
+        isLoggedIn ? (
+          <HeaderLoggedInButtons
+            onOrderHistoryClick={handleOrderHistory}
+            onLogoutClick={handleLogout}
+          />
+        ) : (
+          <HeaderLoginButton onClick={handleLogin} />
+        )
       }
     >
       {renderProductComponent()}
     </HeaderLayout>
-  );
-}
-
-/**
- * 헤더에 표시될 인플루언서 프로필
- */
-function InfluencerProfile({
-  thumbnail,
-  name,
-  slug,
-}: {
-  thumbnail: string | null | undefined;
-  name: string;
-  slug: string | null | undefined;
-}) {
-  return (
-    <ProfileContainer>
-      <ProfileImage src={thumbnail || '/default-profile.png'} alt={name} />
-      <ProfileInfo>
-        <ProfileName>{name}</ProfileName>
-        {slug && <ProfileSlug>@{slug}</ProfileSlug>}
-      </ProfileInfo>
-    </ProfileContainer>
   );
 }
 
@@ -135,37 +147,6 @@ const PlaceholderContent = tw.div`
   min-h-[400px]
   text-fg-muted
   text-lg
-`;
-
-const ProfileContainer = tw.div`
-  flex
-  items-center
-  gap-2
-`;
-
-const ProfileImage = tw.img`
-  w-8
-  h-8
-  rounded-full
-  object-cover
-`;
-
-const ProfileInfo = tw.div`
-  flex
-  flex-col
-`;
-
-const ProfileName = tw.span`
-  text-sm
-  font-semibold
-  text-fg-neutral
-  leading-tight
-`;
-
-const ProfileSlug = tw.span`
-  text-xs
-  text-fg-muted
-  leading-tight
 `;
 
 // Skeleton Styles

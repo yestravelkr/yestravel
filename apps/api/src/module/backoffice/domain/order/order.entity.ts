@@ -21,7 +21,6 @@ import type { TmpOrderRawData } from './tmp-order.entity';
 import {
   PRODUCT_TYPE_ENUM_VALUE,
   ProductTypeEnumType,
-  ProductTypeEnum,
 } from '@src/module/backoffice/admin/admin.schema';
 
 /**
