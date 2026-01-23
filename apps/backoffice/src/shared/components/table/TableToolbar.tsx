@@ -49,7 +49,9 @@ export function TableToolbar({
 
       <PageSizeSelect
         value={pageSize}
-        onChange={(e) => onPageSizeChange(Number(e.target.value))}
+        onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+          onPageSizeChange(Number(e.target.value))
+        }
       >
         {pageSizeOptions.map((size) => (
           <option key={size} value={size}>

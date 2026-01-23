@@ -108,6 +108,72 @@ const BUYER_NAMES = [
   '강미나',
 ];
 
+/** 기간 타입 옵션 */
+export const PERIOD_TYPE_OPTIONS = [
+  { value: 'payment', label: '결제일' },
+  { value: 'order', label: '주문일' },
+  { value: 'usage', label: '이용일' },
+];
+
+/** 기간 프리셋 옵션 */
+export const PERIOD_PRESET_OPTIONS = [
+  { value: 'today', label: '오늘' },
+  { value: '7days', label: '최근 7일' },
+  { value: '1month', label: '1개월' },
+  { value: '2months', label: '2개월' },
+  { value: '3months', label: '3개월' },
+  { value: 'custom', label: '직접입력' },
+];
+
+/** 주문 상태 옵션 */
+export const ORDER_STATUS_OPTIONS = [
+  { value: 'PENDING_PAYMENT', label: '결제대기' },
+  { value: 'PAID', label: '결제완료' },
+  { value: 'PENDING_BOOKING', label: '예약대기' },
+  { value: 'BOOKING_CONFIRMED', label: '예약확정' },
+  { value: 'CLAIM_REQUESTED', label: '클레임 요청' },
+  { value: 'CLAIM_COMPLETED', label: '클레임 완료' },
+  { value: 'COMPLETED', label: '이용완료' },
+];
+
+/** 캠페인 목록 (Mock) */
+export const CAMPAIGN_OPTIONS = [
+  { value: '1', label: '캠페인1' },
+  { value: '2', label: '캠페인2' },
+  { value: '3', label: '캠페인3' },
+  { value: '4', label: '캠페인4' },
+  { value: '5', label: '캠페인5' },
+];
+
+/** 인플루언서 목록 (Mock) */
+export const INFLUENCER_OPTIONS = [
+  { value: '1', label: '인플루언서1' },
+  { value: '2', label: '인플루언서2' },
+  { value: '3', label: '인플루언서3' },
+  { value: '4', label: '인플루언서4' },
+  { value: '5', label: '인플루언서5' },
+  { value: '6', label: '인플루언서6' },
+  { value: '7', label: '인플루언서7' },
+  { value: '8', label: '인플루언서8' },
+  { value: '9', label: '인플루언서9' },
+  { value: '10', label: '인플루언서10' },
+];
+
+/** 상품 목록 (Mock) */
+export const PRODUCT_OPTIONS = [
+  { value: '1', label: '오션뷰 리조트' },
+  { value: '2', label: '시티 호텔' },
+  { value: '3', label: '마운틴 펜션' },
+  { value: '4', label: '풀빌라' },
+];
+
+/** 옵션 목록 (Mock) */
+export const OPTION_OPTIONS = [
+  { value: '1', label: '패키지1' },
+  { value: '2', label: '패키지2' },
+  { value: '3', label: '패키지3' },
+];
+
 /** Mock 주문 데이터 생성 (상태별로 분포) */
 const generateMockOrders = (): HotelOrder[] => {
   const orders: HotelOrder[] = [];
