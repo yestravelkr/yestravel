@@ -147,13 +147,13 @@ export class ShopPaymentService {
 
       this.logger.log('Payment confirmed successfully');
 
-      // Payment 저장
-      await this.savePayment(order, response.data, txId);
+      // Payment 저장 (실패해도 결제 승인은 이미 완료된 상태)
+      await this.savePaymentSafely(order, response.data, txId);
     } catch (error: any) {
       if (error.response?.data?.type === 'ALREADY_PAID') {
         this.logger.log('이미 결제된 요청은 에러 없이 처리');
         // 이미 결제된 경우에도 Payment 저장 시도
-        await this.savePayment(order, error.response.data, txId);
+        await this.savePaymentSafely(order, error.response.data, txId);
         return;
       }
       this.logger.error('Payment confirmation failed', error);
@@ -180,6 +180,26 @@ export class ShopPaymentService {
 
     await this.repositoryProvider.PaymentRepository.save(payment);
     this.logger.log(`Payment saved: ${payment.id}`);
+  }
+
+  /**
+   * Payment 저장 (실패 시 로깅만 하고 에러를 던지지 않음)
+   * - 결제 승인 이후이므로 실패해도 전체 트랜잭션을 롤백하면 안 됨
+   * - 대신 로그를 남겨서 수동 복구 가능하도록 함
+   */
+  private async savePaymentSafely(
+    order: OrderEntity,
+    pgRawData: Record<string, any>,
+    txId: string
+  ): Promise<void> {
+    try {
+      await this.savePayment(order, pgRawData, txId);
+    } catch (error) {
+      this.logger.error(
+        `[CRITICAL] Payment 저장 실패 - 수동 복구 필요. orderId=${order.id}, txId=${txId}`,
+        error
+      );
+    }
   }
 
   async generatePortoneAccessToken() {
