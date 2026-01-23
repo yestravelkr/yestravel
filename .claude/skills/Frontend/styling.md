@@ -1,5 +1,7 @@
 ---
-title: 프론트엔드 스타일링 가이드
+name: Frontend-styling
+description: 프론트엔드 스타일링 가이드. tailwind-styled-components 필수, $prefix 조건부 props, stroke-* 색상 var() 사용.
+keywords: [스타일링, tailwind, styled-components, $prefix, stroke, var, className금지, tw]
 estimated_tokens: ~600
 ---
 

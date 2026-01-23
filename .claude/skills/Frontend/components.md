@@ -1,5 +1,7 @@
 ---
-title: 프론트엔드 컴포넌트 패턴
+name: Frontend-components
+description: 프론트엔드 컴포넌트 패턴. Modal(react-snappy-modal), Toast(sonner), Icon(lucide-react), 상태관리(Zustand).
+keywords: [컴포넌트, Modal, Toast, Icon, lucide, sonner, Zustand, Suspense, EmptyState]
 estimated_tokens: ~600
 ---
 

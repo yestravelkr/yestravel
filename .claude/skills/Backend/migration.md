@@ -1,5 +1,7 @@
 ---
-title: Migration 작성 방법
+name: Backend-migration
+description: TypeORM Migration 작성 방법. 테이블 생성, 컬럼 추가/삭제, 인덱스, 외래키 설정.
+keywords: [Migration, TypeORM, 테이블생성, 컬럼추가, 인덱스, 외래키, 롤백, queryRunner]
 estimated_tokens: ~400
 ---
 

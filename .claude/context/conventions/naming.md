@@ -1,5 +1,7 @@
 ---
-title: 프로젝트 네이밍 규칙
+name: conventions-naming
+description: YesTravel 프로젝트 네이밍 규칙. Enum 네이밍, 변수명, 파일명, 함수명 컨벤션.
+keywords: [네이밍, Enum, 변수명, 파일명, 함수명, 컨벤션, camelCase, PascalCase, SCREAMING_SNAKE]
 estimated_tokens: ~200
 ---
 

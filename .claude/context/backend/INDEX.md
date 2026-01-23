@@ -1,5 +1,7 @@
 ---
-title: 백엔드 기술 스택
+name: backend-index
+description: YesTravel 백엔드 기술 스택 및 코딩 규칙. NestJS, tRPC, TypeORM, Zod.
+keywords: [백엔드, NestJS, tRPC, TypeORM, Zod, DTO분리, Repository, 트랜잭션, awaitFor금지]
 estimated_tokens: ~200
 ---
 
@@ -18,7 +20,6 @@ estimated_tokens: ~200
 
 | 규칙 | 설명 |
 |-----|------|
-| for 루프 await 금지 | `Promise.all()` + `map()` 패턴 사용 |
 | 한 글자 변수명 금지 | `item`, `product` 등 사용 |
 | 함수형 메서드 | `map`, `filter`, `reduce` 사용 |
 

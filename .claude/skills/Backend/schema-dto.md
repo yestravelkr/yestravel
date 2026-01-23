@@ -1,5 +1,7 @@
 ---
-title: Schema & DTO 패턴
+name: Backend-schema-dto
+description: Zod Schema & DTO 패턴 가이드. 스키마 작성, DTO 분리, Enum 네이밍, Nullish 타입.
+keywords: [Zod, Schema, DTO, Enum, nullish, 타입추론, 입력검증, 응답포맷팅]
 estimated_tokens: ~500
 ---
 
@@ -125,6 +127,51 @@ async findOne(id: number): Promise<Module> {
   // TypeORM 메타데이터 제거
   return moduleSchema.parse(result);
 }
+```
+
+## Enum 네이밍 규칙
+
+```typescript
+// 1. Enum 값 배열 (as const 필수)
+export const ROLE_ENUM_VALUE = ['ADMIN_SUPER', 'ADMIN_STAFF'] as const;
+
+// 2. Enum 타입
+export type RoleEnumType = typeof ROLE_ENUM_VALUE[number];
+
+// 3. Enum 객체
+export const RoleEnum: EnumType<RoleEnumType> = {
+  ADMIN_SUPER: 'ADMIN_SUPER',
+  ADMIN_STAFF: 'ADMIN_STAFF'
+};
+
+// 4. Zod 스키마
+export const roleEnumSchema = z.enum(ROLE_ENUM_VALUE);
+```
+
+## Nullish 타입 사용
+
+```typescript
+// Entity에서
+import { Nullish } from '@src/types/utility.type';
+
+@Column({ type: 'varchar', nullable: true })
+email: Nullish<string>;
+
+// Zod 스키마에서
+export const moduleSchema = z.object({
+  email: z.string().email().nullish(), // undefined 또는 null 허용
+});
+```
+
+## TypeScript Import 규칙
+
+```typescript
+// ✅ 타입 전용 import는 import type 사용
+import type { CreateModuleInput } from './module.dto';
+import type { FC } from 'react';
+
+// ✅ 혼합 import
+import React, { type FC } from 'react';
 ```
 
 ## 참고 파일

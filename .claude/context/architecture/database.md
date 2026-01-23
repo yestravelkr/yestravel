@@ -1,5 +1,7 @@
 ---
-title: 데이터베이스 구조
+name: architecture-database
+description: YesTravel 데이터베이스 구조. PostgreSQL 16, TypeORM, Entity 관계, Migration 패턴.
+keywords: [데이터베이스, PostgreSQL, TypeORM, Entity, Migration, 테이블, 컬럼, 외래키, 인덱스]
 estimated_tokens: ~300
 ---
 
