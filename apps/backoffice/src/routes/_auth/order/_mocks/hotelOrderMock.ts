@@ -38,14 +38,14 @@ export const ALERT_STATUSES: OrderStatusTab[] = [
 
 /** 상태별 카운트 (Mock) */
 export const mockStatusCounts: Record<OrderStatusTab, number> = {
-  ALL: 30,
+  ALL: 155,
   PENDING_PAYMENT: 30,
   PAID: 5,
-  PENDING_BOOKING: 30,
-  BOOKING_CONFIRMED: 30,
-  CLAIM_REQUESTED: 30,
-  CLAIM_COMPLETED: 0,
-  COMPLETED: 0,
+  PENDING_BOOKING: 45,
+  BOOKING_CONFIRMED: 35,
+  CLAIM_REQUESTED: 20,
+  CLAIM_COMPLETED: 10,
+  COMPLETED: 10,
 };
 
 /** StatusTabs용 탭 목록 생성 */
@@ -81,21 +81,82 @@ export interface HotelOrder {
   optionName: string;
   checkInDate: string;
   checkOutDate: string;
+  paymentAmount: number;
+  request: string;
+  buyerName: string;
+  buyerPhone: string;
 }
 
-/** Mock 주문 데이터 (30건) */
-export const mockHotelOrders: HotelOrder[] = Array.from(
-  { length: 30 },
-  (_, i) => ({
-    id: i + 1,
-    orderNumber: `250101${String(i + 1).padStart(2, '0')}`,
-    status: 'PAID' as HotelOrderStatus,
-    paidAt: '25.01.01 13:00',
-    campaignName: '캠페인명',
-    influencerName: '인플루언서명',
-    productName: '오션뷰 숙소명',
-    optionName: '패키지1',
-    checkInDate: '25.01.01',
-    checkOutDate: '25.01.02',
-  }),
-);
+/** 상태 목록 (ALL 제외) */
+const STATUSES: HotelOrderStatus[] = [
+  'PENDING_PAYMENT',
+  'PAID',
+  'PENDING_BOOKING',
+  'BOOKING_CONFIRMED',
+  'CLAIM_REQUESTED',
+  'CLAIM_COMPLETED',
+  'COMPLETED',
+];
+
+const REQUESTS = ['', '늦은 체크인 요청', '조용한 방 요청', '높은 층 요청', ''];
+const BUYER_NAMES = [
+  '김민수',
+  '이영희',
+  '박지훈',
+  '최서연',
+  '정현우',
+  '강미나',
+];
+
+/** Mock 주문 데이터 생성 (상태별로 분포) */
+const generateMockOrders = (): HotelOrder[] => {
+  const orders: HotelOrder[] = [];
+  let id = 1;
+
+  STATUSES.forEach((status) => {
+    const count = mockStatusCounts[status];
+    for (let i = 0; i < count; i++) {
+      orders.push({
+        id: id,
+        orderNumber: `2501${String(id).padStart(4, '0')}`,
+        status,
+        paidAt: `25.01.${String((id % 28) + 1).padStart(2, '0')} ${String((id % 12) + 9).padStart(2, '0')}:00`,
+        campaignName: `캠페인${(id % 5) + 1}`,
+        influencerName: `인플루언서${(id % 10) + 1}`,
+        productName: ['오션뷰 리조트', '시티 호텔', '마운틴 펜션', '풀빌라'][
+          id % 4
+        ],
+        optionName: `패키지${(id % 3) + 1}`,
+        checkInDate: `25.01.${String((id % 28) + 1).padStart(2, '0')}`,
+        checkOutDate: `25.01.${String((id % 28) + 2).padStart(2, '0')}`,
+        paymentAmount: [89000, 120000, 150000, 200000, 250000][id % 5],
+        request: REQUESTS[id % 5],
+        buyerName: BUYER_NAMES[id % 6],
+        buyerPhone: `010-${String(1000 + (id % 9000)).padStart(4, '0')}-${String(1000 + ((id * 7) % 9000)).padStart(4, '0')}`,
+      });
+      id++;
+    }
+  });
+
+  return orders;
+};
+
+export const mockHotelOrders: HotelOrder[] = generateMockOrders();
+
+/** 필터링 + 페이지네이션 적용 */
+export function getFilteredOrders(
+  status: OrderStatusTab,
+  page: number,
+  limit: number,
+): { orders: HotelOrder[]; totalCount: number } {
+  const filtered =
+    status === 'ALL'
+      ? mockHotelOrders
+      : mockHotelOrders.filter((order) => order.status === status);
+
+  const totalCount = filtered.length;
+  const startIndex = (page - 1) * limit;
+  const orders = filtered.slice(startIndex, startIndex + limit);
+
+  return { orders, totalCount };
+}

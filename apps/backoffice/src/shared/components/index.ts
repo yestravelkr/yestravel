@@ -1,4 +1,5 @@
 export * from './table/Table';
+export * from './table/TableToolbar';
 export * from './tabs';
 export * from './pagination';
 export * from './empty-state/EmptyState';
