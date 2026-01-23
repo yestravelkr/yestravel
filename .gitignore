@@ -42,5 +42,5 @@ docker/postgresql/data
 
 .mcp.json
 
-**/CLAUDE.md
+*/**/CLAUDE.md
 !./CLAUDE.md
