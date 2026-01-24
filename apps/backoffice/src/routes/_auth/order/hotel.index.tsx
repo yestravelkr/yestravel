@@ -258,6 +258,13 @@ function HotelOrderListPage() {
 
   const statusTabs = getOrderStatusTabs();
 
+  const handleRowClick = (order: HotelOrder) => {
+    navigate({
+      to: '/order/hotel/$orderId',
+      params: { orderId: String(order.id) },
+    });
+  };
+
   return (
     <MajorPageLayout title="숙박 주문관리">
       <ListPageLayout
@@ -290,7 +297,9 @@ function HotelOrderListPage() {
             onPageSizeChange={handlePageSizeChange}
           />
         }
-        table={<Table columns={columns} data={orders} />}
+        table={
+          <Table columns={columns} data={orders} onRowClick={handleRowClick} />
+        }
         pagination={
           <Pagination
             currentPage={page}
