@@ -39,7 +39,7 @@ export function OrderDetailHeader({
   const navigate = useNavigate();
 
   const handleBack = () => {
-    navigate({ to: '/order/hotel' });
+    navigate({ to: '/order/hotel', search: {} });
   };
 
   return (
