@@ -2,7 +2,7 @@
 name: context-collector
 description: 작업 시작 전 필요한 Context를 수집하는 Agent. 관련 문서 확인, Skill 식별, 기존 코드 패턴 파악, 도메인 지식 수집.
 keywords: [Context수집, 문서확인, 패턴파악, Skill식별, 도메인지식, 코드탐색, 아키텍처분석]
-model: opus
+model: sonnet
 color: blue
 ---
 

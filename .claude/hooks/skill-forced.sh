@@ -96,23 +96,42 @@ Step 4 - Agent 활용: YES로 표시된 Agent는 Task 도구로 호출하세요.
 
 ---
 
-### 워크플로우 Agent (Phase별)
+### 분석 Agent (Phase 0-1)
 
-| Agent | Phase | 키워드 | 설명 |
-|-------|-------|--------|------|
-| context-collector | 1 | Context수집, 문서확인, 패턴파악, Skill식별, 아키텍처분석 | Context 문서 수집, Skill 식별, 기존 코드 패턴 파악, 도메인 지식 수집 |
-| task-planner | 2-3 | TaskList, 계획수립, 요구사항명확화, 작업분해, 질문 | TaskList 생성, 코드 수정 계획, 애매한 요구사항 질문 |
-| impact-analyzer | 4 | 사이드이펙트, CodeFlow, UserFlow, BreakingChange, 영향분석 | Code Flow/UserFlow 영향 분석, Breaking Change 탐지, 위험도 평가 |
-| code-writer | 5-6 | 코드작성, 구현, 개발, Entity, Service, 컴포넌트 | 프로젝트 규칙 준수하며 실제 코드 구현 (백엔드/프론트엔드) |
-| code-reviewer | 7 | 코드리뷰, 체크리스트, lint, 규칙검증, 품질검사 | Self Code Review, checklist 기반 검토, lint 실행, 개선 제안 |
+| Agent | 모델 | 키워드 | 설명 |
+|-------|------|--------|------|
+| explore | Haiku | 탐색, 검색, 파일찾기, 패턴매칭, 구조파악 | 빠른 코드베이스 탐색, 파일 위치 찾기 |
+| context-collector | Sonnet | Context수집, 문서확인, 패턴파악, Skill식별 | Context 문서 수집, 기존 코드 패턴 파악 |
+| architect | Opus | 아키텍처, 설계, 디버깅, 시스템구조, 기술부채 | 아키텍처 설계, 복잡한 디버깅 |
+
+### 계획 Agent (Phase 2-3)
+
+| Agent | 모델 | 키워드 | 설명 |
+|-------|------|--------|------|
+| task-planner | Opus | TaskList, 계획수립, 요구사항명확화, 작업분해 | TaskList 생성, 코드 수정 계획 |
+| impact-analyzer | Opus | 사이드이펙트, CodeFlow, UserFlow, BreakingChange | Code Flow/UserFlow 영향 분석, Breaking Change 탐지 |
+
+### 구현 Agent (Phase 4-5)
+
+| Agent | 모델 | 키워드 | 설명 |
+|-------|------|--------|------|
+| code-writer | Sonnet | 코드작성, 구현, 개발, Entity, Service | 백엔드 코드 구현 |
+| designer | Sonnet | UI, UX, 스타일링, 컴포넌트, 레이아웃 | 프론트엔드 UI/UX 설계 및 스타일링 |
+
+### 검증 Agent (Phase 6-7)
+
+| Agent | 모델 | 키워드 | 설명 |
+|-------|------|--------|------|
+| code-reviewer | Opus | 코드리뷰, 체크리스트, lint, 규칙검증 | Self Code Review, checklist 기반 검토 |
+| qa-tester | Sonnet | 테스트, QA, 빌드검증, lint실행 | 빌드/테스트 검증, 품질 확인 |
 
 ### 유틸리티 Agent
 
-| Agent | 키워드 | 설명 |
-|-------|--------|------|
-| git-manager | 커밋, PR생성, 브랜치, push, merge, FEAT, FIX | Commit 메시지 작성, PR 생성, 브랜치 관리 (Git Skill 참조) |
-| Explore | 코드탐색, 파일검색, 구조파악 | 코드베이스 탐색 및 구조 파악 (Built-in) |
-| Plan | 구현계획, 설계, 아키텍처설계 | 구현 전략 및 계획 수립 (Built-in) |
+| Agent | 모델 | 키워드 | 설명 |
+|-------|------|--------|------|
+| git-manager | Haiku | 커밋, PR생성, 브랜치, push, merge | Commit 메시지 작성, PR 생성 |
+| Explore | - | 코드탐색, 파일검색, 구조파악 | 코드베이스 탐색 (Built-in) |
+| Plan | - | 구현계획, 설계, 아키텍처설계 | 구현 전략 수립 (Built-in) |
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 PART 3: 구현
@@ -131,17 +150,25 @@ Step 5 - 구현: 모든 관련 Skill 활성화 및 Agent 호출 후에만 구현
 - Git/pr-review: NO - PR 리뷰 요청 아님
 - Git/pr-apply: NO - PR 피드백 반영 아님
 
-**Agent 평가 (워크플로우):**
+**Agent 평가 (분석):**
+- explore: NO - context-collector에서 탐색 수행
 - context-collector: YES - 관련 Context 수집 필요
+- architect: NO - 단순 기능 구현이므로
+
+**Agent 평가 (계획):**
 - task-planner: YES - 요구사항 명확화 및 TaskList 생성 필요
 - impact-analyzer: YES - 기존 코드 영향 분석 필요
+
+**Agent 평가 (구현):**
 - code-writer: NO - 계획 수립 후 실행
+- designer: NO - UI 작업 아님
+
+**Agent 평가 (검증):**
 - code-reviewer: NO - 구현 완료 후 실행
+- qa-tester: NO - 구현 완료 후 실행
 
 **Agent 평가 (유틸리티):**
 - git-manager: NO - 커밋/PR 생성 아님
-- Explore: NO - context-collector에서 탐색 수행
-- Plan: NO - task-planner에서 계획 수립
 
 그 다음: Skill(Backend), Task(subagent_type="context-collector", ...)
 
