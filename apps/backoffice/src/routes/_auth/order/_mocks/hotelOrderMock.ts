@@ -226,3 +226,95 @@ export function getFilteredOrders(
 
   return { orders, totalCount };
 }
+
+/** 주문 상세 아이템 타입 */
+export interface HotelOrderItem {
+  id: number;
+  productName: string;
+  optionName: string;
+  checkInDate: string;
+  checkOutDate: string;
+  amount: number;
+}
+
+/** 주문 상세 결제 정보 */
+export interface PaymentInfo {
+  paymentMethod: string;
+  productAmount: number;
+  refundAmount: number;
+  totalAmount: number;
+}
+
+/** 주문 상세 회원 정보 */
+export interface MemberInfo {
+  name: string;
+  phone: string;
+}
+
+/** 주문 상세 데이터 타입 */
+export interface HotelOrderDetail {
+  id: number;
+  orderNumber: string;
+  campaignName: string;
+  influencerName: string;
+  orderedAt: string;
+  status: HotelOrderStatus;
+  statusLabel: string;
+  statusDate: string;
+  items: HotelOrderItem[];
+  payment: PaymentInfo;
+  member: MemberInfo;
+}
+
+/** 주문 상세 Mock 데이터 조회 */
+export function getOrderDetail(orderId: string): HotelOrderDetail | null {
+  const order = mockHotelOrders.find((o) => o.id === Number(orderId));
+  if (!order) return null;
+
+  return {
+    id: order.id,
+    orderNumber: order.orderNumber,
+    campaignName: order.campaignName,
+    influencerName: order.influencerName,
+    orderedAt: order.paidAt,
+    status: order.status,
+    statusLabel: ORDER_STATUS_LABELS[order.status],
+    statusDate: order.paidAt,
+    items: [
+      {
+        id: 1,
+        productName: order.productName,
+        optionName: order.optionName,
+        checkInDate: order.checkInDate,
+        checkOutDate: order.checkOutDate,
+        amount: order.paymentAmount,
+      },
+    ],
+    payment: {
+      paymentMethod: '카드',
+      productAmount: order.paymentAmount,
+      refundAmount: 0,
+      totalAmount: order.paymentAmount,
+    },
+    member: {
+      name: order.buyerName,
+      phone: order.buyerPhone,
+    },
+  };
+}
+
+/** 주문별 상태 탭 목록 (상세 페이지용) */
+export function getOrderDetailTabs(orderStatus: HotelOrderStatus) {
+  return [
+    {
+      key: 'ALL' as const,
+      label: '전체 주문',
+    },
+    {
+      key: orderStatus,
+      label: ORDER_STATUS_LABELS[orderStatus],
+      count: 1,
+      hasAlert: ALERT_STATUSES.includes(orderStatus),
+    },
+  ];
+}
