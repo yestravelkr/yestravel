@@ -87,8 +87,8 @@ const TabButton = tw.button<{ $active: boolean }>`
   whitespace-nowrap
   ${(props) =>
     props.$active
-      ? 'border-gray-900 text-gray-900'
-      : 'border-transparent text-gray-500 hover:text-gray-700'}
+      ? 'border-[var(--fg-neutral)] text-[var(--fg-neutral)]'
+      : 'border-transparent text-[var(--fg-muted)] hover:text-[var(--fg-neutral)]'}
 `;
 
 const TabCount = tw.span<{ $active: boolean }>`
@@ -102,7 +102,7 @@ const TabCount = tw.span<{ $active: boolean }>`
   rounded-full
   bg-[var(--bg-neutral,#F4F4F5)]
   text-xs
-  ${(props) => (props.$active ? 'text-gray-900' : 'text-gray-500')}
+  ${(props) => (props.$active ? 'text-[var(--fg-neutral)]' : 'text-[var(--fg-muted)]')}
 `;
 
 const AlertDot = tw.span`

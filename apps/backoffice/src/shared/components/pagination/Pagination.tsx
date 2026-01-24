@@ -116,8 +116,8 @@ const NavButton = tw.button`
   w-8
   h-8
   rounded-lg
-  text-gray-500
-  hover:bg-gray-100
+  text-[var(--fg-muted)]
+  hover:bg-[var(--bg-neutral-subtle)]
   disabled:opacity-40
   disabled:cursor-not-allowed
   disabled:hover:bg-transparent
@@ -140,8 +140,8 @@ const PageButton = tw.button<{ $active: boolean }>`
   ease-out
   ${(props) =>
     props.$active
-      ? 'bg-gray-900 text-white'
-      : 'text-gray-600 hover:bg-gray-100'}
+      ? 'bg-[var(--bg-neutral-solid)] text-[var(--fg-on-surface)]'
+      : 'text-[var(--fg-neutral)] hover:bg-[var(--bg-neutral-subtle)]'}
 `;
 
 const Ellipsis = tw.span`
@@ -151,5 +151,5 @@ const Ellipsis = tw.span`
   w-8
   h-8
   text-sm
-  text-gray-400
+  text-[var(--fg-muted)]
 `;

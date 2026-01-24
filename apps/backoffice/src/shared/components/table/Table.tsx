@@ -76,7 +76,7 @@ export function Table<T>({ columns, data, onRowClick }: TableProps<T>) {
 
 const TableContainer = tw.div`
   overflow-x-auto
-  bg-white
+  bg-[var(--bg-layer)]
 `;
 
 const TableElement = tw.table`
@@ -85,13 +85,13 @@ const TableElement = tw.table`
 
 const TableHeader = tw.thead`
   border-b
-  border-gray-200
+  border-[var(--stroke-neutral)]
 `;
 
 const TableRow = tw.tr<{ $clickable?: boolean }>`
   border-b
-  border-gray-100
-  ${(p) => p.$clickable && 'hover:bg-gray-50 cursor-pointer transition-colors'}
+  border-[var(--stroke-neutral-subtle)]
+  ${(p) => p.$clickable && 'hover:bg-[var(--bg-neutral-subtle)] cursor-pointer transition-colors'}
 `;
 
 const TableHeaderCell = tw.th`
@@ -100,11 +100,11 @@ const TableHeaderCell = tw.th`
   text-left
   text-xs
   font-medium
-  text-gray-500
+  text-[var(--fg-muted)]
 `;
 
 const TableBody = tw.tbody`
-  bg-white
+  bg-[var(--bg-layer)]
 `;
 
 const TableDataCell = tw.td`
@@ -112,5 +112,5 @@ const TableDataCell = tw.td`
   py-3
   whitespace-nowrap
   text-sm
-  text-gray-900
+  text-[var(--fg-neutral)]
 `;

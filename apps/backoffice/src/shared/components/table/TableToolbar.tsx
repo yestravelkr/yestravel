@@ -76,11 +76,11 @@ const LabelSection = tw.div`
   gap-2
   text-sm
   font-medium
-  text-gray-700
+  text-[var(--fg-neutral)]
 `;
 
 const MenuIcon = tw(Menu)`
-  text-gray-500
+  text-[var(--fg-muted)]
 `;
 
 const PageSizeSelect = tw.select`
@@ -88,14 +88,14 @@ const PageSizeSelect = tw.select`
   py-1.5
   text-sm
   border
-  border-gray-200
+  border-[var(--stroke-neutral)]
   rounded-lg
-  bg-white
-  text-gray-700
+  bg-[var(--bg-layer)]
+  text-[var(--fg-neutral)]
   cursor-pointer
   focus:outline-none
   focus:ring-2
-  focus:ring-blue-500
+  focus:ring-[var(--fg-primary)]
   transition-all
   duration-200
 `;
