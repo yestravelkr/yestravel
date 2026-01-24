@@ -75,49 +75,42 @@ export function Table<T>({ columns, data, onRowClick }: TableProps<T>) {
 }
 
 const TableContainer = tw.div`
-  overflow-hidden 
-  bg-white 
-  shadow-sm 
-  ring-1 
-  ring-gray-900/5 
-  rounded-lg
+  overflow-x-auto
+  bg-[var(--bg-layer)]
 `;
 
 const TableElement = tw.table`
-  min-w-full 
-  divide-y 
-  divide-gray-300
+  min-w-full
 `;
 
 const TableHeader = tw.thead`
-  bg-gray-50
+  border-b
+  border-[var(--stroke-neutral)]
 `;
 
 const TableRow = tw.tr<{ $clickable?: boolean }>`
-  ${(p) => p.$clickable && 'hover:bg-gray-50 cursor-pointer transition-colors'}
+  border-b
+  border-[var(--stroke-neutral-subtle)]
+  ${(p) => p.$clickable && 'hover:bg-[var(--bg-neutral-subtle)] cursor-pointer transition-colors'}
 `;
 
 const TableHeaderCell = tw.th`
-  px-6 
-  py-3 
-  text-left 
-  text-xs 
-  font-medium 
-  text-gray-500 
-  uppercase 
-  tracking-wider
+  px-4
+  py-3
+  text-left
+  text-xs
+  font-medium
+  text-[var(--fg-muted)]
 `;
 
 const TableBody = tw.tbody`
-  divide-y 
-  divide-gray-200 
-  bg-white
+  bg-[var(--bg-layer)]
 `;
 
 const TableDataCell = tw.td`
-  px-6 
-  py-4 
-  whitespace-nowrap 
-  text-sm 
-  text-gray-900
+  px-4
+  py-3
+  whitespace-nowrap
+  text-sm
+  text-[var(--fg-neutral)]
 `;
