@@ -4,7 +4,7 @@
  * 뒤로가기 버튼, 주문번호, 캠페인/인플루언서 정보 표시
  */
 
-import { useNavigate } from '@tanstack/react-router';
+import { useRouter } from '@tanstack/react-router';
 import { ArrowLeft } from 'lucide-react';
 import tw from 'tailwind-styled-components';
 
@@ -36,10 +36,10 @@ export function OrderDetailHeader({
   influencerName,
   orderedAt,
 }: OrderDetailHeaderProps) {
-  const navigate = useNavigate();
+  const router = useRouter();
 
   const handleBack = () => {
-    navigate({ to: '/order/hotel', search: {} });
+    router.history.back();
   };
 
   return (
