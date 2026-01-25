@@ -151,6 +151,7 @@ export const campaignInfluencerResponseSchema = z.object({
   campaignInfluencerId: z.string(), // composite key: `${campaignId}_${influencerId}`
   influencerId: z.number(),
   name: z.string(),
+  slug: z.string().nullable(),
   thumbnail: z.string().nullable(),
   periodType: campaignPeriodTypeEnumSchema,
   startAt: z.date().nullable(),
