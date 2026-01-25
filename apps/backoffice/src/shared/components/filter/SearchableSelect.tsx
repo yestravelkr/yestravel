@@ -133,7 +133,6 @@ export function SearchableSelect({
               e.stopPropagation();
               handleClear();
             }}
-            type="button"
           >
             <X size={14} />
           </ClearButton>

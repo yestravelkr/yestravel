@@ -143,7 +143,6 @@ export function MultiSelectDropdown({
               e.stopPropagation();
               handleClearAll();
             }}
-            type="button"
           >
             <X size={14} />
           </ClearButton>

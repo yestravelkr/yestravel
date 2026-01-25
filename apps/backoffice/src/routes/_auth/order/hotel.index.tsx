@@ -230,11 +230,9 @@ function HotelOrderListPage() {
   // orderStatus를 기존 status 필터로 변환 (ALL 또는 특정 상태)
   const statusFilter: OrderStatusTab = (orderStatus as OrderStatusTab) || 'ALL';
 
-  const [ordersData] = trpc.backofficeOrder.findAll.useSuspenseQuery({
-    page,
-    limit,
-    type: 'HOTEL',
-    status: statusFilter === 'ALL' ? undefined : statusFilter,
+  // 공통 필터 파라미터
+  const filterParams = {
+    type: 'HOTEL' as const,
     periodFilterType:
       (periodType as 'PAYMENT_DATE' | 'ORDER_DATE' | 'USAGE_DATE') || undefined,
     startDate: startDate || undefined,
@@ -245,14 +243,23 @@ function HotelOrderListPage() {
       : undefined,
     productId: productId ? parseInt(productId, 10) : undefined,
     searchQuery: searchQuery || undefined,
+  };
+
+  const [ordersData] = trpc.backofficeOrder.findAll.useSuspenseQuery({
+    ...filterParams,
+    page,
+    limit,
+    status: statusFilter === 'ALL' ? undefined : statusFilter,
   });
+
+  const [statusCounts] =
+    trpc.backofficeOrder.getStatusCounts.useSuspenseQuery(filterParams);
 
   const [filterOptions] =
     trpc.backofficeOrder.getFilterOptions.useSuspenseQuery();
 
   const orders = ordersData.data;
   const totalCount = ordersData.total;
-  const statusCounts = ordersData.statusCounts;
   const totalPages = ordersData.totalPages;
 
   const campaignOptions = filterOptions.campaigns.map((c) => ({
