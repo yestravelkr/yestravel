@@ -27,6 +27,7 @@ Step 2 - Skill 활성화: YES로 표시된 모든 Skill에 대해 Skill(skill-na
 
 | Skill | 키워드 | 설명 |
 |-------|--------|------|
+| Coding | SRP, 단일책임, 결합도, 응집도, 설계원칙, 폴더구조 | 공통 코딩 원칙 (Backend/Frontend 공통 참조) |
 | Backend | 백엔드, API, Router, Controller, Service, Repository, Migration, Entity, tRPC, NestJS | 백엔드 개발 전체 |
 | Frontend | 프론트엔드, 컴포넌트, 스타일링, 폼, React, tailwind-styled-components, Modal, Toast | 프론트엔드 개발 전체 |
 

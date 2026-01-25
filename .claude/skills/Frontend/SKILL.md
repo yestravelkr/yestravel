@@ -29,6 +29,18 @@ estimated_tokens: ~300
 3. Usage 주석 추가
 4. Styled components 정의 (파일 최하단)
 
+## 설계 원칙
+
+> **참조**: `.claude/skills/Coding/SKILL.md` - SRP, 결합도, 응집도 공통 원칙
+
+### 프론트엔드 특화 규칙
+
+| 규칙 | 설명 |
+|------|------|
+| **Props Drilling 지양** | 3단계 이상이면 Context 또는 Store 사용 |
+| **common 독립성** | common 컴포넌트는 도메인(auth, product 등) import 금지 |
+| **index.ts 공개 API** | 폴더 외부는 index.ts 통해서만 import |
+
 ## 필수 준수 사항
 
 | 규칙 | 설명 |
@@ -62,6 +74,44 @@ import { IconName } from 'lucide-react';
 - [ ] JSDoc 주석과 Usage 예시 작성했는가?
 - [ ] 아이콘은 `@minim/icon` 먼저 확인했는가?
 - [ ] `alert()` 대신 `toast` 사용했는가?
+
+## 스타일링 가독성 및 중첩 최소화
+
+### 불필요한 div 중첩 제거
+
+```typescript
+// ❌ 의미 없는 중첩
+<Wrapper><Container><Inner><Content>텍스트</Content></Inner></Container></Wrapper>
+
+// ✅ 필요한 만큼만
+<Card><Content>텍스트</Content></Card>
+```
+
+### tailwind 클래스 가독성
+
+```typescript
+// ❌ 한 줄에 모든 클래스
+const Button = tw.button`flex items-center px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600`;
+
+// ✅ 논리적 그룹으로 줄바꿈
+const Button = tw.button`
+  flex items-center
+  px-4 py-2
+  bg-blue-500 text-white rounded
+  hover:bg-blue-600
+`;
+```
+
+### 조건부 스타일 가독성
+
+```typescript
+// ❌ 삼항 중첩
+${({ $v }) => $v === 'a' ? 'bg-blue' : $v === 'b' ? 'bg-gray' : 'bg-white'}
+
+// ✅ 객체 매핑
+const styles = { a: 'bg-blue', b: 'bg-gray', c: 'bg-white' };
+${({ $v }) => styles[$v]}
+```
 
 ## 빠른 참조
 
