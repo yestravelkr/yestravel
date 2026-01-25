@@ -31,13 +31,11 @@ Step 2 - Skill 활성화: YES로 표시된 모든 Skill에 대해 Skill(skill-na
 | Backend | 백엔드, API, Router, Controller, Service, Repository, Migration, Entity, tRPC, NestJS | 백엔드 개발 전체 |
 | Frontend | 프론트엔드, 컴포넌트, 스타일링, 폼, React, tailwind-styled-components, Modal, Toast | 프론트엔드 개발 전체 |
 
-### Git Skill (Git 디렉토리)
+### Git Skill
 
 | Skill | 키워드 | 설명 |
 |-------|--------|------|
-| Git/git | 커밋, PR생성, 브랜치, push, merge, FEAT, FIX | Commit 메시지 작성, PR 생성 규칙 |
-| Git/pr-review | PR리뷰, 코드리뷰, MR, 머지리퀘스트, 체크리스트 | PR/MR 코드 리뷰 |
-| Git/pr-apply | PR피드백, 리뷰적용, 코멘트, 변경요청 | PR 리뷰 피드백 반영 |
+| Git | 커밋, PR생성, 브랜치, push, merge, FEAT, FIX, PR리뷰, 코드리뷰, 피드백 | Commit/PR 생성, PR 리뷰, 피드백 적용 |
 
 ### Sub-Skills (자동 로드됨 - 참조용)
 
@@ -56,6 +54,11 @@ Step 2 - Skill 활성화: YES로 표시된 모든 Skill에 대해 Skill(skill-na
 - components: 컴포넌트 작성 패턴
 - styling: tailwind-styled-components 스타일링
 - form-patterns: React Hook Form 폼 패턴
+
+**Git Sub-Skills:**
+- git: Commit 메시지 작성, PR 생성 규칙
+- pr-review: PR 코드 리뷰 체크리스트
+- pr-apply: PR 리뷰 피드백 반영
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 PART 1.5: CONTEXT 확인
@@ -147,9 +150,7 @@ Step 5 - 구현: 모든 관련 Skill 활성화 및 Agent 호출 후에만 구현
 **Skill 평가:**
 - Backend: YES - 새 API 엔드포인트 생성 및 Service 구현 필요
 - Frontend: NO - 프론트엔드 변경 없음
-- Git/git: NO - 커밋/PR 작업 아님
-- Git/pr-review: NO - PR 리뷰 요청 아님
-- Git/pr-apply: NO - PR 피드백 반영 아님
+- Git: NO - 커밋/PR/리뷰 작업 아님
 
 **Agent 평가 (분석):**
 - explore: NO - context-collector에서 탐색 수행
