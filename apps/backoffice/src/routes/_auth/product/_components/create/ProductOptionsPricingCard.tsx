@@ -14,9 +14,13 @@ import {
   TD,
 } from '@yestravelkr/min-design-system';
 import type { HotelOption } from '@yestravelkr/option-selector';
-import { Settings, Sheet } from 'lucide-react';
+import { Settings } from 'lucide-react';
 import { useMemo } from 'react';
 import { useFormContext } from 'react-hook-form';
+import { toast } from 'sonner';
+import tw from 'tailwind-styled-components';
+
+import { ExcelProcessButtons, type ExcelRowData } from './ExcelProcessButtons';
 
 import { openHotelOptionsModal } from '@/components/product/HotelOptionsModal';
 import { FormCard } from '@/shared/components/form/FormLayout';
@@ -103,9 +107,85 @@ export function ProductOptionsPricingCard() {
     });
   };
 
-  const handleExcelProcess = () => {
-    // TODO: 엑셀 처리 기능
-    console.log('엑셀 처리');
+  /**
+   * 엑셀 다운로드용 데이터 생성
+   */
+  const getExcelData = (): ExcelRowData[] => {
+    if (hotelOptions.length === 0) return [];
+
+    const dates = Object.keys(hotelOptions[0].priceByDate).sort();
+    const excelData: ExcelRowData[] = [];
+
+    dates.forEach((date) => {
+      hotelOptions.forEach((option) => {
+        const anotherPrice = option.anotherPriceByDate?.[date] || {
+          supplyPrice: 0,
+          commission: 0,
+        };
+        const sku = hotelSkus.find((s) => s.checkInDate === date);
+
+        excelData.push({
+          날짜: date,
+          옵션명: option.name,
+          재고: sku?.quantity || 0,
+          공급가: anotherPrice.supplyPrice || 0,
+          판매가: option.priceByDate[date] || 0,
+          수수료: anotherPrice.commission || 0,
+        });
+      });
+    });
+
+    return excelData;
+  };
+
+  /**
+   * 엑셀 업로드 데이터 적용
+   */
+  const handleUploadData = (data: ExcelRowData[]) => {
+    const optionNames = hotelOptions.map((opt) => opt.name);
+    const newOptions = [...hotelOptions];
+    const newSkus = [...hotelSkus];
+    let updatedCount = 0;
+
+    data.forEach((row) => {
+      const date = String(row.날짜);
+      const optionName = String(row.옵션명);
+      const optionIndex = optionNames.indexOf(optionName);
+
+      if (optionIndex === -1) return; // 옵션명 불일치 스킵
+
+      const option = newOptions[optionIndex];
+      if (!option.priceByDate[date]) return; // 날짜 불일치 스킵
+
+      // 판매가 업데이트
+      option.priceByDate[date] = Number(row.판매가) || 0;
+
+      // 공급가, 수수료 업데이트
+      if (!option.anotherPriceByDate) {
+        option.anotherPriceByDate = {};
+      }
+      option.anotherPriceByDate[date] = {
+        supplyPrice: Number(row.공급가) || 0,
+        commission: Number(row.수수료) || 0,
+      };
+
+      // 재고 업데이트
+      const skuIndex = newSkus.findIndex((s) => s.checkInDate === date);
+      const stockValue = Number(row.재고) || 0;
+
+      if (skuIndex >= 0) {
+        newSkus[skuIndex].quantity = stockValue;
+      } else {
+        newSkus.push({ checkInDate: date, quantity: stockValue });
+      }
+
+      updatedCount++;
+    });
+
+    setValue('hotelOptions', newOptions);
+    setValue('hotelSkus', newSkus);
+
+    toast.success(`${updatedCount}개 행이 적용되었습니다.`);
   };
 
   const updatePrice = (
@@ -170,9 +250,9 @@ export function ProductOptionsPricingCard() {
   return (
     <FormCard
       title={
-        <div className="flex items-center justify-between w-full">
+        <TitleWrapper>
           <span>옵션 및 가격</span>
-          <div className="flex gap-2">
+          <ButtonGroup>
             <Button
               kind="neutral"
               variant="outline"
@@ -183,18 +263,13 @@ export function ProductOptionsPricingCard() {
             >
               옵션 설정
             </Button>
-            <Button
-              kind="neutral"
-              variant="outline"
-              shape="soft"
-              size="medium"
-              onClick={handleExcelProcess}
-              leadingIcon={<Sheet size={20} />}
-            >
-              엑셀 처리
-            </Button>
-          </div>
-        </div>
+            <ExcelProcessButtons
+              onGetExcelData={getExcelData}
+              onUploadData={handleUploadData}
+              disabled={hotelOptions.length === 0}
+            />
+          </ButtonGroup>
+        </TitleWrapper>
       }
     >
       {hotelOptions.length > 0 ? (
@@ -374,3 +449,13 @@ function PricingTable({
  *   <ProductOptionsPricingCard />
  * </FormProvider>
  */
+
+// Styled Components
+
+const TitleWrapper = tw.div`
+  flex items-center justify-between w-full
+`;
+
+const ButtonGroup = tw.div`
+  flex gap-2
+`;
