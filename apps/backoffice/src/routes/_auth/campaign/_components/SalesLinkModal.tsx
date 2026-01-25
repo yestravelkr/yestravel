@@ -10,7 +10,7 @@ import SnappyModal, { useCurrentModal } from 'react-snappy-modal';
 import { toast } from 'sonner';
 import tw from 'tailwind-styled-components';
 
-const SHOP_URL = import.meta.env.VITE_SHOP_URL || 'http://localhost:5174';
+const SHOP_URL = import.meta.env.VITE_SHOP_URL || 'http://localhost:3001';
 
 interface Influencer {
   influencerId: number;
