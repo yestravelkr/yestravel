@@ -213,7 +213,7 @@ const IconWrapper = tw.span<{ $isOpen?: boolean; $selected?: boolean }>`
   ${(p) => (p.$selected ? 'text-white' : 'text-[var(--fg-muted)]')}
 `;
 
-const ClearButton = tw.button`
+const ClearButton = tw.span`
   flex
   items-center
   justify-center

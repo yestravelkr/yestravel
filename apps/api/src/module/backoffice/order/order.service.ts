@@ -89,7 +89,7 @@ export class OrderService {
 
       return {
         id: order.id,
-        orderNumber: orderNumberParser.encode([order.id])[0],
+        orderNumber: orderNumberParser.encode([order.id]),
         type: order.type,
         status: order.status,
         customerName: order.customerName,
