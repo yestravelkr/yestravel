@@ -127,6 +127,28 @@ export class OrderController {
 }
 ```
 
+### 유틸리티 타입
+
+| 타입 | 위치 | 사용 |
+|------|------|------|
+| `Nullish<T>` | `@src/types/utility.type` | `T \| null \| undefined` 대체 |
+
+```typescript
+// ✅ Nullish 사용
+import type { Nullish } from '@src/types/utility.type';
+
+interface OrderInput {
+  status: Nullish<string>;
+  campaignId: Nullish<number>;
+}
+
+// ❌ 직접 union 타입 사용 금지
+interface OrderInput {
+  status: string | null | undefined;
+  campaignId: number | null | undefined;
+}
+```
+
 ## 필수 준수 사항 (요약)
 
 | 규칙 | 설명 |
@@ -138,6 +160,7 @@ export class OrderController {
 | Router | Module providers에 추가 금지 (자동 발견) |
 | Import | `import type` 사용, tRPC는 `'nestjs-trpc'`에서 import |
 | 조회 | `findOneOrFail().catch()` 패턴 사용 |
+| Nullish 타입 | `\| null \| undefined` 대신 `Nullish<T>` 사용 |
 
 ## 필수 체크리스트
 
@@ -147,6 +170,7 @@ export class OrderController {
 - [ ] Controller에 TransactionService가 주입되었는가?
 - [ ] Mutation에만 @Transactional이 적용되었는가? (Query 제외)
 - [ ] 단순 조회에 `find`를 사용했는가? (QueryBuilder 최소화)
+- [ ] `| null | undefined` 대신 `Nullish<T>`를 사용했는가?
 - [ ] Router가 Module providers에 없는가?
 - [ ] `import type`을 사용했는가?
 - [ ] `findOneOrFail`을 사용했는가?
@@ -170,3 +194,4 @@ yarn generateEnv                 # 환경 변수 생성
 - Controller: `apps/api/src/module/shop/order/shop.order.controller.ts`
 - Service: `apps/api/src/module/shop/order/shop.order.service.ts`
 - RepositoryProvider: `apps/api/src/module/shared/transaction/repository.provider.ts`
+- Utility Types: `apps/api/src/types/utility.type.ts`
