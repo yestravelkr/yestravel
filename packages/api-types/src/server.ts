@@ -1397,6 +1397,7 @@ const appRouter = t.router({
         campaignInfluencerId: z.string(), // composite key: `${campaignId}_${influencerId}`
         influencerId: z.number(),
         name: z.string(),
+        slug: z.string().nullable(),
         thumbnail: z.string().nullable(),
         periodType: z.enum(
           ['DEFAULT', 'CUSTOM'] as const
@@ -1477,6 +1478,7 @@ const appRouter = t.router({
         campaignInfluencerId: z.string(), // composite key: `${campaignId}_${influencerId}`
         influencerId: z.number(),
         name: z.string(),
+        slug: z.string().nullable(),
         thumbnail: z.string().nullable(),
         periodType: z.enum(
           ['DEFAULT', 'CUSTOM'] as const
@@ -1559,6 +1561,7 @@ const appRouter = t.router({
         campaignInfluencerId: z.string(), // composite key: `${campaignId}_${influencerId}`
         influencerId: z.number(),
         name: z.string(),
+        slug: z.string().nullable(),
         thumbnail: z.string().nullable(),
         periodType: z.enum(
           ['DEFAULT', 'CUSTOM'] as const
