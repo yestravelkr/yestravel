@@ -1,6 +1,10 @@
 import { Link } from '@tanstack/react-router';
+import { Button } from '@yestravelkr/min-design-system';
 import dayjs from 'dayjs';
+import { ExternalLink } from 'lucide-react';
 import tw from 'tailwind-styled-components';
+
+import { openSalesLinkModal } from './SalesLinkModal';
 
 import { EmptyState } from '@/shared/components';
 import { trpc, type RouterOutputs } from '@/shared/trpc';
@@ -29,6 +33,7 @@ export function CampaignList() {
             <TableHeader>종료일</TableHeader>
             <TableHeader>설명</TableHeader>
             <TableHeader>등록일</TableHeader>
+            <TableHeader>부가기능</TableHeader>
           </TableRow>
         </thead>
         <tbody>
@@ -42,6 +47,26 @@ export function CampaignList() {
 }
 
 function CampaignRow({ campaign }: { campaign: Campaign }) {
+  const utils = trpc.useUtils();
+
+  const handleOpenSalesLink = async () => {
+    // 버튼 클릭 시에만 캠페인 상세 조회
+    const campaignDetail = await utils.backofficeCampaign.findById.fetch({
+      id: campaign.id,
+    });
+
+    openSalesLinkModal({
+      campaignId: campaign.id,
+      campaignTitle: campaign.title,
+      influencers: campaignDetail.influencers.map((inf) => ({
+        influencerId: inf.influencerId,
+        name: inf.name,
+        slug: inf.slug,
+        thumbnail: inf.thumbnail,
+      })),
+    });
+  };
+
   return (
     <TableRow>
       <TableCell>
@@ -53,6 +78,17 @@ function CampaignRow({ campaign }: { campaign: Campaign }) {
       <TableCell>{dayjs(campaign.endAt).format('YYYY-MM-DD')}</TableCell>
       <TableCell>{campaign.description || '-'}</TableCell>
       <TableCell>{dayjs(campaign.createdAt).format('YYYY-MM-DD')}</TableCell>
+      <TableCell>
+        <Button
+          kind="neutral"
+          variant="outline"
+          size="small"
+          onClick={handleOpenSalesLink}
+          leadingIcon={<ExternalLink size={16} />}
+        >
+          판매링크
+        </Button>
+      </TableCell>
     </TableRow>
   );
 }
