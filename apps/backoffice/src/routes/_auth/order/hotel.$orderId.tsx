@@ -6,6 +6,7 @@
  */
 
 import { createFileRoute } from '@tanstack/react-router';
+import dayjs from 'dayjs';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import tw from 'tailwind-styled-components';
@@ -14,25 +15,50 @@ import { MemberInfoCard } from './_components/MemberInfoCard';
 import { OrderDetailHeader } from './_components/OrderDetailHeader';
 import { OrderStatusCard } from './_components/OrderStatusCard';
 import { PaymentInfoCard } from './_components/PaymentInfoCard';
-import {
-  getOrderDetail,
-  getOrderDetailTabs,
-  type HotelOrderStatus,
-} from './_mocks/hotelOrderMock';
 
 import { DetailPageLayout } from '@/shared/components';
+import { trpc } from '@/shared/trpc';
 
 export const Route = createFileRoute('/_auth/order/hotel/$orderId')({
   component: HotelOrderDetailPage,
 });
 
+/** 주문 상태 타입 */
+type OrderStatus = 'PENDING' | 'PAID' | 'COMPLETED' | 'CANCELLED' | 'REFUNDED';
+
+/** 상태별 라벨 */
+const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
+  PENDING: '결제대기',
+  PAID: '결제완료',
+  COMPLETED: '이용완료',
+  CANCELLED: '취소',
+  REFUNDED: '환불',
+};
+
+/** 알림 표시가 필요한 상태 */
+const ALERT_STATUSES: OrderStatus[] = ['PAID', 'PENDING'];
+
 function HotelOrderDetailPage() {
   const { orderId } = Route.useParams();
-  const orderDetail = getOrderDetail(orderId);
+  const [activeTab, setActiveTab] = useState<'ALL' | OrderStatus>('ALL');
 
-  const [activeTab, setActiveTab] = useState<'ALL' | HotelOrderStatus>('ALL');
+  const {
+    data: orderDetail,
+    isLoading,
+    isError,
+  } = trpc.backofficeOrder.findById.useQuery({
+    id: parseInt(orderId),
+  });
 
-  if (!orderDetail) {
+  if (isLoading) {
+    return (
+      <PageContainer>
+        <LoadingMessage>로딩 중...</LoadingMessage>
+      </PageContainer>
+    );
+  }
+
+  if (isError || !orderDetail) {
     return (
       <PageContainer>
         <NotFoundMessage>주문을 찾을 수 없습니다.</NotFoundMessage>
@@ -40,7 +66,18 @@ function HotelOrderDetailPage() {
     );
   }
 
-  const tabs = getOrderDetailTabs(orderDetail.status);
+  const tabs = [
+    {
+      key: 'ALL' as const,
+      label: '전체 주문',
+    },
+    {
+      key: orderDetail.status as OrderStatus,
+      label: ORDER_STATUS_LABELS[orderDetail.status as OrderStatus],
+      count: 1,
+      hasAlert: ALERT_STATUSES.includes(orderDetail.status as OrderStatus),
+    },
+  ];
 
   const handleConfirm = () => {
     toast.success('예약이 확정되었습니다.');
@@ -60,7 +97,7 @@ function HotelOrderDetailPage() {
         orderNumber={orderDetail.orderNumber}
         campaignName={orderDetail.campaignName}
         influencerName={orderDetail.influencerName}
-        orderedAt={orderDetail.orderedAt}
+        orderedAt={dayjs(orderDetail.orderedAt).format('YY.MM.DD HH:mm')}
       />
 
       <DetailPageLayout
@@ -70,9 +107,20 @@ function HotelOrderDetailPage() {
             activeTab={activeTab}
             onTabChange={setActiveTab}
             statusLabel={orderDetail.statusLabel}
-            statusDate={orderDetail.statusDate}
+            statusDate={
+              orderDetail.statusDate
+                ? dayjs(orderDetail.statusDate).format('YY.MM.DD HH:mm')
+                : '-'
+            }
             itemCount={orderDetail.items.length}
-            items={orderDetail.items}
+            items={orderDetail.items.map((item) => ({
+              id: item.id,
+              productName: item.productName,
+              optionName: item.optionName,
+              checkInDate: item.checkInDate ?? '-',
+              checkOutDate: item.checkOutDate ?? '-',
+              amount: item.amount,
+            }))}
             onConfirm={handleConfirm}
             onManage={handleManage}
             onHistory={handleHistory}
@@ -80,8 +128,20 @@ function HotelOrderDetailPage() {
         }
         side={
           <>
-            <PaymentInfoCard payment={orderDetail.payment} />
-            <MemberInfoCard member={orderDetail.member} />
+            <PaymentInfoCard
+              payment={{
+                paymentMethod: orderDetail.payment.paymentMethod,
+                productAmount: orderDetail.payment.productAmount,
+                refundAmount: orderDetail.payment.refundAmount,
+                totalAmount: orderDetail.payment.totalAmount,
+              }}
+            />
+            <MemberInfoCard
+              member={{
+                name: orderDetail.member.name,
+                phone: orderDetail.member.phone,
+              }}
+            />
           </>
         }
       />
@@ -96,6 +156,11 @@ const PageContainer = tw.div`
   p-6
   min-h-full
   bg-[var(--bg-layer-base)]
+`;
+
+const LoadingMessage = tw.div`
+  text-[var(--fg-muted)]
+  text-lg
 `;
 
 const NotFoundMessage = tw.div`

@@ -128,3 +128,73 @@ export const filterOptionsResponseSchema = z.object({
     })
   ),
 });
+
+// ===== 주문 상세 조회 Schemas =====
+
+/**
+ * 주문 상세 조회 Input Schema
+ */
+export const findByIdInputSchema = z.object({
+  id: z.number().int().positive(),
+});
+
+/**
+ * 주문 상세 아이템 Schema (호텔 예약 정보)
+ */
+export const orderDetailItemSchema = z.object({
+  id: z.number(),
+  productName: z.string(),
+  optionName: z.string(),
+  checkInDate: z.string().nullish(),
+  checkOutDate: z.string().nullish(),
+  amount: z.number(),
+});
+
+/**
+ * 결제 정보 Schema
+ */
+export const paymentInfoSchema = z.object({
+  paymentMethod: z.string(),
+  productAmount: z.number(),
+  refundAmount: z.number(),
+  totalAmount: z.number(),
+  paidAt: z.date().nullish(),
+});
+
+/**
+ * 회원 정보 Schema
+ */
+export const memberInfoSchema = z.object({
+  name: z.string(),
+  phone: z.string(),
+});
+
+/**
+ * 주문 상세 응답 Schema
+ */
+export const orderDetailResponseSchema = z.object({
+  id: z.number(),
+  orderNumber: z.string(),
+  type: productTypeSchema,
+  status: orderStatusSchema,
+  statusLabel: z.string(),
+  statusDate: z.date().nullish(),
+
+  // 캠페인/인플루언서 정보
+  campaignId: z.number(),
+  campaignName: z.string(),
+  influencerId: z.number(),
+  influencerName: z.string(),
+
+  // 주문 일시
+  orderedAt: z.date(),
+
+  // 주문 아이템 목록
+  items: z.array(orderDetailItemSchema),
+
+  // 결제 정보
+  payment: paymentInfoSchema,
+
+  // 회원 정보
+  member: memberInfoSchema,
+});

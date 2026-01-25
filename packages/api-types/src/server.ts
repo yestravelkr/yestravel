@@ -1166,6 +1166,56 @@ const appRouter = t.router({
           name: z.string(),
         })
       ),
+    })).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    findById: publicProcedure.input(z.object({
+      id: z.number().int().positive(),
+    })).output(z.object({
+      id: z.number(),
+      orderNumber: z.string(),
+      type: z.enum(['HOTEL', 'E-TICKET', 'DELIVERY']),
+      status: z.enum([
+        'PENDING',
+        'PAID',
+        'COMPLETED',
+        'CANCELLED',
+        'REFUNDED',
+      ]),
+      statusLabel: z.string(),
+      statusDate: z.date().nullish(),
+
+      // 캠페인/인플루언서 정보
+      campaignId: z.number(),
+      campaignName: z.string(),
+      influencerId: z.number(),
+      influencerName: z.string(),
+
+      // 주문 일시
+      orderedAt: z.date(),
+
+      // 주문 아이템 목록
+      items: z.array(z.object({
+        id: z.number(),
+        productName: z.string(),
+        optionName: z.string(),
+        checkInDate: z.string().nullish(),
+        checkOutDate: z.string().nullish(),
+        amount: z.number(),
+      })),
+
+      // 결제 정보
+      payment: z.object({
+        paymentMethod: z.string(),
+        productAmount: z.number(),
+        refundAmount: z.number(),
+        totalAmount: z.number(),
+        paidAt: z.date().nullish(),
+      }),
+
+      // 회원 정보
+      member: z.object({
+        name: z.string(),
+        phone: z.string(),
+      }),
     })).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
   }),
   backofficeInfluencer: t.router({

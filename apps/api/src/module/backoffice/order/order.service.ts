@@ -1,10 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { Between, FindOptionsWhere, ILike, In } from 'typeorm';
 import { RepositoryProvider } from '@src/module/shared/transaction/repository.provider';
 import {
   ORDER_STATUS_ENUM_VALUE,
   OrderEntity,
   orderNumberParser,
+  type OrderStatusEnumType,
 } from '@src/module/backoffice/domain/order/order.entity';
 import type { HotelOrderOptionData } from '@src/module/backoffice/domain/order/hotel-order.entity';
 import type {
@@ -14,8 +15,19 @@ import type {
   OrderListItem,
   StatusCounts,
   FilterOptionsResponse,
+  FindByIdInput,
+  OrderDetailResponse,
 } from './order.dto';
 import type { Nullish } from '@src/types/utility.type';
+
+/** 주문 상태별 라벨 */
+const ORDER_STATUS_LABELS: Record<OrderStatusEnumType, string> = {
+  PENDING: '결제대기',
+  PAID: '결제완료',
+  COMPLETED: '이용완료',
+  CANCELLED: '취소',
+  REFUNDED: '환불',
+};
 
 @Injectable()
 export class OrderService {
@@ -258,5 +270,74 @@ export class OrderService {
       'customerName',
     ];
     return allowedColumns.includes(orderBy) ? orderBy : 'createdAt';
+  }
+
+  /**
+   * 주문 상세 조회
+   */
+  async findById(input: FindByIdInput): Promise<OrderDetailResponse> {
+    const { id } = input;
+
+    const order = await this.repositoryProvider.OrderRepository.findOneOrFail({
+      where: { id },
+      relations: ['product', 'campaign', 'influencer', 'payments'],
+    }).catch(() => {
+      throw new NotFoundException(`주문을 찾을 수 없습니다. (id: ${id})`);
+    });
+
+    const orderOptionSnapshot =
+      order.orderOptionSnapshot as HotelOrderOptionData;
+
+    // 결제 정보 계산
+    const latestPayment = order.payments?.[0];
+    const productAmount = order.totalAmount;
+    const refundAmount = latestPayment
+      ? latestPayment.paidAmount - latestPayment.nowAmount
+      : 0;
+
+    return {
+      id: order.id,
+      orderNumber: orderNumberParser.encode([order.id]),
+      type: order.type,
+      status: order.status,
+      statusLabel: ORDER_STATUS_LABELS[order.status],
+      statusDate: latestPayment?.paidAt ?? order.updatedAt,
+
+      // 캠페인/인플루언서 정보
+      campaignId: order.campaignId,
+      campaignName: order.campaign.title,
+      influencerId: order.influencerId,
+      influencerName: order.influencer.name,
+
+      // 주문 일시
+      orderedAt: order.createdAt,
+
+      // 주문 아이템 목록 (현재는 단일 아이템)
+      items: [
+        {
+          id: order.id,
+          productName: order.product.name,
+          optionName: orderOptionSnapshot?.hotelOptionName ?? '',
+          checkInDate: orderOptionSnapshot?.checkInDate,
+          checkOutDate: orderOptionSnapshot?.checkOutDate,
+          amount: order.totalAmount,
+        },
+      ],
+
+      // 결제 정보
+      payment: {
+        paymentMethod: latestPayment?.pgProvider ?? '미결제',
+        productAmount,
+        refundAmount,
+        totalAmount: productAmount - refundAmount,
+        paidAt: latestPayment?.paidAt,
+      },
+
+      // 회원 정보
+      member: {
+        name: order.customerName,
+        phone: order.customerPhone,
+      },
+    };
   }
 }

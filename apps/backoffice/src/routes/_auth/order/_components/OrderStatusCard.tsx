@@ -8,20 +8,25 @@ import { Button } from '@yestravelkr/min-design-system';
 import { ChevronDown } from 'lucide-react';
 import tw from 'tailwind-styled-components';
 
-import type {
-  HotelOrderItem,
-  HotelOrderStatus,
-} from '../_mocks/hotelOrderMock';
-
 import { StatusTabs, type StatusTabItem } from '@/shared/components';
 
-interface OrderStatusCardProps {
+/** 주문 아이템 타입 */
+export interface OrderItem {
+  id: number;
+  productName: string;
+  optionName: string;
+  checkInDate: string;
+  checkOutDate: string;
+  amount: number;
+}
+
+interface OrderStatusCardProps<T extends string = string> {
   /** 상태 탭 목록 */
-  tabs: StatusTabItem<'ALL' | HotelOrderStatus>[];
+  tabs: StatusTabItem<T>[];
   /** 현재 선택된 탭 */
-  activeTab: 'ALL' | HotelOrderStatus;
+  activeTab: T;
   /** 탭 변경 핸들러 */
-  onTabChange: (tab: 'ALL' | HotelOrderStatus) => void;
+  onTabChange: (tab: T) => void;
   /** 상태 라벨 */
   statusLabel: string;
   /** 상태 날짜 */
@@ -29,7 +34,7 @@ interface OrderStatusCardProps {
   /** 아이템 개수 */
   itemCount: number;
   /** 주문 아이템 목록 */
-  items: HotelOrderItem[];
+  items: OrderItem[];
   /** 예약확정 핸들러 */
   onConfirm?: () => void;
   /** 주문관리 핸들러 */
@@ -57,7 +62,7 @@ const formatPrice = (amount: number) =>
  * />
  * ```
  */
-export function OrderStatusCard({
+export function OrderStatusCard<T extends string = string>({
   tabs,
   activeTab,
   onTabChange,
@@ -68,7 +73,7 @@ export function OrderStatusCard({
   onConfirm,
   onManage,
   onHistory,
-}: OrderStatusCardProps) {
+}: OrderStatusCardProps<T>) {
   return (
     <Container>
       <TabSection>
