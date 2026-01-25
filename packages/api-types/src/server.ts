@@ -1063,8 +1063,14 @@ const appRouter = t.router({
       order: z.enum(['ASC', 'DESC']).default('DESC'),
 
       // 필터
-      type: z.enum(PRODUCT_TYPE_ENUM_VALUE).nullish(),
-      status: z.enum(ORDER_STATUS_ENUM_VALUE).nullish(),
+      type: z.enum(['HOTEL', 'E-TICKET', 'DELIVERY']).nullish(),
+      status: z.enum([
+        'PENDING',
+        'PAID',
+        'COMPLETED',
+        'CANCELLED',
+        'REFUNDED',
+      ]).nullish(),
       periodFilterType: z.enum([
         'PAYMENT_DATE',
         'ORDER_DATE',
@@ -1080,8 +1086,14 @@ const appRouter = t.router({
       data: z.array(z.object({
         id: z.number(),
         orderNumber: z.string(),
-        type: z.enum(PRODUCT_TYPE_ENUM_VALUE),
-        status: z.enum(ORDER_STATUS_ENUM_VALUE),
+        type: z.enum(['HOTEL', 'E-TICKET', 'DELIVERY']),
+        status: z.enum([
+          'PENDING',
+          'PAID',
+          'COMPLETED',
+          'CANCELLED',
+          'REFUNDED',
+        ]),
         customerName: z.string(),
         customerPhone: z.string(),
         totalAmount: z.number(),

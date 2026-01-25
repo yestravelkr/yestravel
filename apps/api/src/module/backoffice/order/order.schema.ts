@@ -1,11 +1,16 @@
 import { z } from 'zod';
-import { ORDER_STATUS_ENUM_VALUE } from '@src/module/backoffice/domain/order/order.entity';
-import { PRODUCT_TYPE_ENUM_VALUE } from '@src/module/backoffice/admin/admin.schema';
 
 // ===== Enum Schemas =====
+// Note: 인라인으로 정의 (nestjs-trpc가 import된 상수를 해결하지 못함)
 
-export const orderStatusSchema = z.enum(ORDER_STATUS_ENUM_VALUE);
-export const productTypeSchema = z.enum(PRODUCT_TYPE_ENUM_VALUE);
+export const orderStatusSchema = z.enum([
+  'PENDING',
+  'PAID',
+  'COMPLETED',
+  'CANCELLED',
+  'REFUNDED',
+]);
+export const productTypeSchema = z.enum(['HOTEL', 'E-TICKET', 'DELIVERY']);
 export const periodFilterTypeSchema = z.enum([
   'PAYMENT_DATE',
   'ORDER_DATE',

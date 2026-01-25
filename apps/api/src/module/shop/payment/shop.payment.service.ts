@@ -57,7 +57,9 @@ export class ShopPaymentService {
     await this.saveOrder(order);
 
     // 4. TmpOrder 삭제 (임시 데이터이므로 hard delete)
-    await this.repositoryProvider.TmpOrderRepository.delete({id: tmpOrder.id});
+    await this.repositoryProvider.TmpOrderRepository.delete({
+      id: tmpOrder.id,
+    });
 
     this.logger.log(`Order created successfully: ${order.id}`);
 
