@@ -10,6 +10,8 @@ import {
   orderListResponseSchema,
   statusCountsSchema,
   filterOptionsResponseSchema,
+  findByIdInputSchema,
+  orderDetailResponseSchema,
 } from './order.schema';
 
 @Router({ alias: 'backofficeOrder' })
@@ -51,5 +53,17 @@ export class OrderRouter extends BaseTrpcRouter {
   })
   async getFilterOptions(@Ctx() ctx: BackofficeAuthorizedContext) {
     return this.microserviceClient.send('backofficeOrder.getFilterOptions', {});
+  }
+
+  @UseMiddlewares(BackofficeAuthMiddleware)
+  @Query({
+    input: findByIdInputSchema,
+    output: orderDetailResponseSchema,
+  })
+  async findById(
+    @Ctx() ctx: BackofficeAuthorizedContext,
+    @Input() input: z.infer<typeof findByIdInputSchema>
+  ) {
+    return this.microserviceClient.send('backofficeOrder.findById', input);
   }
 }

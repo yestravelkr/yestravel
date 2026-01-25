@@ -6,7 +6,7 @@
  */
 
 import { createFileRoute } from '@tanstack/react-router';
-import { useState } from 'react';
+import dayjs from 'dayjs';
 import { toast } from 'sonner';
 import tw from 'tailwind-styled-components';
 
@@ -14,13 +14,9 @@ import { MemberInfoCard } from './_components/MemberInfoCard';
 import { OrderDetailHeader } from './_components/OrderDetailHeader';
 import { OrderStatusCard } from './_components/OrderStatusCard';
 import { PaymentInfoCard } from './_components/PaymentInfoCard';
-import {
-  getOrderDetail,
-  getOrderDetailTabs,
-  type HotelOrderStatus,
-} from './_mocks/hotelOrderMock';
 
 import { DetailPageLayout } from '@/shared/components';
+import { trpc } from '@/shared/trpc';
 
 export const Route = createFileRoute('/_auth/order/hotel/$orderId')({
   component: HotelOrderDetailPage,
@@ -28,19 +24,30 @@ export const Route = createFileRoute('/_auth/order/hotel/$orderId')({
 
 function HotelOrderDetailPage() {
   const { orderId } = Route.useParams();
-  const orderDetail = getOrderDetail(orderId);
 
-  const [activeTab, setActiveTab] = useState<'ALL' | HotelOrderStatus>('ALL');
+  const {
+    data: orderDetail,
+    isLoading,
+    isError,
+  } = trpc.backofficeOrder.findById.useQuery({
+    id: Number(orderId),
+  });
 
-  if (!orderDetail) {
+  if (isLoading) {
+    return (
+      <PageContainer>
+        <LoadingMessage>로딩 중...</LoadingMessage>
+      </PageContainer>
+    );
+  }
+
+  if (isError || !orderDetail) {
     return (
       <PageContainer>
         <NotFoundMessage>주문을 찾을 수 없습니다.</NotFoundMessage>
       </PageContainer>
     );
   }
-
-  const tabs = getOrderDetailTabs(orderDetail.status);
 
   const handleConfirm = () => {
     toast.success('예약이 확정되었습니다.');
@@ -60,19 +67,26 @@ function HotelOrderDetailPage() {
         orderNumber={orderDetail.orderNumber}
         campaignName={orderDetail.campaignName}
         influencerName={orderDetail.influencerName}
-        orderedAt={orderDetail.orderedAt}
+        orderedAt={dayjs(orderDetail.orderedAt).format('YY.MM.DD HH:mm')}
       />
 
       <DetailPageLayout
         main={
           <OrderStatusCard
-            tabs={tabs}
-            activeTab={activeTab}
-            onTabChange={setActiveTab}
             statusLabel={orderDetail.statusLabel}
-            statusDate={orderDetail.statusDate}
-            itemCount={orderDetail.items.length}
-            items={orderDetail.items}
+            statusDate={
+              orderDetail.statusDate
+                ? dayjs(orderDetail.statusDate).format('YY.MM.DD HH:mm')
+                : '-'
+            }
+            items={orderDetail.items.map((item) => ({
+              id: item.id,
+              productName: item.productName,
+              optionName: item.optionName,
+              checkInDate: item.checkInDate ?? '-',
+              checkOutDate: item.checkOutDate ?? '-',
+              amount: item.amount,
+            }))}
             onConfirm={handleConfirm}
             onManage={handleManage}
             onHistory={handleHistory}
@@ -80,8 +94,20 @@ function HotelOrderDetailPage() {
         }
         side={
           <>
-            <PaymentInfoCard payment={orderDetail.payment} />
-            <MemberInfoCard member={orderDetail.member} />
+            <PaymentInfoCard
+              payment={{
+                paymentMethod: orderDetail.payment.paymentMethod,
+                productAmount: orderDetail.payment.productAmount,
+                refundAmount: orderDetail.payment.refundAmount,
+                totalAmount: orderDetail.payment.totalAmount,
+              }}
+            />
+            <MemberInfoCard
+              member={{
+                name: orderDetail.member.name,
+                phone: orderDetail.member.phone,
+              }}
+            />
           </>
         }
       />
@@ -96,6 +122,11 @@ const PageContainer = tw.div`
   p-6
   min-h-full
   bg-[var(--bg-layer-base)]
+`;
+
+const LoadingMessage = tw.div`
+  text-[var(--fg-muted)]
+  text-lg
 `;
 
 const NotFoundMessage = tw.div`

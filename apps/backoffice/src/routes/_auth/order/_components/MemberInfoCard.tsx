@@ -4,9 +4,13 @@
  * 회원 이름, 연락처 표시
  */
 
-import type { MemberInfo } from '../_mocks/hotelOrderMock';
-
 import { Card, DescriptionList } from '@/shared/components';
+
+/** 회원 정보 타입 */
+export interface MemberInfo {
+  name: string;
+  phone: string;
+}
 
 interface MemberInfoCardProps {
   /** 회원 정보 */

@@ -7,6 +7,8 @@ import type {
   OrderListResponse,
   StatusCounts,
   FilterOptionsResponse,
+  FindByIdInput,
+  OrderDetailResponse,
 } from './order.dto';
 
 /**
@@ -31,5 +33,10 @@ export class OrderController {
   @MessagePattern('backofficeOrder.getFilterOptions')
   async getFilterOptions(): Promise<FilterOptionsResponse> {
     return await this.orderService.getFilterOptions();
+  }
+
+  @MessagePattern('backofficeOrder.findById')
+  async findById(input: FindByIdInput): Promise<OrderDetailResponse> {
+    return await this.orderService.findById(input);
   }
 }

@@ -6,9 +6,15 @@
 
 import tw from 'tailwind-styled-components';
 
-import type { PaymentInfo } from '../_mocks/hotelOrderMock';
-
 import { Card, DescriptionList } from '@/shared/components';
+
+/** 결제 정보 타입 */
+export interface PaymentInfo {
+  paymentMethod: string;
+  productAmount: number;
+  refundAmount: number;
+  totalAmount: number;
+}
 
 interface PaymentInfoCardProps {
   /** 결제 정보 */
