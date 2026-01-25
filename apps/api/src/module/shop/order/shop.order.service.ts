@@ -127,7 +127,7 @@ export class ShopOrderService {
 
     const hotelProduct =
       await this.repositoryProvider.HotelProductRepository.findOne({
-        where: { id: tmpOrder.raw.productId },
+        where: { id: tmpOrder.raw.productId, type: ProductTypeEnum.HOTEL },
       });
 
     if (!hotelProduct) {
