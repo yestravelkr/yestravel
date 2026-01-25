@@ -269,7 +269,8 @@ function HotelOrderListPage() {
     label: p.name,
   }));
 
-  // 옵션 목록 (현재 API에서 지원하지 않으므로 빈 배열)
+  // TODO: 옵션 필터 API 구현 후 filterOptions에서 조회
+  // 현재 API에서 지원하지 않으므로 빈 배열
   const optionOptions: { value: string; label: string }[] = [];
 
   // Convert comma-separated influencerIds to array
