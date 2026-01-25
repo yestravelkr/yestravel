@@ -1,7 +1,9 @@
 import { Injectable } from '@nestjs/common';
+import { Between, FindOptionsWhere, ILike, In } from 'typeorm';
 import { RepositoryProvider } from '@src/module/shared/transaction/repository.provider';
 import {
   ORDER_STATUS_ENUM_VALUE,
+  OrderEntity,
   orderNumberParser,
 } from '@src/module/backoffice/domain/order/order.entity';
 import type { HotelOrderOptionData } from '@src/module/backoffice/domain/order/hotel-order.entity';
@@ -37,67 +39,46 @@ export class OrderService {
       searchQuery,
     } = input;
 
-    // QueryBuilder 생성 (별칭 'ord' 사용 - 'order'는 PostgreSQL 예약어)
-    const qb = this.repositoryProvider.OrderRepository.createQueryBuilder('ord')
-      .leftJoinAndSelect('ord.product', 'product')
-      .leftJoinAndSelect('ord.campaign', 'campaign')
-      .leftJoinAndSelect('ord.influencer', 'influencer')
-      .where('ord.deletedAt IS NULL');
+    // Where 조건 생성 (OrderEntity는 soft delete 없음)
+    const baseWhere: FindOptionsWhere<OrderEntity> = {};
 
-    // 타입 필터
-    if (type) {
-      qb.andWhere('ord.type = :type', { type });
-    }
-
-    // 상태 필터
-    if (status) {
-      qb.andWhere('ord.status = :status', { status });
+    if (type) baseWhere.type = type;
+    if (status) baseWhere.status = status;
+    if (campaignId) baseWhere.campaignId = campaignId;
+    if (productId) baseWhere.productId = productId;
+    if (influencerIds && influencerIds.length > 0) {
+      baseWhere.influencerId = In(influencerIds);
     }
 
     // 기간 필터
     if (startDate && endDate) {
       const dateColumn = this.getDateColumn(periodFilterType);
-      qb.andWhere(`ord.${dateColumn} BETWEEN :startDate AND :endDate`, {
-        startDate,
-        endDate,
-      });
-    }
-
-    // 캠페인 필터
-    if (campaignId) {
-      qb.andWhere('ord.campaignId = :campaignId', { campaignId });
-    }
-
-    // 인플루언서 필터 (다중 선택)
-    if (influencerIds && influencerIds.length > 0) {
-      qb.andWhere('ord.influencerId IN (:...influencerIds)', {
-        influencerIds,
-      });
-    }
-
-    // 상품 필터
-    if (productId) {
-      qb.andWhere('ord.productId = :productId', { productId });
-    }
-
-    // 검색어 필터 (주문번호, 고객명, 고객 전화번호)
-    if (searchQuery) {
-      qb.andWhere(
-        '(ord.customerName ILIKE :searchQuery OR ord.customerPhone ILIKE :searchQuery)',
-        { searchQuery: `%${searchQuery}%` }
+      (baseWhere as Record<string, unknown>)[dateColumn] = Between(
+        new Date(startDate),
+        new Date(endDate)
       );
     }
 
-    // 정렬
-    const sortColumn = this.getSortColumn(orderBy);
-    qb.orderBy(`ord.${sortColumn}`, order);
+    // 검색어 필터 (OR 조건이므로 배열로 처리)
+    let whereConditions: FindOptionsWhere<OrderEntity>[];
+    if (searchQuery) {
+      whereConditions = [
+        { ...baseWhere, customerName: ILike(`%${searchQuery}%`) },
+        { ...baseWhere, customerPhone: ILike(`%${searchQuery}%`) },
+      ];
+    } else {
+      whereConditions = [baseWhere];
+    }
 
-    // 페이지네이션
-    const offset = (page - 1) * limit;
-    qb.skip(offset).take(limit);
-
-    // 데이터 조회
-    const [orders, total] = await qb.getManyAndCount();
+    // 데이터 조회 (find + relations 사용)
+    const [orders, total] =
+      await this.repositoryProvider.OrderRepository.findAndCount({
+        where: whereConditions,
+        relations: ['product', 'campaign', 'influencer'],
+        order: { [this.getSortColumn(orderBy)]: order },
+        skip: (page - 1) * limit,
+        take: limit,
+      });
 
     // 상태별 카운트 조회 (같은 필터 조건 적용, 상태 필터 제외)
     const statusCounts = await this.getStatusCounts(input);
@@ -116,13 +97,13 @@ export class OrderService {
         customerPhone: order.customerPhone,
         totalAmount: order.totalAmount,
 
-        // 관계 데이터
+        // 관계 데이터 (모두 NOT NULL)
         productId: order.productId,
-        productName: order.product?.name || '',
+        productName: order.product.name,
         campaignId: order.campaignId,
-        campaignName: order.campaign?.title || '',
+        campaignName: order.campaign.title,
         influencerId: order.influencerId,
-        influencerName: order.influencer?.name || '',
+        influencerName: order.influencer.name,
 
         // 호텔 전용 필드
         checkInDate:
@@ -165,17 +146,13 @@ export class OrderService {
       searchQuery,
     } = input;
 
+    // QueryBuilder 사용 (GROUP BY 필요)
     const qb = this.repositoryProvider.OrderRepository.createQueryBuilder('ord')
       .select('ord.status', 'status')
-      .addSelect('COUNT(*)', 'count')
-      .where('ord.deletedAt IS NULL');
+      .addSelect('COUNT(*)', 'count');
 
-    // 타입 필터
-    if (type) {
-      qb.andWhere('ord.type = :type', { type });
-    }
-
-    // 기간 필터
+    // 필터 적용
+    if (type) qb.andWhere('ord.type = :type', { type });
     if (startDate && endDate) {
       const dateColumn = this.getDateColumn(periodFilterType);
       qb.andWhere(`ord.${dateColumn} BETWEEN :startDate AND :endDate`, {
@@ -183,25 +160,11 @@ export class OrderService {
         endDate,
       });
     }
-
-    // 캠페인 필터
-    if (campaignId) {
-      qb.andWhere('ord.campaignId = :campaignId', { campaignId });
-    }
-
-    // 인플루언서 필터
+    if (campaignId) qb.andWhere('ord.campaignId = :campaignId', { campaignId });
     if (influencerIds && influencerIds.length > 0) {
-      qb.andWhere('ord.influencerId IN (:...influencerIds)', {
-        influencerIds,
-      });
+      qb.andWhere('ord.influencerId IN (:...influencerIds)', { influencerIds });
     }
-
-    // 상품 필터
-    if (productId) {
-      qb.andWhere('ord.productId = :productId', { productId });
-    }
-
-    // 검색어 필터
+    if (productId) qb.andWhere('ord.productId = :productId', { productId });
     if (searchQuery) {
       qb.andWhere(
         '(ord.customerName ILIKE :searchQuery OR ord.customerPhone ILIKE :searchQuery)',
