@@ -203,31 +203,29 @@ export class OrderService {
 
   /**
    * 필터 옵션 조회 (캠페인, 인플루언서, 상품 - 최근 100개씩)
+   *
+   * soft delete는 TypeORM이 자동 처리 (@DeleteDateColumn)
    */
   async getFilterOptions(): Promise<FilterOptionsResponse> {
     const [campaigns, influencers, products] = await Promise.all([
-      // 캠페인 최근 100개 (deletedAt 없음)
+      // 캠페인 최근 100개
       this.repositoryProvider.CampaignRepository.find({
         select: ['id', 'title'],
         order: { createdAt: 'DESC' },
         take: 100,
       }),
-      // 인플루언서 최근 100개 (soft delete 적용)
-      this.repositoryProvider.InfluencerRepository.createQueryBuilder(
-        'influencer'
-      )
-        .select(['influencer.id', 'influencer.name'])
-        .where('influencer.deletedAt IS NULL')
-        .orderBy('influencer.createdAt', 'DESC')
-        .take(100)
-        .getMany(),
-      // 상품 최근 100개 (soft delete 적용)
-      this.repositoryProvider.ProductRepository.createQueryBuilder('product')
-        .select(['product.id', 'product.name'])
-        .where('product.deletedAt IS NULL')
-        .orderBy('product.createdAt', 'DESC')
-        .take(100)
-        .getMany(),
+      // 인플루언서 최근 100개 (soft delete 자동 적용)
+      this.repositoryProvider.InfluencerRepository.find({
+        select: ['id', 'name'],
+        order: { createdAt: 'DESC' },
+        take: 100,
+      }),
+      // 상품 최근 100개 (soft delete 자동 적용)
+      this.repositoryProvider.ProductRepository.find({
+        select: ['id', 'name'],
+        order: { createdAt: 'DESC' },
+        take: 100,
+      }),
     ]);
 
     return {
