@@ -152,10 +152,10 @@ export class ShopProductService {
     productId: number,
     productTemplateId: number | null
   ): Promise<HotelProductDetails> {
-    // HotelProduct 조회
+    // HotelProduct 조회 (STI에서는 type 필터 필수)
     const hotelProduct =
       await this.repositoryProvider.HotelProductRepository.findOne({
-        where: { id: productId },
+        where: { id: productId, type: ProductTypeEnum.HOTEL },
       });
 
     // HotelOption 조회

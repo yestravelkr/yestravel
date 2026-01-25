@@ -77,7 +77,7 @@ export class ProductService {
       case 'HOTEL': {
         const [hotel, categories, hotelOptions, hotelSkus] = await Promise.all([
           this.repositoryProvider.HotelProductRepository.findOneOrFail({
-            where: { id },
+            where: { id, type: 'HOTEL' },
             relations: ['brand', 'productTemplate'],
           }).catch(() => {
             throw new NotFoundException(
@@ -125,7 +125,7 @@ export class ProductService {
       case 'DELIVERY': {
         const [delivery, categories] = await Promise.all([
           this.repositoryProvider.DeliveryProductRepository.findOneOrFail({
-            where: { id },
+            where: { id, type: 'DELIVERY' },
             relations: ['brand', 'productTemplate'],
           }).catch(() => {
             throw new NotFoundException(
@@ -162,7 +162,7 @@ export class ProductService {
       case 'E-TICKET': {
         const [eticket, categories] = await Promise.all([
           this.repositoryProvider.ETicketProductRepository.findOneOrFail({
-            where: { id },
+            where: { id, type: 'E-TICKET' },
             relations: ['brand', 'productTemplate'],
           }).catch(() => {
             throw new NotFoundException(
@@ -326,10 +326,10 @@ export class ProductService {
 
     switch (input.type) {
       case 'HOTEL': {
-        // 기존 엔티티 조회
+        // 기존 엔티티 조회 (STI에서는 type 필터 필수)
         const hotelProduct =
           await this.repositoryProvider.HotelProductRepository.findOneOrFail({
-            where: { id: input.id },
+            where: { id: input.id, type: 'HOTEL' },
           }).catch(() => {
             throw new NotFoundException(
               `호텔 상품을 찾을 수 없습니다 (ID: ${input.id})`
@@ -366,11 +366,11 @@ export class ProductService {
           );
         }
 
-        // 기존 엔티티 조회
+        // 기존 엔티티 조회 (STI에서는 type 필터 필수)
         const deliveryProduct =
           await this.repositoryProvider.DeliveryProductRepository.findOneOrFail(
             {
-              where: { id: input.id },
+              where: { id: input.id, type: 'DELIVERY' },
             }
           ).catch(() => {
             throw new NotFoundException(
@@ -389,10 +389,10 @@ export class ProductService {
       }
 
       case 'E-TICKET': {
-        // 기존 엔티티 조회
+        // 기존 엔티티 조회 (STI에서는 type 필터 필수)
         const eticketProduct =
           await this.repositoryProvider.ETicketProductRepository.findOneOrFail({
-            where: { id: input.id },
+            where: { id: input.id, type: 'E-TICKET' },
           }).catch(() => {
             throw new NotFoundException(
               `E-Ticket 상품을 찾을 수 없습니다 (ID: ${input.id})`
