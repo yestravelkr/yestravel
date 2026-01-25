@@ -1,14 +1,12 @@
 /**
  * OrderStatusCard - 주문 상태 카드 컴포넌트
  *
- * 탭, 상태 정보, 주문 아이템 테이블, 액션 버튼 포함
+ * 상태 정보, 주문 아이템 테이블, 액션 버튼 포함
  */
 
 import { Button } from '@yestravelkr/min-design-system';
 import { ChevronDown } from 'lucide-react';
 import tw from 'tailwind-styled-components';
-
-import { StatusTabs, type StatusTabItem } from '@/shared/components';
 
 /** 주문 아이템 타입 */
 export interface OrderItem {
@@ -20,19 +18,11 @@ export interface OrderItem {
   amount: number;
 }
 
-interface OrderStatusCardProps<T extends string = string> {
-  /** 상태 탭 목록 */
-  tabs: StatusTabItem<T>[];
-  /** 현재 선택된 탭 */
-  activeTab: T;
-  /** 탭 변경 핸들러 */
-  onTabChange: (tab: T) => void;
+interface OrderStatusCardProps {
   /** 상태 라벨 */
   statusLabel: string;
   /** 상태 날짜 */
   statusDate: string;
-  /** 아이템 개수 */
-  itemCount: number;
   /** 주문 아이템 목록 */
   items: OrderItem[];
   /** 예약확정 핸들러 */
@@ -50,47 +40,28 @@ const formatPrice = (amount: number) =>
  * Usage:
  * ```tsx
  * <OrderStatusCard
- *   tabs={tabs}
- *   activeTab="PAID"
- *   onTabChange={setActiveTab}
  *   statusLabel="결제완료"
  *   statusDate="25.01.01 13:00"
- *   itemCount={30}
  *   items={orderItems}
  *   onConfirm={() => {}}
  *   onManage={() => {}}
  * />
  * ```
  */
-export function OrderStatusCard<T extends string = string>({
-  tabs,
-  activeTab,
-  onTabChange,
+export function OrderStatusCard({
   statusLabel,
   statusDate,
-  itemCount,
   items,
   onConfirm,
   onManage,
   onHistory,
-}: OrderStatusCardProps<T>) {
+}: OrderStatusCardProps) {
   return (
     <Container>
-      <TabSection>
-        <StatusTabs
-          tabs={tabs}
-          activeTab={activeTab}
-          onTabChange={onTabChange}
-        />
-      </TabSection>
-
       <ContentSection>
         <Header>
           <HeaderLeft>
-            <StatusTitle>
-              {statusLabel}
-              <CountBadge>{itemCount}</CountBadge>
-            </StatusTitle>
+            <StatusTitle>{statusLabel}</StatusTitle>
             <StatusDate>{statusDate}</StatusDate>
           </HeaderLeft>
           <Button
@@ -151,12 +122,6 @@ const Container = tw.div`
   overflow-hidden
 `;
 
-const TabSection = tw.div`
-  px-5
-  border-b
-  border-[var(--stroke-neutral)]
-`;
-
 const ContentSection = tw.div`
   p-5
   flex
@@ -176,27 +141,10 @@ const HeaderLeft = tw.div`
 `;
 
 const StatusTitle = tw.h2`
-  flex
-  items-center
-  gap-1
   text-[21px]
   font-bold
   leading-7
   text-[var(--fg-neutral)]
-`;
-
-const CountBadge = tw.span`
-  inline-flex
-  items-center
-  justify-center
-  h-[22px]
-  min-w-[22px]
-  px-1
-  rounded-full
-  bg-[var(--bg-neutral-solid)]
-  text-[var(--fg-on-surface)]
-  text-[13.5px]
-  font-medium
 `;
 
 const StatusDate = tw.span`

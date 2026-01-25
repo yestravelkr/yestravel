@@ -7,7 +7,6 @@
 
 import { createFileRoute } from '@tanstack/react-router';
 import dayjs from 'dayjs';
-import { useState } from 'react';
 import { toast } from 'sonner';
 import tw from 'tailwind-styled-components';
 
@@ -23,24 +22,8 @@ export const Route = createFileRoute('/_auth/order/hotel/$orderId')({
   component: HotelOrderDetailPage,
 });
 
-/** 주문 상태 타입 */
-type OrderStatus = 'PENDING' | 'PAID' | 'COMPLETED' | 'CANCELLED' | 'REFUNDED';
-
-/** 상태별 라벨 */
-const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
-  PENDING: '결제대기',
-  PAID: '결제완료',
-  COMPLETED: '이용완료',
-  CANCELLED: '취소',
-  REFUNDED: '환불',
-};
-
-/** 알림 표시가 필요한 상태 */
-const ALERT_STATUSES: OrderStatus[] = ['PAID', 'PENDING'];
-
 function HotelOrderDetailPage() {
   const { orderId } = Route.useParams();
-  const [activeTab, setActiveTab] = useState<'ALL' | OrderStatus>('ALL');
 
   const {
     data: orderDetail,
@@ -66,19 +49,6 @@ function HotelOrderDetailPage() {
     );
   }
 
-  const tabs = [
-    {
-      key: 'ALL' as const,
-      label: '전체 주문',
-    },
-    {
-      key: orderDetail.status as OrderStatus,
-      label: ORDER_STATUS_LABELS[orderDetail.status as OrderStatus],
-      count: 1,
-      hasAlert: ALERT_STATUSES.includes(orderDetail.status as OrderStatus),
-    },
-  ];
-
   const handleConfirm = () => {
     toast.success('예약이 확정되었습니다.');
   };
@@ -103,16 +73,12 @@ function HotelOrderDetailPage() {
       <DetailPageLayout
         main={
           <OrderStatusCard
-            tabs={tabs}
-            activeTab={activeTab}
-            onTabChange={setActiveTab}
             statusLabel={orderDetail.statusLabel}
             statusDate={
               orderDetail.statusDate
                 ? dayjs(orderDetail.statusDate).format('YY.MM.DD HH:mm')
                 : '-'
             }
-            itemCount={orderDetail.items.length}
             items={orderDetail.items.map((item) => ({
               id: item.id,
               productName: item.productName,
