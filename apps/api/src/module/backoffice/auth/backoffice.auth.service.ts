@@ -41,10 +41,10 @@ export class BackofficeAuthService {
     const admin = await this.repositoryProvider.AdminRepository.findOneByOrFail(
       { email }
     ).catch(() => {
-      throw new NotFoundException('Admin not found');
+      throw new NotFoundException('존재하지 않는 계정입니다');
     });
-    if (!admin.checkPassword(password)) {
-      throw new UnauthorizedException('Invalid password');
+    if (!(await admin.checkPassword(password))) {
+      throw new UnauthorizedException('비밀번호가 틀렸습니다');
     }
     const payload: AdminAuthPayload = { email: admin.email, id: admin.id };
     const accessToken = jwtService.sign(
@@ -66,8 +66,8 @@ export class BackofficeAuthService {
         refreshToken,
         ConfigProvider.auth.jwt.backoffice.refresh
       );
-    } catch (e) {
-      throw new UnauthorizedException('Invalid refresh token');
+    } catch {
+      throw new UnauthorizedException('유효하지 않은 토큰입니다');
     }
 
     // 사용자가 여전히 존재하는지 확인
@@ -77,7 +77,7 @@ export class BackofficeAuthService {
         email: payload.email,
       }
     ).catch(() => {
-      throw new NotFoundException('Admin not found');
+      throw new NotFoundException('존재하지 않는 계정입니다');
     });
 
     // 새로운 access token 발급
