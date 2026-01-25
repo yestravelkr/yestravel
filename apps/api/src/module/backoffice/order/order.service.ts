@@ -37,29 +37,27 @@ export class OrderService {
       searchQuery,
     } = input;
 
-    // QueryBuilder 생성
-    const qb = this.repositoryProvider.OrderRepository.createQueryBuilder(
-      'order'
-    )
-      .leftJoinAndSelect('order.product', 'product')
-      .leftJoinAndSelect('order.campaign', 'campaign')
-      .leftJoinAndSelect('order.influencer', 'influencer')
-      .where('order.deletedAt IS NULL');
+    // QueryBuilder 생성 (별칭 'ord' 사용 - 'order'는 PostgreSQL 예약어)
+    const qb = this.repositoryProvider.OrderRepository.createQueryBuilder('ord')
+      .leftJoinAndSelect('ord.product', 'product')
+      .leftJoinAndSelect('ord.campaign', 'campaign')
+      .leftJoinAndSelect('ord.influencer', 'influencer')
+      .where('ord.deletedAt IS NULL');
 
     // 타입 필터
     if (type) {
-      qb.andWhere('order.type = :type', { type });
+      qb.andWhere('ord.type = :type', { type });
     }
 
     // 상태 필터
     if (status) {
-      qb.andWhere('order.status = :status', { status });
+      qb.andWhere('ord.status = :status', { status });
     }
 
     // 기간 필터
     if (startDate && endDate) {
       const dateColumn = this.getDateColumn(periodFilterType);
-      qb.andWhere(`order.${dateColumn} BETWEEN :startDate AND :endDate`, {
+      qb.andWhere(`ord.${dateColumn} BETWEEN :startDate AND :endDate`, {
         startDate,
         endDate,
       });
@@ -67,32 +65,32 @@ export class OrderService {
 
     // 캠페인 필터
     if (campaignId) {
-      qb.andWhere('order.campaignId = :campaignId', { campaignId });
+      qb.andWhere('ord.campaignId = :campaignId', { campaignId });
     }
 
     // 인플루언서 필터 (다중 선택)
     if (influencerIds && influencerIds.length > 0) {
-      qb.andWhere('order.influencerId IN (:...influencerIds)', {
+      qb.andWhere('ord.influencerId IN (:...influencerIds)', {
         influencerIds,
       });
     }
 
     // 상품 필터
     if (productId) {
-      qb.andWhere('order.productId = :productId', { productId });
+      qb.andWhere('ord.productId = :productId', { productId });
     }
 
     // 검색어 필터 (주문번호, 고객명, 고객 전화번호)
     if (searchQuery) {
       qb.andWhere(
-        '(order.customerName ILIKE :searchQuery OR order.customerPhone ILIKE :searchQuery)',
+        '(ord.customerName ILIKE :searchQuery OR ord.customerPhone ILIKE :searchQuery)',
         { searchQuery: `%${searchQuery}%` }
       );
     }
 
     // 정렬
     const sortColumn = this.getSortColumn(orderBy);
-    qb.orderBy(`order.${sortColumn}`, order);
+    qb.orderBy(`ord.${sortColumn}`, order);
 
     // 페이지네이션
     const offset = (page - 1) * limit;
@@ -167,22 +165,20 @@ export class OrderService {
       searchQuery,
     } = input;
 
-    const qb = this.repositoryProvider.OrderRepository.createQueryBuilder(
-      'order'
-    )
-      .select('order.status', 'status')
+    const qb = this.repositoryProvider.OrderRepository.createQueryBuilder('ord')
+      .select('ord.status', 'status')
       .addSelect('COUNT(*)', 'count')
-      .where('order.deletedAt IS NULL');
+      .where('ord.deletedAt IS NULL');
 
     // 타입 필터
     if (type) {
-      qb.andWhere('order.type = :type', { type });
+      qb.andWhere('ord.type = :type', { type });
     }
 
     // 기간 필터
     if (startDate && endDate) {
       const dateColumn = this.getDateColumn(periodFilterType);
-      qb.andWhere(`order.${dateColumn} BETWEEN :startDate AND :endDate`, {
+      qb.andWhere(`ord.${dateColumn} BETWEEN :startDate AND :endDate`, {
         startDate,
         endDate,
       });
@@ -190,30 +186,30 @@ export class OrderService {
 
     // 캠페인 필터
     if (campaignId) {
-      qb.andWhere('order.campaignId = :campaignId', { campaignId });
+      qb.andWhere('ord.campaignId = :campaignId', { campaignId });
     }
 
     // 인플루언서 필터
     if (influencerIds && influencerIds.length > 0) {
-      qb.andWhere('order.influencerId IN (:...influencerIds)', {
+      qb.andWhere('ord.influencerId IN (:...influencerIds)', {
         influencerIds,
       });
     }
 
     // 상품 필터
     if (productId) {
-      qb.andWhere('order.productId = :productId', { productId });
+      qb.andWhere('ord.productId = :productId', { productId });
     }
 
     // 검색어 필터
     if (searchQuery) {
       qb.andWhere(
-        '(order.customerName ILIKE :searchQuery OR order.customerPhone ILIKE :searchQuery)',
+        '(ord.customerName ILIKE :searchQuery OR ord.customerPhone ILIKE :searchQuery)',
         { searchQuery: `%${searchQuery}%` }
       );
     }
 
-    qb.groupBy('order.status');
+    qb.groupBy('ord.status');
 
     const results = await qb.getRawMany<{ status: string; count: string }>();
 
