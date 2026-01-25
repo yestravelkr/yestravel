@@ -58,6 +58,12 @@ color: cyan
 
 ---
 
+## 설계 원칙
+
+> **참조**: `.claude/skills/Coding/SKILL.md` - SRP, 결합도, 응집도 공통 원칙
+
+---
+
 ## 백엔드 코드 작성 규칙
 
 ### Entity
@@ -231,6 +237,42 @@ const Box = tw.div`border-stroke-neutral`;
 
 // ✅ var() 함수 사용
 const Box = tw.div`border-[var(--stroke-neutral)]`;
+```
+
+### 스타일링 가독성 및 중첩 최소화
+
+```typescript
+// ❌ 불필요한 div 중첩
+<Wrapper>
+  <Container>
+    <InnerWrapper>
+      <Content>텍스트</Content>
+    </InnerWrapper>
+  </Container>
+</Wrapper>
+
+// ✅ 필요한 만큼만
+<Card>
+  <Content>텍스트</Content>
+</Card>
+
+// ❌ 한 줄에 너무 많은 클래스
+const Button = tw.button`flex items-center justify-center px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600`;
+
+// ✅ 논리적 그룹으로 분리 (줄바꿈)
+const Button = tw.button`
+  flex items-center justify-center
+  px-4 py-2
+  bg-blue-500 text-white rounded-lg
+  hover:bg-blue-600
+`;
+
+// ❌ 인라인 삼항 중첩
+${({ $v }) => $v === 'a' ? 'bg-blue' : $v === 'b' ? 'bg-gray' : 'bg-white'}
+
+// ✅ 객체 매핑
+const styles = { a: 'bg-blue', b: 'bg-gray', c: 'bg-white' };
+${({ $v }) => styles[$v]}
 ```
 
 ---

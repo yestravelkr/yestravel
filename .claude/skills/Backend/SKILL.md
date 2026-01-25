@@ -55,6 +55,17 @@ estimated_tokens: ~600
 10. Migration 실행 (`yarn migration:run`)
 11. Lint 실행 (`cd apps/api && yarn lint`)
 
+## 설계 원칙
+
+> **참조**: `.claude/skills/Coding/SKILL.md` - SRP, 결합도, 응집도 공통 원칙
+
+### 백엔드 특화 규칙
+
+| 규칙 | 설명 |
+|------|------|
+| **모듈 간 통신** | Service 직접 주입 대신 MicroserviceClient 사용 |
+| **Repository 주입** | 구체 클래스 대신 `getXxxRepository` 토큰 사용 |
+
 ## 필수 준수 사항 (요약)
 
 | 규칙 | 설명 |
