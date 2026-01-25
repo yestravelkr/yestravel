@@ -35,6 +35,7 @@ export interface CampaignInfluencerResponse {
   campaignInfluencerId: string;
   influencerId: number;
   name: string;
+  slug: string | null;
   thumbnail: string | null;
   periodType: CampaignPeriodTypeEnumType;
   startAt: Date | null;
@@ -131,6 +132,7 @@ export class CampaignInfluencerEntity {
       campaignInfluencerId: this.id,
       influencerId: this.influencerId,
       name: this.influencer?.name ?? '',
+      slug: this.influencer?.slug ?? null,
       thumbnail: this.influencer?.thumbnail ?? null,
       periodType: this.periodType,
       startAt: this.startAt ?? null,
