@@ -45,7 +45,7 @@ estimated_tokens: ~300
 
 | 규칙 | 설명 |
 |-----|------|
-| **className 금지** | `tailwind-styled-components` 필수 사용 |
+| **className 제한** | 4개 이상 클래스 사용 시 `tailwind-styled-components` 필수. 3개 이하는 `className` 허용 |
 | **$prefix 패턴** | 조건부 props는 `$primary`, `$active` 형식 |
 | **stroke-* 색상** | `var()` 함수로 사용 (예: `border-[var(--stroke-neutral)]`) |
 | **아이콘** | `@minim/icon` 1순위, 없으면 `lucide-react` 사용 |
@@ -67,7 +67,7 @@ import { IconName } from 'lucide-react';
 
 ## 필수 체크리스트
 
-- [ ] `className` 사용하지 않았는가?
+- [ ] `className`에 4개 이상 클래스가 있다면 styled component로 분리했는가?
 - [ ] `tailwind-styled-components` 사용했는가?
 - [ ] 조건부 props에 `$` 접두사 사용했는가?
 - [ ] styled components가 파일 최하단에 있는가?
@@ -76,6 +76,22 @@ import { IconName } from 'lucide-react';
 - [ ] `alert()` 대신 `toast` 사용했는가?
 
 ## 스타일링 가독성 및 중첩 최소화
+
+### className vs styled component 기준
+
+```typescript
+// ✅ 3개 이하 - className 허용
+<div className="flex items-center gap-2">
+
+// ❌ 4개 이상 - styled component 사용
+<div className="flex items-center gap-2 p-4 bg-white rounded-lg">
+
+// ✅ 4개 이상은 styled component로 분리
+const Container = tw.div`
+  flex items-center gap-2
+  p-4 bg-white rounded-lg
+`;
+```
 
 ### 불필요한 div 중첩 제거
 
