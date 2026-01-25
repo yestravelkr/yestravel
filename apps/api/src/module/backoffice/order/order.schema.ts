@@ -20,16 +20,9 @@ export const periodFilterTypeSchema = z.enum([
 // ===== Input Schemas =====
 
 /**
- * 주문 목록 조회 Input Schema
+ * 주문 필터 공통 Schema (상태별 카운트, 목록 조회에서 공유)
  */
-export const findAllOrdersInputSchema = z.object({
-  // 페이지네이션
-  page: z.number().int().min(1).default(1),
-  limit: z.number().int().positive().default(50),
-  orderBy: z.string().default('createdAt'),
-  order: z.enum(['ASC', 'DESC']).default('DESC'),
-
-  // 필터
+const orderFilterSchema = z.object({
   type: productTypeSchema.nullish(),
   status: orderStatusSchema.nullish(),
   periodFilterType: periodFilterTypeSchema.nullish(),
@@ -40,6 +33,22 @@ export const findAllOrdersInputSchema = z.object({
   productId: z.number().int().positive().nullish(),
   searchQuery: z.string().nullish(),
 });
+
+/**
+ * 주문 목록 조회 Input Schema
+ */
+export const findAllOrdersInputSchema = orderFilterSchema.extend({
+  // 페이지네이션
+  page: z.number().int().min(1).default(1),
+  limit: z.number().int().positive().default(50),
+  orderBy: z.string().default('createdAt'),
+  order: z.enum(['ASC', 'DESC']).default('DESC'),
+});
+
+/**
+ * 상태별 카운트 조회 Input Schema
+ */
+export const getStatusCountsInputSchema = orderFilterSchema;
 
 // ===== Output Schemas =====
 
@@ -94,7 +103,6 @@ export const orderListResponseSchema = z.object({
   page: z.number(),
   limit: z.number(),
   totalPages: z.number(),
-  statusCounts: statusCountsSchema,
 });
 
 /**

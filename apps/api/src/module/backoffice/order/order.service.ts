@@ -9,18 +9,20 @@ import {
 import type { HotelOrderOptionData } from '@src/module/backoffice/domain/order/hotel-order.entity';
 import type {
   FindAllOrdersInput,
+  GetStatusCountsInput,
   OrderListResponse,
   OrderListItem,
   StatusCounts,
   FilterOptionsResponse,
 } from './order.dto';
+import type { Nullish } from '@src/types/utility.type';
 
 @Injectable()
 export class OrderService {
   constructor(private readonly repositoryProvider: RepositoryProvider) {}
 
   /**
-   * 주문 목록 조회 (필터링 + 페이지네이션 + 상태별 카운트)
+   * 주문 목록 조회 (필터링 + 페이지네이션)
    */
   async findAll(input: FindAllOrdersInput): Promise<OrderListResponse> {
     const {
@@ -80,9 +82,6 @@ export class OrderService {
         take: limit,
       });
 
-    // 상태별 카운트 조회 (같은 필터 조건 적용, 상태 필터 제외)
-    const statusCounts = await this.getStatusCounts(input);
-
     // Response 포맷팅
     const data: OrderListItem[] = orders.map(order => {
       const orderOptionSnapshot =
@@ -125,16 +124,13 @@ export class OrderService {
       page,
       limit,
       totalPages: Math.ceil(total / limit),
-      statusCounts,
     };
   }
 
   /**
    * 상태별 카운트 조회
    */
-  private async getStatusCounts(
-    input: FindAllOrdersInput
-  ): Promise<StatusCounts> {
+  async getStatusCounts(input: GetStatusCountsInput): Promise<StatusCounts> {
     const {
       type,
       periodFilterType,
@@ -238,7 +234,7 @@ export class OrderService {
   /**
    * 기간 필터 타입에 따른 컬럼명 반환
    */
-  private getDateColumn(periodFilterType: string | null | undefined): string {
+  private getDateColumn(periodFilterType: Nullish<string>): string {
     switch (periodFilterType) {
       case 'PAYMENT_DATE':
         return 'createdAt'; // TODO: 결제일 컬럼 추가 시 변경

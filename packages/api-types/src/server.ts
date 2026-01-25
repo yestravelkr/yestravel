@@ -1056,13 +1056,6 @@ const appRouter = t.router({
   }),
   backofficeOrder: t.router({
     findAll: publicProcedure.input(z.object({
-      // 페이지네이션
-      page: z.number().int().min(1).default(1),
-      limit: z.number().int().positive().default(50),
-      orderBy: z.string().default('createdAt'),
-      order: z.enum(['ASC', 'DESC']).default('DESC'),
-
-      // 필터
       type: z.enum(['HOTEL', 'E-TICKET', 'DELIVERY']).nullish(),
       status: z.enum([
         'PENDING',
@@ -1082,6 +1075,12 @@ const appRouter = t.router({
       influencerIds: z.array(z.number().int().positive()).nullish(),
       productId: z.number().int().positive().nullish(),
       searchQuery: z.string().nullish(),
+    }).extend({
+      // 페이지네이션
+      page: z.number().int().min(1).default(1),
+      limit: z.number().int().positive().default(50),
+      orderBy: z.string().default('createdAt'),
+      order: z.enum(['ASC', 'DESC']).default('DESC'),
     }).nullish().default({})).output(z.object({
       data: z.array(z.object({
         id: z.number(),
@@ -1119,14 +1118,34 @@ const appRouter = t.router({
       page: z.number(),
       limit: z.number(),
       totalPages: z.number(),
-      statusCounts: z.object({
-        ALL: z.number(),
-        PENDING: z.number(),
-        PAID: z.number(),
-        COMPLETED: z.number(),
-        CANCELLED: z.number(),
-        REFUNDED: z.number(),
-      }),
+    })).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    getStatusCounts: publicProcedure.input(z.object({
+      type: z.enum(['HOTEL', 'E-TICKET', 'DELIVERY']).nullish(),
+      status: z.enum([
+        'PENDING',
+        'PAID',
+        'COMPLETED',
+        'CANCELLED',
+        'REFUNDED',
+      ]).nullish(),
+      periodFilterType: z.enum([
+        'PAYMENT_DATE',
+        'ORDER_DATE',
+        'USAGE_DATE',
+      ]).nullish(),
+      startDate: z.string().nullish(),
+      endDate: z.string().nullish(),
+      campaignId: z.number().int().positive().nullish(),
+      influencerIds: z.array(z.number().int().positive()).nullish(),
+      productId: z.number().int().positive().nullish(),
+      searchQuery: z.string().nullish(),
+    }).nullish().default({})).output(z.object({
+      ALL: z.number(),
+      PENDING: z.number(),
+      PAID: z.number(),
+      COMPLETED: z.number(),
+      CANCELLED: z.number(),
+      REFUNDED: z.number(),
     })).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
     getFilterOptions: publicProcedure.output(z.object({
       campaigns: z.array(

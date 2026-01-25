@@ -1,6 +1,7 @@
 import type { z } from 'zod';
 import type {
   findAllOrdersInputSchema,
+  getStatusCountsInputSchema,
   orderListItemSchema,
   orderListResponseSchema,
   statusCountsSchema,
@@ -10,6 +11,8 @@ import type {
 // ===== Input DTOs =====
 
 export type FindAllOrdersInput = z.infer<typeof findAllOrdersInputSchema>;
+
+export type GetStatusCountsInput = z.infer<typeof getStatusCountsInputSchema>;
 
 // ===== Output DTOs =====
 

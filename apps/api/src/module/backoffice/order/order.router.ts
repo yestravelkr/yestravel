@@ -6,7 +6,9 @@ import { BackofficeAuthMiddleware } from '@src/module/backoffice/auth/backoffice
 import type { BackofficeAuthorizedContext } from '@src/module/backoffice/auth/backoffice.auth.middleware';
 import {
   findAllOrdersInputSchema,
+  getStatusCountsInputSchema,
   orderListResponseSchema,
+  statusCountsSchema,
   filterOptionsResponseSchema,
 } from './order.schema';
 
@@ -26,6 +28,21 @@ export class OrderRouter extends BaseTrpcRouter {
     @Input() input?: z.infer<typeof findAllOrdersInputSchema>
   ) {
     return this.microserviceClient.send('backofficeOrder.findAll', input || {});
+  }
+
+  @UseMiddlewares(BackofficeAuthMiddleware)
+  @Query({
+    input: getStatusCountsInputSchema.nullish().default({}),
+    output: statusCountsSchema,
+  })
+  async getStatusCounts(
+    @Ctx() ctx: BackofficeAuthorizedContext,
+    @Input() input?: z.infer<typeof getStatusCountsInputSchema>
+  ) {
+    return this.microserviceClient.send(
+      'backofficeOrder.getStatusCounts',
+      input || {}
+    );
   }
 
   @UseMiddlewares(BackofficeAuthMiddleware)
