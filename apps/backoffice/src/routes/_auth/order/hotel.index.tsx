@@ -8,6 +8,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { createColumnHelper } from '@tanstack/react-table';
 import { Button } from '@yestravelkr/min-design-system';
+import dayjs from 'dayjs';
 import { toast } from 'sonner';
 
 import {
@@ -144,16 +145,7 @@ const columns = [
   }),
   columnHelper.accessor('createdAt', {
     header: '주문일시',
-    cell: (info) => {
-      const date = new Date(info.getValue());
-      return date.toLocaleDateString('ko-KR', {
-        year: '2-digit',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-      });
-    },
+    cell: (info) => dayjs(info.getValue()).format('YY/MM/DD HH:mm'),
     size: 120,
   }),
   columnHelper.accessor('campaignName', {
