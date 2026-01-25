@@ -99,8 +99,7 @@ export class OrderEntity extends BaseEntity {
   }
 
   get orderNumber(): string {
-    const [number] = orderNumberParser.encode([this.id]);
-    return number;
+    return orderNumberParser.encode([this.id]);
   }
 
   /** 주문 타입 (HOTEL, E-TICKET, DELIVERY) */

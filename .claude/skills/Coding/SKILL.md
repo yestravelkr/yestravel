@@ -121,6 +121,34 @@ apps/shop/src/
 
 ---
 
+## 날짜 처리 규칙
+
+> **모든 Date 관련 로직은 `dayjs`를 사용한다.**
+
+| 규칙 | 설명 |
+|------|------|
+| **날짜 생성** | `dayjs()`, `dayjs(date)` 사용 |
+| **포맷팅** | `dayjs().format('YYYY-MM-DD')` |
+| **비교/계산** | `dayjs().add()`, `dayjs().diff()` |
+| **파싱** | `dayjs(string)`, `dayjs(timestamp)` |
+
+```typescript
+// ✅ dayjs 사용
+import dayjs from 'dayjs';
+
+const today = dayjs();
+const formatted = dayjs(order.createdAt).format('YYYY-MM-DD HH:mm');
+const weekLater = dayjs().add(7, 'day');
+const diffDays = dayjs(endDate).diff(startDate, 'day');
+
+// ❌ native Date 직접 조작 금지
+const date = new Date();
+date.setDate(date.getDate() + 7);
+const formatted = date.toISOString().split('T')[0];
+```
+
+---
+
 ## 코드 작성 시 체크리스트
 
 - [ ] 이 파일의 책임은 하나인가?
@@ -128,3 +156,4 @@ apps/shop/src/
 - [ ] 관련 파일들이 같은 폴더에 있는가?
 - [ ] 순환 의존이 발생하지 않는가?
 - [ ] 공개 API(index.ts)를 통해 접근하는가?
+- [ ] Date 처리에 dayjs를 사용했는가?

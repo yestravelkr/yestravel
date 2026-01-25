@@ -1054,6 +1054,120 @@ const appRouter = t.router({
       message: z.string(),
     })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
   }),
+  backofficeOrder: t.router({
+    findAll: publicProcedure.input(z.object({
+      type: z.enum(['HOTEL', 'E-TICKET', 'DELIVERY']).nullish(),
+      status: z.enum([
+        'PENDING',
+        'PAID',
+        'COMPLETED',
+        'CANCELLED',
+        'REFUNDED',
+      ]).nullish(),
+      periodFilterType: z.enum([
+        'PAYMENT_DATE',
+        'ORDER_DATE',
+        'USAGE_DATE',
+      ]).nullish(),
+      startDate: z.string().nullish(),
+      endDate: z.string().nullish(),
+      campaignId: z.number().int().positive().nullish(),
+      influencerIds: z.array(z.number().int().positive()).nullish(),
+      productId: z.number().int().positive().nullish(),
+      searchQuery: z.string().nullish(),
+    }).extend({
+      // 페이지네이션
+      page: z.number().int().min(1).default(1),
+      limit: z.number().int().positive().default(50),
+      orderBy: z.string().default('createdAt'),
+      order: z.enum(['ASC', 'DESC']).default('DESC'),
+    }).nullish().default({})).output(z.object({
+      data: z.array(z.object({
+        id: z.number(),
+        orderNumber: z.string(),
+        type: z.enum(['HOTEL', 'E-TICKET', 'DELIVERY']),
+        status: z.enum([
+          'PENDING',
+          'PAID',
+          'COMPLETED',
+          'CANCELLED',
+          'REFUNDED',
+        ]),
+        customerName: z.string(),
+        customerPhone: z.string(),
+        totalAmount: z.number(),
+
+        // 관계 데이터
+        productId: z.number(),
+        productName: z.string(),
+        campaignId: z.number(),
+        campaignName: z.string(),
+        influencerId: z.number(),
+        influencerName: z.string(),
+
+        // 호텔 전용 필드 (nullable)
+        checkInDate: z.string().nullish(),
+        checkOutDate: z.string().nullish(),
+        hotelOptionName: z.string().nullish(),
+
+        // 타임스탬프
+        createdAt: z.date(),
+        updatedAt: z.date(),
+      })),
+      total: z.number(),
+      page: z.number(),
+      limit: z.number(),
+      totalPages: z.number(),
+    })).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    getStatusCounts: publicProcedure.input(z.object({
+      type: z.enum(['HOTEL', 'E-TICKET', 'DELIVERY']).nullish(),
+      status: z.enum([
+        'PENDING',
+        'PAID',
+        'COMPLETED',
+        'CANCELLED',
+        'REFUNDED',
+      ]).nullish(),
+      periodFilterType: z.enum([
+        'PAYMENT_DATE',
+        'ORDER_DATE',
+        'USAGE_DATE',
+      ]).nullish(),
+      startDate: z.string().nullish(),
+      endDate: z.string().nullish(),
+      campaignId: z.number().int().positive().nullish(),
+      influencerIds: z.array(z.number().int().positive()).nullish(),
+      productId: z.number().int().positive().nullish(),
+      searchQuery: z.string().nullish(),
+    }).nullish().default({})).output(z.object({
+      ALL: z.number(),
+      PENDING: z.number(),
+      PAID: z.number(),
+      COMPLETED: z.number(),
+      CANCELLED: z.number(),
+      REFUNDED: z.number(),
+    })).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    getFilterOptions: publicProcedure.output(z.object({
+      campaigns: z.array(
+        z.object({
+          id: z.number(),
+          name: z.string(),
+        })
+      ),
+      influencers: z.array(
+        z.object({
+          id: z.number(),
+          name: z.string(),
+        })
+      ),
+      products: z.array(
+        z.object({
+          id: z.number(),
+          name: z.string(),
+        })
+      ),
+    })).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
+  }),
   backofficeInfluencer: t.router({
     findAll: publicProcedure.input(z.object({
       page: z.number().min(1).default(1),

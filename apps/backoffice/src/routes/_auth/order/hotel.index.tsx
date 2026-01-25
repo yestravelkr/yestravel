@@ -8,26 +8,13 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { createColumnHelper } from '@tanstack/react-table';
 import { Button } from '@yestravelkr/min-design-system';
+import dayjs from 'dayjs';
 import { toast } from 'sonner';
 
 import {
   OrderFilters,
   type OrderFiltersState,
 } from './_components/OrderFilters';
-import {
-  CAMPAIGN_OPTIONS,
-  type HotelOrder,
-  type HotelOrderStatus,
-  INFLUENCER_OPTIONS,
-  OPTION_OPTIONS,
-  ORDER_STATUS_OPTIONS,
-  type OrderStatusTab,
-  PERIOD_PRESET_OPTIONS,
-  PERIOD_TYPE_OPTIONS,
-  PRODUCT_OPTIONS,
-  getFilteredOrders,
-  getOrderStatusTabs,
-} from './_mocks/hotelOrderMock';
 
 import { MajorPageLayout } from '@/components/layout';
 import {
@@ -37,6 +24,52 @@ import {
   Table,
   TableToolbar,
 } from '@/shared/components';
+import { trpc } from '@/shared/trpc';
+
+/** 주문 상태 (백엔드 5가지) */
+type OrderStatus = 'PENDING' | 'PAID' | 'COMPLETED' | 'CANCELLED' | 'REFUNDED';
+
+/** 상태 탭 타입 (전체 주문 포함) */
+type OrderStatusTab = 'ALL' | OrderStatus;
+
+/** 상태별 라벨 */
+const ORDER_STATUS_LABELS: Record<OrderStatusTab, string> = {
+  ALL: '전체 주문',
+  PENDING: '결제대기',
+  PAID: '결제완료',
+  COMPLETED: '이용완료',
+  CANCELLED: '취소',
+  REFUNDED: '환불',
+};
+
+/** 알림 표시가 필요한 상태 (빨간 점) */
+const ALERT_STATUSES: OrderStatusTab[] = ['PAID', 'PENDING'];
+
+/** 기간 타입 옵션 */
+const PERIOD_TYPE_OPTIONS = [
+  { value: 'PAYMENT_DATE', label: '결제일' },
+  { value: 'ORDER_DATE', label: '주문일' },
+  { value: 'USAGE_DATE', label: '이용일' },
+];
+
+/** 기간 프리셋 옵션 */
+const PERIOD_PRESET_OPTIONS = [
+  { value: 'today', label: '오늘' },
+  { value: '7days', label: '최근 7일' },
+  { value: '1month', label: '1개월' },
+  { value: '2months', label: '2개월' },
+  { value: '3months', label: '3개월' },
+  { value: 'custom', label: '직접입력' },
+];
+
+/** 주문 상태 옵션 */
+const ORDER_STATUS_OPTIONS = [
+  { value: 'PENDING', label: '결제대기' },
+  { value: 'PAID', label: '결제완료' },
+  { value: 'COMPLETED', label: '이용완료' },
+  { value: 'CANCELLED', label: '취소' },
+  { value: 'REFUNDED', label: '환불' },
+];
 
 interface HotelOrderSearchParams {
   page: number;
@@ -73,15 +106,27 @@ export const Route = createFileRoute('/_auth/order/hotel/')({
   },
 });
 
-const STATUS_LABELS: Record<HotelOrderStatus, string> = {
-  PENDING_PAYMENT: '결제대기',
-  PAID: '결제완료',
-  PENDING_BOOKING: '예약대기',
-  BOOKING_CONFIRMED: '예약확정',
-  CLAIM_REQUESTED: '클레임 요청',
-  CLAIM_COMPLETED: '클레임 완료',
-  COMPLETED: '이용완료',
-};
+/** 주문 데이터 타입 (API 응답 기반) */
+interface HotelOrder {
+  id: number;
+  orderNumber: string;
+  type: 'HOTEL' | 'E-TICKET' | 'DELIVERY';
+  status: OrderStatus;
+  customerName: string;
+  customerPhone: string;
+  totalAmount: number;
+  productId: number;
+  productName: string;
+  campaignId: number;
+  campaignName: string;
+  influencerId: number;
+  influencerName: string;
+  checkInDate?: string | null;
+  checkOutDate?: string | null;
+  hotelOptionName?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
 
 const columnHelper = createColumnHelper<HotelOrder>();
 
@@ -95,11 +140,12 @@ const columns = [
   }),
   columnHelper.accessor('status', {
     header: '주문상태',
-    cell: (info) => STATUS_LABELS[info.getValue()],
+    cell: (info) => ORDER_STATUS_LABELS[info.getValue()],
     size: 90,
   }),
-  columnHelper.accessor('paidAt', {
-    header: '결제일시',
+  columnHelper.accessor('createdAt', {
+    header: '주문일시',
+    cell: (info) => dayjs(info.getValue()).format('YY/MM/DD HH:mm'),
     size: 120,
   }),
   columnHelper.accessor('campaignName', {
@@ -114,32 +160,32 @@ const columns = [
     header: '상품',
     size: 120,
   }),
-  columnHelper.accessor('optionName', {
+  columnHelper.accessor('hotelOptionName', {
     header: '옵션',
+    cell: (info) => info.getValue() || '-',
     size: 80,
   }),
   columnHelper.display({
     id: 'usageDate',
     header: '이용일',
-    cell: (info) =>
-      `${info.row.original.checkInDate} ~ ${info.row.original.checkOutDate}`,
+    cell: (info) => {
+      const checkIn = info.row.original.checkInDate;
+      const checkOut = info.row.original.checkOutDate;
+      if (!checkIn || !checkOut) return '-';
+      return `${checkIn} ~ ${checkOut}`;
+    },
     size: 140,
   }),
-  columnHelper.accessor('paymentAmount', {
+  columnHelper.accessor('totalAmount', {
     header: '결제금액',
     cell: (info) => formatPrice(info.getValue()),
     size: 100,
   }),
-  columnHelper.accessor('request', {
-    header: '요청사항',
-    cell: (info) => info.getValue() || '-',
-    size: 120,
-  }),
-  columnHelper.accessor('buyerName', {
+  columnHelper.accessor('customerName', {
     header: '구매자',
     size: 80,
   }),
-  columnHelper.accessor('buyerPhone', {
+  columnHelper.accessor('customerPhone', {
     header: '구매자 연락처',
     size: 130,
   }),
@@ -168,7 +214,6 @@ function HotelOrderListPage() {
     campaignId,
     influencerIds,
     productId,
-    optionId,
     searchQuery,
   } = searchParams;
 
@@ -176,8 +221,57 @@ function HotelOrderListPage() {
 
   // orderStatus를 기존 status 필터로 변환 (ALL 또는 특정 상태)
   const statusFilter: OrderStatusTab = (orderStatus as OrderStatusTab) || 'ALL';
-  const { orders, totalCount } = getFilteredOrders(statusFilter, page, limit);
-  const totalPages = Math.ceil(totalCount / limit);
+
+  // 공통 필터 파라미터
+  const filterParams = {
+    type: 'HOTEL' as const,
+    periodFilterType:
+      (periodType as 'PAYMENT_DATE' | 'ORDER_DATE' | 'USAGE_DATE') || undefined,
+    startDate: startDate || undefined,
+    endDate: endDate || undefined,
+    campaignId: campaignId ? parseInt(campaignId, 10) : undefined,
+    influencerIds: influencerIds
+      ? influencerIds.split(',').filter(Boolean).map(Number)
+      : undefined,
+    productId: productId ? parseInt(productId, 10) : undefined,
+    searchQuery: searchQuery || undefined,
+  };
+
+  const [ordersData] = trpc.backofficeOrder.findAll.useSuspenseQuery({
+    ...filterParams,
+    page,
+    limit,
+    status: statusFilter === 'ALL' ? undefined : statusFilter,
+  });
+
+  const [statusCounts] =
+    trpc.backofficeOrder.getStatusCounts.useSuspenseQuery(filterParams);
+
+  const [filterOptions] =
+    trpc.backofficeOrder.getFilterOptions.useSuspenseQuery();
+
+  const orders = ordersData.data;
+  const totalCount = ordersData.total;
+  const totalPages = ordersData.totalPages;
+
+  const campaignOptions = filterOptions.campaigns.map((c) => ({
+    value: String(c.id),
+    label: c.name,
+  }));
+
+  const influencerOptions = filterOptions.influencers.map((i) => ({
+    value: String(i.id),
+    label: i.name,
+  }));
+
+  const productOptions = filterOptions.products.map((p) => ({
+    value: String(p.id),
+    label: p.name,
+  }));
+
+  // TODO: 옵션 필터 API 구현 후 filterOptions에서 조회
+  // 현재 API에서 지원하지 않으므로 빈 배열
+  const optionOptions: { value: string; label: string }[] = [];
 
   // Convert comma-separated influencerIds to array
   const influencerIdsArray = influencerIds
@@ -193,7 +287,7 @@ function HotelOrderListPage() {
     campaignId: campaignId || null,
     influencerIds: influencerIdsArray,
     productId: productId || null,
-    optionId: optionId || null,
+    optionId: null,
     searchQuery,
   };
 
@@ -256,7 +350,22 @@ function HotelOrderListPage() {
     });
   };
 
-  const statusTabs = getOrderStatusTabs();
+  // 상태 탭 목록 생성
+  const tabOrder: OrderStatusTab[] = [
+    'ALL',
+    'PENDING',
+    'PAID',
+    'COMPLETED',
+    'CANCELLED',
+    'REFUNDED',
+  ];
+
+  const statusTabs = tabOrder.map((key) => ({
+    key,
+    label: ORDER_STATUS_LABELS[key],
+    count: statusCounts[key],
+    hasAlert: ALERT_STATUSES.includes(key) && statusCounts[key] > 0,
+  }));
 
   const handleRowClick = (order: HotelOrder) => {
     navigate({
@@ -282,10 +391,10 @@ function HotelOrderListPage() {
             periodTypeOptions={PERIOD_TYPE_OPTIONS}
             periodPresetOptions={PERIOD_PRESET_OPTIONS}
             orderStatusOptions={ORDER_STATUS_OPTIONS}
-            campaignOptions={CAMPAIGN_OPTIONS}
-            influencerOptions={INFLUENCER_OPTIONS}
-            productOptions={PRODUCT_OPTIONS}
-            optionOptions={OPTION_OPTIONS}
+            campaignOptions={campaignOptions}
+            influencerOptions={influencerOptions}
+            productOptions={productOptions}
+            optionOptions={optionOptions}
             onExcelDownload={handleExcelDownload}
           />
         }

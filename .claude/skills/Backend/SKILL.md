@@ -66,6 +66,89 @@ estimated_tokens: ~600
 | **모듈 간 통신** | Service 직접 주입 대신 MicroserviceClient 사용 |
 | **Repository 주입** | 구체 클래스 대신 `getXxxRepository` 토큰 사용 |
 
+### TypeORM 쿼리 규칙
+
+| 규칙 | 설명 |
+|------|------|
+| **기본 조회** | `find`, `findOne`, `findAndCount` 사용 |
+| **QueryBuilder** | `find`로 불가능할 때만 사용 (GROUP BY, 복잡한 JOIN 등) |
+| **relations** | LEFT JOIN은 `relations` 옵션 사용 |
+
+```typescript
+// ✅ 기본: find + relations
+const orders = await repository.find({
+  where: { status: 'PAID', campaignId: In([1, 2, 3]) },
+  relations: ['product', 'campaign'],
+  order: { createdAt: 'DESC' },
+  take: 50,
+});
+
+// ✅ QueryBuilder 허용: GROUP BY 필요 시
+const counts = await repository.createQueryBuilder('ord')
+  .select('ord.status', 'status')
+  .addSelect('COUNT(*)', 'count')
+  .groupBy('ord.status')
+  .getRawMany();
+
+// ❌ 단순 조회에 QueryBuilder 사용 금지
+const orders = await repository.createQueryBuilder('order')
+  .where('order.status = :status', { status: 'PAID' })
+  .getMany();
+```
+
+### 트랜잭션 규칙
+
+| 규칙 | 설명 |
+|------|------|
+| **@Transactional 위치** | Mutation(CUD) Controller 메서드에만 적용 |
+| **Query 메서드** | @Transactional 불필요 (읽기 전용) |
+| **트랜잭션 범위** | 하나의 API 요청 = 하나의 트랜잭션 |
+
+```typescript
+@Controller()
+export class OrderController {
+  constructor(private readonly transactionService: TransactionService) {}
+
+  // ✅ Mutation: @Transactional 필요
+  @Transactional()
+  @MessagePattern('order.create')
+  async create(data: CreateOrderInput) { ... }
+
+  @Transactional()
+  @MessagePattern('order.update')
+  async update(data: UpdateOrderInput) { ... }
+
+  // ✅ Query: @Transactional 불필요
+  @MessagePattern('order.findAll')
+  async findAll(data: FindAllOrdersInput) { ... }
+
+  @MessagePattern('order.getById')
+  async getById(data: { id: number }) { ... }
+}
+```
+
+### 유틸리티 타입
+
+| 타입 | 위치 | 사용 |
+|------|------|------|
+| `Nullish<T>` | `@src/types/utility.type` | `T \| null \| undefined` 대체 |
+
+```typescript
+// ✅ Nullish 사용
+import type { Nullish } from '@src/types/utility.type';
+
+interface OrderInput {
+  status: Nullish<string>;
+  campaignId: Nullish<number>;
+}
+
+// ❌ 직접 union 타입 사용 금지
+interface OrderInput {
+  status: string | null | undefined;
+  campaignId: number | null | undefined;
+}
+```
+
 ## 필수 준수 사항 (요약)
 
 | 규칙 | 설명 |
@@ -77,6 +160,7 @@ estimated_tokens: ~600
 | Router | Module providers에 추가 금지 (자동 발견) |
 | Import | `import type` 사용, tRPC는 `'nestjs-trpc'`에서 import |
 | 조회 | `findOneOrFail().catch()` 패턴 사용 |
+| Nullish 타입 | `\| null \| undefined` 대신 `Nullish<T>` 사용 |
 
 ## 필수 체크리스트
 
@@ -84,7 +168,9 @@ estimated_tokens: ~600
 - [ ] Entity가 `domain/`에 생성되었는가?
 - [ ] Repository가 RepositoryProvider에 등록되었는가?
 - [ ] Controller에 TransactionService가 주입되었는가?
-- [ ] Mutation에 @Transactional이 적용되었는가?
+- [ ] Mutation에만 @Transactional이 적용되었는가? (Query 제외)
+- [ ] 단순 조회에 `find`를 사용했는가? (QueryBuilder 최소화)
+- [ ] `| null | undefined` 대신 `Nullish<T>`를 사용했는가?
 - [ ] Router가 Module providers에 없는가?
 - [ ] `import type`을 사용했는가?
 - [ ] `findOneOrFail`을 사용했는가?
@@ -108,3 +194,4 @@ yarn generateEnv                 # 환경 변수 생성
 - Controller: `apps/api/src/module/shop/order/shop.order.controller.ts`
 - Service: `apps/api/src/module/shop/order/shop.order.service.ts`
 - RepositoryProvider: `apps/api/src/module/shared/transaction/repository.provider.ts`
+- Utility Types: `apps/api/src/types/utility.type.ts`
