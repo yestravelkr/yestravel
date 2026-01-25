@@ -9,8 +9,8 @@ module.exports = {
         'http://localhost:3000', // 동일 origin
       ];
       
-      // *.dev.yestravel.co.kr 패턴 매칭
-      const devPattern = /^https?:\/\/[a-zA-Z0-9-]+\.dev\.yestravel\.co\.kr$/;
+      // *.dev.yestravel.co.kr 및 dev.yestravel.co.kr 패턴 매칭
+      const devPattern = /^https?:\/\/([a-zA-Z0-9-]+\.)?dev\.yestravel\.co\.kr$/;
       
       // origin이 없는 경우 (같은 origin 요청, Postman 등)
       if (!origin) {

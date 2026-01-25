@@ -62,8 +62,8 @@ module.exports = {
         'https://www.yestravel.kr',
       ];
       
-      // *.yestravel.co.kr 패턴 매칭 (모든 서브도메인 허용)
-      const productionPattern = /^https:\/\/[a-zA-Z0-9-]+\.yestravel\.co\.kr$/;
+      // *.yestravel.co.kr 및 yestravel.co.kr 패턴 매칭 (서브도메인 optional)
+      const productionPattern = /^https:\/\/([a-zA-Z0-9-]+\.)?yestravel\.co\.kr$/;
       
       // origin이 없는 경우 (같은 origin 요청)
       if (!origin) {
