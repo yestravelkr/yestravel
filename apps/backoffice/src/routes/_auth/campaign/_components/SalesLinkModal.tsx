@@ -30,7 +30,7 @@ function SalesLinkModal({
   campaignTitle,
   influencers,
 }: SalesLinkModalProps) {
-  const { closeModal } = useCurrentModal();
+  const { resolveModal } = useCurrentModal();
 
   const handleSelectInfluencer = (influencer: Influencer) => {
     if (!influencer.slug) {
@@ -40,7 +40,7 @@ function SalesLinkModal({
 
     const salesUrl = `${SHOP_URL}/i/${influencer.slug}/c/${campaignId}`;
     window.open(salesUrl, '_blank', 'noopener,noreferrer');
-    closeModal();
+    resolveModal();
   };
 
   return (
@@ -86,7 +86,7 @@ function SalesLinkModal({
       </Content>
 
       <Footer>
-        <Button kind="neutral" variant="outline" onClick={closeModal}>
+        <Button kind="neutral" variant="outline" onClick={() => resolveModal()}>
           닫기
         </Button>
       </Footer>
