@@ -30,7 +30,7 @@ function HotelOrderDetailPage() {
     isLoading,
     isError,
   } = trpc.backofficeOrder.findById.useQuery({
-    id: parseInt(orderId),
+    id: Number(orderId),
   });
 
   if (isLoading) {
