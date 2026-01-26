@@ -54,21 +54,27 @@ export class ShopPaymentService {
 
     // 3. Order 상태를 PAID로 업데이트 및 저장
     order.status = OrderStatusEnum.PAID;
-    await this.saveOrder(order);
+    const savedOrder = await this.saveOrder(order);
 
     // 4. TmpOrder 삭제 (임시 데이터이므로 hard delete)
     await this.repositoryProvider.TmpOrderRepository.delete({
       id: tmpOrder.id,
     });
 
-    this.logger.log(`Order created successfully: ${order.id}`);
+    this.logger.log(
+      `Order created successfully: id=${savedOrder.id}, orderNumber=${savedOrder.orderNumber}`
+    );
 
     // 마지막. 내부로직 문제 없을 시 PortOne 결제 수동 승인 및 Payment 저장
-    await this.confirmPayment(data, order);
+    await this.confirmPayment(data, savedOrder);
+
+    const resultOrderNumber = savedOrder.orderNumber;
+    this.logger.log(`Returning orderNumber: ${resultOrderNumber}`);
 
     return {
       success: true,
       message: 'Payment completed and order created',
+      orderNumber: resultOrderNumber,
     };
   }
 
@@ -98,10 +104,10 @@ export class ShopPaymentService {
   }
 
   /**
-   * Order 저장
+   * Order 저장 (저장된 엔티티 반환)
    */
-  private async saveOrder(order: OrderEntity): Promise<void> {
-    await this.repositoryProvider.OrderRepository.save(order);
+  private async saveOrder(order: OrderEntity): Promise<OrderEntity> {
+    return this.repositoryProvider.OrderRepository.save(order);
   }
 
   /**
@@ -136,7 +142,8 @@ export class ShopPaymentService {
     await this.generatePortoneAccessToken();
 
     try {
-      const response = await axios.post(
+      // 1. 결제 승인
+      await axios.post(
         `${this.PORTONE_API_URL}/payments/${paymentId}/confirm`,
         { paymentToken, txId },
         {
@@ -149,8 +156,11 @@ export class ShopPaymentService {
 
       this.logger.log('Payment confirmed successfully');
 
+      // 2. 결제 상세 정보 조회 (결제 수단 등 상세 정보 포함)
+      const paymentDetail = await this.getPaymentDetail(paymentId);
+
       // Payment 저장 (실패해도 결제 승인은 이미 완료된 상태)
-      await this.savePaymentSafely(order, response.data, txId);
+      await this.savePaymentSafely(order, paymentDetail, txId);
     } catch (error: any) {
       if (error.response?.data?.type === 'ALREADY_PAID') {
         this.logger.log('이미 결제된 요청은 에러 없이 처리');
@@ -166,12 +176,35 @@ export class ShopPaymentService {
           return;
         }
 
-        // 기존 Payment가 없으면 저장 (이전에 저장 실패한 경우)
-        await this.savePaymentSafely(order, error.response.data, txId);
+        // 결제 상세 정보 조회 후 저장
+        const paymentDetail = await this.getPaymentDetail(paymentId);
+        await this.savePaymentSafely(order, paymentDetail, txId);
         return;
       }
       this.logger.error('Payment confirmation failed', error);
       throw error;
+    }
+  }
+
+  /**
+   * PortOne 결제 상세 정보 조회
+   */
+  private async getPaymentDetail(
+    paymentId: string
+  ): Promise<Record<string, any>> {
+    try {
+      const response = await axios.get(
+        `${this.PORTONE_API_URL}/payments/${paymentId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${this.portoneToken.accessToken}`,
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      this.logger.error('Failed to get payment detail', error);
+      return {};
     }
   }
 

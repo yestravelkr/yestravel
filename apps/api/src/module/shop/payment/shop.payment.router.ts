@@ -14,6 +14,7 @@ export class ShopPaymentRouter extends BaseTrpcRouter {
     output: z.object({
       success: z.boolean(),
       message: z.string(),
+      orderNumber: z.string(),
     }),
   })
   async complete(

@@ -10,4 +10,5 @@ export const shopPaymentCompleteInputSchema = z.object({
 export const shopPaymentCompleteOutputSchema = z.object({
   success: z.boolean(),
   message: z.string(),
+  orderNumber: z.string(),
 });
