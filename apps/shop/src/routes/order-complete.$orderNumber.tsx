@@ -1,22 +1,20 @@
 /**
- * OrderDetailPage - 주문 상세 페이지
+ * OrderCompletePage - 주문 완료 페이지
  *
- * 주문 상세 정보를 표시하는 페이지입니다.
- * 현재 숙박(accommodation) 타입만 지원합니다.
+ * 결제 완료 후 표시되는 주문 완료 페이지입니다.
+ * 주문 상세 페이지와 컴포넌트를 공유합니다.
  *
  * Usage:
- * - /order/{orderNumber} (주문 상세)
+ * - /order-complete/{orderNumber} (결제 완료 후 이동)
  */
 
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { X } from 'lucide-react';
 import { Suspense } from 'react';
-import { toast } from 'sonner';
 import tw from 'tailwind-styled-components';
 
 import {
-  ORDER_STATUS,
-  AccommodationOrderStatusCard,
+  OrderStatusCard,
   UserInfoSection,
   PaymentSummarySection,
 } from '@/components/order';
@@ -26,15 +24,15 @@ import { trpc } from '@/shared';
 // Route Definition
 // ============================================================================
 
-export const Route = createFileRoute('/order/$orderNumber')({
-  component: OrderDetailPage,
+export const Route = createFileRoute('/order-complete/$orderNumber')({
+  component: OrderCompletePage,
 });
 
 // ============================================================================
 // Skeleton Component
 // ============================================================================
 
-function OrderDetailSkeleton() {
+function OrderCompleteSkeleton() {
   return (
     <Container>
       <Header>
@@ -43,8 +41,8 @@ function OrderDetailSkeleton() {
       <ContentWrapper>
         <Section>
           <div className="flex flex-col gap-1">
-            <div className="h-7 w-32 bg-gray-200 rounded animate-pulse" />
-            <div className="h-[18px] w-48 bg-gray-200 rounded animate-pulse" />
+            <div className="h-7 w-24 bg-gray-200 rounded animate-pulse" />
+            <div className="h-[18px] w-40 bg-gray-200 rounded animate-pulse" />
           </div>
         </Section>
         <Section>
@@ -65,66 +63,71 @@ function OrderDetailSkeleton() {
 // Main Component
 // ============================================================================
 
-function OrderDetailPage() {
+function OrderCompletePage() {
   const { orderNumber } = Route.useParams();
 
   return (
-    <Suspense fallback={<OrderDetailSkeleton />}>
-      <OrderDetailContent orderNumber={orderNumber} />
+    <Suspense fallback={<OrderCompleteSkeleton />}>
+      <OrderCompleteContent orderNumber={orderNumber} />
     </Suspense>
   );
 }
 
-function OrderDetailContent({ orderNumber }: { orderNumber: string }) {
+function OrderCompleteContent({ orderNumber }: { orderNumber: string }) {
   const navigate = useNavigate();
   const [data] = trpc.shopOrder.getOrderDetail.useSuspenseQuery({
     orderNumber,
   });
 
   const handleClose = () => {
-    navigate({ to: '/' });
+    if (data.influencerSlug) {
+      navigate({ to: '/i/$slug', params: { slug: data.influencerSlug } });
+    } else {
+      navigate({ to: '/' });
+    }
   };
 
-  const handleCancelRequest = () => {
-    toast.success('취소 신청이 완료되었습니다.');
+  const handleConfirm = () => {
+    if (data.influencerSlug) {
+      navigate({ to: '/i/$slug', params: { slug: data.influencerSlug } });
+    } else {
+      navigate({ to: '/' });
+    }
   };
 
   return (
     <Container>
       {/* Header */}
       <Header>
-        <CloseButton onClick={handleClose}>
+        <IconButton onClick={handleClose}>
           <X size={24} />
-        </CloseButton>
+        </IconButton>
       </Header>
 
       {/* Content */}
       <ContentWrapper>
-        {/* Order Info */}
+        {/* Order Complete Title */}
         <Section>
           <OrderInfoContainer>
-            <OrderDate>{data.orderDate}</OrderDate>
+            <OrderCompleteTitle>주문완료</OrderCompleteTitle>
             <OrderNumberText>주문번호: {data.orderNumber}</OrderNumberText>
           </OrderInfoContainer>
         </Section>
 
-        {/* Order Status Card */}
-        <AccommodationOrderStatusCard
-          data={{
-            status:
-              data.status as (typeof ORDER_STATUS)[keyof typeof ORDER_STATUS],
-            statusDescription: data.statusDescription ?? undefined,
-            accommodation: {
-              thumbnail: data.accommodation.thumbnail ?? null,
-              hotelName: data.accommodation.hotelName,
-              roomName: data.accommodation.roomName,
-              optionName: data.accommodation.optionName,
-            },
-            checkIn: data.checkIn,
-            checkOut: data.checkOut,
-          }}
-          onCancelRequest={handleCancelRequest}
-        />
+        {/* Product Info Card */}
+        <OrderStatusCard>
+          <OrderStatusCard.AccommodationInfo
+            thumbnail={data.accommodation.thumbnail ?? null}
+            hotelName={data.accommodation.hotelName}
+            roomName={data.accommodation.roomName}
+            optionName={data.accommodation.optionName}
+          />
+          <OrderStatusCard.Divider />
+          <OrderStatusCard.CheckTime
+            checkIn={data.checkIn}
+            checkOut={data.checkOut}
+          />
+        </OrderStatusCard>
 
         {/* User Info */}
         <UserInfoSection user={data.user} />
@@ -132,6 +135,11 @@ function OrderDetailContent({ orderNumber }: { orderNumber: string }) {
         {/* Payment Summary */}
         <PaymentSummarySection payment={data.payment} type="accommodation" />
       </ContentWrapper>
+
+      {/* Footer Button */}
+      <FooterContainer>
+        <ConfirmButton onClick={handleConfirm}>확인</ConfirmButton>
+      </FooterContainer>
     </Container>
   );
 }
@@ -145,6 +153,8 @@ const Container = tw.div`
   bg-bg-layer
   max-w-[600px]
   mx-auto
+  flex
+  flex-col
 `;
 
 const Header = tw.header`
@@ -158,7 +168,7 @@ const Header = tw.header`
   gap-5
 `;
 
-const CloseButton = tw.button`
+const IconButton = tw.button`
   w-6
   h-6
   flex
@@ -168,6 +178,7 @@ const CloseButton = tw.button`
 `;
 
 const ContentWrapper = tw.div`
+  flex-1
   bg-bg-layer-base
   flex
   flex-col
@@ -188,7 +199,7 @@ const OrderInfoContainer = tw.div`
   gap-1
 `;
 
-const OrderDate = tw.p`
+const OrderCompleteTitle = tw.h1`
   text-[21px]
   font-bold
   leading-7
@@ -199,4 +210,26 @@ const OrderNumberText = tw.p`
   text-[13.5px]
   leading-[18px]
   text-fg-muted
+`;
+
+const FooterContainer = tw.div`
+  bg-white
+  p-5
+  pb-8
+`;
+
+const ConfirmButton = tw.button`
+  w-full
+  h-[52px]
+  bg-bg-neutral-solid
+  text-fg-on-surface
+  rounded-xl
+  flex
+  items-center
+  justify-center
+  text-[16.5px]
+  font-medium
+  leading-[22px]
+  hover:opacity-90
+  transition-opacity
 `;

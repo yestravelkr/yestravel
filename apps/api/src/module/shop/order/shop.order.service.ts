@@ -3,6 +3,7 @@ import {
   BadRequestException,
   NotFoundException,
 } from '@nestjs/common';
+import dayjs from 'dayjs';
 import { RepositoryProvider } from '@src/module/shared/transaction/repository.provider';
 import { ProductTypeEnum } from '@src/module/backoffice/admin/admin.schema';
 import {
@@ -10,7 +11,15 @@ import {
   CreateHotelOrderOutput,
   GetTmpOrderInput,
   GetTmpOrderOutput,
+  UpdateTmpOrderInput,
+  UpdateTmpOrderOutput,
+  GetOrderDetailInput,
+  GetOrderDetailOutput,
 } from './shop.order.dto';
+import {
+  OrderStatusEnumType,
+  OrderStatusEnum,
+} from '@src/module/backoffice/domain/order/order.entity';
 import { CampaignInfluencerProductEntity } from '@src/module/backoffice/domain/campaign-influencer-product.entity';
 import { HotelOptionEntity } from '@src/module/backoffice/domain/product/hotel-option.entity';
 import { HotelSkuEntity } from '@src/module/backoffice/domain/product/hotel-sku.entity';
@@ -146,6 +155,47 @@ export class ShopOrderService {
         checkOutTime: hotelProduct.checkOutTime ?? '11:00:00',
       },
       orderOptionSnapshot: tmpOrder.raw.orderOptionSnapshot,
+    };
+  }
+
+  /**
+   * 임시 주문 정보 업데이트 (고객 정보)
+   */
+  async updateTmpOrder(
+    input: UpdateTmpOrderInput
+  ): Promise<UpdateTmpOrderOutput> {
+    const { orderNumber, customerName, customerPhone } = input;
+    const [orderId] = orderNumberParser.decode(orderNumber);
+
+    if (!orderId) {
+      throw new BadRequestException(
+        `유효하지 않은 주문번호입니다 (orderNumber: ${orderNumber})`
+      );
+    }
+
+    const tmpOrder = await this.repositoryProvider.TmpOrderRepository.findOne({
+      where: { id: orderId },
+    });
+
+    if (!tmpOrder) {
+      throw new NotFoundException(
+        `주문을 찾을 수 없습니다 (orderNumber: ${orderNumber})`
+      );
+    }
+
+    // raw 데이터 업데이트
+    tmpOrder.raw = {
+      ...tmpOrder.raw,
+      customerName,
+      customerPhone,
+    };
+
+    await this.repositoryProvider.TmpOrderRepository.save(tmpOrder);
+
+    return {
+      success: true,
+      customerName,
+      customerPhone,
     };
   }
 
@@ -318,5 +368,172 @@ export class ShopOrderService {
     }
 
     return dates;
+  }
+
+  /**
+   * 실제 주문 상세 조회
+   */
+  async getOrderDetail(
+    input: GetOrderDetailInput
+  ): Promise<GetOrderDetailOutput> {
+    const { orderNumber } = input;
+    const [orderId] = orderNumberParser.decode(orderNumber);
+
+    if (!orderId) {
+      throw new BadRequestException(
+        `유효하지 않은 주문번호입니다 (orderNumber: ${orderNumber})`
+      );
+    }
+
+    const order = await this.repositoryProvider.OrderRepository.findOne({
+      where: { id: orderId },
+      relations: ['payments'],
+    });
+
+    if (!order) {
+      throw new NotFoundException(
+        `주문을 찾을 수 없습니다 (orderNumber: ${orderNumber})`
+      );
+    }
+
+    const [hotelProduct, influencer] = await Promise.all([
+      this.repositoryProvider.HotelProductRepository.findOne({
+        where: { id: order.productId, type: ProductTypeEnum.HOTEL },
+      }),
+      this.repositoryProvider.InfluencerRepository.findOne({
+        where: { id: order.influencerId },
+      }),
+    ]);
+
+    if (!hotelProduct) {
+      throw new NotFoundException(
+        `상품을 찾을 수 없습니다 (productId: ${order.productId})`
+      );
+    }
+
+    return {
+      type: 'accommodation',
+      orderId: order.id,
+      orderNumber: order.orderNumber,
+      orderDate: this.formatOrderDate(order.createdAt),
+      status: this.mapOrderStatusToFrontend(order.status),
+      statusDescription: null,
+      influencerSlug: influencer?.slug ?? null,
+      accommodation: {
+        thumbnail: hotelProduct.thumbnailUrls[0] ?? null,
+        hotelName: hotelProduct.name,
+        roomName: hotelProduct.name,
+        optionName: order.orderOptionSnapshot.hotelOptionName,
+      },
+      checkIn: {
+        date: this.formatDateWithDay(order.orderOptionSnapshot.checkInDate),
+        time: this.formatTime(hotelProduct.checkInTime ?? '15:00:00'),
+      },
+      checkOut: {
+        date: this.formatDateWithDay(order.orderOptionSnapshot.checkOutDate),
+        time: this.formatTime(hotelProduct.checkOutTime ?? '11:00:00'),
+      },
+      user: {
+        name: order.customerName,
+        phone: order.customerPhone,
+      },
+      payment: {
+        totalAmount: order.totalAmount,
+        productAmount: order.totalAmount,
+        paymentMethod: this.getPaymentMethod(order.payments),
+      },
+    };
+  }
+
+  /**
+   * 주문 생성일시 포맷팅 ("25.01.01 13:00")
+   */
+  private formatOrderDate(date: Date): string {
+    return dayjs(date).format('YY.MM.DD HH:mm');
+  }
+
+  /**
+   * 날짜를 요일 포함 형식으로 포맷팅 ("25.12.10(금)")
+   */
+  private formatDateWithDay(dateStr: string): string {
+    const weekdays = ['일', '월', '화', '수', '목', '금', '토'];
+    const d = dayjs(dateStr);
+    const dayOfWeek = weekdays[d.day()];
+    return `${d.format('YY.MM.DD')}(${dayOfWeek})`;
+  }
+
+  /**
+   * 시간 문자열에서 초 제거 ("15:00:00" -> "15:00")
+   */
+  private formatTime(timeStr: string): string {
+    const parts = timeStr.split(':');
+    return `${parts[0]}:${parts[1]}`;
+  }
+
+  /**
+   * 백엔드 주문 상태를 프론트엔드 상태로 매핑
+   */
+  private mapOrderStatusToFrontend(status: OrderStatusEnumType): string {
+    const statusMap: Record<OrderStatusEnumType, string> = {
+      [OrderStatusEnum.PENDING]: 'PENDING_PAYMENT',
+      [OrderStatusEnum.PAID]: 'RESERVATION_CONFIRMED',
+      [OrderStatusEnum.COMPLETED]: 'COMPLETED',
+      [OrderStatusEnum.CANCELLED]: 'CANCELLED',
+      [OrderStatusEnum.REFUNDED]: 'CANCELLED',
+    };
+    return statusMap[status] ?? status;
+  }
+
+  /**
+   * 결제 수단 추출 (pgRawData에서 실제 결제 수단 확인)
+   * PortOne v2 API 응답 구조 기준
+   */
+  private getPaymentMethod(
+    payments:
+      | { pgProvider: string; pgRawData?: Record<string, any> | null }[]
+      | undefined
+  ): string {
+    if (!payments || payments.length === 0) {
+      return '미결제';
+    }
+
+    const payment = payments[0];
+    const rawData = payment.pgRawData;
+
+    if (!rawData) {
+      return '카드결제';
+    }
+
+    // PortOne v2 응답 구조: method.type, method.provider
+    const method = rawData.method;
+    if (method) {
+      // 간편결제인 경우 (method.provider에 NAVERPAY, KAKAOPAY 등)
+      if (method.provider) {
+        const easyPayMap: Record<string, string> = {
+          KAKAOPAY: '카카오페이',
+          NAVERPAY: '네이버페이',
+          TOSSPAY: '토스페이',
+          PAYCO: '페이코',
+          SAMSUNGPAY: '삼성페이',
+          APPLEPAY: '애플페이',
+        };
+        return easyPayMap[method.provider] ?? method.provider;
+      }
+
+      // 일반 결제 수단 타입으로 판단
+      const methodType = method.type;
+      if (methodType) {
+        const methodTypeMap: Record<string, string> = {
+          PaymentMethodCard: '신용카드',
+          PaymentMethodVirtualAccount: '무통장입금',
+          PaymentMethodTransfer: '계좌이체',
+          PaymentMethodMobile: '휴대폰결제',
+          PaymentMethodEasyPay: '간편결제',
+        };
+        return methodTypeMap[methodType] ?? '카드결제';
+      }
+    }
+
+    return '카드결제';
   }
 }
