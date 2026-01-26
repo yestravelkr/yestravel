@@ -1,6 +1,13 @@
+/**
+ * Brand List Page - 브랜드 관리 페이지
+ *
+ * 브랜드 목록을 조회하고 관리하는 페이지입니다.
+ */
+
 import { createFileRoute, Link } from '@tanstack/react-router';
+import { Button } from '@yestravelkr/min-design-system';
+import { Plus } from 'lucide-react';
 import { Suspense } from 'react';
-import tw from 'tailwind-styled-components';
 
 import { BrandList } from './_components/BrandList';
 
@@ -16,24 +23,21 @@ function BrandListPage() {
     <MajorPageLayout
       title="브랜드 관리"
       headerActions={
-        <CreateButton to="/brand/create">새 브랜드 등록</CreateButton>
+        <Link to="/brand/create">
+          <Button
+            kind="neutral"
+            variant="solid"
+            size="medium"
+            leadingIcon={<Plus size={20} />}
+          >
+            브랜드 등록
+          </Button>
+        </Link>
       }
     >
-      <Suspense fallback={<TableSkeleton columns={4} rows={5} />}>
+      <Suspense fallback={<TableSkeleton columns={6} rows={5} />}>
         <BrandList />
       </Suspense>
     </MajorPageLayout>
   );
 }
-
-// 새 브랜드 등록 버튼 - 파란색 배경의 액션 버튼
-const CreateButton = tw(Link)`
-  px-4
-  py-2
-  bg-blue-600
-  text-white
-  rounded-lg
-  hover:bg-blue-700
-  transition-colors
-  font-medium
-`;

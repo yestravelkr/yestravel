@@ -6,6 +6,7 @@ import {
   registerBrandInputSchema,
   findBrandByIdInputSchema,
   updateBrandInputSchema,
+  deleteBrandInputSchema,
 } from './brand.schema';
 
 // Inferred types from Zod schemas
@@ -15,3 +16,4 @@ export type Brand = z.infer<typeof brandSchema>;
 export type RegisterBrandInput = z.infer<typeof registerBrandInputSchema>;
 export type FindBrandByIdInput = z.infer<typeof findBrandByIdInputSchema>;
 export type UpdateBrandInput = z.infer<typeof updateBrandInputSchema>;
+export type DeleteBrandInput = z.infer<typeof deleteBrandInputSchema>;

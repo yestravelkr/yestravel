@@ -1,7 +1,15 @@
-import { Injectable, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { RepositoryProvider } from '@src/module/shared/transaction/repository.provider';
 import { BrandEntity } from '@src/module/backoffice/domain/brand.entity';
-import type { RegisterBrandInput, UpdateBrandInput } from './brand.type';
+import type {
+  RegisterBrandInput,
+  UpdateBrandInput,
+  DeleteBrandInput,
+} from './brand.type';
 
 @Injectable()
 export class BrandService {
@@ -51,5 +59,43 @@ export class BrandService {
 
     // Use repository update method to preserve relationships
     return this.repositoryProvider.BrandRepository.updateBrand(id, updateData);
+  }
+
+  async delete(dto: DeleteBrandInput): Promise<void> {
+    const { id } = dto;
+
+    // Check if brand exists
+    const brand = await this.repositoryProvider.BrandRepository.findOneBy({
+      id,
+    });
+
+    if (!brand) {
+      throw new NotFoundException(`브랜드를 찾을 수 없습니다 (ID: ${id})`);
+    }
+
+    // Check if brand has associated products
+    const productCount = await this.repositoryProvider.ProductRepository.count({
+      where: { brandId: id },
+    });
+
+    if (productCount > 0) {
+      throw new ConflictException(
+        `이 브랜드에 연결된 상품이 ${productCount}개 있어 삭제할 수 없습니다. 먼저 상품을 삭제하거나 다른 브랜드로 변경해주세요.`
+      );
+    }
+
+    // Check if brand has associated product templates
+    const templateCount =
+      await this.repositoryProvider.ProductTemplateRepository.count({
+        where: { brandId: id },
+      });
+
+    if (templateCount > 0) {
+      throw new ConflictException(
+        `이 브랜드에 연결된 품목이 ${templateCount}개 있어 삭제할 수 없습니다. 먼저 품목을 삭제하거나 다른 브랜드로 변경해주세요.`
+      );
+    }
+
+    await this.repositoryProvider.BrandRepository.softRemove(brand);
   }
 }

@@ -9,6 +9,7 @@ import type {
   RegisterBrandInput,
   FindBrandByIdInput,
   UpdateBrandInput,
+  DeleteBrandInput,
 } from './brand.type';
 
 @Controller()
@@ -68,5 +69,12 @@ export class BrandController {
   async update(data: UpdateBrandInput): Promise<Brand> {
     const brand = await this.brandService.update(data);
     return this.formatBrandResponse(brand);
+  }
+
+  @MessagePattern('backoffice.brand.delete')
+  @Transactional
+  async delete(data: DeleteBrandInput): Promise<{ success: boolean }> {
+    await this.brandService.delete(data);
+    return { success: true };
   }
 }

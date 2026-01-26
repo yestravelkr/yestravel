@@ -58,3 +58,7 @@ export const findBrandByIdInputSchema = z.object({
 export const updateBrandInputSchema = registerBrandInputSchema.extend({
   id: z.number(),
 });
+
+export const deleteBrandInputSchema = z.object({
+  id: z.number(),
+});
