@@ -39,6 +39,15 @@ type KakaoConfigType = {
   clientSecret: string;
 };
 
+type SmtntConfigType = {
+  /** API URL의 사용자 ID */
+  userId: string;
+  /** 카카오 발신 프로필 키 */
+  senderKey: string;
+  /** 발신번호 */
+  callback: string;
+};
+
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export const ConfigProvider = {
   stage: config.get<string>('stage'),
@@ -67,4 +76,5 @@ export const ConfigProvider = {
   kakao: config.has('kakao')
     ? config.get<KakaoConfigType>('kakao')
     : { clientId: '', clientSecret: '' },
+  smtnt: config.has('smtnt') ? config.get<SmtntConfigType>('smtnt') : undefined,
 } as const;
