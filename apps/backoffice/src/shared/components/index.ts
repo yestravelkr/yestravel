@@ -11,3 +11,4 @@ export * from './brand/BrandForm';
 export * from './ui/FileUpload';
 export * from './layout';
 export * from './card';
+export * from './DeleteConfirmModal';
