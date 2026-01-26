@@ -75,7 +75,7 @@ export class InfluencerService {
       );
 
     if (isDuplicateSlug) {
-      throw new ConflictException('이미 동일한 Slug가 존재합니다');
+      throw new ConflictException('이미 동일한 샵 URL이 존재합니다');
     }
 
     // 인플루언서 엔티티 생성
@@ -131,7 +131,7 @@ export class InfluencerService {
           id
         );
       if (isDuplicateSlug) {
-        throw new ConflictException('이미 동일한 Slug가 존재합니다');
+        throw new ConflictException('이미 동일한 샵 URL이 존재합니다');
       }
     }
 
