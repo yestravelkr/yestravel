@@ -70,7 +70,7 @@ export function ActionMenu({ items, align = 'right' }: ActionMenuProps) {
       <TriggerButton
         ref={refs.setReference}
         type="button"
-        onClick={(e) => e.stopPropagation()}
+        onClick={(e: React.MouseEvent) => e.stopPropagation()}
         {...getReferenceProps()}
       >
         <MoreHorizontal size={20} />
@@ -90,7 +90,7 @@ export function ActionMenu({ items, align = 'right' }: ActionMenuProps) {
                   type="button"
                   $danger={item.danger}
                   $disabled={item.disabled}
-                  onClick={(e) => {
+                  onClick={(e: React.MouseEvent) => {
                     e.stopPropagation();
                     handleItemClick(item);
                   }}
