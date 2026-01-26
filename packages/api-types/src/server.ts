@@ -1241,11 +1241,11 @@ const appRouter = t.router({
       name: z.string().min(1, '인플루언서명은 필수입니다'),
       slug: z
         .string()
-        .min(1, 'Slug는 필수입니다')
-        .max(50, 'Slug는 50자 이내로 입력해주세요')
+        .min(1, '샵 URL은 필수입니다')
+        .max(50, '샵 URL은 50자 이내로 입력해주세요')
         .regex(
           /^[a-z0-9_-]+$/,
-          'Slug는 영문 소문자, 숫자, 하이픈(-), 언더스코어(_)만 사용 가능합니다'
+          '샵 URL은 영문 소문자, 숫자, 하이픈(-), 언더스코어(_)만 사용 가능합니다'
         ),
       email: z.string().email('유효한 이메일을 입력해주세요').nullish(),
       phoneNumber: z.string().nullish(),
@@ -1329,11 +1329,11 @@ const appRouter = t.router({
       name: z.string().min(1, '인플루언서명은 필수입니다'),
       slug: z
         .string()
-        .min(1, 'Slug는 필수입니다')
-        .max(50, 'Slug는 50자 이내로 입력해주세요')
+        .min(1, '샵 URL은 필수입니다')
+        .max(50, '샵 URL은 50자 이내로 입력해주세요')
         .regex(
           /^[a-z0-9_-]+$/,
-          'Slug는 영문 소문자, 숫자, 하이픈(-), 언더스코어(_)만 사용 가능합니다'
+          '샵 URL은 영문 소문자, 숫자, 하이픈(-), 언더스코어(_)만 사용 가능합니다'
         ),
       email: z.string().email('유효한 이메일을 입력해주세요').nullish(),
       phoneNumber: z.string().nullish(),
