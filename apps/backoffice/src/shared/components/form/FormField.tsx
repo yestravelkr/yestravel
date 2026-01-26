@@ -27,22 +27,22 @@ export function FormField({
 }
 
 const FieldContainer = tw.div`
-  space-y-1
+  flex flex-col
+  gap-2
 `;
 
 const Label = tw.label`
-  block 
-  text-sm 
-  font-medium 
-  text-gray-700
+  text-[15px]
+  leading-5
+  text-[var(--fg-muted,#71717A)]
 `;
 
 const RequiredMark = tw.span`
-  text-red-500 
+  text-[var(--fg-critical,#EB3D3D)]
   ml-1
 `;
 
 const ErrorMessage = tw.p`
-  text-sm 
-  text-red-600
+  text-sm
+  text-[var(--fg-critical,#EB3D3D)]
 `;
