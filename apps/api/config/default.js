@@ -1,6 +1,7 @@
 module.exports = {
   stage: process.env.NODE_ENV,
   name: '여기는 default.js 입니다.',
+  envPrefix: '', // production 환경에서는 빈 문자열
   database: {
     yestravel: {
       type: 'postgres',

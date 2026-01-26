@@ -1,5 +1,6 @@
 module.exports = {
   name: '여기는 development.js 입니다.',
+  envPrefix: 'D', // 개발 환경
   cors: {
     origin: (origin, callback) => {
       // 허용할 도메인 목록
