@@ -59,13 +59,23 @@ export class InfluencerService {
 
   async create(input: CreateInfluencerInput): Promise<InfluencerEntity> {
     // 중복 이름 체크
-    const isDuplicate =
+    const isDuplicateName =
       await this.repositoryProvider.InfluencerRepository.existsByName(
         input.name
       );
 
-    if (isDuplicate) {
+    if (isDuplicateName) {
       throw new ConflictException('이미 동일한 이름의 인플루언서가 존재합니다');
+    }
+
+    // 중복 slug 체크
+    const isDuplicateSlug =
+      await this.repositoryProvider.InfluencerRepository.existsBySlug(
+        input.slug
+      );
+
+    if (isDuplicateSlug) {
+      throw new ConflictException('이미 동일한 샵 URL이 존재합니다');
     }
 
     // 인플루언서 엔티티 생성
@@ -101,15 +111,27 @@ export class InfluencerService {
 
     // 이름 중복 체크 (다른 인플루언서와 중복되는 경우)
     if (updateData.name !== existingInfluencer.name) {
-      const isDuplicate =
+      const isDuplicateName =
         await this.repositoryProvider.InfluencerRepository.existsByName(
           updateData.name,
           id
         );
-      if (isDuplicate) {
+      if (isDuplicateName) {
         throw new ConflictException(
           '이미 동일한 이름의 인플루언서가 존재합니다'
         );
+      }
+    }
+
+    // slug 중복 체크 (다른 인플루언서와 중복되는 경우)
+    if (updateData.slug !== existingInfluencer.slug) {
+      const isDuplicateSlug =
+        await this.repositoryProvider.InfluencerRepository.existsBySlug(
+          updateData.slug,
+          id
+        );
+      if (isDuplicateSlug) {
+        throw new ConflictException('이미 동일한 샵 URL이 존재합니다');
       }
     }
 

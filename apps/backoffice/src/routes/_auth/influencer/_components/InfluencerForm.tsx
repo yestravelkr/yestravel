@@ -53,6 +53,7 @@ export function InfluencerForm({
     setValue,
   } = useForm<CreateInfluencerInput>({
     defaultValues: data || {
+      slug: '',
       socialMedias: [],
       businessInfo: {
         type: 'INDIVIDUAL',
@@ -177,6 +178,34 @@ export function InfluencerForm({
                   placeholder="인플루언서명을 입력하세요"
                   error={!!errors.name}
                 />
+              </FieldWrapper>
+
+              <FieldWrapper
+                label="샵 URL"
+                value={data?.slug}
+                isEditMode={isEditMode}
+                error={errors.slug?.message}
+                required
+              >
+                <Input
+                  {...register('slug', {
+                    required: '샵 URL은 필수입니다',
+                    maxLength: {
+                      value: 50,
+                      message: '샵 URL은 50자 이내로 입력해주세요',
+                    },
+                    pattern: {
+                      value: /^[a-z0-9_-]+$/,
+                      message:
+                        '영문 소문자, 숫자, 하이픈(-), 언더스코어(_)만 사용 가능합니다',
+                    },
+                  })}
+                  placeholder="예: instagram_id"
+                  error={!!errors.slug}
+                />
+                <SlugHelperText>
+                  커머스 페이지 주소: /i/{'{값}'} 형식으로 사용됩니다
+                </SlugHelperText>
               </FieldWrapper>
 
               <FieldWrapper
@@ -496,6 +525,12 @@ const FormGrid = tw.div`
   grid-cols-1
   md:grid-cols-2
   gap-6
+`;
+
+const SlugHelperText = tw.p`
+  text-xs
+  text-gray-500
+  mt-1
 `;
 
 const SocialMediaList = tw.div`
