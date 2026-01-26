@@ -147,15 +147,43 @@ export function ProductOptionsPricingCard() {
     const newSkus = [...hotelSkus];
     let updatedCount = 0;
 
-    data.forEach((row) => {
+    console.log('[ExcelUpload] 기존 옵션명:', optionNames);
+    console.log(
+      '[ExcelUpload] 기존 날짜:',
+      hotelOptions[0]?.priceByDate
+        ? Object.keys(hotelOptions[0].priceByDate)
+        : [],
+    );
+    console.log('[ExcelUpload] 업로드 데이터:', data);
+
+    data.forEach((row, index) => {
+      const rawDate = row.날짜;
       const date = String(row.날짜);
       const optionName = String(row.옵션명);
       const optionIndex = optionNames.indexOf(optionName);
 
-      if (optionIndex === -1) return; // 옵션명 불일치 스킵
+      console.log(
+        `[ExcelUpload] Row ${index}: rawDate=`,
+        rawDate,
+        `typeof=${typeof rawDate}, date="${date}", optionName="${optionName}", optionIndex=${optionIndex}`,
+      );
+
+      if (optionIndex === -1) {
+        console.log(`[ExcelUpload] Row ${index}: 옵션명 불일치 - 스킵`);
+        return;
+      }
 
       const option = newOptions[optionIndex];
-      if (!option.priceByDate[date]) return; // 날짜 불일치 스킵
+      const hasDate = date in option.priceByDate;
+      console.log(
+        `[ExcelUpload] Row ${index}: 날짜 존재 여부=${hasDate}, priceByDate keys=`,
+        Object.keys(option.priceByDate),
+      );
+
+      if (!(date in option.priceByDate)) {
+        console.log(`[ExcelUpload] Row ${index}: 날짜 불일치 - 스킵`);
+        return;
+      }
 
       // 판매가 업데이트
       option.priceByDate[date] = Number(row.판매가) || 0;
