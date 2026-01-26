@@ -16,12 +16,14 @@ import {
   registerBrandInputSchema,
   findBrandByIdInputSchema,
   updateBrandInputSchema,
+  deleteBrandInputSchema,
   brandSchema,
 } from './brand.schema';
 import type {
   RegisterBrandInput,
   FindBrandByIdInput,
   UpdateBrandInput,
+  DeleteBrandInput,
 } from './brand.type';
 
 @Router({ alias: 'backofficeBrand' })
@@ -84,5 +86,21 @@ export class BrandRouter extends BaseTrpcRouter {
       input
     );
     return brandSchema.parse(output);
+  }
+
+  @UseMiddlewares(BackofficeAuthMiddleware)
+  @Mutation({
+    input: deleteBrandInputSchema,
+    output: z.object({ success: z.boolean() }),
+  })
+  async delete(
+    @Ctx() ctx: BackofficeAuthorizedContext,
+    @Input() input: DeleteBrandInput
+  ) {
+    const output = await this.microserviceClient.send(
+      'backoffice.brand.delete',
+      input
+    );
+    return output;
   }
 }
