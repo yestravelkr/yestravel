@@ -219,6 +219,7 @@ const appRouter = t.router({
     })).output(z.object({
       success: z.boolean(),
       message: z.string(),
+      orderNumber: z.string(),
     })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
   }),
   shopOrder: t.router({
@@ -248,6 +249,49 @@ const appRouter = t.router({
         hotelOptionId: z.number(),
         hotelOptionName: z.string(),
         priceByDate: z.record(z.string(), z.number()),
+      }),
+    })).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    updateTmpOrder: publicProcedure.input(z.object({
+      orderNumber: z.string(),
+      customerName: z.string(),
+      customerPhone: z.string(),
+    })).output(z.object({
+      success: z.boolean(),
+      customerName: z.string(),
+      customerPhone: z.string(),
+    })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    getOrderDetail: publicProcedure.input(z.object({
+      orderNumber: z.string(),
+    })).output(z.object({
+      type: z.literal('accommodation'),
+      orderId: z.number(),
+      orderNumber: z.string(),
+      orderDate: z.string(),
+      status: z.string(),
+      statusDescription: z.string().nullish(),
+      influencerSlug: z.string().nullish(),
+      accommodation: z.object({
+        thumbnail: z.string().nullish(),
+        hotelName: z.string(),
+        roomName: z.string(),
+        optionName: z.string(),
+      }),
+      checkIn: z.object({
+        date: z.string(),
+        time: z.string(),
+      }),
+      checkOut: z.object({
+        date: z.string(),
+        time: z.string(),
+      }),
+      user: z.object({
+        name: z.string(),
+        phone: z.string(),
+      }),
+      payment: z.object({
+        totalAmount: z.number(),
+        productAmount: z.number(),
+        paymentMethod: z.string(),
       }),
     })).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
   }),

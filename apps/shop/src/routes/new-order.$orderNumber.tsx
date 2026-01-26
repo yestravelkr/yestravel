@@ -69,6 +69,8 @@ function NewOrderContent({ orderNumber }: { orderNumber: string }) {
     },
   });
 
+  const updateTmpOrderMutation = trpc.shopOrder.updateTmpOrder.useMutation();
+
   const handleAuthClick = async () => {
     const result = await openLoginBottomSheet();
     if (result?.success) {
@@ -111,13 +113,18 @@ function NewOrderContent({ orderNumber }: { orderNumber: string }) {
   };
 
   const paymentComplete = async (paymentResult: unknown) => {
-    await axios.post(
+    const response = await axios.post(
       `${API_BASEURL}/trpc/shopPayment.complete`,
       paymentResult,
       {
         withCredentials: true,
       }
     );
+    console.log('Payment complete response:', response.data);
+    // tRPC mutation 응답 구조: { result: { data: { ... } } }
+    const orderNumber = response.data?.result?.data?.orderNumber;
+    console.log('Extracted orderNumber:', orderNumber);
+    return orderNumber;
   };
 
   const handleSubmit = async () => {
@@ -131,6 +138,13 @@ function NewOrderContent({ orderNumber }: { orderNumber: string }) {
     setIsSubmitting(true);
 
     try {
+      // 결제 전 TmpOrder에 고객 정보 저장
+      await updateTmpOrderMutation.mutateAsync({
+        orderNumber,
+        customerName: formData.userName,
+        customerPhone: formData.userPhone.replace(/-/g, ''),
+      });
+
       const payMethodConfig = getPortOnePayMethod(formData.paymentMethod);
 
       const paymentRequest: PaymentRequest = {
@@ -158,13 +172,16 @@ function NewOrderContent({ orderNumber }: { orderNumber: string }) {
         return;
       }
 
-      // 결제 승인 요청
-      await paymentComplete(response);
+      // 결제 승인 요청 및 실제 주문번호 받기
+      const realOrderNumber = await paymentComplete(response);
 
       toast.success('결제가 완료되었습니다.');
 
-      // 주문 상세 페이지로 이동
-      navigate({ to: '/order/$orderNumber', params: { orderNumber } });
+      // 주문 완료 페이지로 이동 (실제 주문번호 사용)
+      navigate({
+        to: '/order-complete/$orderNumber',
+        params: { orderNumber: realOrderNumber },
+      });
     } catch (error) {
       console.error('결제 오류:', error);
       toast.error('결제 중 오류가 발생했습니다.');
