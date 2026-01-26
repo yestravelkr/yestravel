@@ -15,6 +15,8 @@ import { TransactionService } from '@src/module/shared/transaction/transaction.s
 import { getEntityManager } from '@src/database/datasources';
 import { AddressEntity } from './address.entity';
 import Sqids from 'sqids';
+import dayjs from 'dayjs';
+import { ConfigProvider } from '@src/config';
 import { PaymentEntity } from '@src/module/backoffice/domain/order/payment.entity';
 import type { HotelOrderOptionData } from '@src/module/backoffice/domain/order/hotel-order.entity';
 import type { TmpOrderRawData } from './tmp-order.entity';
@@ -49,10 +51,43 @@ export const OrderStatusEnum = {
   REFUNDED: 'REFUNDED',
 } as const;
 
-export const orderNumberParser = new Sqids({
+const sqids = new Sqids({
   minLength: 8,
   alphabet: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ',
 });
+
+/**
+ * OrderNumber Parser
+ *
+ * 형식: ${ENV_PREFIX}ORD${YYYY-MM-DD}-${encodedNumber}
+ * - production: ORD2026-01-27-ABC12345
+ * - development: DORD2026-01-27-ABC12345
+ * - localdev: LORD2026-01-27-ABC12345
+ */
+export const orderNumberParser = {
+  /**
+   * 주문번호 인코딩
+   * @param ids - [orderId] 배열
+   * @param date - 주문 생성 날짜
+   */
+  encode(ids: number[], date: Date): string {
+    const envPrefix = ConfigProvider.envPrefix;
+    const dateStr = dayjs(date).format('YYYY-MM-DD');
+    const encoded = sqids.encode(ids);
+    return `${envPrefix}ORD${dateStr}-${encoded}`;
+  },
+
+  /**
+   * 주문번호 디코딩
+   * @param orderNumber - 주문번호 문자열
+   * @returns [orderId] 배열
+   */
+  decode(orderNumber: string): number[] {
+    // 마지막 '-' 이후의 인코딩된 부분만 추출
+    const encoded = orderNumber.slice(orderNumber.lastIndexOf('-') + 1);
+    return sqids.decode(encoded);
+  },
+};
 
 /**
  * OrderEntity - 주문 엔티티
@@ -99,7 +134,7 @@ export class OrderEntity extends BaseEntity {
   }
 
   get orderNumber(): string {
-    return orderNumberParser.encode([this.id]);
+    return orderNumberParser.encode([this.id], this.createdAt);
   }
 
   /** 주문 타입 (HOTEL, E-TICKET, DELIVERY) */

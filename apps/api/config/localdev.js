@@ -1,5 +1,6 @@
 module.exports = {
   name: '여기는 localdev.js 입니다.',
+  envPrefix: 'L', // 로컬 환경
   database: {
     yestravel: {
       type: 'postgres',

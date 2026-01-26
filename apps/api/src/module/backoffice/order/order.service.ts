@@ -101,7 +101,7 @@ export class OrderService {
 
       return {
         id: order.id,
-        orderNumber: orderNumberParser.encode([order.id]),
+        orderNumber: orderNumberParser.encode([order.id], order.createdAt),
         type: order.type,
         status: order.status,
         customerName: order.customerName,
@@ -297,7 +297,7 @@ export class OrderService {
 
     return {
       id: order.id,
-      orderNumber: orderNumberParser.encode([order.id]),
+      orderNumber: orderNumberParser.encode([order.id], order.createdAt),
       type: order.type,
       status: order.status,
       statusLabel: ORDER_STATUS_LABELS[order.status],

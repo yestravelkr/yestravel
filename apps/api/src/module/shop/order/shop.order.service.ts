@@ -106,7 +106,10 @@ export class ShopOrderService {
 
     const savedTmpOrder =
       await this.repositoryProvider.TmpOrderRepository.save(tmpOrder);
-    const orderNumber = orderNumberParser.encode([savedTmpOrder.id]);
+    const orderNumber = orderNumberParser.encode(
+      [savedTmpOrder.id],
+      savedTmpOrder.createdAt
+    );
 
     return { orderNumber };
   }
