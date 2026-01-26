@@ -298,3 +298,222 @@ export function getFilteredData(
 - [ ] `MajorPageLayout` 사용
 - [ ] 뒤로가기 버튼 포함
 - [ ] 폼은 `react-hook-form` + `zod` 사용
+
+---
+
+## 간단한 리스트 페이지 패턴
+
+필터/탭 없이 검색 + 테이블만 필요한 경우 (예: 브랜드 관리)
+
+### 파일 구조
+
+```
+routes/_auth/{도메인}/
+├── index.tsx              # 리스트 페이지
+├── create.tsx             # 생성 페이지
+├── $id.tsx                # 상세/수정 페이지
+└── _components/
+    └── {Domain}List.tsx   # 리스트 컴포넌트
+```
+
+### 예시 코드
+
+```tsx
+// index.tsx
+import { MajorPageLayout } from '@/components/layout';
+import { TableSkeleton } from '@/shared/components';
+
+export const Route = createFileRoute('/_auth/{domain}/')({
+  component: {Domain}ListPage,
+});
+
+function {Domain}ListPage() {
+  return (
+    <MajorPageLayout
+      title="{도메인} 관리"
+      headerActions={
+        <Link to="/{domain}/create">
+          <Button kind="neutral" variant="solid" size="medium" leadingIcon={<Plus size={20} />}>
+            {도메인} 등록
+          </Button>
+        </Link>
+      }
+    >
+      <Suspense fallback={<TableSkeleton columns={6} rows={5} />}>
+        <{Domain}List />
+      </Suspense>
+    </MajorPageLayout>
+  );
+}
+```
+
+```tsx
+// _components/{Domain}List.tsx
+import { createColumnHelper } from '@tanstack/react-table';
+import dayjs from 'dayjs';
+import { Table, ListPageLayout, Input, EmptyState, openDeleteConfirmModal } from '@/shared/components';
+import { toast } from 'sonner';
+
+const columnHelper = createColumnHelper<{DataType}>();
+
+export function {Domain}List() {
+  const navigate = useNavigate();
+  const utils = trpc.useUtils();
+  const [data] = trpc.backoffice{Domain}.findAll.useSuspenseQuery();
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // 삭제 mutation
+  const deleteMutation = trpc.backoffice{Domain}.delete.useMutation({
+    onSuccess: () => {
+      toast.success('{도메인}이(가) 삭제되었습니다.');
+      utils.backoffice{Domain}.findAll.invalidate();
+    },
+    onError: (error) => {
+      toast.error(error.message || '{도메인} 삭제에 실패했습니다.');
+    },
+  });
+
+  // 검색 필터링
+  const filteredData = useMemo(() => {
+    if (!searchQuery.trim()) return data;
+    const query = searchQuery.toLowerCase();
+    return data.filter((item) => item.name.toLowerCase().includes(query));
+  }, [data, searchQuery]);
+
+  // 삭제 핸들러
+  const handleDelete = async (item: {DataType}) => {
+    const confirmed = await openDeleteConfirmModal({
+      targetName: '{도메인}',
+    });
+    if (confirmed) {
+      await deleteMutation.mutateAsync({ id: item.id });
+    }
+  };
+
+  const columns = [
+    columnHelper.accessor('name', {
+      header: '이름',
+      size: 160,
+    }),
+    columnHelper.accessor('createdAt', {
+      header: '등록일',
+      cell: (info) => dayjs(info.getValue()).format('YY.MM.DD'),
+      size: 120,
+    }),
+    columnHelper.display({
+      id: 'actions',
+      header: '',
+      cell: (info) => (
+        <ActionButtons>
+          <Button kind="neutral" variant="outline" size="small" onClick={(e) => { e.stopPropagation(); navigate({ to: `/{domain}/${info.row.original.id}` }); }}>
+            수정
+          </Button>
+          <Button kind="critical" variant="outline" size="small" onClick={(e) => { e.stopPropagation(); handleDelete(info.row.original); }}>
+            삭제
+          </Button>
+        </ActionButtons>
+      ),
+      size: 140,
+    }),
+  ];
+
+  if (!data || data.length === 0) {
+    return (
+      <EmptyState
+        icon={<InboxIcon />}
+        title="등록된 {도메인}이(가) 없습니다"
+        description="새로운 {도메인}을(를) 등록하여 관리를 시작하세요."
+        action={<Link to="/{domain}/create"><Button>첫 {도메인} 등록하기</Button></Link>}
+      />
+    );
+  }
+
+  return (
+    <ListPageLayout
+      filters={
+        <SearchWrapper>
+          <Input prefix={<Search size={20} />} placeholder="이름 검색" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+        </SearchWrapper>
+      }
+      table={<Table columns={columns} data={filteredData} onRowClick={(row) => navigate({ to: `/{domain}/${row.id}` })} />}
+    />
+  );
+}
+
+const SearchWrapper = tw.div`w-[280px]`;
+const ActionButtons = tw.div`flex items-center gap-1`;
+```
+
+---
+
+## 삭제 확인 모달
+
+### openDeleteConfirmModal 사용법
+
+```tsx
+import { openDeleteConfirmModal } from '@/shared/components';
+import { toast } from 'sonner';
+
+const handleDelete = async (item: DataType) => {
+  // 모달로 확인
+  const confirmed = await openDeleteConfirmModal({
+    targetName: '브랜드',  // "선택한 브랜드을(를) 삭제할까요?" 형태로 표시
+    description: '삭제된 데이터는 복구할 수 없습니다.',  // 선택사항
+  });
+
+  if (confirmed) {
+    // 삭제 실행
+    await deleteMutation.mutateAsync({ id: item.id });
+  }
+};
+```
+
+### DeleteConfirmModal Props
+
+| prop | 타입 | 필수 | 설명 |
+|------|------|------|------|
+| `targetName` | `string` | O | 삭제 대상 이름 (브랜드, 상품 등) |
+| `description` | `string` | X | 추가 설명 메시지 |
+
+---
+
+## Toast 사용법 (sonner)
+
+### 기본 사용
+
+```tsx
+import { toast } from 'sonner';
+
+// 성공
+toast.success('저장되었습니다.');
+
+// 에러
+toast.error('저장에 실패했습니다.');
+toast.error(error.message || '기본 에러 메시지');
+
+// 정보
+toast.info('처리 중입니다.');
+
+// 경고
+toast.warning('주의가 필요합니다.');
+```
+
+### Mutation과 함께 사용
+
+```tsx
+const deleteMutation = trpc.backoffice{Domain}.delete.useMutation({
+  onSuccess: () => {
+    toast.success('{도메인}이(가) 삭제되었습니다.');
+    utils.backoffice{Domain}.findAll.invalidate();  // 캐시 무효화
+  },
+  onError: (error) => {
+    toast.error(error.message || '{도메인} 삭제에 실패했습니다.');
+  },
+});
+```
+
+### 주의사항
+
+- `alert()` 사용 금지 → `toast` 사용
+- 삭제 확인은 `openDeleteConfirmModal` 사용
+- 작업 완료 시에만 `toast.success` 표시
