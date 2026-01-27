@@ -9,8 +9,8 @@ export const ROLE_VALUES = {
 export const ROLE_LABELS = {
   [ROLE_VALUES.ADMIN_SUPER]: '최고 관리자',
   [ROLE_VALUES.ADMIN_STAFF]: '관리자',
-  [ROLE_VALUES.PARTNER_SUPER]: '파트너 관리자',
-  [ROLE_VALUES.PARTNER_STAFF]: '파트너 직원',
+  [ROLE_VALUES.PARTNER_SUPER]: '대표 관리자',
+  [ROLE_VALUES.PARTNER_STAFF]: '관리자',
 } as const;
 
 export type RoleType = (typeof ROLE_VALUES)[keyof typeof ROLE_VALUES];

@@ -41,6 +41,14 @@ export class BrandController {
             accountHolder: brand.bankInfo.accountHolder,
           }
         : null,
+      brandManagers: brand.brandManagers?.map((manager) => ({
+        id: manager.id,
+        email: manager.email,
+        name: manager.name,
+        phoneNumber: manager.phoneNumber,
+        role: manager.role,
+        createdAt: manager.createdAt,
+      })),
       createdAt: brand.createdAt,
     };
   }

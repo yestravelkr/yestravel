@@ -16,6 +16,7 @@ import {
   businessInfoSchema,
   bankInfoSchema,
   PRODUCT_TYPE_ENUM_VALUE,
+  brandManagerSchema,
 } from './types';
 import {
   TIME_FORMAT_REGEX,
@@ -1753,6 +1754,7 @@ const appRouter = t.router({
         accountNumber: z.string().nullish(),
         accountHolder: z.string().nullish(),
       }).nullish(),
+      brandManagers: z.array(brandManagerSchema).optional(),
       createdAt: z.date(),
     })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
     findAll: publicProcedure.output(z.array(z.object({
@@ -1776,6 +1778,7 @@ const appRouter = t.router({
         accountNumber: z.string().nullish(),
         accountHolder: z.string().nullish(),
       }).nullish(),
+      brandManagers: z.array(brandManagerSchema).optional(),
       createdAt: z.date(),
     }))).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
     findById: publicProcedure.input(z.object({
@@ -1801,6 +1804,7 @@ const appRouter = t.router({
         accountNumber: z.string().nullish(),
         accountHolder: z.string().nullish(),
       }).nullish(),
+      brandManagers: z.array(brandManagerSchema).optional(),
       createdAt: z.date(),
     })).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
     update: publicProcedure.input(z.object({
@@ -1846,6 +1850,7 @@ const appRouter = t.router({
         accountNumber: z.string().nullish(),
         accountHolder: z.string().nullish(),
       }).nullish(),
+      brandManagers: z.array(brandManagerSchema).optional(),
       createdAt: z.date(),
     })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
     delete: publicProcedure.input(z.object({

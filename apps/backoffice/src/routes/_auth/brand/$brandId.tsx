@@ -7,11 +7,15 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { useState, useEffect } from 'react';
+import { createColumnHelper } from '@tanstack/react-table';
+import { RefreshCw, Trash2 } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import tw from 'tailwind-styled-components';
 
+import { ROLE_VALUES } from '@/constants/role';
+import { ActionMenu } from '@/shared/components/ActionMenu';
 import { LicenseFileField } from '@/shared/components/brand/LicenseFileField';
 import { Card } from '@/shared/components/card/Card';
 import {
@@ -21,11 +25,13 @@ import {
   ButtonGroup,
 } from '@/shared/components/layout';
 import { SelectDropdown } from '@/shared/components/SelectDropdown';
+import { Table } from '@/shared/components/table/Table';
 import { trpc } from '@/shared/trpc';
 import {
   registerBrandInputSchema,
   BusinessType,
   type RegisterBrandInput,
+  type Brand,
 } from '@/types/brand.type';
 
 export const Route = createFileRoute('/_auth/brand/$brandId')({
@@ -141,6 +147,24 @@ function BrandDetailPage() {
     setIsEditMode(false);
   };
 
+  // 브랜드 매니저 핸들러 (API 연동 전 임시)
+  const handleRoleChange = (managerId: number, newRole: string) => {
+    toast.info(
+      `권한 변경 기능은 준비 중입니다. (ID: ${managerId}, Role: ${newRole})`,
+    );
+    // TODO: API 연동 후 구현
+  };
+
+  const handleResetPassword = (managerId: number, managerName: string) => {
+    toast.info(`${managerName}님의 비밀번호 재설정 기능은 준비 중입니다.`);
+    // TODO: API 연동 후 구현
+  };
+
+  const handleRemoveManager = (managerId: number, managerName: string) => {
+    toast.info(`${managerName}님을 목록에서 제거하는 기능은 준비 중입니다.`);
+    // TODO: API 연동 후 구현
+  };
+
   if (isLoading) {
     return (
       <FormPageLayout.Container>
@@ -176,7 +200,7 @@ function BrandDetailPage() {
               </ButtonGroup>
             ) : (
               <PrimaryButton type="button" onClick={handleEdit}>
-                저장
+                수정
               </PrimaryButton>
             )}
           </FormPageLayout.Header>
@@ -431,11 +455,121 @@ function BrandDetailPage() {
                 )}
               </FormFieldWrapperFull>
             </Card>
+
+            {/* 사용자 */}
+            <Card title="사용자">
+              {brand.brandManagers && brand.brandManagers.length > 0 ? (
+                <ManagerTable
+                  managers={brand.brandManagers}
+                  onRoleChange={handleRoleChange}
+                  onResetPassword={handleResetPassword}
+                  onRemoveManager={handleRemoveManager}
+                />
+              ) : (
+                <EmptyMessage>등록된 사용자가 없습니다.</EmptyMessage>
+              )}
+            </Card>
           </FormPageLayout.Cards>
         </FormPageLayout.Content>
       </form>
     </FormPageLayout.Container>
   );
+}
+
+// ============================================
+// 브랜드 매니저 테이블 컴포넌트
+// ============================================
+
+type BrandManager = NonNullable<Brand['brandManagers']>[number];
+
+const managerColumnHelper = createColumnHelper<BrandManager>();
+
+const roleOptions = [
+  { value: ROLE_VALUES.PARTNER_SUPER, label: '대표 관리자' },
+  { value: ROLE_VALUES.PARTNER_STAFF, label: '관리자' },
+];
+
+interface ManagerTableProps {
+  managers: BrandManager[];
+  onRoleChange: (managerId: number, newRole: string) => void;
+  onResetPassword: (managerId: number, managerName: string) => void;
+  onRemoveManager: (managerId: number, managerName: string) => void;
+}
+
+function ManagerTable({
+  managers,
+  onRoleChange,
+  onResetPassword,
+  onRemoveManager,
+}: ManagerTableProps) {
+  const columns = useMemo(
+    () => [
+      managerColumnHelper.accessor('name', {
+        header: '이름',
+        size: 100,
+      }),
+      managerColumnHelper.accessor('email', {
+        header: '이메일',
+        size: 200,
+      }),
+      managerColumnHelper.accessor('phoneNumber', {
+        header: '연락처',
+        size: 140,
+      }),
+      managerColumnHelper.accessor('role', {
+        header: '권한',
+        size: 150,
+        cell: (info) => {
+          const role = info.getValue();
+          const manager = info.row.original;
+          return (
+            <SelectDropdown
+              options={roleOptions}
+              value={role}
+              onChange={(newRole) => onRoleChange(manager.id, newRole)}
+              width={130}
+            />
+          );
+        },
+      }),
+      managerColumnHelper.accessor('createdAt', {
+        header: '등록일',
+        size: 120,
+        cell: (info) => {
+          const date = info.getValue();
+          return new Date(date).toLocaleDateString('ko-KR');
+        },
+      }),
+      managerColumnHelper.display({
+        id: 'actions',
+        header: '',
+        size: 50,
+        cell: (info) => {
+          const manager = info.row.original;
+          return (
+            <ActionMenu
+              items={[
+                {
+                  label: '비밀번호 재설정',
+                  icon: <RefreshCw size={20} />,
+                  onClick: () => onResetPassword(manager.id, manager.name),
+                },
+                {
+                  label: '관리자 목록에서 제거',
+                  icon: <Trash2 size={20} />,
+                  onClick: () => onRemoveManager(manager.id, manager.name),
+                  danger: true,
+                },
+              ]}
+            />
+          );
+        },
+      }),
+    ],
+    [onRoleChange, onResetPassword, onRemoveManager],
+  );
+
+  return <Table columns={columns} data={managers} />;
 }
 
 // ============================================
@@ -507,4 +641,11 @@ const LoadingMessage = tw.div`
 const ErrorStateMessage = tw.div`
   text-[var(--fg-critical,#EB3D3D)]
   text-lg
+`;
+
+const EmptyMessage = tw.div`
+  text-[var(--fg-muted)]
+  text-sm
+  py-4
+  text-center
 `;

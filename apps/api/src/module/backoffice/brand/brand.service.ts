@@ -36,7 +36,10 @@ export class BrandService {
   }
 
   async findById(id: number): Promise<BrandEntity> {
-    return this.repositoryProvider.BrandRepository.findOneByOrFail({ id });
+    return this.repositoryProvider.BrandRepository.findOneOrFail({
+      where: { id },
+      relations: ['brandManagers'],
+    });
   }
 
   async update(dto: UpdateBrandInput): Promise<BrandEntity> {
