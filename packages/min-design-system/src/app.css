@@ -1,5 +1,6 @@
 @import './index.css';
 @import './fonts.css';
+@import './theme/light-theme.css';
 
 @theme {
   /* Foreground colors */
