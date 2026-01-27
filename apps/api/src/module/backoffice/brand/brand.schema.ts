@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { EnumType } from '@src/types/utility.type';
+import { roleEnumSchema } from '@src/module/backoffice/admin/admin.schema';
 
 // Common business type enum for all schemas
 export const BUSINESS_TYPE_ENUM_VALUE = [
@@ -31,6 +32,16 @@ export const bankInfoSchema = z.object({
   accountHolder: z.string().nullish(),
 });
 
+// Brand manager schema (브랜드 관리자 정보)
+export const brandManagerSchema = z.object({
+  id: z.number(),
+  email: z.string(),
+  name: z.string(),
+  phoneNumber: z.string(),
+  role: roleEnumSchema,
+  createdAt: z.date(),
+});
+
 // Main brand schema
 export const brandSchema = z.object({
   id: z.number(),
@@ -39,6 +50,7 @@ export const brandSchema = z.object({
   phoneNumber: z.string().nullish(),
   businessInfo: businessInfoSchema.nullish(),
   bankInfo: bankInfoSchema.nullish(),
+  brandManagers: z.array(brandManagerSchema).optional(),
   createdAt: z.date(),
 });
 
