@@ -230,14 +230,17 @@ export function BrandForm({
               </FieldWrapper>
 
               <LicenseFileField
+                label="사업자등록증 사본"
                 isEditMode={isEditMode}
-                licenseFileUrl={
+                fileUrl={
                   isEditMode
                     ? licenseFileUrl
                     : data?.businessInfo?.licenseFileUrl
                 }
                 error={errors.businessInfo?.licenseFileUrl?.message}
-                onChange={(url) => setValue('businessInfo.licenseFileUrl', url)}
+                onChange={(url) =>
+                  setValue('businessInfo.licenseFileUrl', url ?? '')
+                }
               />
             </FormGrid>
           </Section>

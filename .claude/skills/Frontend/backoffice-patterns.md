@@ -215,6 +215,171 @@ import { ListPageLayout } from '@/shared/components';
 
 ---
 
+## FormPageLayout 사용법 (생성/수정 폼 페이지)
+
+생성, 상세/수정 페이지에서 사용하는 1컬럼 중앙 정렬 레이아웃
+
+### 구성 요소
+
+| 컴포넌트 | 설명 |
+|---------|------|
+| `FormPageLayout.Container` | 페이지 컨테이너 (회색 배경, 중앙 정렬) |
+| `FormPageLayout.Content` | 콘텐츠 래퍼 (width 860px, gap-8) |
+| `FormPageLayout.Header` | 헤더 (뒤로가기 + 타이틀 + 액션) |
+| `FormPageLayout.Cards` | 카드 영역 (gap-5) |
+
+### 버튼 컴포넌트
+
+| 컴포넌트 | 설명 |
+|---------|------|
+| `PrimaryButton` | 검정 배경 기본 버튼 |
+| `SecondaryButton` | 흰색 배경 아웃라인 버튼 |
+| `ButtonGroup` | 버튼 그룹 래퍼 |
+
+### 생성 페이지 예시
+
+```tsx
+import { FormPageLayout, PrimaryButton } from '@/shared/components/layout';
+import { Card } from '@/shared/components/card/Card';
+import { SelectDropdown } from '@/shared/components/SelectDropdown';
+import { ImageFileField } from '@/shared/components/brand/LicenseFileField';
+
+function CreatePage() {
+  const navigate = useNavigate();
+  const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm();
+
+  return (
+    <FormPageLayout.Container>
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <FormPageLayout.Content>
+          <FormPageLayout.Header title="새 브랜드" onBack={() => navigate({ to: '/brand' })}>
+            <PrimaryButton type="submit" disabled={isPending}>
+              {isPending ? '저장 중...' : '저장'}
+            </PrimaryButton>
+          </FormPageLayout.Header>
+
+          <FormPageLayout.Cards>
+            <Card title="기본정보">
+              {/* 폼 필드들 */}
+            </Card>
+            <Card title="사업자정보">
+              {/* SelectDropdown 사용 */}
+              <SelectDropdown
+                variant="form"
+                options={businessTypeOptions}
+                value={watch('businessInfo.type')}
+                onChange={(v) => setValue('businessInfo.type', v)}
+                error={!!errors.businessInfo?.type}
+                placeholder="선택해주세요"
+              />
+              {/* ImageFileField 사용 */}
+              <ImageFileField
+                label="사업자등록증 사본"
+                isEditMode={true}
+                fileUrl={watch('licenseFileUrl')}
+                onChange={(url) => setValue('licenseFileUrl', url)}
+                error={errors.licenseFileUrl?.message}
+                uploadPath="business-license"
+              />
+            </Card>
+          </FormPageLayout.Cards>
+        </FormPageLayout.Content>
+      </form>
+    </FormPageLayout.Container>
+  );
+}
+```
+
+### 상세/수정 페이지 예시 (view/edit 모드 전환)
+
+```tsx
+import { FormPageLayout, PrimaryButton, SecondaryButton, ButtonGroup } from '@/shared/components/layout';
+
+function DetailPage() {
+  const [isEditMode, setIsEditMode] = useState(false);
+
+  return (
+    <FormPageLayout.Container>
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <FormPageLayout.Content>
+          <FormPageLayout.Header title={brand.name} onBack={() => navigate({ to: '/brand' })}>
+            {isEditMode ? (
+              <ButtonGroup>
+                <SecondaryButton type="button" onClick={() => setIsEditMode(false)}>
+                  취소
+                </SecondaryButton>
+                <PrimaryButton type="submit" disabled={isPending}>
+                  저장
+                </PrimaryButton>
+              </ButtonGroup>
+            ) : (
+              <PrimaryButton type="button" onClick={() => setIsEditMode(true)}>
+                저장
+              </PrimaryButton>
+            )}
+          </FormPageLayout.Header>
+
+          <FormPageLayout.Cards>
+            <Card title="기본정보">
+              {isEditMode ? (
+                <StyledInput {...register('name')} />
+              ) : (
+                <FieldValue>{brand.name}</FieldValue>
+              )}
+            </Card>
+          </FormPageLayout.Cards>
+        </FormPageLayout.Content>
+      </form>
+    </FormPageLayout.Container>
+  );
+}
+```
+
+### 폼 필드 스타일 컴포넌트
+
+```tsx
+// 2컬럼 레이아웃
+const FormRow = tw.div`flex gap-2 w-full`;
+
+// 필드 래퍼 (flex-1)
+const FormFieldWrapper = tw.div`flex flex-col gap-2 flex-1 min-w-0`;
+
+// 전체 너비 필드 래퍼
+const FormFieldWrapperFull = tw.div`flex flex-col gap-2 w-full`;
+
+// 라벨
+const FieldLabel = tw.label`
+  text-[15px] leading-5
+  text-[var(--fg-muted,#71717A)]
+`;
+
+// 값 표시 (view 모드)
+const FieldValue = tw.div`
+  h-11 flex items-center
+  text-[16.5px] leading-[22px]
+  text-[var(--fg-neutral,#18181B)]
+`;
+
+// Input
+const StyledInput = tw.input<{ $error?: boolean }>`
+  w-full h-11 px-4
+  bg-white border rounded-xl
+  text-[16.5px] leading-[22px]
+  text-[var(--fg-neutral,#18181B)]
+  placeholder:text-[var(--fg-placeholder,#9E9E9E)]
+  outline-none transition-colors
+  focus:ring-2 focus:ring-blue-500
+  ${({ $error }) => $error
+    ? 'border-[var(--stroke-critical,#EB3D3D)]'
+    : 'border-[var(--stroke-neutral,#E4E4E7)]'}
+`;
+
+// 에러 메시지
+const ErrorMessage = tw.p`text-sm text-[var(--fg-critical,#EB3D3D)]`;
+```
+
+---
+
 ## Pagination 사용법
 
 ```tsx
@@ -295,9 +460,11 @@ export function getFilteredData(
 
 ### 상세 페이지 구현 시
 
-- [ ] `MajorPageLayout` 사용
+- [ ] `FormPageLayout` 사용 (생성/수정 폼 페이지)
 - [ ] 뒤로가기 버튼 포함
 - [ ] 폼은 `react-hook-form` + `zod` 사용
+- [ ] `SelectDropdown` variant="form" 사용 (native select 금지)
+- [ ] `ImageFileField` 사용 (이미지 업로드)
 
 ---
 
@@ -517,3 +684,71 @@ const deleteMutation = trpc.backoffice{Domain}.delete.useMutation({
 - `alert()` 사용 금지 → `toast` 사용
 - 삭제 확인은 `openDeleteConfirmModal` 사용
 - 작업 완료 시에만 `toast.success` 표시
+
+---
+
+## SelectDropdown 사용법 (폼용)
+
+native `<select>` 대신 커스텀 드롭다운 사용
+
+```tsx
+import { SelectDropdown } from '@/shared/components/SelectDropdown';
+
+// 옵션 목록 (빈 값 없이 정의)
+const options = [
+  { value: 'INDIVIDUAL', label: '개인사업자' },
+  { value: 'CORPORATION', label: '법인사업자' },
+];
+
+// 폼에서 사용
+<SelectDropdown
+  variant="form"
+  options={options}
+  value={watch('type')}
+  onChange={(v) => setValue('type', v)}
+  error={!!errors.type}
+  placeholder="선택해주세요"
+/>
+```
+
+### Props
+
+| prop | 타입 | 필수 | 설명 |
+|------|------|------|------|
+| `variant` | `'default' \| 'form'` | X | 스타일 (폼에서는 `"form"` 필수) |
+| `options` | `{ value: string; label: string }[]` | O | 옵션 목록 |
+| `value` | `string \| null \| undefined` | O | 현재 값 |
+| `onChange` | `(value: string) => void` | O | 값 변경 핸들러 |
+| `error` | `boolean` | X | 에러 상태 |
+| `placeholder` | `string` | X | placeholder 텍스트 |
+| `disabled` | `boolean` | X | 비활성화 |
+
+---
+
+## ImageFileField 사용법
+
+이미지 업로드 필드 (편집 모드: FileUpload, 보기 모드: 썸네일)
+
+```tsx
+import { ImageFileField } from '@/shared/components/brand/LicenseFileField';
+
+<ImageFileField
+  label="사업자등록증 사본"
+  isEditMode={isEditMode}
+  fileUrl={watch('licenseFileUrl')}
+  onChange={(url) => setValue('licenseFileUrl', url)}
+  error={errors.licenseFileUrl?.message}
+  uploadPath="business-license"
+/>
+```
+
+### Props
+
+| prop | 타입 | 필수 | 설명 |
+|------|------|------|------|
+| `label` | `string` | O | 필드 라벨 |
+| `isEditMode` | `boolean` | O | 편집 모드 여부 |
+| `fileUrl` | `string \| null \| undefined` | X | 파일 URL |
+| `onChange` | `(url: string \| null) => void` | O | 값 변경 핸들러 |
+| `error` | `string` | X | 에러 메시지 |
+| `uploadPath` | `string` | X | 업로드 경로 (기본: `images`) |

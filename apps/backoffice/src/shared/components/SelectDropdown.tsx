@@ -3,6 +3,26 @@
  *
  * 클릭 시 드롭다운이 열리는 커스텀 Select 컴포넌트입니다.
  * floating-ui를 사용하여 화면 경계에서 자동으로 위치가 조정됩니다.
+ *
+ * Usage:
+ * ```tsx
+ * // 테이블 필터용 (기본)
+ * <SelectDropdown
+ *   options={[{ value: 'all', label: '전체' }]}
+ *   value={filter}
+ *   onChange={setFilter}
+ * />
+ *
+ * // 폼용
+ * <SelectDropdown
+ *   variant="form"
+ *   options={businessTypeOptions}
+ *   value={watch('businessInfo.type')}
+ *   onChange={(v) => setValue('businessInfo.type', v)}
+ *   error={!!errors.businessInfo?.type}
+ *   placeholder="선택해주세요"
+ * />
+ * ```
  */
 
 import {
@@ -15,6 +35,7 @@ import {
   shift,
   autoUpdate,
   FloatingPortal,
+  size,
 } from '@floating-ui/react';
 import { ChevronDown } from 'lucide-react';
 import { useState } from 'react';
@@ -31,33 +52,56 @@ interface SelectDropdownProps {
   /** 선택 옵션 목록 */
   options: SelectOption[];
   /** 현재 선택된 값 */
-  value: string;
+  value: string | null | undefined;
   /** 값 변경 핸들러 */
   onChange: (value: string) => void;
-  /** 드롭다운 너비 (기본: 160px) */
+  /** 드롭다운 스타일 (default: 테이블 필터용, form: 폼 input용) */
+  variant?: 'default' | 'form';
+  /** 드롭다운 너비 - default variant에서만 사용 */
   width?: number;
   /** 비활성화 여부 */
   disabled?: boolean;
+  /** 에러 상태 - form variant에서 사용 */
+  error?: boolean;
+  /** placeholder 텍스트 */
+  placeholder?: string;
 }
 
 export function SelectDropdown({
   options,
   value,
   onChange,
+  variant = 'default',
   width = 160,
   disabled = false,
+  error = false,
+  placeholder = '선택하세요',
 }: SelectDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   const { refs, floatingStyles, context } = useFloating({
     open: isOpen,
-    onOpenChange: setIsOpen,
-    middleware: [offset(8), flip(), shift({ padding: 8 })],
+    onOpenChange: disabled ? undefined : setIsOpen,
+    middleware: [
+      offset(8),
+      flip(),
+      shift({ padding: 8 }),
+      size({
+        apply({ rects, elements }) {
+          // form variant일 때 trigger 너비에 맞춤
+          if (variant === 'form') {
+            Object.assign(elements.floating.style, {
+              width: `${rects.reference.width}px`,
+            });
+          }
+        },
+      }),
+    ],
     whileElementsMounted: autoUpdate,
     placement: 'bottom-start',
   });
 
-  const click = useClick(context);
+  const click = useClick(context, { enabled: !disabled });
   const dismiss = useDismiss(context);
 
   const { getReferenceProps, getFloatingProps } = useInteractions([
@@ -72,24 +116,47 @@ export function SelectDropdown({
     setIsOpen(false);
   };
 
+  const isFormVariant = variant === 'form';
+
   return (
     <>
-      <Trigger
-        ref={refs.setReference}
-        type="button"
-        style={{ width }}
-        $disabled={disabled}
-        {...getReferenceProps()}
-      >
-        <TriggerLabel>{selectedOption?.label || '선택하세요'}</TriggerLabel>
-        <ChevronIcon size={20} $isOpen={isOpen} />
-      </Trigger>
+      {isFormVariant ? (
+        <FormTrigger
+          ref={refs.setReference}
+          type="button"
+          $disabled={disabled}
+          $error={error}
+          $isOpen={isOpen}
+          {...getReferenceProps()}
+        >
+          <TriggerLabel $isPlaceholder={!selectedOption}>
+            {selectedOption?.label || placeholder}
+          </TriggerLabel>
+          <ChevronIcon size={20} $isOpen={isOpen} />
+        </FormTrigger>
+      ) : (
+        <DefaultTrigger
+          ref={refs.setReference}
+          type="button"
+          style={{ width }}
+          $disabled={disabled}
+          {...getReferenceProps()}
+        >
+          <TriggerLabel $isPlaceholder={!selectedOption}>
+            {selectedOption?.label || placeholder}
+          </TriggerLabel>
+          <ChevronIcon size={20} $isOpen={isOpen} />
+        </DefaultTrigger>
+      )}
 
       {isOpen && (
         <FloatingPortal>
           <Dropdown
             ref={refs.setFloating}
-            style={floatingStyles}
+            style={{
+              ...floatingStyles,
+              width: isFormVariant ? undefined : 240,
+            }}
             {...getFloatingProps()}
           >
             <DropdownList>
@@ -111,7 +178,11 @@ export function SelectDropdown({
   );
 }
 
-const Trigger = tw.button<{ $disabled?: boolean }>`
+// ============================================
+// Default Trigger (테이블 필터용)
+// ============================================
+
+const DefaultTrigger = tw.button<{ $disabled?: boolean }>`
   flex items-center justify-between
   gap-1
   w-full
@@ -125,20 +196,56 @@ const Trigger = tw.button<{ $disabled?: boolean }>`
   ${({ $disabled }) => $disabled && 'opacity-50 cursor-not-allowed'}
 `;
 
-const TriggerLabel = tw.span`
+// ============================================
+// Form Trigger (폼 input용)
+// ============================================
+
+const FormTrigger = tw.button<{
+  $disabled?: boolean;
+  $error?: boolean;
+  $isOpen?: boolean;
+}>`
+  flex items-center justify-between
+  gap-2
+  w-full
+  h-11
+  px-4
+  bg-white
+  border
+  rounded-xl
+  text-[16.5px]
+  leading-[22px]
+  text-[var(--fg-neutral,#18181B)]
+  cursor-pointer
+  transition-colors
+  ${({ $isOpen }) => $isOpen && 'ring-2 ring-blue-500'}
+  ${({ $error }) =>
+    $error
+      ? 'border-[var(--stroke-critical,#EB3D3D)]'
+      : 'border-[var(--stroke-neutral,#E4E4E7)]'}
+  ${({ $disabled }) => $disabled && 'opacity-50 cursor-not-allowed'}
+`;
+
+// ============================================
+// Common Components
+// ============================================
+
+const TriggerLabel = tw.span<{ $isPlaceholder?: boolean }>`
   flex-1
   text-left
+  ${({ $isPlaceholder }) =>
+    $isPlaceholder && 'text-[var(--fg-placeholder,#9E9E9E)]'}
 `;
 
 const ChevronIcon = tw(ChevronDown)<{ $isOpen?: boolean }>`
-  text-[var(--fg-neutral,#18181b)]
+  text-[var(--fg-muted,#71717A)]
   transition-transform
+  shrink-0
   ${({ $isOpen }) => $isOpen && 'rotate-180'}
 `;
 
 const Dropdown = tw.div`
   z-50
-  w-[240px]
   p-2
   bg-white
   rounded-[20px]
@@ -147,6 +254,8 @@ const Dropdown = tw.div`
 
 const DropdownList = tw.div`
   flex flex-col
+  max-h-[240px]
+  overflow-y-auto
 `;
 
 const DropdownItem = tw.button<{ $selected?: boolean }>`
@@ -161,23 +270,9 @@ const DropdownItem = tw.button<{ $selected?: boolean }>`
   text-left
   cursor-pointer
   transition-colors
+  shrink-0
   ${({ $selected }) =>
     $selected
       ? 'bg-[var(--bg-neutral,#f4f4f5)]'
       : 'hover:bg-[var(--bg-neutral,#f4f4f5)]'}
 `;
-
-/**
- * Usage:
- *
- * const [role, setRole] = useState('admin');
- *
- * <SelectDropdown
- *   options={[
- *     { value: 'super', label: '대표 관리자' },
- *     { value: 'admin', label: '관리자' },
- *   ]}
- *   value={role}
- *   onChange={setRole}
- * />
- */

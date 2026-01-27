@@ -2,27 +2,53 @@ import tw from 'tailwind-styled-components';
 
 import { FormField, FileUpload } from '@/shared/components';
 
-interface LicenseFileFieldProps {
+interface ImageFileFieldProps {
+  /** 필드 라벨 */
+  label: string;
+  /** 편집 모드 여부 */
   isEditMode: boolean;
-  licenseFileUrl?: string | null;
+  /** 파일 URL */
+  fileUrl?: string | null;
+  /** 에러 메시지 */
   error?: string;
+  /** 값 변경 핸들러 */
   onChange: (url: string | null) => void;
+  /** 업로드 경로 (기본: images) */
+  uploadPath?: string;
 }
 
-export function LicenseFileField({
+/**
+ * ImageFileField - 이미지 파일 업로드 필드
+ *
+ * 편집 모드에서는 FileUpload, 보기 모드에서는 썸네일 표시
+ *
+ * Usage:
+ * ```tsx
+ * <ImageFileField
+ *   label="사업자등록증 사본"
+ *   isEditMode={isEditMode}
+ *   fileUrl={licenseFileUrl}
+ *   onChange={(url) => setValue('licenseFileUrl', url)}
+ *   error={errors.licenseFileUrl?.message}
+ * />
+ * ```
+ */
+export function ImageFileField({
+  label,
   isEditMode,
-  licenseFileUrl,
+  fileUrl,
   error,
   onChange,
-}: LicenseFileFieldProps) {
+  uploadPath = 'images',
+}: ImageFileFieldProps) {
   if (isEditMode) {
     return (
-      <FormField label="사업자등록증 사본" error={error}>
+      <FormField label={label} error={error}>
         <FileUpload
-          value={licenseFileUrl}
+          value={fileUrl}
           onChange={onChange}
           accept="image/*"
-          uploadPath="business-license"
+          uploadPath={uploadPath}
           error={!!error}
         />
       </FormField>
@@ -31,16 +57,14 @@ export function LicenseFileField({
 
   return (
     <InfoItem>
-      <InfoLabel>사업자등록증 사본</InfoLabel>
-      {licenseFileUrl ? (
-        <LicenseThumbnail>
-          <img src={licenseFileUrl} alt="사업자등록증 사본" />
-          <ThumbnailOverlay
-            onClick={() => window.open(licenseFileUrl, '_blank')}
-          >
+      <InfoLabel>{label}</InfoLabel>
+      {fileUrl ? (
+        <ImageThumbnail>
+          <img src={fileUrl} alt={label} />
+          <ThumbnailOverlay onClick={() => window.open(fileUrl, '_blank')}>
             <span>크게보기</span>
           </ThumbnailOverlay>
-        </LicenseThumbnail>
+        </ImageThumbnail>
       ) : (
         <InfoValue>-</InfoValue>
       )}
@@ -48,22 +72,31 @@ export function LicenseFileField({
   );
 }
 
+/**
+ * @deprecated ImageFileField를 사용하세요
+ */
+export const LicenseFileField = ImageFileField;
+
 const InfoItem = tw.div`
-  space-y-1
+  flex flex-col
+  gap-2
 `;
 
-const InfoLabel = tw.dt`
-  text-sm
-  font-medium
-  text-gray-500
+const InfoLabel = tw.label`
+  text-[15px]
+  leading-5
+  text-[var(--fg-muted,#71717A)]
 `;
 
-const InfoValue = tw.dd`
-  text-sm
-  text-gray-900
+const InfoValue = tw.div`
+  h-11
+  flex items-center
+  text-[16.5px]
+  leading-[22px]
+  text-[var(--fg-neutral,#18181B)]
 `;
 
-const LicenseThumbnail = tw.div`
+const ImageThumbnail = tw.div`
   relative
   w-32
   h-32
@@ -74,7 +107,7 @@ const LicenseThumbnail = tw.div`
   cursor-pointer
   mt-2
   group
-  
+
   img {
     width: 100%;
     height: 100%;
