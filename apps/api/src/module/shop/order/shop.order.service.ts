@@ -4,6 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import dayjs from 'dayjs';
+import { In } from 'typeorm';
 import { RepositoryProvider } from '@src/module/shared/transaction/repository.provider';
 import { ProductTypeEnum } from '@src/module/backoffice/admin/admin.schema';
 import {
@@ -574,73 +575,89 @@ export class ShopOrderService {
         take: limit,
       });
 
-    const orderItems = await Promise.all(
-      orders.map(async order => {
-        // saleId(CampaignInfluencerProduct) 조회
-        const sale =
-          await this.repositoryProvider.CampaignInfluencerProductRepository.findOne(
-            {
-              where: {
-                productId: order.productId,
-                campaignInfluencer: {
-                  influencerId: order.influencerId,
-                  campaignId: order.campaignId,
-                },
-              },
-              relations: ['campaignInfluencer'],
-            }
-          );
+    if (orders.length === 0) {
+      return { orders: [], total: 0, hasMore: false };
+    }
 
-        const baseFields = {
-          orderId: order.id,
-          orderNumber: order.orderNumber,
-          orderDate: this.formatOrderDate(order.createdAt),
-          status: this.mapOrderStatusToFrontend(order.status),
-          statusDescription: this.getStatusDescription(order.status),
-          totalAmount: order.totalAmount,
-          influencerSlug: order.influencer?.slug ?? '',
-          saleId: sale?.id ?? 0,
-        };
+    // N+1 방지: 필요한 데이터를 한 번에 조회
+    const productIds = [...new Set(orders.map(o => o.productId))];
+    const hotelProductIds = orders
+      .filter(o => o.type === ProductTypeEnum.HOTEL)
+      .map(o => o.productId);
 
-        // 호텔 상품인 경우
-        if (order.type === ProductTypeEnum.HOTEL) {
-          const hotelProduct =
-            await this.repositoryProvider.HotelProductRepository.findOne({
-              where: { id: order.productId, type: ProductTypeEnum.HOTEL },
-            });
+    // 1. CampaignInfluencerProduct (saleId) 일괄 조회
+    const campaignInfluencerProducts =
+      await this.repositoryProvider.CampaignInfluencerProductRepository.find({
+        where: { productId: In(productIds) },
+        relations: ['campaignInfluencer'],
+      });
 
-          return {
-            ...baseFields,
-            type: 'HOTEL' as const,
-            accommodation: {
-              thumbnail: hotelProduct?.thumbnailUrls[0] ?? null,
-              hotelName: hotelProduct?.name ?? '',
-              roomName: hotelProduct?.name ?? '',
-              optionName: order.orderOptionSnapshot.hotelOptionName,
-            },
-            checkIn: {
-              date: this.formatDateWithDay(
-                order.orderOptionSnapshot.checkInDate
-              ),
-              time: this.formatTime(hotelProduct?.checkInTime ?? '15:00:00'),
-            },
-            checkOut: {
-              date: this.formatDateWithDay(
-                order.orderOptionSnapshot.checkOutDate
-              ),
-              time: this.formatTime(hotelProduct?.checkOutTime ?? '11:00:00'),
-            },
-          };
-        }
+    // saleId Map: `${productId}-${influencerId}-${campaignId}` -> saleId
+    const saleIdMap = new Map<string, number>();
+    for (const cip of campaignInfluencerProducts) {
+      const key = `${cip.productId}-${cip.campaignInfluencer.influencerId}-${cip.campaignInfluencer.campaignId}`;
+      saleIdMap.set(key, cip.id);
+    }
 
-        // 배송 상품인 경우 (TODO: 배송 상품 정보 조회 구현)
+    // 2. HotelProduct 일괄 조회
+    const hotelProducts =
+      hotelProductIds.length > 0
+        ? await this.repositoryProvider.HotelProductRepository.find({
+            where: { id: In(hotelProductIds), type: ProductTypeEnum.HOTEL },
+          })
+        : [];
+
+    const hotelProductMap = new Map(hotelProducts.map(hp => [hp.id, hp]));
+
+    // 3. 주문 목록 매핑
+    const orderItems = orders.map(order => {
+      const saleKey = `${order.productId}-${order.influencerId}-${order.campaignId}`;
+      const saleId = saleIdMap.get(saleKey) ?? 0;
+
+      const baseFields = {
+        orderId: order.id,
+        orderNumber: order.orderNumber,
+        orderDate: this.formatOrderDate(order.createdAt),
+        status: this.mapOrderStatusToFrontend(order.status),
+        statusDescription: this.getStatusDescription(order.status),
+        totalAmount: order.totalAmount,
+        influencerSlug: order.influencer?.slug ?? '',
+        saleId,
+      };
+
+      // 호텔 상품인 경우
+      if (order.type === ProductTypeEnum.HOTEL) {
+        const hotelProduct = hotelProductMap.get(order.productId);
+
         return {
           ...baseFields,
-          type: 'DELIVERY' as const,
-          products: [],
+          type: 'HOTEL' as const,
+          accommodation: {
+            thumbnail: hotelProduct?.thumbnailUrls[0] ?? null,
+            hotelName: hotelProduct?.name ?? '',
+            roomName: hotelProduct?.name ?? '',
+            optionName: order.orderOptionSnapshot.hotelOptionName,
+          },
+          checkIn: {
+            date: this.formatDateWithDay(order.orderOptionSnapshot.checkInDate),
+            time: this.formatTime(hotelProduct?.checkInTime ?? '15:00:00'),
+          },
+          checkOut: {
+            date: this.formatDateWithDay(
+              order.orderOptionSnapshot.checkOutDate
+            ),
+            time: this.formatTime(hotelProduct?.checkOutTime ?? '11:00:00'),
+          },
         };
-      })
-    );
+      }
+
+      // 배송 상품인 경우 (TODO: 배송 상품 정보 조회 구현)
+      return {
+        ...baseFields,
+        type: 'DELIVERY' as const,
+        products: [],
+      };
+    });
 
     return {
       orders: orderItems,
