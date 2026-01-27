@@ -16,6 +16,7 @@ import {
   businessInfoSchema,
   bankInfoSchema,
   PRODUCT_TYPE_ENUM_VALUE,
+  brandManagerSchema,
 } from './types';
 import {
   TIME_FORMAT_REGEX,
