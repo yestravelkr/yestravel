@@ -25,3 +25,5 @@ dist-ssr
 
 
 routeTree.gen.*
+*storybook.log
+storybook-static
