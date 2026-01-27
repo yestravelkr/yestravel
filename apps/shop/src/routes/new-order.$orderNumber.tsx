@@ -113,11 +113,15 @@ function NewOrderContent({ orderNumber }: { orderNumber: string }) {
   };
 
   const paymentComplete = async (paymentResult: unknown) => {
+    const { accessToken } = useAuthStore.getState();
     const response = await axios.post(
       `${API_BASEURL}/trpc/shopPayment.complete`,
       paymentResult,
       {
         withCredentials: true,
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
       }
     );
     console.log('Payment complete response:', response.data);
