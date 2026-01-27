@@ -1,6 +1,5 @@
-import { createFileRoute, Outlet } from '@tanstack/react-router';
+import { createFileRoute, Outlet, useNavigate } from '@tanstack/react-router';
 import { Suspense } from 'react';
-import { toast } from 'sonner';
 import tw from 'tailwind-styled-components';
 
 import { openLoginBottomSheet } from '@/components/auth/LoginBottomSheet';
@@ -43,6 +42,7 @@ function InfluencerLayout() {
  * 인플루언서 레이아웃 콘텐츠 - 데이터 로딩 후 렌더링
  */
 function InfluencerLayoutContent({ slug }: { slug: string }) {
+  const navigate = useNavigate();
   const { isLoggedIn, logout } = useAuthStore();
   const [influencer] = trpc.shopInfluencer.findBySlug.useSuspenseQuery({
     slug,
@@ -57,8 +57,7 @@ function InfluencerLayoutContent({ slug }: { slug: string }) {
   };
 
   const handleOrderHistory = () => {
-    // TODO: 주문내역 페이지 구현 후 연결
-    toast.info('주문내역 페이지 준비 중입니다.');
+    navigate({ to: '/my-orders' });
   };
 
   const handleLogout = () => {
@@ -68,13 +67,14 @@ function InfluencerLayoutContent({ slug }: { slug: string }) {
 
   return (
     <HeaderLayout
-      title={
+      left={
         <InfluencerProfile
           avatarUrl={influencer.thumbnail || '/default-profile.png'}
           name={influencer.name}
           handle={influencer.slug}
         />
       }
+      title=""
       right={
         isLoggedIn ? (
           <HeaderLoggedInButtons

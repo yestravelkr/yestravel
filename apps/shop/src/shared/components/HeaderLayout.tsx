@@ -30,11 +30,13 @@ export function HeaderLayout({
   return (
     <Container>
       <Header>
-        {left && <LeftWrapper>{left}</LeftWrapper>}
+        <LeftWrapper>{left}</LeftWrapper>
         <TitleWrapper>
-          {isStringTitle ? <Title>{title}</Title> : title}
+          <TitleContent>
+            {isStringTitle ? <Title>{title}</Title> : title}
+          </TitleContent>
         </TitleWrapper>
-        {right && <RightWrapper>{right}</RightWrapper>}
+        <RightWrapper>{right}</RightWrapper>
       </Header>
       {children}
     </Container>
@@ -56,21 +58,29 @@ const Header = tw.header`
   bg-white
   border-b
   border-stroke-neutral
+  relative
   flex
   items-center
-  gap-2
+  justify-between
 `;
 
 const LeftWrapper = tw.div`
   flex
   items-center
-  justify-center
+  z-10
 `;
 
 const TitleWrapper = tw.div`
-  flex-1
+  absolute
+  inset-x-0
   flex
   items-center
+  justify-center
+  pointer-events-none
+`;
+
+const TitleContent = tw.div`
+  pointer-events-auto
 `;
 
 const Title = tw.div`
@@ -83,7 +93,7 @@ const Title = tw.div`
 const RightWrapper = tw.div`
   flex
   items-center
-  justify-center
+  z-10
 `;
 
 /**
