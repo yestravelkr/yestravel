@@ -293,6 +293,64 @@ const appRouter = t.router({
         productAmount: z.number(),
         paymentMethod: z.string(),
       }),
+    })).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    getMyOrders: publicProcedure.input(z.object({
+      offset: z.number().optional().default(0),
+      limit: z.number().optional().default(20),
+    })).output(z.object({
+      orders: z.array(z.discriminatedUnion('type', [
+        z.object({
+          orderId: z.number(),
+          orderNumber: z.string(),
+          orderDate: z.string(),
+          status: z.string(),
+          statusDescription: z.string().nullish(),
+          totalAmount: z.number(),
+          /** 상품 상세 페이지 이동용 */
+          influencerSlug: z.string(),
+          saleId: z.number(),
+        }).extend({
+          type: z.literal('HOTEL'),
+          accommodation: z.object({
+            thumbnail: z.string().nullish(),
+            hotelName: z.string(),
+            roomName: z.string(),
+            optionName: z.string(),
+          }),
+          checkIn: z.object({
+            date: z.string(),
+            time: z.string(),
+          }),
+          checkOut: z.object({
+            date: z.string(),
+            time: z.string(),
+          }),
+        }),
+        z.object({
+          orderId: z.number(),
+          orderNumber: z.string(),
+          orderDate: z.string(),
+          status: z.string(),
+          statusDescription: z.string().nullish(),
+          totalAmount: z.number(),
+          /** 상품 상세 페이지 이동용 */
+          influencerSlug: z.string(),
+          saleId: z.number(),
+        }).extend({
+          type: z.literal('DELIVERY'),
+          products: z.array(
+            z.object({
+              thumbnail: z.string().nullish(),
+              name: z.string(),
+              option: z.string(),
+              price: z.number(),
+              quantity: z.number(),
+            })
+          ),
+        }),
+      ])),
+      total: z.number(),
+      hasMore: z.boolean(),
     })).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
   }),
   shopInfluencer: t.router({

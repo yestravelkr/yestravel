@@ -1,4 +1,11 @@
-import { Router, Mutation, Query, Input } from 'nestjs-trpc';
+import {
+  Router,
+  Mutation,
+  Query,
+  Input,
+  Ctx,
+  UseMiddlewares,
+} from 'nestjs-trpc';
 import { Injectable } from '@nestjs/common';
 import { BaseTrpcRouter } from '@src/module/trpc/baseTrpcRouter';
 import {
@@ -10,13 +17,20 @@ import {
   updateTmpOrderOutputSchema,
   getOrderDetailInputSchema,
   getOrderDetailOutputSchema,
+  getMyOrdersInputSchema,
+  getMyOrdersOutputSchema,
 } from './shop.order.schema';
 import type {
   CreateHotelOrderInput,
   GetTmpOrderInput,
   UpdateTmpOrderInput,
   GetOrderDetailInput,
+  GetMyOrdersInput,
 } from './shop.order.dto';
+import {
+  ShopAuthMiddleware,
+  type ShopAuthorizedContext,
+} from '@src/module/shop/auth/shop.auth.middleware';
 
 @Router({ alias: 'shopOrder' })
 @Injectable()
@@ -51,5 +65,20 @@ export class ShopOrderRouter extends BaseTrpcRouter {
   })
   async getOrderDetail(@Input() input: GetOrderDetailInput) {
     return this.microserviceClient.send('shopOrder.getOrderDetail', input);
+  }
+
+  @UseMiddlewares(ShopAuthMiddleware)
+  @Query({
+    input: getMyOrdersInputSchema,
+    output: getMyOrdersOutputSchema,
+  })
+  async getMyOrders(
+    @Input() input: GetMyOrdersInput,
+    @Ctx() ctx: ShopAuthorizedContext
+  ) {
+    return this.microserviceClient.send('shopOrder.getMyOrders', {
+      memberId: ctx.member.id,
+      ...input,
+    });
   }
 }

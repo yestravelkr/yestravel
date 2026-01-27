@@ -18,10 +18,11 @@ export class HotelOrderEntity extends OrderEntity {
   /**
    * TmpOrderRawData에서 HotelOrderEntity 인스턴스 생성
    */
-  static fromHotel(raw: TmpOrderRawData): HotelOrderEntity {
+  static fromHotel(raw: TmpOrderRawData, memberId: number): HotelOrderEntity {
     const order = new HotelOrderEntity();
 
     order.type = ProductTypeEnum.HOTEL;
+    order.memberId = memberId;
     order.customerName = raw.customerName;
     order.customerPhone = raw.customerPhone;
     order.productId = raw.productId;

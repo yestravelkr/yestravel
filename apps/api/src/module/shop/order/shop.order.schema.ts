@@ -89,3 +89,71 @@ export const getOrderDetailOutputSchema = z.object({
     paymentMethod: z.string(),
   }),
 });
+
+// getMyOrders - 내 주문내역 조회
+export const getMyOrdersInputSchema = z.object({
+  offset: z.number().optional().default(0),
+  limit: z.number().optional().default(20),
+});
+
+/** 주문 목록 아이템 - 공통 필드 */
+const orderListItemBaseSchema = z.object({
+  orderId: z.number(),
+  orderNumber: z.string(),
+  orderDate: z.string(),
+  status: z.string(),
+  statusDescription: z.string().nullish(),
+  totalAmount: z.number(),
+  /** 상품 상세 페이지 이동용 */
+  influencerSlug: z.string(),
+  saleId: z.number(),
+});
+
+/** 숙박 주문 목록 아이템 */
+const hotelOrderListItemSchema = orderListItemBaseSchema.extend({
+  type: z.literal('HOTEL'),
+  accommodation: z.object({
+    thumbnail: z.string().nullish(),
+    hotelName: z.string(),
+    roomName: z.string(),
+    optionName: z.string(),
+  }),
+  checkIn: z.object({
+    date: z.string(),
+    time: z.string(),
+  }),
+  checkOut: z.object({
+    date: z.string(),
+    time: z.string(),
+  }),
+});
+
+/** 배송 주문 목록 아이템 */
+const deliveryOrderListItemSchema = orderListItemBaseSchema.extend({
+  type: z.literal('DELIVERY'),
+  products: z.array(
+    z.object({
+      thumbnail: z.string().nullish(),
+      name: z.string(),
+      option: z.string(),
+      price: z.number(),
+      quantity: z.number(),
+    })
+  ),
+});
+
+/** 주문 목록 아이템 (숙박 | 배송) */
+export const orderListItemSchema = z.discriminatedUnion('type', [
+  hotelOrderListItemSchema,
+  deliveryOrderListItemSchema,
+]);
+
+export type OrderListItem = z.infer<typeof orderListItemSchema>;
+export type HotelOrderListItem = z.infer<typeof hotelOrderListItemSchema>;
+export type DeliveryOrderListItem = z.infer<typeof deliveryOrderListItemSchema>;
+
+export const getMyOrdersOutputSchema = z.object({
+  orders: z.array(orderListItemSchema),
+  total: z.number(),
+  hasMore: z.boolean(),
+});

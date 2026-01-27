@@ -19,7 +19,7 @@ export class ShopPaymentController {
   @MessagePattern('shopPayment.complete')
   @Transactional
   async complete(
-    data: ShopPaymentCompleteInput
+    data: ShopPaymentCompleteInput & { memberId: number }
   ): Promise<ShopPaymentCompleteOutput> {
     const result = await this.shopPaymentService.handlePaymentComplete(data);
     return shopPaymentCompleteOutputSchema.parse(result);
