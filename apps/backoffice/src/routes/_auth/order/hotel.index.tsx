@@ -19,6 +19,7 @@ import {
 import { MajorPageLayout } from '@/components/layout';
 import {
   ListPageLayout,
+  openConfirmModal,
   Pagination,
   StatusTabs,
   Table,
@@ -66,7 +67,7 @@ const ORDER_STATUS_LABELS: Record<OrderStatusTab, string> = {
 };
 
 /** 알림 표시가 필요한 상태 (빨간 점) */
-const ALERT_STATUSES: OrderStatusTab[] = ['PAID', 'PENDING'];
+const ALERT_STATUSES: OrderStatusTab[] = ['PAID'];
 
 /** 기간 타입 옵션 */
 const PERIOD_TYPE_OPTIONS = [
@@ -87,7 +88,6 @@ const PERIOD_PRESET_OPTIONS = [
 
 /** 주문 상태 옵션 (숙박용) */
 const ORDER_STATUS_OPTIONS = [
-  { value: 'PENDING', label: '결제대기' },
   { value: 'PAID', label: '결제완료' },
   { value: 'PENDING_RESERVATION', label: '예약대기' },
   { value: 'RESERVATION_CONFIRMED', label: '예약확정' },
@@ -158,73 +158,16 @@ const columnHelper = createColumnHelper<HotelOrder>();
 const formatPrice = (amount: number) =>
   new Intl.NumberFormat('ko-KR').format(amount) + '원';
 
-const columns = [
-  columnHelper.accessor('orderNumber', {
-    header: '주문번호',
-    size: 100,
-  }),
-  columnHelper.accessor('status', {
-    header: '주문상태',
-    cell: (info) => ORDER_STATUS_LABELS[info.getValue()],
-    size: 90,
-  }),
-  columnHelper.accessor('createdAt', {
-    header: '주문일시',
-    cell: (info) => dayjs(info.getValue()).format('YY/MM/DD HH:mm'),
-    size: 120,
-  }),
-  columnHelper.accessor('campaignName', {
-    header: '캠페인',
-    size: 100,
-  }),
-  columnHelper.accessor('influencerName', {
-    header: '인플루언서',
-    size: 100,
-  }),
-  columnHelper.accessor('productName', {
-    header: '상품',
-    size: 120,
-  }),
-  columnHelper.accessor('hotelOptionName', {
-    header: '옵션',
-    cell: (info) => info.getValue() || '-',
-    size: 80,
-  }),
-  columnHelper.display({
-    id: 'usageDate',
-    header: '이용일',
-    cell: (info) => {
-      const checkIn = info.row.original.checkInDate;
-      const checkOut = info.row.original.checkOutDate;
-      if (!checkIn || !checkOut) return '-';
-      return `${checkIn} ~ ${checkOut}`;
-    },
-    size: 140,
-  }),
-  columnHelper.accessor('totalAmount', {
-    header: '결제금액',
-    cell: (info) => formatPrice(info.getValue()),
-    size: 100,
-  }),
-  columnHelper.accessor('customerName', {
-    header: '구매자',
-    size: 80,
-  }),
-  columnHelper.accessor('customerPhone', {
-    header: '구매자 연락처',
-    size: 130,
-  }),
-  columnHelper.display({
-    id: 'actions',
-    header: '',
-    cell: () => (
-      <Button kind="neutral" variant="solid" size="small">
-        상세보기
-      </Button>
-    ),
-    size: 100,
-  }),
-];
+/** 상태별 액션 버튼 정보 */
+const STATUS_ACTION_CONFIG: Partial<
+  Record<OrderStatus, { label: string; nextStatus: OrderStatus }>
+> = {
+  PAID: { label: '주문확인', nextStatus: 'PENDING_RESERVATION' },
+  PENDING_RESERVATION: {
+    label: '예약확정',
+    nextStatus: 'RESERVATION_CONFIRMED',
+  },
+};
 
 function HotelOrderListPage() {
   const searchParams = Route.useSearch();
@@ -274,6 +217,119 @@ function HotelOrderListPage() {
 
   const [filterOptions] =
     trpc.backofficeOrder.getFilterOptions.useSuspenseQuery();
+
+  const trpcUtils = trpc.useUtils();
+  const updateStatusMutation = trpc.backofficeOrder.updateStatus.useMutation({
+    onSuccess: () => {
+      trpcUtils.backofficeOrder.findAll.invalidate();
+      trpcUtils.backofficeOrder.getStatusCounts.invalidate();
+      toast.success('주문 상태가 변경되었습니다.');
+    },
+    onError: (error) => {
+      toast.error(error.message || '상태 변경에 실패했습니다.');
+    },
+  });
+
+  /** 상태 변경 버튼 클릭 핸들러 */
+  const handleStatusChange = async (
+    order: HotelOrder,
+    nextStatus: OrderStatus,
+  ) => {
+    const confirmed = await openConfirmModal({
+      title: `${ORDER_STATUS_LABELS[nextStatus]} 상태로 변경됩니다.`,
+    });
+
+    if (confirmed) {
+      updateStatusMutation.mutate({
+        orderId: order.id,
+        status: nextStatus,
+      });
+    }
+  };
+
+  /** 테이블 컬럼 정의 (컴포넌트 내부에서 핸들러 참조) */
+  const columns = [
+    columnHelper.accessor('orderNumber', {
+      header: '주문번호',
+      size: 100,
+    }),
+    columnHelper.accessor('status', {
+      header: '주문상태',
+      cell: (info) => ORDER_STATUS_LABELS[info.getValue()],
+      size: 90,
+    }),
+    columnHelper.accessor('createdAt', {
+      header: '주문일시',
+      cell: (info) => dayjs(info.getValue()).format('YY/MM/DD HH:mm'),
+      size: 120,
+    }),
+    columnHelper.accessor('campaignName', {
+      header: '캠페인',
+      size: 100,
+    }),
+    columnHelper.accessor('influencerName', {
+      header: '인플루언서',
+      size: 160,
+    }),
+    columnHelper.accessor('productName', {
+      header: '상품',
+      size: 120,
+    }),
+    columnHelper.accessor('hotelOptionName', {
+      header: '옵션',
+      cell: (info) => info.getValue() || '-',
+      size: 80,
+    }),
+    columnHelper.display({
+      id: 'usageDate',
+      header: '이용일',
+      cell: (info) => {
+        const checkIn = info.row.original.checkInDate;
+        const checkOut = info.row.original.checkOutDate;
+        if (!checkIn || !checkOut) return '-';
+        return `${checkIn} ~ ${checkOut}`;
+      },
+      size: 140,
+    }),
+    columnHelper.accessor('totalAmount', {
+      header: '결제금액',
+      cell: (info) => formatPrice(info.getValue()),
+      size: 100,
+    }),
+    columnHelper.accessor('customerName', {
+      header: '구매자',
+      size: 80,
+    }),
+    columnHelper.accessor('customerPhone', {
+      header: '구매자 연락처',
+      size: 130,
+    }),
+    columnHelper.display({
+      id: 'actions',
+      header: '',
+      cell: (info) => {
+        const status = info.row.original.status;
+        const actionConfig = STATUS_ACTION_CONFIG[status];
+
+        if (!actionConfig) return null;
+
+        return (
+          <Button
+            kind="neutral"
+            variant="solid"
+            size="small"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleStatusChange(info.row.original, actionConfig.nextStatus);
+            }}
+          >
+            {actionConfig.label}
+          </Button>
+        );
+      },
+      size: 100,
+    }),
+  ];
 
   const orders = ordersData.data;
   const totalCount = ordersData.total;
@@ -378,7 +434,6 @@ function HotelOrderListPage() {
   // 상태 탭 목록 생성 (숙박용)
   const tabOrder: OrderStatusTab[] = [
     'ALL',
-    'PENDING',
     'PAID',
     'PENDING_RESERVATION',
     'RESERVATION_CONFIRMED',

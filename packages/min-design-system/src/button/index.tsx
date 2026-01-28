@@ -32,12 +32,18 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 function getColorStyles(
   kind: 'neutral' | 'primary' | 'muted' | 'critical',
   variant: 'solid' | 'outline' | 'ghost' | 'subtle' | 'glass',
-  disabled = false,
+  disabled = false
 ): string {
   if (disabled) {
-    return ['bg-[var(--bg-disabled)]', 'text-[var(--fg-disabled)]', 'border-[var(--bg-disabled)]'].join(' ');
+    return [
+      'bg-[var(--bg-disabled)]',
+      'text-[var(--fg-disabled)]',
+      'border-[var(--bg-disabled)]',
+    ].join(' ');
   }
-  let fgColor = '', bgColor = '', borderColor = '';
+  let fgColor = '',
+    bgColor = '',
+    borderColor = '';
   switch (kind) {
     case 'primary':
       fgColor = 'text-[var(--fg-primary)]';
@@ -45,9 +51,9 @@ function getColorStyles(
       borderColor = 'border-[var(--fg-primary)]';
       break;
     case 'muted':
-      fgColor = 'text-[var(--fg-muted)]';
-      bgColor = 'bg-[var(--bg-muted)]';
-      borderColor = 'border-[var(--bg-muted)]';
+      fgColor = 'text-[var(--fg-neutral)]';
+      bgColor = 'bg-[var(--bg-neutral)]';
+      borderColor = 'border-[var(--bg-neutral)]';
       break;
     case 'critical':
       fgColor = 'text-[var(--fg-critical)]';
@@ -63,16 +69,31 @@ function getColorStyles(
 
   switch (variant) {
     case 'outline':
-      return ['bg-[var(--bg-neutral-subtle)]', fgColor, 'border-[var(--stroke-neutral)]'].join(' ');
+      return [
+        'bg-[var(--bg-neutral-subtle)]',
+        fgColor,
+        'border-[var(--stroke-neutral)]',
+      ].join(' ');
     case 'subtle':
-      return ['bg-[var(--bg-neutral-subtle)]', fgColor, 'border-[var(--stroke-neutral)]'].join(' ');
+      return [
+        'bg-[var(--bg-neutral-subtle)]',
+        fgColor,
+        'border-[var(--stroke-neutral)]',
+      ].join(' ');
     case 'ghost':
       return ['bg-transparent', fgColor, 'border-transparent'].join(' ');
     case 'glass':
-      return ['bg-[var(--bg-neutral-glass)]', fgColor, 'border-[var(--bg-neutral-glass)]'].join(' ');
+      return [
+        'bg-[var(--bg-neutral-glass)]',
+        fgColor,
+        'border-[var(--bg-neutral-glass)]',
+      ].join(' ');
     case 'solid':
     default:
-      return [bgColor, 'text-[var(--fg-on-surface)]', borderColor].join(' ');
+      const textColor =
+        kind === 'muted' ? fgColor : 'text-[var(--fg-on-surface)]';
+      const solidBorder = kind === 'muted' ? 'border-transparent' : borderColor;
+      return [bgColor, textColor, solidBorder].join(' ');
   }
 }
 
@@ -103,10 +124,9 @@ export function Button({
   };
 
   const colorStyles = getColorStyles(kind, variant, disabled);
-  const baseStyles = 'inline-flex justify-center items-center transition-colors';
-  const disabledStyles = disabled
-    ? 'cursor-not-allowed'
-    : 'cursor-pointer';
+  const baseStyles =
+    'inline-flex justify-center items-center transition-colors';
+  const disabledStyles = disabled ? 'cursor-not-allowed' : 'cursor-pointer';
 
   return (
     <button
@@ -132,9 +152,7 @@ export function Button({
       )}
 
       <div className="px-1 flex justify-start items-start">
-        <div className="justify-start font-medium leading-snug">
-          {children}
-        </div>
+        <div className="justify-start font-medium leading-snug">{children}</div>
       </div>
 
       {trailingIcon && (

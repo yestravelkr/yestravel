@@ -11,6 +11,7 @@ export * from './brand/BrandForm';
 export * from './ui/FileUpload';
 export * from './layout';
 export * from './card';
+export * from './ConfirmModal';
 export * from './DeleteConfirmModal';
 export * from './SelectDropdown';
 export * from './ActionMenu';
