@@ -157,6 +157,24 @@ export const findByIdInputSchema = z.object({
 });
 
 /**
+ * 주문 상태 변경 Input Schema
+ */
+export const updateStatusInputSchema = z.object({
+  orderId: z.number().int().positive(),
+  status: orderStatusSchema,
+});
+
+/**
+ * 주문 상태 변경 Response Schema
+ */
+export const updateStatusResponseSchema = z.object({
+  success: z.boolean(),
+  orderId: z.number(),
+  previousStatus: orderStatusSchema,
+  newStatus: orderStatusSchema,
+});
+
+/**
  * 주문 상세 아이템 Schema (호텔 예약 정보)
  */
 export const orderDetailItemSchema = z.object({
