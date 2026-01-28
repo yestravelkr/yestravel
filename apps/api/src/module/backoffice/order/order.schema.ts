@@ -6,9 +6,18 @@ import { z } from 'zod';
 export const orderStatusSchema = z.enum([
   'PENDING',
   'PAID',
+  'PENDING_RESERVATION',
+  'RESERVATION_CONFIRMED',
   'COMPLETED',
+  'PREPARING_SHIPMENT',
+  'SHIPPING',
+  'DELIVERED',
+  'PURCHASE_CONFIRMED',
+  'CANCEL_REQUESTED',
   'CANCELLED',
-  'REFUNDED',
+  'RETURN_REQUESTED',
+  'RETURNING',
+  'RETURNED',
 ]);
 export const productTypeSchema = z.enum(['HOTEL', 'E-TICKET', 'DELIVERY']);
 export const periodFilterTypeSchema = z.enum([
@@ -89,9 +98,18 @@ export const statusCountsSchema = z.object({
   ALL: z.number(),
   PENDING: z.number(),
   PAID: z.number(),
+  PENDING_RESERVATION: z.number(),
+  RESERVATION_CONFIRMED: z.number(),
   COMPLETED: z.number(),
+  PREPARING_SHIPMENT: z.number(),
+  SHIPPING: z.number(),
+  DELIVERED: z.number(),
+  PURCHASE_CONFIRMED: z.number(),
+  CANCEL_REQUESTED: z.number(),
   CANCELLED: z.number(),
-  REFUNDED: z.number(),
+  RETURN_REQUESTED: z.number(),
+  RETURNING: z.number(),
+  RETURNED: z.number(),
 });
 
 /**

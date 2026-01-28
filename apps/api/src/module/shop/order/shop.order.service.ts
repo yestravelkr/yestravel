@@ -478,30 +478,24 @@ export class ShopOrderService {
 
   /**
    * 백엔드 주문 상태를 프론트엔드 상태로 매핑
+   * 새로운 14개 상태 체계에서는 1:1 매핑 (PENDING → PENDING_PAYMENT만 변환)
    */
   private mapOrderStatusToFrontend(status: OrderStatusEnumType): string {
-    const statusMap: Record<OrderStatusEnumType, string> = {
-      [OrderStatusEnum.PENDING]: 'PENDING_PAYMENT',
-      [OrderStatusEnum.PAID]: 'RESERVATION_CONFIRMED',
-      [OrderStatusEnum.COMPLETED]: 'COMPLETED',
-      [OrderStatusEnum.CANCELLED]: 'CANCELLED',
-      [OrderStatusEnum.REFUNDED]: 'CANCELLED',
-    };
-    return statusMap[status] ?? status;
+    // PENDING만 PENDING_PAYMENT로 변환 (프론트엔드 호환성)
+    if (status === OrderStatusEnum.PENDING) {
+      return 'PENDING_PAYMENT';
+    }
+    // 나머지는 그대로 반환
+    return status;
   }
 
   /**
    * 주문 상태에 대한 설명 텍스트 반환
+   * 현재는 모든 상태에 대해 null 반환 (필요시 상태별 설명 추가)
    */
-  private getStatusDescription(status: OrderStatusEnumType): string | null {
-    const descriptionMap: Record<OrderStatusEnumType, string | null> = {
-      [OrderStatusEnum.PENDING]: null,
-      [OrderStatusEnum.PAID]: null,
-      [OrderStatusEnum.COMPLETED]: null,
-      [OrderStatusEnum.CANCELLED]: null,
-      [OrderStatusEnum.REFUNDED]: null,
-    };
-    return descriptionMap[status] ?? null;
+  private getStatusDescription(_status: OrderStatusEnumType): string | null {
+    // 모든 상태에 대해 기본 설명 없음
+    return null;
   }
 
   /**

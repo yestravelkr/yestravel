@@ -5,8 +5,8 @@ import {
   ORDER_STATUS_ENUM_VALUE,
   OrderEntity,
   orderNumberParser,
-  type OrderStatusEnumType,
 } from '@src/module/backoffice/domain/order/order.entity';
+import { ORDER_STATUS_LABELS } from '@src/module/backoffice/domain/order/order-status';
 import type { HotelOrderOptionData } from '@src/module/backoffice/domain/order/hotel-order.entity';
 import type {
   FindAllOrdersInput,
@@ -19,15 +19,6 @@ import type {
   OrderDetailResponse,
 } from './order.dto';
 import type { Nullish } from '@src/types/utility.type';
-
-/** 주문 상태별 라벨 */
-const ORDER_STATUS_LABELS: Record<OrderStatusEnumType, string> = {
-  PENDING: '결제대기',
-  PAID: '결제완료',
-  COMPLETED: '이용완료',
-  CANCELLED: '취소',
-  REFUNDED: '환불',
-};
 
 @Injectable()
 export class OrderService {
@@ -189,9 +180,18 @@ export class OrderService {
       ALL: 0,
       PENDING: 0,
       PAID: 0,
+      PENDING_RESERVATION: 0,
+      RESERVATION_CONFIRMED: 0,
       COMPLETED: 0,
+      PREPARING_SHIPMENT: 0,
+      SHIPPING: 0,
+      DELIVERED: 0,
+      PURCHASE_CONFIRMED: 0,
+      CANCEL_REQUESTED: 0,
       CANCELLED: 0,
-      REFUNDED: 0,
+      RETURN_REQUESTED: 0,
+      RETURNING: 0,
+      RETURNED: 0,
     };
 
     // 결과 매핑
