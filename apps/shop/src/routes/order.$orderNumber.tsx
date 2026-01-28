@@ -82,7 +82,7 @@ function OrderDetailContent({ orderNumber }: { orderNumber: string }) {
   });
 
   const handleClose = () => {
-    navigate({ to: '/' });
+    navigate({ to: '/my-orders' });
   };
 
   const handleCancelRequest = () => {
