@@ -25,32 +25,14 @@ import {
   PRODUCT_TYPE_ENUM_VALUE,
   ProductTypeEnumType,
 } from '@src/module/backoffice/admin/admin.schema';
+import {
+  ORDER_STATUS_ENUM_VALUE,
+  OrderStatusEnum,
+  type OrderStatusEnumType,
+} from './order-status';
 
-/**
- * 주문 상태 Enum
- */
-export const ORDER_STATUS_ENUM_VALUE = [
-  'PENDING',
-  'PAID',
-  'COMPLETED',
-  'CANCELLED',
-  'REFUNDED',
-] as const;
-
-export type OrderStatusEnumType = (typeof ORDER_STATUS_ENUM_VALUE)[number];
-
-export const OrderStatusEnum = {
-  /** 결제 대기 */
-  PENDING: 'PENDING',
-  /** 결제 완료 */
-  PAID: 'PAID',
-  /** 이용 완료 */
-  COMPLETED: 'COMPLETED',
-  /** 취소 */
-  CANCELLED: 'CANCELLED',
-  /** 환불 */
-  REFUNDED: 'REFUNDED',
-} as const;
+// Re-export for backward compatibility
+export { ORDER_STATUS_ENUM_VALUE, OrderStatusEnum, type OrderStatusEnumType };
 
 const sqids = new Sqids({
   minLength: 8,
@@ -151,7 +133,7 @@ export class OrderEntity extends BaseEntity {
   @Column({
     name: 'status',
     type: 'varchar',
-    length: 20,
+    length: 30,
     default: OrderStatusEnum.PENDING,
   })
   status: OrderStatusEnumType;
