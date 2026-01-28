@@ -1,8 +1,6 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class RefactorProductInheritance1768531200001
-  implements MigrationInterface
-{
+export class RefactorProductInheritance1768531200001 implements MigrationInterface {
   name = 'RefactorProductInheritance1768531200001';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
