@@ -98,6 +98,9 @@
 | 프론트엔드 기술 스택 | `.claude/context/frontend/INDEX.md` |
 | 백엔드 기술 스택 | `.claude/context/backend/INDEX.md` |
 | 네이밍 규칙 | `.claude/context/conventions/naming.md` |
+| 캠페인 구조 | `.claude/context/domain/campaign.md` |
+| 호텔 주문 구조 | `.claude/context/domain/hotel-order.md` |
+| 결제/주문 구조 | `.claude/context/domain/payment-order.md` |
 
 ### Skills (방법/절차) - "이렇게 해라"
 
