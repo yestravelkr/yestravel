@@ -11,6 +11,8 @@ import type {
   paymentInfoSchema,
   memberInfoSchema,
   orderDetailResponseSchema,
+  updateStatusInputSchema,
+  updateStatusResponseSchema,
 } from './order.schema';
 
 // ===== Input DTOs =====
@@ -38,3 +40,7 @@ export type PaymentInfo = z.infer<typeof paymentInfoSchema>;
 export type MemberInfo = z.infer<typeof memberInfoSchema>;
 
 export type OrderDetailResponse = z.infer<typeof orderDetailResponseSchema>;
+
+export type UpdateStatusInput = z.infer<typeof updateStatusInputSchema>;
+
+export type UpdateStatusResponse = z.infer<typeof updateStatusResponseSchema>;
