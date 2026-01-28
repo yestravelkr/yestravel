@@ -58,8 +58,7 @@ interface BaseCreateProductTemplateInput {
 }
 
 // Hotel 생성 Input
-export interface CreateHotelTemplateInput
-  extends BaseCreateProductTemplateInput {
+export interface CreateHotelTemplateInput extends BaseCreateProductTemplateInput {
   type: 'HOTEL';
   baseCapacity: number;
   maxCapacity: number;
@@ -70,8 +69,7 @@ export interface CreateHotelTemplateInput
 }
 
 // Delivery 생성 Input
-export interface CreateDeliveryTemplateInput
-  extends BaseCreateProductTemplateInput {
+export interface CreateDeliveryTemplateInput extends BaseCreateProductTemplateInput {
   type: 'DELIVERY';
   useOptions?: boolean;
   delivery: {
@@ -90,8 +88,7 @@ export interface CreateDeliveryTemplateInput
 }
 
 // ETicket 생성 Input
-export interface CreateETicketTemplateInput
-  extends BaseCreateProductTemplateInput {
+export interface CreateETicketTemplateInput extends BaseCreateProductTemplateInput {
   type: 'E-TICKET';
   useOptions?: boolean;
 }

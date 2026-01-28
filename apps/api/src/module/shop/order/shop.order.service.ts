@@ -19,10 +19,7 @@ import {
   GetMyOrdersInput,
   GetMyOrdersOutput,
 } from './shop.order.dto';
-import {
-  OrderStatusEnumType,
-  OrderStatusEnum,
-} from '@src/module/backoffice/domain/order/order.entity';
+import { OrderStatusEnumType } from '@src/module/backoffice/domain/order/order.entity';
 import { CampaignInfluencerProductEntity } from '@src/module/backoffice/domain/campaign-influencer-product.entity';
 import { HotelOptionEntity } from '@src/module/backoffice/domain/product/hotel-option.entity';
 import { HotelSkuEntity } from '@src/module/backoffice/domain/product/hotel-sku.entity';

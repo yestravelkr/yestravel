@@ -1,8 +1,6 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class AlterProductCampaignIdNullable1731825200000
-  implements MigrationInterface
-{
+export class AlterProductCampaignIdNullable1731825200000 implements MigrationInterface {
   name = 'AlterProductCampaignIdNullable1731825200000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {

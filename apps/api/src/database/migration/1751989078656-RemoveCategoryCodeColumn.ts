@@ -1,8 +1,6 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class RemoveCategoryCodeColumn1751989078656
-  implements MigrationInterface
-{
+export class RemoveCategoryCodeColumn1751989078656 implements MigrationInterface {
   name = 'RemoveCategoryCodeColumn1751989078656';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
