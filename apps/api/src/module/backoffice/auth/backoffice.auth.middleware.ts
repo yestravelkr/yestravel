@@ -53,7 +53,6 @@ export class BackofficeAuthMiddleware implements TRPCMiddleware {
   }
 }
 
-export interface BackofficeAuthorizedContext
-  extends CreateExpressContextOptions {
+export interface BackofficeAuthorizedContext extends CreateExpressContextOptions {
   admin: AdminAuthPayload;
 }
