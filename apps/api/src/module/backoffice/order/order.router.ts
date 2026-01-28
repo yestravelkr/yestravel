@@ -1,7 +1,14 @@
 import { z } from 'zod';
 import { MicroserviceClient } from '@src/module/trpc/microserviceClient';
 import { BaseTrpcRouter } from '@src/module/trpc/baseTrpcRouter';
-import { Router, Query, Ctx, Input, UseMiddlewares } from 'nestjs-trpc';
+import {
+  Router,
+  Query,
+  Mutation,
+  Ctx,
+  Input,
+  UseMiddlewares,
+} from 'nestjs-trpc';
 import { BackofficeAuthMiddleware } from '@src/module/backoffice/auth/backoffice.auth.middleware';
 import type { BackofficeAuthorizedContext } from '@src/module/backoffice/auth/backoffice.auth.middleware';
 import {
@@ -12,6 +19,8 @@ import {
   filterOptionsResponseSchema,
   findByIdInputSchema,
   orderDetailResponseSchema,
+  updateStatusInputSchema,
+  updateStatusResponseSchema,
 } from './order.schema';
 
 @Router({ alias: 'backofficeOrder' })
@@ -65,5 +74,17 @@ export class OrderRouter extends BaseTrpcRouter {
     @Input() input: z.infer<typeof findByIdInputSchema>
   ) {
     return this.microserviceClient.send('backofficeOrder.findById', input);
+  }
+
+  @UseMiddlewares(BackofficeAuthMiddleware)
+  @Mutation({
+    input: updateStatusInputSchema,
+    output: updateStatusResponseSchema,
+  })
+  async updateStatus(
+    @Ctx() ctx: BackofficeAuthorizedContext,
+    @Input() input: z.infer<typeof updateStatusInputSchema>
+  ) {
+    return this.microserviceClient.send('backofficeOrder.updateStatus', input);
   }
 }
