@@ -4,7 +4,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { RepositoryProvider } from '@src/module/shared/transaction/repository.provider';
-import { JwtService } from '@nestjs/jwt';
+import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 import { ConfigProvider } from '@src/config';
 
 const jwtService = new JwtService();
@@ -49,11 +49,11 @@ export class BackofficeAuthService {
     const payload: AdminAuthPayload = { email: admin.email, id: admin.id };
     const accessToken = jwtService.sign(
       payload,
-      ConfigProvider.auth.jwt.backoffice.access
+      ConfigProvider.auth.jwt.backoffice.access as JwtSignOptions
     );
     const refreshToken = jwtService.sign(
       payload,
-      ConfigProvider.auth.jwt.backoffice.refresh
+      ConfigProvider.auth.jwt.backoffice.refresh as JwtSignOptions
     );
     return { accessToken, refreshToken };
   }
@@ -84,7 +84,7 @@ export class BackofficeAuthService {
     const newPayload: AdminAuthPayload = { email: admin.email, id: admin.id };
     const accessToken = jwtService.sign(
       newPayload,
-      ConfigProvider.auth.jwt.backoffice.access
+      ConfigProvider.auth.jwt.backoffice.access as JwtSignOptions
     );
 
     return { accessToken };

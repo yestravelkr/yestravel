@@ -3,7 +3,7 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
+import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 import { randomInt } from 'crypto';
 import { RepositoryProvider } from '@src/module/shared/transaction/repository.provider';
 import { ConfigProvider } from '@src/config';
@@ -268,11 +268,11 @@ export class ShopAuthService {
     return {
       accessToken: jwtService.sign(
         accessPayload,
-        ConfigProvider.auth.jwt.store.access
+        ConfigProvider.auth.jwt.store.access as JwtSignOptions
       ),
       refreshToken: jwtService.sign(
         refreshPayload,
-        ConfigProvider.auth.jwt.store.refresh
+        ConfigProvider.auth.jwt.store.refresh as JwtSignOptions
       ),
       member: {
         id: member.id,
