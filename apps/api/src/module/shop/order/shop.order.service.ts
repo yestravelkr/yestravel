@@ -478,14 +478,9 @@ export class ShopOrderService {
 
   /**
    * 백엔드 주문 상태를 프론트엔드 상태로 매핑
-   * 새로운 14개 상태 체계에서는 1:1 매핑 (PENDING → PENDING_PAYMENT만 변환)
+   * 새로운 14개 상태 체계에서는 1:1 매핑 (변환 없음)
    */
   private mapOrderStatusToFrontend(status: OrderStatusEnumType): string {
-    // PENDING만 PENDING_PAYMENT로 변환 (프론트엔드 호환성)
-    if (status === OrderStatusEnum.PENDING) {
-      return 'PENDING_PAYMENT';
-    }
-    // 나머지는 그대로 반환
     return status;
   }
 
