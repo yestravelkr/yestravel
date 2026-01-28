@@ -1,5 +1,7 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
+import { Transactional } from '@src/module/shared/transaction/transaction.decorator';
+import { TransactionService } from '@src/module/shared/transaction/transaction.service';
 import { OrderService } from './order.service';
 import type {
   FindAllOrdersInput,
@@ -9,16 +11,19 @@ import type {
   FilterOptionsResponse,
   FindByIdInput,
   OrderDetailResponse,
+  UpdateStatusInput,
+  UpdateStatusResponse,
 } from './order.dto';
 
 /**
- * OrderController - 주문 조회 컨트롤러
- *
- * Query만 있으므로 @Transactional 및 TransactionService 불필요
+ * OrderController - 주문 관리 컨트롤러
  */
 @Controller()
 export class OrderController {
-  constructor(private readonly orderService: OrderService) {}
+  constructor(
+    private readonly orderService: OrderService,
+    private readonly transactionService: TransactionService
+  ) {}
 
   @MessagePattern('backofficeOrder.findAll')
   async findAll(input: FindAllOrdersInput): Promise<OrderListResponse> {
@@ -38,5 +43,11 @@ export class OrderController {
   @MessagePattern('backofficeOrder.findById')
   async findById(input: FindByIdInput): Promise<OrderDetailResponse> {
     return await this.orderService.findById(input);
+  }
+
+  @Transactional
+  @MessagePattern('backofficeOrder.updateStatus')
+  async updateStatus(input: UpdateStatusInput): Promise<UpdateStatusResponse> {
+    return await this.orderService.updateStatus(input);
   }
 }

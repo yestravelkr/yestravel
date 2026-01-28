@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { Between, FindOptionsWhere, ILike, In } from 'typeorm';
 import { RepositoryProvider } from '@src/module/shared/transaction/repository.provider';
 import {
@@ -6,7 +10,10 @@ import {
   OrderEntity,
   orderNumberParser,
 } from '@src/module/backoffice/domain/order/order.entity';
-import { ORDER_STATUS_LABELS } from '@src/module/backoffice/domain/order/order-status';
+import {
+  ORDER_STATUS_LABELS,
+  canTransition,
+} from '@src/module/backoffice/domain/order/order-status';
 import type { HotelOrderOptionData } from '@src/module/backoffice/domain/order/hotel-order.entity';
 import type {
   FindAllOrdersInput,
@@ -17,6 +24,8 @@ import type {
   FilterOptionsResponse,
   FindByIdInput,
   OrderDetailResponse,
+  UpdateStatusInput,
+  UpdateStatusResponse,
 } from './order.dto';
 import type { Nullish } from '@src/types/utility.type';
 
@@ -270,6 +279,40 @@ export class OrderService {
       'customerName',
     ];
     return allowedColumns.includes(orderBy) ? orderBy : 'createdAt';
+  }
+
+  /**
+   * 주문 상태 변경
+   * 상태 전이 규칙에 따라 유효한 상태 변경만 허용
+   */
+  async updateStatus(input: UpdateStatusInput): Promise<UpdateStatusResponse> {
+    const { orderId, status: newStatus } = input;
+
+    const order = await this.repositoryProvider.OrderRepository.findOneOrFail({
+      where: { id: orderId },
+    }).catch(() => {
+      throw new NotFoundException(`주문을 찾을 수 없습니다. (id: ${orderId})`);
+    });
+
+    const previousStatus = order.status;
+
+    // 상태 전이 가능 여부 검증
+    if (!canTransition(order.type, previousStatus, newStatus)) {
+      throw new BadRequestException(
+        `${ORDER_STATUS_LABELS[previousStatus]} 상태에서 ${ORDER_STATUS_LABELS[newStatus]} 상태로 변경할 수 없습니다.`
+      );
+    }
+
+    // 상태 업데이트
+    order.status = newStatus;
+    await this.repositoryProvider.OrderRepository.save(order);
+
+    return {
+      success: true,
+      orderId: order.id,
+      previousStatus,
+      newStatus,
+    };
   }
 
   /**
