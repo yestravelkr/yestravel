@@ -45,8 +45,8 @@ export class OrderController {
     return await this.orderService.findById(input);
   }
 
-  @Transactional
   @MessagePattern('backofficeOrder.updateStatus')
+  @Transactional
   async updateStatus(input: UpdateStatusInput): Promise<UpdateStatusResponse> {
     return await this.orderService.updateStatus(input);
   }
