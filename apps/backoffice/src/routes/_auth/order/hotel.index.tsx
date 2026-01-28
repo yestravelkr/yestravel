@@ -26,8 +26,22 @@ import {
 } from '@/shared/components';
 import { trpc } from '@/shared/trpc';
 
-/** 주문 상태 (백엔드 5가지) */
-type OrderStatus = 'PENDING' | 'PAID' | 'COMPLETED' | 'CANCELLED' | 'REFUNDED';
+/** 주문 상태 (14개) */
+type OrderStatus =
+  | 'PENDING'
+  | 'PAID'
+  | 'PENDING_RESERVATION'
+  | 'RESERVATION_CONFIRMED'
+  | 'COMPLETED'
+  | 'PREPARING_SHIPMENT'
+  | 'SHIPPING'
+  | 'DELIVERED'
+  | 'PURCHASE_CONFIRMED'
+  | 'CANCEL_REQUESTED'
+  | 'CANCELLED'
+  | 'RETURN_REQUESTED'
+  | 'RETURNING'
+  | 'RETURNED';
 
 /** 상태 탭 타입 (전체 주문 포함) */
 type OrderStatusTab = 'ALL' | OrderStatus;
@@ -37,9 +51,18 @@ const ORDER_STATUS_LABELS: Record<OrderStatusTab, string> = {
   ALL: '전체 주문',
   PENDING: '결제대기',
   PAID: '결제완료',
+  PENDING_RESERVATION: '예약대기',
+  RESERVATION_CONFIRMED: '예약확정',
   COMPLETED: '이용완료',
-  CANCELLED: '취소',
-  REFUNDED: '환불',
+  PREPARING_SHIPMENT: '배송준비중',
+  SHIPPING: '배송중',
+  DELIVERED: '배송완료',
+  PURCHASE_CONFIRMED: '구매확정',
+  CANCEL_REQUESTED: '취소요청',
+  CANCELLED: '취소완료',
+  RETURN_REQUESTED: '반품요청',
+  RETURNING: '반품중',
+  RETURNED: '반품완료',
 };
 
 /** 알림 표시가 필요한 상태 (빨간 점) */
@@ -62,13 +85,15 @@ const PERIOD_PRESET_OPTIONS = [
   { value: 'custom', label: '직접입력' },
 ];
 
-/** 주문 상태 옵션 */
+/** 주문 상태 옵션 (숙박용) */
 const ORDER_STATUS_OPTIONS = [
   { value: 'PENDING', label: '결제대기' },
   { value: 'PAID', label: '결제완료' },
+  { value: 'PENDING_RESERVATION', label: '예약대기' },
+  { value: 'RESERVATION_CONFIRMED', label: '예약확정' },
   { value: 'COMPLETED', label: '이용완료' },
-  { value: 'CANCELLED', label: '취소' },
-  { value: 'REFUNDED', label: '환불' },
+  { value: 'CANCEL_REQUESTED', label: '취소요청' },
+  { value: 'CANCELLED', label: '취소완료' },
 ];
 
 interface HotelOrderSearchParams {
@@ -350,14 +375,16 @@ function HotelOrderListPage() {
     });
   };
 
-  // 상태 탭 목록 생성
+  // 상태 탭 목록 생성 (숙박용)
   const tabOrder: OrderStatusTab[] = [
     'ALL',
     'PENDING',
     'PAID',
+    'PENDING_RESERVATION',
+    'RESERVATION_CONFIRMED',
     'COMPLETED',
+    'CANCEL_REQUESTED',
     'CANCELLED',
-    'REFUNDED',
   ];
 
   const statusTabs = tabOrder.map((key) => ({
