@@ -54,11 +54,11 @@ import { formatPriceExact } from '@/shared';
 // Types
 // ============================================================================
 
-/** 주문 상태 타입 */
+/** 주문 상태 타입 (백엔드 order-status.ts와 동일) */
 export const ORDER_STATUS = {
   // 공통 상태
-  PENDING_PAYMENT: 'PENDING_PAYMENT',
-  PAYMENT_COMPLETED: 'PAYMENT_COMPLETED',
+  PENDING: 'PENDING',
+  PAID: 'PAID',
 
   // 숙박 전용 상태
   PENDING_RESERVATION: 'PENDING_RESERVATION',
@@ -78,7 +78,7 @@ export const ORDER_STATUS = {
   // 반품 상태 (배송 전용)
   RETURN_REQUESTED: 'RETURN_REQUESTED',
   RETURNING: 'RETURNING',
-  RETURN_COMPLETED: 'RETURN_COMPLETED',
+  RETURNED: 'RETURNED',
 } as const;
 
 export type OrderStatusType = (typeof ORDER_STATUS)[keyof typeof ORDER_STATUS];
@@ -86,8 +86,8 @@ export type OrderStatusType = (typeof ORDER_STATUS)[keyof typeof ORDER_STATUS];
 /** 상태별 라벨 */
 const STATUS_LABELS: Record<OrderStatusType, string> = {
   // 공통
-  PENDING_PAYMENT: '결제대기',
-  PAYMENT_COMPLETED: '결제완료',
+  PENDING: '결제대기',
+  PAID: '결제완료',
 
   // 숙박
   PENDING_RESERVATION: '예약대기',
@@ -107,7 +107,7 @@ const STATUS_LABELS: Record<OrderStatusType, string> = {
   // 반품
   RETURN_REQUESTED: '반품요청',
   RETURNING: '반품중',
-  RETURN_COMPLETED: '반품완료',
+  RETURNED: '반품완료',
 };
 
 // ============================================================================

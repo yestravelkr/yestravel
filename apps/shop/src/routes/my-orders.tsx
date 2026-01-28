@@ -32,8 +32,8 @@ export const Route = createFileRoute('/my-orders')({
  */
 function canCancelOrder(status: string): boolean {
   const cancelableStatuses = [
-    'PENDING_PAYMENT',
-    'PAYMENT_COMPLETED',
+    'PENDING',
+    'PAID',
     'PENDING_RESERVATION',
     'RESERVATION_CONFIRMED',
   ];
