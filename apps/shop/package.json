@@ -9,7 +9,9 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "prepare": "husky",
-    "test": "echo \"No test specified\" && exit 0"
+    "test": "echo \"No test specified\" && exit 0",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
   },
   "husky": {
     "hooks": {
@@ -43,7 +45,13 @@
     "zustand": "^5.0.3"
   },
   "devDependencies": {
+    "@chromatic-com/storybook": "^5.0.0",
     "@eslint/js": "^9.19.0",
+    "@storybook/addon-a11y": "^10.2.0",
+    "@storybook/addon-docs": "^10.2.0",
+    "@storybook/addon-vitest": "^10.2.0",
+    "@storybook/react-vite": "^10.2.0",
+    "@storybook/test": "^8.6.15",
     "@tanstack/router-devtools": "^1.125.3",
     "@tanstack/router-plugin": "^1.102.3",
     "@types/react": "^19.0.8",
@@ -51,6 +59,8 @@
     "@typescript-eslint/eslint-plugin": "^8.24.0",
     "@typescript-eslint/parser": "^8.24.0",
     "@vitejs/plugin-react": "^4.3.4",
+    "@vitest/browser-playwright": "4.0.10",
+    "@vitest/coverage-v8": "4.0.10",
     "@yestravelkr/api-types": "*",
     "eslint": "^9.20.0",
     "eslint-config-prettier": "^10.0.1",
@@ -60,10 +70,13 @@
     "eslint-plugin-react": "^7.37.4",
     "eslint-plugin-react-hooks": "^5.1.0",
     "eslint-plugin-react-refresh": "^0.4.18",
+    "eslint-plugin-storybook": "^10.2.0",
     "globals": "^15.14.0",
     "husky": "^9.1.7",
     "lint-staged": "^15.4.3",
+    "playwright": "^1.58.0",
     "prettier": "^3.5.0",
+    "storybook": "^10.2.0",
     "tailwindcss": "^4.1.17",
     "typescript": "~5.7.2",
     "typescript-eslint": "^8.22.0",

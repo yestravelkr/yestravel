@@ -11,6 +11,7 @@ import { BaseEntity } from '@src/module/backoffice/domain/base.entity';
 import { ProductEntity } from '@src/module/backoffice/domain/product/product.entity';
 import { InfluencerEntity } from '@src/module/backoffice/domain/influencer.entity';
 import { CampaignEntity } from '@src/module/backoffice/domain/campaign.entity';
+import { MemberEntity } from '@src/module/backoffice/domain/shop/member.entity';
 import { TransactionService } from '@src/module/shared/transaction/transaction.service';
 import { getEntityManager } from '@src/database/datasources';
 import { AddressEntity } from './address.entity';
@@ -101,14 +102,16 @@ export const orderNumberParser = {
 @Index('IDX_order_product_id', ['productId'])
 @Index('IDX_order_influencer_id', ['influencerId'])
 @Index('IDX_order_campaign_id', ['campaignId'])
+@Index('IDX_order_member_id', ['memberId'])
 export class OrderEntity extends BaseEntity {
   /**
    * TmpOrderRawData에서 OrderEntity 인스턴스 생성
    */
-  static from(raw: TmpOrderRawData): OrderEntity {
+  static from(raw: TmpOrderRawData, memberId: number): OrderEntity {
     const order = new OrderEntity();
 
     order.type = raw.orderOptionSnapshot.type;
+    order.memberId = memberId;
     order.customerName = raw.customerName;
     order.customerPhone = raw.customerPhone;
     order.productId = raw.productId;
@@ -212,6 +215,17 @@ export class OrderEntity extends BaseEntity {
 
   @OneToMany(() => PaymentEntity, payment => payment.order)
   payments: PaymentEntity[];
+
+  // ===== 회원 정보 (Shop 회원과 연결) =====
+
+  /** 회원 ID */
+  @Column()
+  memberId: number;
+
+  /** 회원 관계 */
+  @ManyToOne(() => MemberEntity)
+  @JoinColumn({ name: 'member_id' })
+  member: MemberEntity;
 }
 
 export const getOrderRepository = (

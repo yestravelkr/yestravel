@@ -4,6 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import dayjs from 'dayjs';
+import { In } from 'typeorm';
 import { RepositoryProvider } from '@src/module/shared/transaction/repository.provider';
 import { ProductTypeEnum } from '@src/module/backoffice/admin/admin.schema';
 import {
@@ -15,6 +16,8 @@ import {
   UpdateTmpOrderOutput,
   GetOrderDetailInput,
   GetOrderDetailOutput,
+  GetMyOrdersInput,
+  GetMyOrdersOutput,
 } from './shop.order.dto';
 import {
   OrderStatusEnumType,
@@ -488,6 +491,20 @@ export class ShopOrderService {
   }
 
   /**
+   * 주문 상태에 대한 설명 텍스트 반환
+   */
+  private getStatusDescription(status: OrderStatusEnumType): string | null {
+    const descriptionMap: Record<OrderStatusEnumType, string | null> = {
+      [OrderStatusEnum.PENDING]: null,
+      [OrderStatusEnum.PAID]: null,
+      [OrderStatusEnum.COMPLETED]: null,
+      [OrderStatusEnum.CANCELLED]: null,
+      [OrderStatusEnum.REFUNDED]: null,
+    };
+    return descriptionMap[status] ?? null;
+  }
+
+  /**
    * 결제 수단 추출 (pgRawData에서 실제 결제 수단 확인)
    * PortOne v2 API 응답 구조 기준
    */
@@ -538,5 +555,114 @@ export class ShopOrderService {
     }
 
     return '카드결제';
+  }
+
+  /**
+   * 내 주문내역 조회
+   */
+  async getMyOrders(
+    memberId: number,
+    input: GetMyOrdersInput
+  ): Promise<GetMyOrdersOutput> {
+    const { offset = 0, limit = 20 } = input;
+
+    const [orders, total] =
+      await this.repositoryProvider.OrderRepository.findAndCount({
+        where: { memberId },
+        relations: ['product', 'influencer'],
+        order: { createdAt: 'DESC' },
+        skip: offset,
+        take: limit,
+      });
+
+    if (orders.length === 0) {
+      return { orders: [], total: 0, hasMore: false };
+    }
+
+    // N+1 방지: 필요한 데이터를 한 번에 조회
+    const productIds = [...new Set(orders.map(o => o.productId))];
+    const hotelProductIds = orders
+      .filter(o => o.type === ProductTypeEnum.HOTEL)
+      .map(o => o.productId);
+
+    // 1. CampaignInfluencerProduct (saleId) 일괄 조회
+    const campaignInfluencerProducts =
+      await this.repositoryProvider.CampaignInfluencerProductRepository.find({
+        where: { productId: In(productIds) },
+        relations: ['campaignInfluencer'],
+      });
+
+    // saleId Map: `${productId}-${influencerId}-${campaignId}` -> saleId
+    const saleIdMap = new Map<string, number>();
+    for (const cip of campaignInfluencerProducts) {
+      const key = `${cip.productId}-${cip.campaignInfluencer.influencerId}-${cip.campaignInfluencer.campaignId}`;
+      saleIdMap.set(key, cip.id);
+    }
+
+    // 2. HotelProduct 일괄 조회
+    const hotelProducts =
+      hotelProductIds.length > 0
+        ? await this.repositoryProvider.HotelProductRepository.find({
+            where: { id: In(hotelProductIds), type: ProductTypeEnum.HOTEL },
+          })
+        : [];
+
+    const hotelProductMap = new Map(hotelProducts.map(hp => [hp.id, hp]));
+
+    // 3. 주문 목록 매핑
+    const orderItems = orders.map(order => {
+      const saleKey = `${order.productId}-${order.influencerId}-${order.campaignId}`;
+      const saleId = saleIdMap.get(saleKey) ?? 0;
+
+      const baseFields = {
+        orderId: order.id,
+        orderNumber: order.orderNumber,
+        orderDate: this.formatOrderDate(order.createdAt),
+        status: this.mapOrderStatusToFrontend(order.status),
+        statusDescription: this.getStatusDescription(order.status),
+        totalAmount: order.totalAmount,
+        influencerSlug: order.influencer?.slug ?? '',
+        saleId,
+      };
+
+      // 호텔 상품인 경우
+      if (order.type === ProductTypeEnum.HOTEL) {
+        const hotelProduct = hotelProductMap.get(order.productId);
+
+        return {
+          ...baseFields,
+          type: 'HOTEL' as const,
+          accommodation: {
+            thumbnail: hotelProduct?.thumbnailUrls[0] ?? null,
+            hotelName: hotelProduct?.name ?? '',
+            roomName: hotelProduct?.name ?? '',
+            optionName: order.orderOptionSnapshot.hotelOptionName,
+          },
+          checkIn: {
+            date: this.formatDateWithDay(order.orderOptionSnapshot.checkInDate),
+            time: this.formatTime(hotelProduct?.checkInTime ?? '15:00:00'),
+          },
+          checkOut: {
+            date: this.formatDateWithDay(
+              order.orderOptionSnapshot.checkOutDate
+            ),
+            time: this.formatTime(hotelProduct?.checkOutTime ?? '11:00:00'),
+          },
+        };
+      }
+
+      // 배송 상품인 경우 (TODO: 배송 상품 정보 조회 구현)
+      return {
+        ...baseFields,
+        type: 'DELIVERY' as const,
+        products: [],
+      };
+    });
+
+    return {
+      orders: orderItems,
+      total,
+      hasMore: offset + limit < total,
+    };
   }
 }

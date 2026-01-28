@@ -1,6 +1,5 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { Suspense } from 'react';
-import { toast } from 'sonner';
 import tw from 'tailwind-styled-components';
 
 import { openLoginBottomSheet } from '@/components/auth/LoginBottomSheet';
@@ -39,6 +38,7 @@ function SaleDetailPage() {
  * 상품 상세 콘텐츠
  */
 function SaleDetailContent({ saleId }: { saleId: number }) {
+  const navigate = useNavigate();
   const { isLoggedIn, logout } = useAuthStore();
   const [data] = trpc.shopProduct.getProductDetail.useSuspenseQuery({
     saleId,
@@ -52,7 +52,7 @@ function SaleDetailContent({ saleId }: { saleId: number }) {
   };
 
   const handleOrderHistory = () => {
-    toast.info('주문내역 페이지 준비 중입니다.');
+    navigate({ to: '/my-orders' });
   };
 
   const handleLogout = () => {

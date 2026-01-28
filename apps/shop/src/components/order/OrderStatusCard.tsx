@@ -77,6 +77,7 @@ export const ORDER_STATUS = {
 
   // 반품 상태 (배송 전용)
   RETURN_REQUESTED: 'RETURN_REQUESTED',
+  RETURNING: 'RETURNING',
   RETURN_COMPLETED: 'RETURN_COMPLETED',
 } as const;
 
@@ -105,6 +106,7 @@ const STATUS_LABELS: Record<OrderStatusType, string> = {
 
   // 반품
   RETURN_REQUESTED: '반품요청',
+  RETURNING: '반품중',
   RETURN_COMPLETED: '반품완료',
 };
 

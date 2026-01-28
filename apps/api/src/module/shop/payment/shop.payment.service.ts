@@ -39,18 +39,18 @@ export class ShopPaymentService {
   constructor(private readonly repositoryProvider: RepositoryProvider) {}
 
   async handlePaymentComplete(
-    data: ShopPaymentCompleteInput
+    data: ShopPaymentCompleteInput & { memberId: number }
   ): Promise<ShopPaymentCompleteOutput> {
     this.logger.log('Payment complete webhook received');
     this.logger.log(JSON.stringify(data, null, 2));
 
-    const { paymentId } = data;
+    const { paymentId, memberId } = data;
 
     // 1. TmpOrder 조회 (paymentId = orderNumber)
     const tmpOrder = await this.getTmpOrderByOrderNumber(paymentId);
 
     // 2. TmpOrder → Order 변환 (타입별로 적절한 엔티티 사용)
-    const order = this.createOrderFromTmpOrder(tmpOrder);
+    const order = this.createOrderFromTmpOrder(tmpOrder, memberId);
 
     // 3. Order 상태를 PAID로 업데이트 및 저장
     order.status = OrderStatusEnum.PAID;
@@ -114,15 +114,16 @@ export class ShopPaymentService {
    * TmpOrder → Order 변환 (타입별로 적절한 엔티티 사용)
    */
   private createOrderFromTmpOrder(
-    tmpOrder: Awaited<ReturnType<typeof this.getTmpOrderByOrderNumber>>
+    tmpOrder: Awaited<ReturnType<typeof this.getTmpOrderByOrderNumber>>,
+    memberId: number
   ): OrderEntity {
     switch (tmpOrder.type) {
       case ProductTypeEnum.HOTEL:
-        return HotelOrderEntity.fromHotel(tmpOrder.raw);
+        return HotelOrderEntity.fromHotel(tmpOrder.raw, memberId);
 
       case ProductTypeEnum.DELIVERY:
       case ProductTypeEnum['E-TICKET']:
-        return OrderEntity.from(tmpOrder.raw);
+        return OrderEntity.from(tmpOrder.raw, memberId);
 
       default:
         throw new BadRequestException(

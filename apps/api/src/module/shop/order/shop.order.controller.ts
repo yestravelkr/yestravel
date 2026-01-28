@@ -6,6 +6,7 @@ import {
   getTmpOrderOutputSchema,
   updateTmpOrderOutputSchema,
   getOrderDetailOutputSchema,
+  getMyOrdersOutputSchema,
 } from './shop.order.schema';
 import type {
   CreateHotelOrderInput,
@@ -16,6 +17,8 @@ import type {
   UpdateTmpOrderOutput,
   GetOrderDetailInput,
   GetOrderDetailOutput,
+  GetMyOrdersInput,
+  GetMyOrdersOutput,
 } from './shop.order.dto';
 
 @Controller()
@@ -50,5 +53,14 @@ export class ShopOrderController {
   ): Promise<GetOrderDetailOutput> {
     const result = await this.shopOrderService.getOrderDetail(input);
     return getOrderDetailOutputSchema.parse(result);
+  }
+
+  @MessagePattern('shopOrder.getMyOrders')
+  async getMyOrders(
+    input: GetMyOrdersInput & { memberId: number }
+  ): Promise<GetMyOrdersOutput> {
+    const { memberId, ...rest } = input;
+    const result = await this.shopOrderService.getMyOrders(memberId, rest);
+    return getMyOrdersOutputSchema.parse(result);
   }
 }
