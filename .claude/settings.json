@@ -13,16 +13,6 @@
           }
         ]
       }
-    ],
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": ".claude/hooks/generate-context-after-task.sh"
-          }
-        ]
-      }
     ]
   }
 }
