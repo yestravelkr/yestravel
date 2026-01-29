@@ -1,1 +1,1 @@
-{"root":["./src/index.ts","./src/hotel/hoteloptionselector.ts","./src/hotel/index.ts","./src/hotel/types.ts","./src/product/productoptionselector.ts","./src/product/productskuselector.ts","./src/product/index.ts","./src/product/types.ts"],"version":"5.9.3"}
+{"root":["./src/index.ts","./src/hotel/hoteloptionselector.ts","./src/hotel/index.ts","./src/hotel/types.ts","./src/product/productoptionselector.ts","./src/product/productskuselector.ts","./src/product/index.ts","./src/product/types.ts"],"version":"5.7.3"}
