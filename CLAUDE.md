@@ -10,6 +10,43 @@
 클라이언트 → tRPC Router → MicroserviceClient → EventBus → NestJS Controller → Service
 ```
 
+## Context 절약 원칙 (최우선)
+
+Main Agent의 Context Window는 제한적입니다. **Subagent가 할 수 있는 작업은 반드시 Subagent에 위임**하세요.
+
+### Subagent에 위임해야 하는 작업
+
+| 작업 | Agent | 이유 |
+|------|-------|------|
+| 코드베이스 탐색/검색 | `explore` | 파일 내용이 Main Context에 쌓이지 않음 |
+| 여러 파일 읽기 | `explore`, `context-collector` | 탐색 결과만 요약해서 받음 |
+| 패턴/구조 파악 | `context-collector` | 분석 결과만 받음 |
+| 복잡한 계획 수립 | `task-planner` | 계획 결과만 받음 |
+| 영향 분석 | `impact-analyzer` | 분석 결과만 받음 |
+| 코드 리뷰 | `code-reviewer` | 리뷰 결과만 받음 |
+| 테스트/빌드 검증 | `qa-tester` | 검증 결과만 받음 |
+
+### 코드 작성 위임 기준
+
+| 상황 | 처리 |
+|------|------|
+| 1~2개 파일 수정/생성 | Main Agent 직접 처리 |
+| 3개 이상 파일 수정/생성 | `code-writer` Agent에 위임 |
+| 여러 파일 대규모 리팩토링 | `code-writer` Agent에 위임 |
+
+### Main Agent가 직접 해야 하는 작업
+
+- 단일~소수 파일 수정 (Edit)
+- 단일~소수 파일 생성 (Write)
+- 단순 명령 실행 (Bash)
+- 사용자와 대화
+
+### 금지 사항
+
+- Main Agent에서 직접 Glob/Grep으로 여러 파일 탐색
+- Main Agent에서 직접 여러 파일 Read
+- Main Agent에서 복잡한 분석 수행
+
 ## 작업 워크플로우 (필수)
 
 모든 코드 작업은 아래 순서를 따릅니다:
