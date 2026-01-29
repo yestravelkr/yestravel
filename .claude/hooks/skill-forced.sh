@@ -184,6 +184,12 @@ Task(subagent_type="qa-tester", prompt="빌드와 lint를 실행해줘")
 | Agent | 모델 | 언제 사용 | 위임할 작업 |
 |-------|------|----------|------------|
 | git-manager | Haiku | 커밋/PR 생성 | Commit 메시지 작성, PR 생성 |
+| context-manager | Sonnet | Context 문서 정리 | 파일 분리, 토큰 최적화, 구조 개선 |
+
+**context-manager 사용 시점:**
+- "context 파일들 정리해줘" → `Task(subagent_type="context-manager", prompt="...")`
+- Context 문서가 너무 길 때 → 파일 분리 요청
+- 중복 내용 정리 필요 시
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 PART 3: 구현

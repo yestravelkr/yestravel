@@ -25,6 +25,7 @@ Main Agent의 Context Window는 제한적입니다. **Subagent가 할 수 있는
 | 영향 분석 | `impact-analyzer` | 분석 결과만 받음 |
 | 코드 리뷰 | `code-reviewer` | 리뷰 결과만 받음 |
 | 테스트/빌드 검증 | `qa-tester` | 검증 결과만 받음 |
+| Context 문서 정리 | `context-manager` | 파일 분리, 토큰 최적화 |
 
 ### 코드 작성 위임 기준
 

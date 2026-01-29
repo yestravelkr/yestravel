@@ -151,33 +151,23 @@ PHASE 5: Context 저장 - 작업 완료 후 필수
 
 ### Step 5.2: Context 저장 (YES인 경우)
 
-저장 위치:
+**context-manager Agent 사용:**
+```
+Task(subagent_type="context-manager", prompt="[저장할 내용]을 적절한 위치에 저장해줘")
+```
+
+context-manager가 처리하는 작업:
+- 적절한 저장 위치 결정 (domain/context/skills)
+- 기존 문서와 중복 확인
+- 파일이 커지면 자동 분리 (INDEX + detail 패턴)
+- frontmatter 및 템플릿 적용
+
+저장 위치 참고:
 | 유형 | 경로 |
 |------|------|
 | 도메인 지식 | `.claude/context/domain/{주제}.md` |
 | 개발 패턴 | `.claude/context/{카테고리}/{주제}.md` |
 | 개발 방법 | `.claude/skills/{skill-name}/{주제}.md` |
-
-템플릿:
-```markdown
----
-name: {kebab-case-name}
-description: {한 줄 설명}
-keywords: [키워드1, 키워드2]
-estimated_tokens: ~{예상 토큰}
----
-
-# {제목}
-
-## 요약
-{한 줄 요약}
-
-## 상세
-{상세 내용}
-
-## 관련 파일
-- `path/to/file.ts`
-```
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 예외 상황
