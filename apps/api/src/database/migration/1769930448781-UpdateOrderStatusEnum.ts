@@ -9,8 +9,8 @@ import { MigrationInterface, QueryRunner } from 'typeorm';
  *   - DELIVERY: REFUNDED → RETURNED
  * - 나머지 상태(PENDING, PAID, COMPLETED, CANCELLED)는 그대로 유지
  */
-export class UpdateOrderStatusEnum1770000000000 implements MigrationInterface {
-  name = 'UpdateOrderStatusEnum1770000000000';
+export class UpdateOrderStatusEnum1769930448781 implements MigrationInterface {
+  name = 'UpdateOrderStatusEnum1769930448781';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     // 1. status 컬럼 크기 확장 (20 → 30)
@@ -19,25 +19,26 @@ export class UpdateOrderStatusEnum1770000000000 implements MigrationInterface {
     `);
 
     // 2. REFUNDED 상태만 변환 (새 체계에서 삭제된 상태)
+    // type::text로 캐스팅하여 새 enum 값 사용 문제 회피
     // HOTEL: REFUNDED → CANCELLED
     await queryRunner.query(`
       UPDATE "order"
       SET status = 'CANCELLED'
-      WHERE status = 'REFUNDED' AND type = 'HOTEL'
+      WHERE status = 'REFUNDED' AND type::text = 'HOTEL'
     `);
 
     // DELIVERY: REFUNDED → RETURNED
     await queryRunner.query(`
       UPDATE "order"
       SET status = 'RETURNED'
-      WHERE status = 'REFUNDED' AND type = 'DELIVERY'
+      WHERE status = 'REFUNDED' AND type::text = 'DELIVERY'
     `);
 
     // E-TICKET: REFUNDED → CANCELLED (사용되지 않지만 안전하게)
     await queryRunner.query(`
       UPDATE "order"
       SET status = 'CANCELLED'
-      WHERE status = 'REFUNDED' AND type = 'E-TICKET'
+      WHERE status = 'REFUNDED' AND type::text = 'E-TICKET'
     `);
   }
 
@@ -47,7 +48,7 @@ export class UpdateOrderStatusEnum1770000000000 implements MigrationInterface {
     await queryRunner.query(`
       UPDATE "order"
       SET status = 'REFUNDED'
-      WHERE status = 'RETURNED' AND type = 'DELIVERY'
+      WHERE status = 'RETURNED' AND type::text = 'DELIVERY'
     `);
 
     // 새로운 상태들을 기존 상태로 변환 (롤백 시)

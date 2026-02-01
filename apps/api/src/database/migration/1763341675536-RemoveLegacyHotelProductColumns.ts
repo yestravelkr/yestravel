@@ -1,7 +1,7 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class RemoveLegacyHotelProductColumns1731825300000 implements MigrationInterface {
-  name = 'RemoveLegacyHotelProductColumns1731825300000';
+export class RemoveLegacyHotelProductColumns1763341675536 implements MigrationInterface {
+  name = 'RemoveLegacyHotelProductColumns1763341675536';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     // hotel_product 테이블의 레거시 컬럼 제거

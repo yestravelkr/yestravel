@@ -8,8 +8,8 @@ import { MigrationInterface, QueryRunner } from 'typeorm';
  *
  * PostgreSQL INHERITS 특성상 부모 테이블에만 추가하면 자식 테이블에 자동 상속됨
  */
-export class AddOriginalPrice1734900000000 implements MigrationInterface {
-  name = 'AddOriginalPrice1734900000000';
+export class AddOriginalPrice1766400000001 implements MigrationInterface {
+  name = 'AddOriginalPrice1766400000001';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     // ProductTemplate에 original_price, price 추가

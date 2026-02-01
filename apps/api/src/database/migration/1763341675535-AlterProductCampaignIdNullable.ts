@@ -1,7 +1,7 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class AlterProductCampaignIdNullable1731825200000 implements MigrationInterface {
-  name = 'AlterProductCampaignIdNullable1731825200000';
+export class AlterProductCampaignIdNullable1763341675535 implements MigrationInterface {
+  name = 'AlterProductCampaignIdNullable1763341675535';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     // product 테이블의 campaign_id를 nullable로 변경

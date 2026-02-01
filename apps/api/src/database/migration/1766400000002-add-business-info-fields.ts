@@ -1,7 +1,7 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class AddBusinessInfoFields1735200000000 implements MigrationInterface {
-  name = 'AddBusinessInfoFields1735200000000';
+export class AddBusinessInfoFields1766400000002 implements MigrationInterface {
+  name = 'AddBusinessInfoFields1766400000002';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     // brand 테이블에 address, mail_order_license_number 추가
