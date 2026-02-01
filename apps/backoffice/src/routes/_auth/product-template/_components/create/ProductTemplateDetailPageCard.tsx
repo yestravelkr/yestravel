@@ -1,8 +1,11 @@
+import { Suspense, lazy } from 'react';
 import { UseFormSetValue, UseFormWatch } from 'react-hook-form';
-import ReactQuill from 'react-quill-new';
-import 'react-quill-new/dist/quill.snow.css';
 
 import { FormCard, FormSection } from '@/shared/components/form/FormLayout';
+
+const CKEditorWrapper = lazy(
+  () => import('@/shared/components/editor/CKEditorWrapper'),
+);
 
 interface ProductTemplateDetailPageCardProps {
   /** React Hook Form setValue */
@@ -20,11 +23,17 @@ export function ProductTemplateDetailPageCard({
   return (
     <FormCard title="상세 페이지">
       <FormSection>
-        <ReactQuill
-          theme="snow"
-          value={detailContent}
-          onChange={(value) => setValue('detailContent', value)}
-        />
+        <Suspense
+          fallback={
+            <div className="h-64 animate-pulse rounded border bg-gray-100" />
+          }
+        >
+          <CKEditorWrapper
+            value={detailContent}
+            maxWidth={'400px'}
+            onChange={(value) => setValue('detailContent', value)}
+          />
+        </Suspense>
       </FormSection>
     </FormCard>
   );
