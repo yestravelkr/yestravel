@@ -29,9 +29,9 @@ export const periodFilterTypeSchema = z.enum([
 // ===== Input Schemas =====
 
 /**
- * 주문 필터 공통 Schema (상태별 카운트, 목록 조회에서 공유)
+ * 주문 필터 공통 Schema (상태별 카운트, 목록 조회, 엑셀 내보내기에서 공유)
  */
-const orderFilterSchema = z.object({
+export const orderFilterSchema = z.object({
   type: productTypeSchema.nullish(),
   status: orderStatusSchema.nullish(),
   periodFilterType: periodFilterTypeSchema.nullish(),
@@ -233,4 +233,20 @@ export const orderDetailResponseSchema = z.object({
 
   // 회원 정보
   member: memberInfoSchema,
+});
+
+// ===== 엑셀 내보내기 Schemas =====
+
+/**
+ * 엑셀 내보내기 Input Schema
+ */
+export const exportToExcelInputSchema = orderFilterSchema;
+
+/**
+ * 엑셀 내보내기 Response Schema
+ */
+export const exportToExcelResponseSchema = z.object({
+  downloadUrl: z.string(),
+  fileName: z.string(),
+  totalCount: z.number(),
 });

@@ -13,6 +13,8 @@ import type {
   orderDetailResponseSchema,
   updateStatusInputSchema,
   updateStatusResponseSchema,
+  exportToExcelInputSchema,
+  exportToExcelResponseSchema,
 } from './order.schema';
 
 // ===== Input DTOs =====
@@ -44,3 +46,7 @@ export type OrderDetailResponse = z.infer<typeof orderDetailResponseSchema>;
 export type UpdateStatusInput = z.infer<typeof updateStatusInputSchema>;
 
 export type UpdateStatusResponse = z.infer<typeof updateStatusResponseSchema>;
+
+export type ExportToExcelInput = z.infer<typeof exportToExcelInputSchema>;
+
+export type ExportToExcelResponse = z.infer<typeof exportToExcelResponseSchema>;

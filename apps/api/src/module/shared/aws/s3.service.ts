@@ -1,5 +1,9 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import {
+  S3Client,
+  PutObjectCommand,
+  GetObjectCommand,
+} from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { v4 as uuidv4 } from 'uuid';
 import { ConfigProvider } from '@src/config';
@@ -17,6 +21,18 @@ interface GeneratePresignedUrlParams {
   path: string; // 업로드 경로
   expiresIn?: number; // 만료 시간 (초)
   publicRead?: boolean; // public 읽기 권한 허용 여부
+}
+
+interface UploadBufferParams {
+  buffer: Buffer;
+  fileName: string; // 저장할 파일명 (확장자 포함)
+  path: string; // 업로드 경로
+  contentType: string; // MIME type
+}
+
+interface UploadBufferResult {
+  fileUrl: string;
+  fileKey: string;
 }
 
 @Injectable()
@@ -111,5 +127,57 @@ export class S3Service {
 
   getFileUrl(fileKey: string): string {
     return `https://${this.bucket}.s3.${this.region}.amazonaws.com/${fileKey}`;
+  }
+
+  /**
+   * Buffer를 S3에 직접 업로드
+   */
+  async uploadBuffer(params: UploadBufferParams): Promise<UploadBufferResult> {
+    const { buffer, fileName, path, contentType } = params;
+
+    // 경로 정리
+    const sanitizedPath = this.sanitizePath(path);
+
+    // S3 key 생성 (path/fileName)
+    const key = sanitizedPath ? `${sanitizedPath}/${fileName}` : fileName;
+
+    try {
+      const command = new PutObjectCommand({
+        Bucket: this.bucket,
+        Key: key,
+        Body: buffer,
+        ContentType: contentType,
+      });
+
+      await this.s3Client.send(command);
+
+      const fileUrl = `https://${this.bucket}.s3.${this.region}.amazonaws.com/${key}`;
+
+      return {
+        fileUrl,
+        fileKey: key,
+      };
+    } catch (error) {
+      throw new Error(`Failed to upload buffer to S3: ${error.message}`);
+    }
+  }
+
+  /**
+   * GetObject용 presigned URL 생성 (다운로드용)
+   */
+  async generateDownloadUrl(
+    fileKey: string,
+    expiresIn: number = 3600
+  ): Promise<string> {
+    try {
+      const command = new GetObjectCommand({
+        Bucket: this.bucket,
+        Key: fileKey,
+      });
+
+      return await getSignedUrl(this.s3Client, command, { expiresIn });
+    } catch (error) {
+      throw new Error(`Failed to generate download URL: ${error.message}`);
+    }
   }
 }

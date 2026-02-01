@@ -417,8 +417,28 @@ function HotelOrderListPage() {
     navigate({ search: { ...searchParams, ...newSearchParams } });
   };
 
+  const exportToExcelMutation = trpc.backofficeOrder.exportToExcel.useMutation({
+    onSuccess: (data) => {
+      // presigned URL로 다운로드 트리거
+      const link = document.createElement('a');
+      link.href = data.downloadUrl;
+      link.download = data.fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast.success(`${data.totalCount}건의 주문이 엑셀로 다운로드됩니다.`);
+    },
+    onError: (error) => {
+      toast.error(error.message || '엑셀 다운로드에 실패했습니다.');
+    },
+  });
+
   const handleExcelDownload = () => {
-    toast.success('엑셀 다운로드가 시작되었습니다.');
+    exportToExcelMutation.mutate({
+      ...filterParams,
+      status: statusFilter === 'ALL' ? undefined : statusFilter,
+    });
   };
 
   const handleStatusTabChange = (tab: OrderStatusTab) => {

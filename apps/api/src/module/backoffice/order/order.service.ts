@@ -4,7 +4,10 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { Between, FindOptionsWhere, ILike, In } from 'typeorm';
+import * as ExcelJS from 'exceljs';
+import dayjs from 'dayjs';
 import { RepositoryProvider } from '@src/module/shared/transaction/repository.provider';
+import { S3Service } from '@src/module/shared/aws/s3.service';
 import {
   ORDER_STATUS_ENUM_VALUE,
   OrderEntity,
@@ -26,12 +29,17 @@ import type {
   OrderDetailResponse,
   UpdateStatusInput,
   UpdateStatusResponse,
+  ExportToExcelInput,
+  ExportToExcelResponse,
 } from './order.dto';
 import type { Nullish } from '@src/types/utility.type';
 
 @Injectable()
 export class OrderService {
-  constructor(private readonly repositoryProvider: RepositoryProvider) {}
+  constructor(
+    private readonly repositoryProvider: RepositoryProvider,
+    private readonly s3Service: S3Service
+  ) {}
 
   /**
    * 주문 목록 조회 (필터링 + 페이지네이션)
@@ -381,6 +389,188 @@ export class OrderService {
         name: order.customerName,
         phone: order.customerPhone,
       },
+    };
+  }
+
+  /**
+   * 주문 데이터를 엑셀 파일로 내보내기
+   * - 필터 조건으로 전체 데이터 조회 (pagination 없이)
+   * - 엑셀 파일 생성 후 S3 업로드
+   * - presigned URL 반환
+   */
+  async exportToExcel(
+    input: ExportToExcelInput
+  ): Promise<ExportToExcelResponse> {
+    const {
+      type,
+      status,
+      periodFilterType,
+      startDate,
+      endDate,
+      campaignId,
+      influencerIds,
+      productId,
+      searchQuery,
+    } = input;
+
+    // Where 조건 생성
+    const baseWhere: FindOptionsWhere<OrderEntity> = {};
+
+    if (type) baseWhere.type = type;
+    if (status) baseWhere.status = status;
+    if (campaignId) baseWhere.campaignId = campaignId;
+    if (productId) baseWhere.productId = productId;
+    if (influencerIds && influencerIds.length > 0) {
+      baseWhere.influencerId = In(influencerIds);
+    }
+
+    // 기간 필터
+    if (startDate && endDate) {
+      const dateColumn = this.getDateColumn(periodFilterType);
+      (baseWhere as Record<string, unknown>)[dateColumn] = Between(
+        new Date(startDate),
+        new Date(endDate)
+      );
+    }
+
+    // 검색어 필터
+    let whereConditions: FindOptionsWhere<OrderEntity>[];
+    if (searchQuery) {
+      whereConditions = [
+        { ...baseWhere, customerName: ILike(`%${searchQuery}%`) },
+        { ...baseWhere, customerPhone: ILike(`%${searchQuery}%`) },
+      ];
+    } else {
+      whereConditions = [baseWhere];
+    }
+
+    // 전체 데이터 조회 (pagination 없이, payments 포함)
+    const orders = await this.repositoryProvider.OrderRepository.find({
+      where: whereConditions,
+      relations: ['product', 'campaign', 'influencer', 'payments'],
+      order: { createdAt: 'DESC' },
+    });
+
+    // 엑셀 워크북 생성
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('주문목록');
+
+    // 컬럼 정의 (27개)
+    worksheet.columns = [
+      { header: '주문번호', key: 'orderNumber', width: 15 },
+      { header: '타입', key: 'type', width: 10 },
+      { header: '주문상태', key: 'status', width: 12 },
+      { header: '주문일시', key: 'createdAt', width: 18 },
+      { header: '결제일시', key: 'paidAt', width: 18 },
+      { header: '캠페인', key: 'campaignName', width: 20 },
+      { header: '인플루언서', key: 'influencerName', width: 15 },
+      { header: '상품', key: 'productName', width: 25 },
+      { header: '옵션', key: 'optionName', width: 15 },
+      { header: '이용일', key: 'usageDate', width: 25 },
+      { header: '주문수량', key: 'orderQuantity', width: 10 },
+      { header: '환불수량', key: 'refundQuantity', width: 10 },
+      { header: '총 수량', key: 'totalQuantity', width: 10 },
+      { header: '상품금액', key: 'productAmount', width: 12 },
+      { header: '상품 결제금액', key: 'productPaidAmount', width: 14 },
+      { header: '총 배송비', key: 'shippingFee', width: 12 },
+      { header: '총 결제금액', key: 'totalPaidAmount', width: 14 },
+      { header: '상품 환불금액', key: 'productRefundAmount', width: 14 },
+      { header: '총 환불금액', key: 'totalRefundAmount', width: 14 },
+      { header: '최종 주문금액', key: 'finalAmount', width: 14 },
+      { header: '결제수단', key: 'paymentMethod', width: 12 },
+      { header: '요청사항', key: 'requestNote', width: 20 },
+      { header: 'imp_uid', key: 'impUid', width: 20 },
+      { header: '구매자', key: 'customerName', width: 10 },
+      { header: '구매자 연락처', key: 'customerPhone', width: 15 },
+      { header: '수령인 (이용자)', key: 'recipientName', width: 12 },
+      { header: '수령인 연락처', key: 'recipientPhone', width: 15 },
+    ];
+
+    // 헤더 스타일 적용
+    const headerRow = worksheet.getRow(1);
+    headerRow.font = { bold: true };
+    headerRow.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FFE0E0E0' },
+    };
+
+    // 데이터 추가
+    for (const order of orders) {
+      const orderOptionSnapshot =
+        order.orderOptionSnapshot as HotelOrderOptionData;
+      const latestPayment = order.payments?.[0];
+
+      // 환불금액 계산
+      const paidAmount = latestPayment?.paidAmount ?? order.totalAmount;
+      const nowAmount = latestPayment?.nowAmount ?? order.totalAmount;
+      const refundAmount = paidAmount - nowAmount;
+
+      // 이용일 (체크인 ~ 체크아웃)
+      const usageDate =
+        order.type === 'HOTEL' && orderOptionSnapshot?.checkInDate
+          ? `${orderOptionSnapshot.checkInDate} ~ ${orderOptionSnapshot.checkOutDate ?? ''}`
+          : '-';
+
+      worksheet.addRow({
+        orderNumber: orderNumberParser.encode([order.id], order.createdAt),
+        type: order.type,
+        status: ORDER_STATUS_LABELS[order.status],
+        createdAt: dayjs(order.createdAt).format('YYYY-MM-DD HH:mm'),
+        paidAt: latestPayment?.paidAt
+          ? dayjs(latestPayment.paidAt).format('YYYY-MM-DD HH:mm')
+          : '-',
+        campaignName: order.campaign.title,
+        influencerName: order.influencer.name,
+        productName: order.product.name,
+        optionName:
+          order.type === 'HOTEL'
+            ? (orderOptionSnapshot?.hotelOptionName ?? '-')
+            : '-',
+        usageDate,
+        orderQuantity: '-', // 호텔은 수량 개념 없음
+        refundQuantity: '-',
+        totalQuantity: '-',
+        productAmount: order.product.price,
+        productPaidAmount: order.totalAmount,
+        shippingFee: '-', // 호텔은 배송비 없음
+        totalPaidAmount: order.totalAmount,
+        productRefundAmount: refundAmount > 0 ? refundAmount : '-',
+        totalRefundAmount: refundAmount > 0 ? refundAmount : '-',
+        finalAmount: nowAmount,
+        paymentMethod: latestPayment?.pgProvider ?? '-',
+        requestNote: '-', // 스키마에 없음
+        impUid: latestPayment?.impUid ?? '-',
+        customerName: order.customerName,
+        customerPhone: order.customerPhone,
+        recipientName: order.customerName, // 호텔은 구매자=이용자
+        recipientPhone: order.customerPhone,
+      });
+    }
+
+    // 버퍼로 변환
+    const buffer = await workbook.xlsx.writeBuffer();
+
+    // 파일명 생성 (타임스탬프 포함)
+    const timestamp = dayjs().format('YYYYMMDD_HHmmss');
+    const fileName = `orders_${timestamp}.xlsx`;
+
+    // S3 업로드
+    const { fileKey } = await this.s3Service.uploadBuffer({
+      buffer: Buffer.from(buffer),
+      fileName,
+      path: 'exports/orders',
+      contentType:
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
+
+    // presigned URL 생성 (1시간 유효)
+    const downloadUrl = await this.s3Service.generateDownloadUrl(fileKey, 3600);
+
+    return {
+      downloadUrl,
+      fileName,
+      totalCount: orders.length,
     };
   }
 }
