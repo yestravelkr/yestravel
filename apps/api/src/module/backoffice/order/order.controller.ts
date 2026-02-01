@@ -13,6 +13,8 @@ import type {
   OrderDetailResponse,
   UpdateStatusInput,
   UpdateStatusResponse,
+  ExportToExcelInput,
+  ExportToExcelResponse,
 } from './order.dto';
 
 /**
@@ -49,5 +51,12 @@ export class OrderController {
   @Transactional
   async updateStatus(input: UpdateStatusInput): Promise<UpdateStatusResponse> {
     return await this.orderService.updateStatus(input);
+  }
+
+  @MessagePattern('backofficeOrder.exportToExcel')
+  async exportToExcel(
+    input: ExportToExcelInput
+  ): Promise<ExportToExcelResponse> {
+    return await this.orderService.exportToExcel(input);
   }
 }
