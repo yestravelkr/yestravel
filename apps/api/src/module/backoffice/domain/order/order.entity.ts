@@ -55,7 +55,7 @@ export const orderNumberParser = {
    */
   encode(ids: number[], date: Date): string {
     const envPrefix = ConfigProvider.envPrefix;
-    const dateStr = dayjs(date).format('YYYY-MM-DD');
+    const dateStr = dayjs(date).format('YYMMDD');
     const encoded = sqids.encode(ids);
     return `${envPrefix}ORD${dateStr}-${encoded}`;
   },
