@@ -35,28 +35,49 @@ import {
 @Router({ alias: 'shopOrder' })
 @Injectable()
 export class ShopOrderRouter extends BaseTrpcRouter {
+  @UseMiddlewares(ShopAuthMiddleware)
   @Mutation({
     input: createHotelOrderInputSchema,
     output: createHotelOrderOutputSchema,
   })
-  async createHotelOrder(@Input() input: CreateHotelOrderInput) {
-    return this.microserviceClient.send('shopOrder.createHotelOrder', input);
+  async createHotelOrder(
+    @Input() input: CreateHotelOrderInput,
+    @Ctx() ctx: ShopAuthorizedContext
+  ) {
+    return this.microserviceClient.send('shopOrder.createHotelOrder', {
+      memberId: ctx.member.id,
+      ...input,
+    });
   }
 
+  @UseMiddlewares(ShopAuthMiddleware)
   @Query({
     input: getTmpOrderInputSchema,
     output: getTmpOrderOutputSchema,
   })
-  async getTmpOrder(@Input() input: GetTmpOrderInput) {
-    return this.microserviceClient.send('shopOrder.getTmpOrder', input);
+  async getTmpOrder(
+    @Input() input: GetTmpOrderInput,
+    @Ctx() ctx: ShopAuthorizedContext
+  ) {
+    return this.microserviceClient.send('shopOrder.getTmpOrder', {
+      memberId: ctx.member.id,
+      ...input,
+    });
   }
 
+  @UseMiddlewares(ShopAuthMiddleware)
   @Mutation({
     input: updateTmpOrderInputSchema,
     output: updateTmpOrderOutputSchema,
   })
-  async updateTmpOrder(@Input() input: UpdateTmpOrderInput) {
-    return this.microserviceClient.send('shopOrder.updateTmpOrder', input);
+  async updateTmpOrder(
+    @Input() input: UpdateTmpOrderInput,
+    @Ctx() ctx: ShopAuthorizedContext
+  ) {
+    return this.microserviceClient.send('shopOrder.updateTmpOrder', {
+      memberId: ctx.member.id,
+      ...input,
+    });
   }
 
   @Query({

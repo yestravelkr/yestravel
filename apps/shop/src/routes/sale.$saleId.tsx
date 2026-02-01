@@ -93,7 +93,7 @@ function SaleDetailContent({ saleId }: { saleId: number }) {
 
   return (
     <HeaderLayout
-      title={
+      left={
         <InfluencerProfile
           avatarUrl={data.influencer.thumbnail || '/default-profile.png'}
           name={data.influencer.name}

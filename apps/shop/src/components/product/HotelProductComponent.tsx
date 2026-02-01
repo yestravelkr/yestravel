@@ -20,6 +20,9 @@ import { ProductDetailTabs, type ProductDetailTab } from './ProductDetailTabs';
 import { ProductThumbnail } from './ProductThumbnail';
 import { ProductTitleSection } from './ProductTitleSection';
 
+import { openLoginBottomSheet } from '@/components/auth/LoginBottomSheet';
+import { useAuthStore } from '@/store/authStore';
+
 dayjs.locale('ko');
 
 /**
@@ -84,6 +87,7 @@ export function HotelProductComponent(props: HotelProductComponentProps) {
   }, [options.skus]);
 
   const navigate = useNavigate();
+  const { isLoggedIn } = useAuthStore();
 
   const [checkInDate, setCheckInDate] = useState<string>(initialCheckIn);
   const [checkOutDate, setCheckOutDate] = useState<string>(initialCheckOut);
@@ -91,7 +95,15 @@ export function HotelProductComponent(props: HotelProductComponentProps) {
   const [selectedTab, setSelectedTab] = useState<ProductDetailTab>('info');
 
   // 바텀시트 열기 (구매하기 버튼 클릭 시)
-  const handleOpenOptionSheet = () => {
+  const handleOpenOptionSheet = async () => {
+    // 비로그인 상태면 로그인 먼저 진행
+    if (!isLoggedIn) {
+      const loginResult = await openLoginBottomSheet();
+      if (!loginResult?.success) {
+        return; // 로그인 취소/실패 시 중단
+      }
+    }
+
     openHotelOptionBottomSheet({
       saleId,
       config: options,
