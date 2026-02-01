@@ -1,18 +1,17 @@
-## declare base image - node 20.13
+## declare base image - node 22.16
 FROM node:22.16 AS builder
 
 WORKDIR /app
-# Copy monorepo dependencies
-COPY package.json yarn.lock node_modules ./
-COPY apps/api/package.json ./apps/api/
 
-# Copy workspace packages (필수: yarn workspace 의존성 해결을 위해)
+# Copy monorepo dependencies
+COPY package.json yarn.lock ./
+COPY apps/api/package.json ./apps/api/
 COPY packages/option-selector/package.json ./packages/option-selector/
 
-# Github Action 에서 caching된 node_modules를 사용하기 위해 install하지 않음
+# Install all dependencies (including devDependencies for build)
 RUN yarn install --frozen-lockfile
 
-# Copy API source code
+# Copy source code
 COPY apps/api ./apps/api
 COPY packages/option-selector ./packages/option-selector
 
