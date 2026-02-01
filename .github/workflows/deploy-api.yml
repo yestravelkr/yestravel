@@ -91,22 +91,29 @@ jobs:
             --build-arg AWS_SECRET_ACCESS_KEY=$API_SECRET_ACCESS_KEY
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:${{ steps.vars.outputs.TAG_NAME }}
 
-      - name: Upload Dockerrun.aws.json
+      - name: Upload deployment bundle
         env:
-          DOCKER_RUN_FILE: ${{ steps.vars.outputs.TAG_NAME }}-YestravelAPI-Dockerrun.aws.json
+          BUNDLE_FILE: ${{ steps.vars.outputs.TAG_NAME }}-YestravelAPI.zip
         run: |
-          sed -e "s/<TAG>/${{ steps.vars.outputs.TAG_NAME }}/" ./apps/api/Dockerrun.aws.json > $DOCKER_RUN_FILE
-          aws s3 cp $DOCKER_RUN_FILE s3://$S3BUCKET/$DOCKER_RUN_FILE
+          # Dockerrun.aws.json에 태그 적용
+          sed -e "s/<TAG>/${{ steps.vars.outputs.TAG_NAME }}/" ./apps/api/Dockerrun.aws.json > Dockerrun.aws.json
+
+          # .ebextensions 폴더와 함께 zip 생성
+          mkdir -p .ebextensions
+          cp -r ./apps/api/.ebextensions/* .ebextensions/ 2>/dev/null || true
+          zip -r $BUNDLE_FILE Dockerrun.aws.json .ebextensions/
+
+          aws s3 cp $BUNDLE_FILE s3://$S3BUCKET/$BUNDLE_FILE
 
       - name: Create Elastic Beanstalk version
         env:
-          DOCKER_RUN_FILE: ${{ steps.vars.outputs.TAG_NAME }}-YestravelAPI-Dockerrun.aws.json
+          BUNDLE_FILE: ${{ steps.vars.outputs.TAG_NAME }}-YestravelAPI.zip
         run: |
           aws elasticbeanstalk create-application-version \
             --region ap-northeast-2 \
             --application-name $APP_NAME \
             --version-label ${{ steps.vars.outputs.TAG_NAME }} \
-            --source-bundle S3Bucket="$S3BUCKET",S3Key="$DOCKER_RUN_FILE"
+            --source-bundle S3Bucket="$S3BUCKET",S3Key="$BUNDLE_FILE"
 
   deploy:
     needs: build
