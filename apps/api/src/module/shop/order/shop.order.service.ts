@@ -2,6 +2,7 @@ import {
   Injectable,
   BadRequestException,
   NotFoundException,
+  ForbiddenException,
 } from '@nestjs/common';
 import dayjs from 'dayjs';
 import { In } from 'typeorm';
@@ -48,6 +49,7 @@ export class ShopOrderService {
   constructor(private readonly repositoryProvider: RepositoryProvider) {}
 
   async createHotelOrder(
+    memberId: number,
     input: CreateHotelOrderInput
   ): Promise<CreateHotelOrderOutput> {
     const { saleId, checkInDate, checkOutDate, optionId } = input;
@@ -100,6 +102,7 @@ export class ShopOrderService {
     };
 
     const tmpOrder = this.repositoryProvider.TmpOrderRepository.create({
+      memberId,
       type: ProductTypeEnum.HOTEL,
       raw,
     });
@@ -117,7 +120,10 @@ export class ShopOrderService {
   /**
    * 임시 주문 조회
    */
-  async getTmpOrder(input: GetTmpOrderInput): Promise<GetTmpOrderOutput> {
+  async getTmpOrder(
+    memberId: number,
+    input: GetTmpOrderInput
+  ): Promise<GetTmpOrderOutput> {
     const { orderNumber } = input;
     const [orderId] = orderNumberParser.decode(orderNumber);
 
@@ -135,6 +141,10 @@ export class ShopOrderService {
       throw new NotFoundException(
         `주문을 찾을 수 없습니다 (orderNumber: ${orderNumber})`
       );
+    }
+
+    if (tmpOrder.memberId !== memberId) {
+      throw new ForbiddenException('본인의 주문만 조회할 수 있습니다');
     }
 
     const hotelProduct =
@@ -165,6 +175,7 @@ export class ShopOrderService {
    * 임시 주문 정보 업데이트 (고객 정보)
    */
   async updateTmpOrder(
+    memberId: number,
     input: UpdateTmpOrderInput
   ): Promise<UpdateTmpOrderOutput> {
     const { orderNumber, customerName, customerPhone } = input;
@@ -184,6 +195,10 @@ export class ShopOrderService {
       throw new NotFoundException(
         `주문을 찾을 수 없습니다 (orderNumber: ${orderNumber})`
       );
+    }
+
+    if (tmpOrder.memberId !== memberId) {
+      throw new ForbiddenException('본인의 주문만 수정할 수 있습니다');
     }
 
     // raw 데이터 업데이트

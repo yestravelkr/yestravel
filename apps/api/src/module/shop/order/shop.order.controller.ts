@@ -27,23 +27,28 @@ export class ShopOrderController {
 
   @MessagePattern('shopOrder.createHotelOrder')
   async createHotelOrder(
-    input: CreateHotelOrderInput
+    input: CreateHotelOrderInput & { memberId: number }
   ): Promise<CreateHotelOrderOutput> {
-    const result = await this.shopOrderService.createHotelOrder(input);
+    const { memberId, ...rest } = input;
+    const result = await this.shopOrderService.createHotelOrder(memberId, rest);
     return createHotelOrderOutputSchema.parse(result);
   }
 
   @MessagePattern('shopOrder.getTmpOrder')
-  async getTmpOrder(input: GetTmpOrderInput): Promise<GetTmpOrderOutput> {
-    const result = await this.shopOrderService.getTmpOrder(input);
+  async getTmpOrder(
+    input: GetTmpOrderInput & { memberId: number }
+  ): Promise<GetTmpOrderOutput> {
+    const { memberId, ...rest } = input;
+    const result = await this.shopOrderService.getTmpOrder(memberId, rest);
     return getTmpOrderOutputSchema.parse(result);
   }
 
   @MessagePattern('shopOrder.updateTmpOrder')
   async updateTmpOrder(
-    input: UpdateTmpOrderInput
+    input: UpdateTmpOrderInput & { memberId: number }
   ): Promise<UpdateTmpOrderOutput> {
-    const result = await this.shopOrderService.updateTmpOrder(input);
+    const { memberId, ...rest } = input;
+    const result = await this.shopOrderService.updateTmpOrder(memberId, rest);
     return updateTmpOrderOutputSchema.parse(result);
   }
 
