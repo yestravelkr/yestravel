@@ -30,6 +30,7 @@ export function ProductTemplateDetailPageCard({
         >
           <CKEditorWrapper
             value={detailContent}
+            maxWidth={'400px'}
             onChange={(value) => setValue('detailContent', value)}
           />
         </Suspense>

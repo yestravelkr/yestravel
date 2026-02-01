@@ -2,7 +2,3 @@
 @import "@yestravelkr/min-design-system/app.css";
 
 @source "../../../packages/min-design-system/src/**/*.{ts,tsx}";
-
-.ql-container {
-  min-height: 670px;
-}

@@ -6,6 +6,7 @@ import { S3UploadAdapterPlugin } from './CKEditorUploadAdapter';
 interface CKEditorWrapperProps {
   value: string;
   onChange: (value: string) => void;
+  maxWidth?: string;
 }
 
 /**
@@ -17,19 +18,22 @@ interface CKEditorWrapperProps {
 export default function CKEditorWrapper({
   value,
   onChange,
+  maxWidth,
 }: CKEditorWrapperProps) {
   return (
-    <CKEditor
-      editor={ClassicEditor}
-      config={{
-        licenseKey: 'GPL',
-        extraPlugins: [S3UploadAdapterPlugin],
-      }}
-      data={value}
-      onBlur={(_, editor) => {
-        const data = editor.getData();
-        onChange(data);
-      }}
-    />
+    <div style={{ maxWidth: maxWidth ?? '100%', width: '100%', minWidth: 0 }}>
+      <CKEditor
+        editor={ClassicEditor}
+        config={{
+          licenseKey: 'GPL',
+          extraPlugins: [S3UploadAdapterPlugin],
+        }}
+        data={value}
+        onBlur={(_, editor) => {
+          const data = editor.getData();
+          onChange(data);
+        }}
+      />
+    </div>
   );
 }
