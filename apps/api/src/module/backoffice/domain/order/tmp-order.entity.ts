@@ -46,6 +46,10 @@ export interface TmpOrderRawData {
  */
 @Entity('tmp_order')
 export class TmpOrderEntity extends BaseEntity {
+  /** 주문 생성자 회원 ID */
+  @Column()
+  memberId: number;
+
   /** 상품 타입 (HOTEL, E-TICKET, DELIVERY) */
   @Column({
     type: 'enum',
