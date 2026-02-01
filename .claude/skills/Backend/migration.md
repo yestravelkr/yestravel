@@ -45,6 +45,26 @@ yarn migration:run      # 실행
 yarn migration:revert   # 되돌리기 (가장 최근 1개)
 ```
 
+## 네이밍 규칙
+
+| 항목 | 규칙 | 예시 |
+|------|------|------|
+| 테이블명 | snake_case | `tmp_order`, `hotel_template` |
+| 컬럼명 | snake_case | `member_id`, `created_at` |
+| 제약조건명 | PK_/FK_/UQ_/IDX_ 접두사 + snake_case | `PK_hotel_template`, `FK_order_member` |
+
+**컬럼명은 반드시 snake_case로 작성:**
+```typescript
+// ✅ 올바른 예
+await queryRunner.query(`ALTER TABLE tmp_order ADD COLUMN "member_id" integer NOT NULL`);
+
+// ❌ 잘못된 예 (camelCase 사용)
+await queryRunner.query(`ALTER TABLE tmp_order ADD COLUMN "memberId" integer NOT NULL`);
+```
+
+> TypeORM은 엔티티의 camelCase 프로퍼티를 자동으로 snake_case 컬럼명으로 변환합니다.
+> Migration에서 camelCase로 컬럼을 생성하면 엔티티와 매핑되지 않습니다.
+
 ## 금지 사항
 
 | 금지 | 이유 |
@@ -52,6 +72,7 @@ yarn migration:revert   # 되돌리기 (가장 최근 1개)
 | 수동으로 타임스탬프 생성 | 기존 migration과 순서 충돌 발생 |
 | 파일 직접 생성 | 타임스탬프 형식 오류 위험 |
 | 파일명 수동 수정 | 실행 순서 꼬임 발생 |
+| 컬럼명에 camelCase 사용 | TypeORM 엔티티 매핑 실패 |
 
 **왜 순서가 중요한가?**
 - TypeORM은 파일명의 타임스탬프 순서대로 migration 실행
