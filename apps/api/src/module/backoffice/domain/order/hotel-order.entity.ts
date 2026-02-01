@@ -67,6 +67,11 @@ export interface HotelOrderOptionData {
   hotelOptionName: string;
   /** 날짜별 가격 정보 (스냅샷) */
   priceByDate: Record<string, number>;
+  /** 날짜별 공급가/수수료 정보 (스냅샷) */
+  anotherPriceByDate?: Record<
+    string,
+    { supplyPrice: number; commission: number }
+  >;
 }
 
 export const getHotelOrderRepository = (

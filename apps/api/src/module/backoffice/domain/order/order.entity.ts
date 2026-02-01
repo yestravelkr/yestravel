@@ -12,6 +12,8 @@ import { ProductEntity } from '@src/module/backoffice/domain/product/product.ent
 import { InfluencerEntity } from '@src/module/backoffice/domain/influencer.entity';
 import { CampaignEntity } from '@src/module/backoffice/domain/campaign.entity';
 import { MemberEntity } from '@src/module/backoffice/domain/shop/member.entity';
+import { InfluencerSettlementEntity } from '@src/module/backoffice/domain/settlement/influencer-settlement.entity';
+import { BrandSettlementEntity } from '@src/module/backoffice/domain/settlement/brand-settlement.entity';
 import { TransactionService } from '@src/module/shared/transaction/transaction.service';
 import { getEntityManager } from '@src/database/datasources';
 import { AddressEntity } from './address.entity';
@@ -85,6 +87,8 @@ export const orderNumberParser = {
 @Index('IDX_order_influencer_id', ['influencerId'])
 @Index('IDX_order_campaign_id', ['campaignId'])
 @Index('IDX_order_member_id', ['memberId'])
+@Index('IDX_order_influencer_settlement_id', ['influencerSettlementId'])
+@Index('IDX_order_brand_settlement_id', ['brandSettlementId'])
 export class OrderEntity extends BaseEntity {
   /**
    * TmpOrderRawData에서 OrderEntity 인스턴스 생성
@@ -208,6 +212,26 @@ export class OrderEntity extends BaseEntity {
   @ManyToOne(() => MemberEntity)
   @JoinColumn({ name: 'member_id' })
   member: MemberEntity;
+
+  // ===== 정산 정보 =====
+
+  /** 인플루언서 정산 ID */
+  @Column({ name: 'influencer_settlement_id', nullable: true })
+  influencerSettlementId: number | null;
+
+  /** 인플루언서 정산 관계 */
+  @ManyToOne(() => InfluencerSettlementEntity, settlement => settlement.orders)
+  @JoinColumn({ name: 'influencer_settlement_id' })
+  influencerSettlement: InfluencerSettlementEntity | null;
+
+  /** 브랜드 정산 ID */
+  @Column({ name: 'brand_settlement_id', nullable: true })
+  brandSettlementId: number | null;
+
+  /** 브랜드 정산 관계 */
+  @ManyToOne(() => BrandSettlementEntity, settlement => settlement.orders)
+  @JoinColumn({ name: 'brand_settlement_id' })
+  brandSettlement: BrandSettlementEntity | null;
 }
 
 export const getOrderRepository = (

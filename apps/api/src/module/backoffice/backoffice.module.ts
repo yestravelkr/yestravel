@@ -8,6 +8,7 @@ import { ProductModule } from '@src/module/backoffice/product/product.module';
 import { CategoryModule } from '@src/module/backoffice/category/category.module';
 import { InfluencerModule } from '@src/module/backoffice/influencer/influencer.module';
 import { OrderModule } from '@src/module/backoffice/order/order.module';
+import { SettlementModule } from '@src/module/backoffice/settlement/settlement.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { OrderModule } from '@src/module/backoffice/order/order.module';
     CategoryModule,
     InfluencerModule,
     OrderModule,
+    SettlementModule,
   ],
   exports: [
     BackofficeAuthModule,
@@ -31,6 +33,7 @@ import { OrderModule } from '@src/module/backoffice/order/order.module';
     CategoryModule,
     InfluencerModule,
     OrderModule,
+    SettlementModule,
   ],
 })
 export class BackofficeModule {}

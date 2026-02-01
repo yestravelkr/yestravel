@@ -31,6 +31,8 @@ import { getMemberRepository } from '@src/module/backoffice/domain/shop/member.e
 import { getMemberAddressRepository } from '@src/module/backoffice/domain/shop/member-address.entity';
 import { getPhoneVerificationRepository } from '@src/module/backoffice/domain/shop/phone-verification.entity';
 import { getSocialAccountRepository } from '@src/module/backoffice/domain/shop/social-account.entity';
+import { getInfluencerSettlementRepository } from '@src/module/backoffice/domain/settlement/influencer-settlement.entity';
+import { getBrandSettlementRepository } from '@src/module/backoffice/domain/settlement/brand-settlement.entity';
 import { DataSource, EntityManager } from 'typeorm';
 import { getEntityManager } from '@src/database/datasources';
 
@@ -168,5 +170,13 @@ export class RepositoryProvider {
 
   get SocialAccountRepository() {
     return getSocialAccountRepository(this.transaction);
+  }
+
+  get InfluencerSettlementRepository() {
+    return getInfluencerSettlementRepository(this.transaction);
+  }
+
+  get BrandSettlementRepository() {
+    return getBrandSettlementRepository(this.transaction);
   }
 }

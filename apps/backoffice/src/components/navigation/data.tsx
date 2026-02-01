@@ -46,6 +46,15 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
+    title: '정산 관리',
+    items: [
+      {
+        title: '정산',
+        url: '/settlement',
+      },
+    ],
+  },
+  {
     title: '관리',
     items: [
       {

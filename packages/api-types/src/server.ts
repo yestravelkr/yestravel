@@ -2157,6 +2157,167 @@ const appRouter = t.router({
       success: z.boolean(),
       message: z.string(),
     })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
+  }),
+  backofficeSettlement: t.router({
+    findAll: publicProcedure.input(z.object({
+      status: z.enum(['PENDING', 'COMPLETED']).nullish(),
+      targetType: z.enum(['INFLUENCER', 'BRAND']).nullish(),
+      campaignId: z.number().int().positive().nullish(),
+      targetId: z.number().int().positive().nullish(),
+      periodYear: z.number().int().positive().nullish(),
+      periodMonth: z.number().int().min(1).max(12).nullish(),
+      page: z.number().int().min(1).default(1),
+      limit: z.number().int().positive().default(50),
+    }).nullish().default({})).output(z.object({
+      data: z.array(z.object({
+        id: z.number(),
+        targetType: z.enum(['INFLUENCER', 'BRAND']),
+        targetId: z.number(),
+        targetName: z.string(),
+        periodYear: z.number(),
+        periodMonth: z.number(),
+        status: z.enum(['PENDING', 'COMPLETED']),
+        scheduledAt: z.date(),
+        completedAt: z.date().nullish(),
+        totalSales: z.number(),
+        totalQuantity: z.number(),
+        totalAmount: z.number(),
+        campaignNames: z.array(z.string()),
+        createdAt: z.date(),
+      })),
+      total: z.number(),
+      page: z.number(),
+      limit: z.number(),
+      totalPages: z.number(),
+    })).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    findInfluencerSettlementById: publicProcedure.input(z.object({
+      id: z.number().int().positive(),
+    })).output(z.object({
+      id: z.number(),
+      influencerId: z.number(),
+      influencerName: z.string(),
+      periodYear: z.number(),
+      periodMonth: z.number(),
+      status: z.enum(['PENDING', 'COMPLETED']),
+      scheduledAt: z.date(),
+      completedAt: z.date().nullish(),
+      totalSales: z.number(),
+      totalQuantity: z.number(),
+      totalAmount: z.number(),
+      campaignGroups: z.array(z.object({
+        campaignId: z.number(),
+        campaignName: z.string(),
+        campaignPeriod: z.string(),
+        products: z.array(z.object({
+          productId: z.number(),
+          productName: z.string(),
+          optionName: z.string().nullish(),
+          quantity: z.number(),
+          sales: z.number(),
+          settlementAmount: z.number(),
+        })),
+        subtotalQuantity: z.number(),
+        subtotalSales: z.number(),
+        subtotalAmount: z.number(),
+      })),
+      bankAccount: z.object({
+        bankName: z.string().nullish(),
+        accountNumber: z.string().nullish(),
+        accountHolder: z.string().nullish(),
+      }),
+    })).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    findBrandSettlementById: publicProcedure.input(z.object({
+      id: z.number().int().positive(),
+    })).output(z.object({
+      id: z.number(),
+      brandId: z.number(),
+      brandName: z.string(),
+      periodYear: z.number(),
+      periodMonth: z.number(),
+      status: z.enum(['PENDING', 'COMPLETED']),
+      scheduledAt: z.date(),
+      completedAt: z.date().nullish(),
+      totalSales: z.number(),
+      totalQuantity: z.number(),
+      totalAmount: z.number(),
+      campaignGroups: z.array(z.object({
+        campaignId: z.number(),
+        campaignName: z.string(),
+        campaignPeriod: z.string(),
+        products: z.array(z.object({
+          productId: z.number(),
+          productName: z.string(),
+          optionName: z.string().nullish(),
+          quantity: z.number(),
+          sales: z.number(),
+          settlementAmount: z.number(),
+        })),
+        subtotalQuantity: z.number(),
+        subtotalSales: z.number(),
+        subtotalAmount: z.number(),
+      })),
+      bankAccount: z.object({
+        bankName: z.string().nullish(),
+        accountNumber: z.string().nullish(),
+        accountHolder: z.string().nullish(),
+      }),
+    })).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    getFilterOptions: publicProcedure.output(z.object({
+      campaigns: z.array(z.object({
+        id: z.number(),
+        name: z.string(),
+      })),
+      influencers: z.array(z.object({
+        id: z.number(),
+        name: z.string(),
+      })),
+      brands: z.array(z.object({
+        id: z.number(),
+        name: z.string(),
+      })),
+      periods: z.array(z.object({
+        year: z.number(),
+        month: z.number(),
+        label: z.string(),
+      })),
+    })).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    createInfluencerSettlement: publicProcedure.input(z.object({
+      influencerId: z.number().int().positive(),
+      periodYear: z.number().int().positive(),
+      periodMonth: z.number().int().min(1).max(12),
+      scheduledAt: z.string(),
+    })).output(z.object({
+      id: z.number(),
+      success: z.boolean(),
+    })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    createBrandSettlement: publicProcedure.input(z.object({
+      brandId: z.number().int().positive(),
+      periodYear: z.number().int().positive(),
+      periodMonth: z.number().int().min(1).max(12),
+      scheduledAt: z.string(),
+    })).output(z.object({
+      id: z.number(),
+      success: z.boolean(),
+    })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    completeInfluencerSettlements: publicProcedure.input(z.object({
+      ids: z.array(z.number().int().positive()),
+    })).output(z.object({
+      success: z.boolean(),
+      completedCount: z.number(),
+    })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    completeBrandSettlements: publicProcedure.input(z.object({
+      ids: z.array(z.number().int().positive()),
+    })).output(z.object({
+      success: z.boolean(),
+      completedCount: z.number(),
+    })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    exportToExcel: publicProcedure.input(z.object({
+      settlementId: z.number().int().positive(),
+      targetType: z.enum(['INFLUENCER', 'BRAND']),
+    })).output(z.object({
+      downloadUrl: z.string(),
+      fileName: z.string(),
+    })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
   })
 });
 export type AppRouter = typeof appRouter;
