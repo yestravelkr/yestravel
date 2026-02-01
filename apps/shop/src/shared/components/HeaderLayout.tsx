@@ -10,7 +10,7 @@ import tw from 'tailwind-styled-components';
 
 export interface HeaderLayoutProps {
   /** 헤더에 표시될 타이틀 (문자열 또는 커스텀 컴포넌트) */
-  title: ReactNode;
+  title?: ReactNode;
   /** 헤더 왼쪽에 표시될 아이콘 (뒤로가기 등) */
   left?: ReactNode;
   /** 헤더 오른쪽에 표시될 컴포넌트 (로그인 버튼 등) */
