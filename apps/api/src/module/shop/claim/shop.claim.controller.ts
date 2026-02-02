@@ -6,12 +6,15 @@ import { Transactional } from '@src/module/shared/transaction/transaction.decora
 import {
   createClaimOutputSchema,
   getClaimByOrderIdOutputSchema,
+  withdrawClaimOutputSchema,
 } from './shop.claim.schema';
 import type {
   CreateClaimInput,
   CreateClaimOutput,
   GetClaimByOrderIdInput,
   GetClaimByOrderIdOutput,
+  WithdrawClaimInput,
+  WithdrawClaimOutput,
 } from './shop.claim.dto';
 
 @Controller()
@@ -34,5 +37,12 @@ export class ShopClaimController {
   ): Promise<GetClaimByOrderIdOutput> {
     const result = await this.shopClaimService.findByOrderId(input);
     return getClaimByOrderIdOutputSchema.parse(result);
+  }
+
+  @MessagePattern('shopClaim.withdraw')
+  @Transactional
+  async withdraw(input: WithdrawClaimInput): Promise<WithdrawClaimOutput> {
+    const result = await this.shopClaimService.withdraw(input);
+    return withdrawClaimOutputSchema.parse(result);
   }
 }

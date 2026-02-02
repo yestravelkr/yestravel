@@ -13,10 +13,13 @@ import {
   createClaimOutputSchema,
   getClaimByOrderIdInputSchema,
   getClaimByOrderIdOutputSchema,
+  withdrawClaimInputSchema,
+  withdrawClaimOutputSchema,
 } from './shop.claim.schema';
 import type {
   CreateClaimInput,
   GetClaimByOrderIdInput,
+  WithdrawClaimInput,
 } from './shop.claim.dto';
 import {
   ShopAuthMiddleware,
@@ -57,6 +60,24 @@ export class ShopClaimRouter extends BaseTrpcRouter {
     @Ctx() ctx: ShopAuthorizedContext
   ) {
     return this.microserviceClient.send('shopClaim.findByOrderId', {
+      memberId: ctx.member.id,
+      ...input,
+    });
+  }
+
+  /**
+   * 취소 철회
+   */
+  @UseMiddlewares(ShopAuthMiddleware)
+  @Mutation({
+    input: withdrawClaimInputSchema,
+    output: withdrawClaimOutputSchema,
+  })
+  async withdraw(
+    @Input() input: Omit<WithdrawClaimInput, 'memberId'>,
+    @Ctx() ctx: ShopAuthorizedContext
+  ) {
+    return this.microserviceClient.send('shopClaim.withdraw', {
       memberId: ctx.member.id,
       ...input,
     });

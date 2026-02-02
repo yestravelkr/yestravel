@@ -12,6 +12,8 @@ import type {
   CreateClaimOutput,
   GetClaimByOrderIdInput,
   GetClaimByOrderIdOutput,
+  WithdrawClaimInput,
+  WithdrawClaimOutput,
 } from './shop.claim.dto';
 
 /** 취소 가능한 주문 상태 (HOTEL) */
@@ -170,6 +172,50 @@ export class ShopClaimService {
       originalAmount: claim.amount.original,
       refundAmount: claim.amount.refund,
       createdAt: claim.createdAt,
+    };
+  }
+
+  /**
+   * 취소 철회
+   * - REQUESTED 상태의 클레임만 철회 가능
+   * - 클레임 상태: REQUESTED → WITHDRAWN
+   * - 주문 상태: CANCEL_REQUESTED/RETURN_REQUESTED → previousOrderStatus로 복원
+   */
+  async withdraw(input: WithdrawClaimInput): Promise<WithdrawClaimOutput> {
+    const { orderId, memberId } = input;
+
+    // 1. 주문 권한 확인
+    const order = await this.repositoryProvider.OrderRepository.findOne({
+      where: { id: orderId, memberId },
+    });
+
+    if (!order) {
+      throw new NotFoundException('주문을 찾을 수 없습니다.');
+    }
+
+    // 2. REQUESTED 상태인 클레임 조회
+    const claim = await this.repositoryProvider.ClaimRepository.findOne({
+      where: { orderId, status: 'REQUESTED' },
+      order: { createdAt: 'DESC' },
+    });
+
+    if (!claim) {
+      throw new NotFoundException('철회할 취소 요청을 찾을 수 없습니다.');
+    }
+
+    // 3. 클레임 상태 업데이트: WITHDRAWN
+    claim.status = 'WITHDRAWN';
+    await this.repositoryProvider.ClaimRepository.save(claim);
+
+    // 4. 주문 상태 복원: previousOrderStatus
+    const previousStatus = claim.previousOrderStatus;
+    order.status = previousStatus;
+    await this.repositoryProvider.OrderRepository.save(order);
+
+    return {
+      success: true,
+      orderId,
+      newOrderStatus: previousStatus,
     };
   }
 

@@ -52,3 +52,15 @@ export const claimDetailSchema = z.object({
 });
 
 export const getClaimByOrderIdOutputSchema = claimDetailSchema.nullish();
+
+// ===== Withdraw Claim (취소 철회) =====
+
+export const withdrawClaimInputSchema = z.object({
+  orderId: z.number().int().positive(),
+});
+
+export const withdrawClaimOutputSchema = z.object({
+  success: z.boolean(),
+  orderId: z.number(),
+  newOrderStatus: z.string(),
+});

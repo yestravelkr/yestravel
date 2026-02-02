@@ -5,6 +5,8 @@ import type {
   getClaimByOrderIdInputSchema,
   getClaimByOrderIdOutputSchema,
   claimDetailSchema,
+  withdrawClaimInputSchema,
+  withdrawClaimOutputSchema,
 } from './shop.claim.schema';
 
 // ===== Create Claim =====
@@ -32,3 +34,11 @@ export type GetClaimByOrderIdOutput = z.infer<
 >;
 
 export type ClaimDetail = z.infer<typeof claimDetailSchema>;
+
+// ===== Withdraw Claim =====
+
+export type WithdrawClaimInput = z.infer<typeof withdrawClaimInputSchema> & {
+  memberId: number;
+};
+
+export type WithdrawClaimOutput = z.infer<typeof withdrawClaimOutputSchema>;

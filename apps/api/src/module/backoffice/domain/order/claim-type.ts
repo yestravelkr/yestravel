@@ -12,6 +12,7 @@ export const CLAIM_STATUS = [
   'APPROVED',
   'REJECTED',
   'COMPLETED',
+  'WITHDRAWN', // 철회 (고객이 취소 요청을 철회)
 ] as const;
 export type ClaimStatus = (typeof CLAIM_STATUS)[number];
 
@@ -32,6 +33,7 @@ export const CLAIM_STATUS_LABELS: Record<ClaimStatus, string> = {
   APPROVED: '승인',
   REJECTED: '거절',
   COMPLETED: '완료',
+  WITHDRAWN: '철회',
 };
 
 // 클레임 타입 라벨
