@@ -225,6 +225,9 @@ export const orderDetailResponseSchema = z.object({
   // 주문 일시
   orderedAt: z.date(),
 
+  // 취소 사유 (취소요청 상태일 때)
+  cancelReason: z.string().nullish(),
+
   // 주문 아이템 목록
   items: z.array(orderDetailItemSchema),
 
