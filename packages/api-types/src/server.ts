@@ -438,7 +438,6 @@ const appRouter = t.router({
       originalAmount: z.number(),
       refundAmount: z.number(),
       createdAt: z.date(),
-      processedAt: z.date().nullish(),
     }).nullish()).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
   }),
   shopAuth: t.router({
@@ -1664,6 +1663,15 @@ const appRouter = t.router({
       })),
       createdAt: z.date(),
       updatedAt: z.date(),
+    })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
+  }),
+  backofficeClaim: t.router({
+    reject: publicProcedure.input(z.object({
+      orderId: z.number(),
+    })).output(z.object({
+      success: z.boolean(),
+      orderId: z.number(),
+      newOrderStatus: z.string(),
     })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
   }),
   backofficeCategory: t.router({

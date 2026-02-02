@@ -11,6 +11,8 @@ import tw from 'tailwind-styled-components';
 interface ConfirmModalProps {
   /** 모달 타이틀 (메시지) */
   title: string;
+  /** 모달 설명 (서브 메시지) */
+  description?: string;
   /** 확인 버튼 텍스트 (기본: 확인) */
   confirmText?: string;
   /** 취소 버튼 텍스트 (기본: 취소) */
@@ -19,6 +21,7 @@ interface ConfirmModalProps {
 
 export function ConfirmModal({
   title,
+  description,
   confirmText = '확인',
   cancelText = '취소',
 }: ConfirmModalProps) {
@@ -28,6 +31,7 @@ export function ConfirmModal({
     <Container>
       <Content>
         <Title>{title}</Title>
+        {description && <Description>{description}</Description>}
       </Content>
       <ButtonGroup>
         <Button
@@ -82,6 +86,13 @@ const Title = tw.p`
   text-lg font-bold
   text-[var(--fg-neutral,#18181b)]
   leading-6
+`;
+
+const Description = tw.p`
+  text-[15px]
+  text-[var(--fg-neutral,#18181B)]
+  leading-5
+  font-normal
 `;
 
 const ButtonGroup = tw.div`

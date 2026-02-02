@@ -15,7 +15,7 @@ import { OrderDetailHeader } from './_components/OrderDetailHeader';
 import { OrderStatusCard } from './_components/OrderStatusCard';
 import { PaymentInfoCard } from './_components/PaymentInfoCard';
 
-import { DetailPageLayout } from '@/shared/components';
+import { DetailPageLayout, openConfirmModal } from '@/shared/components';
 import { trpc } from '@/shared/trpc';
 
 export const Route = createFileRoute('/_auth/order/hotel/$orderId')({
@@ -24,6 +24,7 @@ export const Route = createFileRoute('/_auth/order/hotel/$orderId')({
 
 function HotelOrderDetailPage() {
   const { orderId } = Route.useParams();
+  const utils = trpc.useUtils();
 
   const {
     data: orderDetail,
@@ -31,6 +32,16 @@ function HotelOrderDetailPage() {
     isError,
   } = trpc.backofficeOrder.findById.useQuery({
     id: Number(orderId),
+  });
+
+  const rejectClaimMutation = trpc.backofficeClaim.reject.useMutation({
+    onSuccess: () => {
+      toast.success('취소요청이 거절되었습니다.');
+      utils.backofficeOrder.findById.invalidate({ id: Number(orderId) });
+    },
+    onError: (error) => {
+      toast.error(error.message || '취소 거절에 실패했습니다.');
+    },
   });
 
   if (isLoading) {
@@ -61,6 +72,26 @@ function HotelOrderDetailPage() {
     toast.info('주문 히스토리를 확인합니다.');
   };
 
+  const handleCancelApprove = () => {
+    // TODO: 취소승인 API 연동
+    // - backofficeClaim.approve 뮤테이션 호출
+    // - 환불 금액 설정 모달 (부분 환불 지원)
+    // - 승인 시 주문 상태 → CANCELLED
+    // - Payment.nowAmount 업데이트 (실제 PG 환불 연동은 별도)
+    toast.success('취소가 승인되었습니다.');
+  };
+
+  const handleCancelReject = async () => {
+    const confirmed = await openConfirmModal({
+      title: '취소요청을 거절합니다.',
+      description: '이전 주문상태로 변경됩니다.',
+    });
+
+    if (!confirmed) return;
+
+    rejectClaimMutation.mutate({ orderId: Number(orderId) });
+  };
+
   return (
     <PageContainer>
       <OrderDetailHeader
@@ -73,6 +104,7 @@ function HotelOrderDetailPage() {
       <DetailPageLayout
         main={
           <OrderStatusCard
+            status={orderDetail.status}
             statusLabel={orderDetail.statusLabel}
             statusDate={
               orderDetail.statusDate
@@ -87,9 +119,12 @@ function HotelOrderDetailPage() {
               checkOutDate: item.checkOutDate ?? '-',
               amount: item.amount,
             }))}
+            cancelReason={orderDetail.cancelReason}
             onConfirm={handleConfirm}
             onManage={handleManage}
             onHistory={handleHistory}
+            onCancelApprove={handleCancelApprove}
+            onCancelReject={handleCancelReject}
           />
         }
         side={
