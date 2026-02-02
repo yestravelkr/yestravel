@@ -10,9 +10,11 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { ArrowLeft, ChevronLeft, FileText, LogOut } from 'lucide-react';
 import { Suspense } from 'react';
+import { toast } from 'sonner';
 import tw from 'tailwind-styled-components';
 
 import { openLoginBottomSheet } from '@/components/auth/LoginBottomSheet';
+import { openConfirmModal } from '@/components/common';
 import {
   OrderStatusCard,
   HotelOrderCardContent,
@@ -123,13 +125,28 @@ function MyOrdersContent() {
     navigate({ to: '/cancel-request/$orderNumber', params: { orderNumber } });
   };
 
-  const handleCancelWithdraw = (orderNumber: string) => {
-    // TODO: 취소 철회 API 연동
-    // - shopClaim.withdraw 뮤테이션 구현 필요
-    // - 클레임 상태 확인 (REQUESTED 상태에서만 철회 가능)
-    // - 철회 시 주문 상태 → previousOrderStatus로 복원
-    // - 클레임 삭제 또는 상태를 WITHDRAWN으로 변경
-    console.log('취소 철회:', orderNumber);
+  const utils = trpc.useUtils();
+  const withdrawMutation = trpc.shopClaim.withdraw.useMutation({
+    onSuccess: () => {
+      toast.success('취소 요청이 철회되었습니다.');
+      utils.shopOrder.getMyOrders.invalidate();
+    },
+    onError: error => {
+      toast.error(error.message || '취소 철회에 실패했습니다.');
+    },
+  });
+
+  const handleCancelWithdraw = async (orderId: number) => {
+    const confirmed = await openConfirmModal({
+      title: '취소 철회',
+      description: '취소 요청을 철회할까요?',
+      confirmText: '취소 철회',
+      cancelText: '취소',
+    });
+
+    if (confirmed) {
+      withdrawMutation.mutate({ orderId });
+    }
   };
 
   const handleCancelDetail = (orderNumber: string) => {
@@ -205,9 +222,7 @@ function MyOrdersContent() {
                     {order.status === 'CANCEL_REQUESTED' && (
                       <OrderStatusCard.Actions>
                         <OrderStatusCard.SubtleButton
-                          onClick={() =>
-                            handleCancelWithdraw(order.orderNumber)
-                          }
+                          onClick={() => handleCancelWithdraw(order.orderId)}
                         >
                           취소 철회
                         </OrderStatusCard.SubtleButton>
