@@ -9,14 +9,9 @@ import {
 import { BaseEntity } from '@src/module/backoffice/domain/base.entity';
 import { OrderEntity } from '@src/module/backoffice/domain/order/order.entity';
 import { MemberEntity } from '@src/module/backoffice/domain/shop/member.entity';
-import { AdminEntity } from '@src/module/backoffice/domain/admin.entity';
 import { TransactionService } from '@src/module/shared/transaction/transaction.service';
 import { getEntityManager } from '@src/database/datasources';
-import {
-  ClaimReasonInfo,
-  ClaimAmountInfo,
-  ClaimProcessInfo,
-} from './claim-embedded';
+import { ClaimReasonInfo, ClaimAmountInfo } from './claim-embedded';
 import type { ProductTypeEnumType } from '@src/module/backoffice/admin/admin.schema';
 import type { ClaimType, ClaimStatus } from './claim-type';
 import type { ClaimDetail } from './claim-detail.type';
@@ -91,17 +86,6 @@ export class ClaimEntity extends BaseEntity {
   /** 타입별 상세 정보 (JSONB) */
   @Column({ type: 'jsonb' })
   detail: ClaimDetail;
-
-  // ===== 처리 정보 (Embedded) =====
-
-  /** 처리 정보 */
-  @Column(() => ClaimProcessInfo)
-  process: ClaimProcessInfo;
-
-  /** 처리한 관리자 관계 */
-  @ManyToOne(() => AdminEntity)
-  @JoinColumn({ name: 'process_admin_id' })
-  processedBy?: AdminEntity;
 }
 
 export const getClaimRepository = (

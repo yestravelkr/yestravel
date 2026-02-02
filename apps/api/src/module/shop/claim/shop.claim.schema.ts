@@ -49,7 +49,6 @@ export const claimDetailSchema = z.object({
   originalAmount: z.number(),
   refundAmount: z.number(),
   createdAt: z.date(),
-  processedAt: z.date().nullish(),
 });
 
 export const getClaimByOrderIdOutputSchema = claimDetailSchema.nullish();

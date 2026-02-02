@@ -22,8 +22,6 @@ export class CreateClaimTable1770600000000 implements MigrationInterface {
         "amount_original" integer NOT NULL,
         "amount_refund" integer NOT NULL,
         "detail" jsonb NOT NULL,
-        "process_admin_id" integer,
-        "process_processed_at" TIMESTAMP WITH TIME ZONE,
         CONSTRAINT "PK_claim" PRIMARY KEY ("id")
       )
     `);
@@ -54,19 +52,10 @@ export class CreateClaimTable1770600000000 implements MigrationInterface {
       ADD CONSTRAINT "FK_claim_member"
       FOREIGN KEY ("member_id") REFERENCES "member"("id") ON DELETE NO ACTION ON UPDATE NO ACTION
     `);
-
-    await queryRunner.query(`
-      ALTER TABLE "claim"
-      ADD CONSTRAINT "FK_claim_admin"
-      FOREIGN KEY ("process_admin_id") REFERENCES "admin"("id") ON DELETE NO ACTION ON UPDATE NO ACTION
-    `);
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
     // Foreign Key 제거
-    await queryRunner.query(
-      `ALTER TABLE "claim" DROP CONSTRAINT "FK_claim_admin"`
-    );
     await queryRunner.query(
       `ALTER TABLE "claim" DROP CONSTRAINT "FK_claim_member"`
     );

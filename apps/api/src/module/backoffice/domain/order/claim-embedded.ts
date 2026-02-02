@@ -46,18 +46,3 @@ export class ClaimAmountInfo {
   @Column({ name: 'refund', type: 'int' })
   refund: number;
 }
-
-/**
- * 처리 정보 Embedded
- * 참고: TypeORM이 프로퍼티명(process)을 prefix로 자동 추가함
- *       → process_admin_id, process_processed_at
- */
-export class ClaimProcessInfo {
-  /** 처리한 관리자 ID */
-  @Column({ name: 'admin_id', type: 'int', nullable: true })
-  adminId: Nullish<number>;
-
-  /** 처리 일시 */
-  @Column({ name: 'processed_at', type: 'timestamptz', nullable: true })
-  processedAt: Nullish<Date>;
-}

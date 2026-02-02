@@ -112,10 +112,6 @@ export class ShopClaimService {
       refund: refundAmount,
     };
     claim.detail = detail;
-    claim.process = {
-      adminId: null,
-      processedAt: null,
-    };
 
     const savedClaim =
       await this.repositoryProvider.ClaimRepository.save(claim);
@@ -174,7 +170,6 @@ export class ShopClaimService {
       originalAmount: claim.amount.original,
       refundAmount: claim.amount.refund,
       createdAt: claim.createdAt,
-      processedAt: claim.process.processedAt,
     };
   }
 
