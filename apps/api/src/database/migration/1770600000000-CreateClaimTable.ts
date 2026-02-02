@@ -18,12 +18,12 @@ export class CreateClaimTable1770600000000 implements MigrationInterface {
         "previous_order_status" varchar(30) NOT NULL,
         "reason_category" varchar(30) NOT NULL,
         "reason_detail" text,
-        "evidence_urls" jsonb,
-        "original_amount" integer NOT NULL,
-        "refund_amount" integer NOT NULL,
+        "reason_evidence_urls" jsonb,
+        "amount_original" integer NOT NULL,
+        "amount_refund" integer NOT NULL,
         "detail" jsonb NOT NULL,
-        "processed_by_id" integer,
-        "processed_at" TIMESTAMP WITH TIME ZONE,
+        "process_admin_id" integer,
+        "process_processed_at" TIMESTAMP WITH TIME ZONE,
         CONSTRAINT "PK_claim" PRIMARY KEY ("id")
       )
     `);
@@ -58,7 +58,7 @@ export class CreateClaimTable1770600000000 implements MigrationInterface {
     await queryRunner.query(`
       ALTER TABLE "claim"
       ADD CONSTRAINT "FK_claim_admin"
-      FOREIGN KEY ("processed_by_id") REFERENCES "admin"("id") ON DELETE NO ACTION ON UPDATE NO ACTION
+      FOREIGN KEY ("process_admin_id") REFERENCES "admin"("id") ON DELETE NO ACTION ON UPDATE NO ACTION
     `);
   }
 
