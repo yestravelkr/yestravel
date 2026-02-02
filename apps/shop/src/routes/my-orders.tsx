@@ -150,11 +150,7 @@ function MyOrdersContent() {
   };
 
   const handleCancelDetail = (orderNumber: string) => {
-    // TODO: 취소 상세 페이지 또는 모달
-    // - shopClaim.findByOrderNumber 쿼리 구현 필요
-    // - 클레임 정보: 사유, 요청일, 상태, 예상 환불금액 표시
-    // - 거절된 경우 거절 사유 표시
-    console.log('취소 상세:', orderNumber);
+    navigate({ to: '/cancel-detail/$orderNumber', params: { orderNumber } });
   };
 
   return (
