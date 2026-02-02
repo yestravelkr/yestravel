@@ -100,7 +100,7 @@ export class ClaimEntity extends BaseEntity {
 
   /** 처리한 관리자 관계 */
   @ManyToOne(() => AdminEntity)
-  @JoinColumn({ name: 'processed_by_id' })
+  @JoinColumn({ name: 'process_admin_id' })
   processedBy?: AdminEntity;
 }
 
