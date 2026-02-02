@@ -68,7 +68,9 @@ export function CancelApproveModal({
           <StyledInput
             type="text"
             value={cancelFee.toLocaleString()}
-            onChange={(e) => handleCancelFeeChange(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              handleCancelFeeChange(e.target.value)
+            }
             placeholder="0"
           />
           <InputSuffix>원</InputSuffix>
