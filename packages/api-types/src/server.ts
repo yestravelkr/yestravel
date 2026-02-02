@@ -1666,6 +1666,17 @@ const appRouter = t.router({
     })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
   }),
   backofficeClaim: t.router({
+    approve: publicProcedure.input(z.object({
+      orderId: z.number(),
+      cancelFee: z.number(),
+      refundAmount: z.number(),
+    })).output(z.object({
+      success: z.boolean(),
+      orderId: z.number(),
+      newOrderStatus: z.string(),
+      cancelFee: z.number(),
+      refundAmount: z.number(),
+    })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
     reject: publicProcedure.input(z.object({
       orderId: z.number(),
     })).output(z.object({

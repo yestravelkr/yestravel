@@ -4,11 +4,73 @@
 
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { RepositoryProvider } from '@src/module/shared/transaction/repository.provider';
-import type { RejectClaimInput, RejectClaimResponse } from './claim.dto';
+import type {
+  ApproveClaimInput,
+  ApproveClaimResponse,
+  RejectClaimInput,
+  RejectClaimResponse,
+} from './claim.dto';
 
 @Injectable()
 export class ClaimService {
   constructor(private readonly repositoryProvider: RepositoryProvider) {}
+
+  /**
+   * 취소 승인
+   * - Claim 상태: REQUESTED → APPROVED
+   * - Order 상태: CANCEL_REQUESTED → CANCELLED
+   * - Payment 환불금액 업데이트
+   */
+  async approve(input: ApproveClaimInput): Promise<ApproveClaimResponse> {
+    const { orderId, cancelFee, refundAmount } = input;
+
+    // 1. REQUESTED 상태인 클레임 조회
+    const claim = await this.repositoryProvider.ClaimRepository.findOne({
+      where: { orderId, status: 'REQUESTED' },
+      order: { createdAt: 'DESC' },
+    });
+
+    if (!claim) {
+      throw new NotFoundException(
+        `주문 ${orderId}에 대한 취소 요청을 찾을 수 없습니다.`
+      );
+    }
+
+    // 2. 클레임 상태 및 금액 업데이트
+    claim.status = 'APPROVED';
+    claim.amount.refund = refundAmount;
+    // TODO: history 테이블에 처리 이력 기록
+
+    await this.repositoryProvider.ClaimRepository.save(claim);
+
+    // 3. 주문 상태 변경: CANCELLED
+    const order = await this.repositoryProvider.OrderRepository.findOneOrFail({
+      where: { id: orderId },
+    }).catch(() => {
+      throw new NotFoundException(`주문 ${orderId}을 찾을 수 없습니다.`);
+    });
+
+    order.status = 'CANCELLED';
+    await this.repositoryProvider.OrderRepository.save(order);
+
+    // 4. Payment 환불금액 업데이트 (nowAmount 차감)
+    const payment = await this.repositoryProvider.PaymentRepository.findOne({
+      where: { orderId },
+    });
+
+    if (payment) {
+      payment.nowAmount = payment.paidAmount - refundAmount;
+      await this.repositoryProvider.PaymentRepository.save(payment);
+    }
+
+    return {
+      success: true,
+      orderId,
+      newOrderStatus: 'CANCELLED',
+      cancelFee,
+      refundAmount,
+    };
+  }
 
   /**
    * 취소 거절

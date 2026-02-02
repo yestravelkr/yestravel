@@ -7,7 +7,12 @@ import { MessagePattern } from '@nestjs/microservices';
 import { Transactional } from '@src/module/shared/transaction/transaction.decorator';
 import { TransactionService } from '@src/module/shared/transaction/transaction.service';
 import { ClaimService } from './claim.service';
-import type { RejectClaimInput, RejectClaimResponse } from './claim.dto';
+import type {
+  ApproveClaimInput,
+  ApproveClaimResponse,
+  RejectClaimInput,
+  RejectClaimResponse,
+} from './claim.dto';
 
 @Controller()
 export class ClaimController {
@@ -15,6 +20,12 @@ export class ClaimController {
     private readonly claimService: ClaimService,
     private readonly transactionService: TransactionService
   ) {}
+
+  @MessagePattern('backofficeClaim.approve')
+  @Transactional
+  async approve(input: ApproveClaimInput): Promise<ApproveClaimResponse> {
+    return await this.claimService.approve(input);
+  }
 
   @MessagePattern('backofficeClaim.reject')
   @Transactional

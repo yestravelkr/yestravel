@@ -15,7 +15,11 @@ import { OrderDetailHeader } from './_components/OrderDetailHeader';
 import { OrderStatusCard } from './_components/OrderStatusCard';
 import { PaymentInfoCard } from './_components/PaymentInfoCard';
 
-import { DetailPageLayout, openConfirmModal } from '@/shared/components';
+import {
+  DetailPageLayout,
+  openCancelApproveModal,
+  openConfirmModal,
+} from '@/shared/components';
 import { trpc } from '@/shared/trpc';
 
 export const Route = createFileRoute('/_auth/order/hotel/$orderId')({
@@ -32,6 +36,18 @@ function HotelOrderDetailPage() {
     isError,
   } = trpc.backofficeOrder.findById.useQuery({
     id: Number(orderId),
+  });
+
+  const approveClaimMutation = trpc.backofficeClaim.approve.useMutation({
+    onSuccess: (data) => {
+      toast.success(
+        `취소가 승인되었습니다. (환불금액: ${data.refundAmount.toLocaleString()}원)`,
+      );
+      utils.backofficeOrder.findById.invalidate({ id: Number(orderId) });
+    },
+    onError: (error) => {
+      toast.error(error.message || '취소 승인에 실패했습니다.');
+    },
   });
 
   const rejectClaimMutation = trpc.backofficeClaim.reject.useMutation({
@@ -72,13 +88,19 @@ function HotelOrderDetailPage() {
     toast.info('주문 히스토리를 확인합니다.');
   };
 
-  const handleCancelApprove = () => {
-    // TODO: 취소승인 API 연동
-    // - backofficeClaim.approve 뮤테이션 호출
-    // - 환불 금액 설정 모달 (부분 환불 지원)
-    // - 승인 시 주문 상태 → CANCELLED
-    // - Payment.nowAmount 업데이트 (실제 PG 환불 연동은 별도)
-    toast.success('취소가 승인되었습니다.');
+  const handleCancelApprove = async () => {
+    const result = await openCancelApproveModal({
+      productAmount: orderDetail.payment.totalAmount,
+      defaultCancelFee: 0,
+    });
+
+    if (!result?.confirmed) return;
+
+    approveClaimMutation.mutate({
+      orderId: Number(orderId),
+      cancelFee: result.cancelFee,
+      refundAmount: result.refundAmount,
+    });
   };
 
   const handleCancelReject = async () => {
