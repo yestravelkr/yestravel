@@ -3,3 +3,12 @@
 
 export type { AppRouter } from './server';
 export { normalizeTime } from './utils';
+export {
+  CLAIM_TYPE,
+  CLAIM_STATUS,
+  CLAIM_REASON_CATEGORY,
+  CLAIM_REASON_CATEGORY_LABELS,
+  type ClaimType,
+  type ClaimStatus,
+  type ClaimReasonCategory,
+} from './types/claim';
