@@ -27,6 +27,7 @@ import { getTmpOrderRepository } from '@src/module/backoffice/domain/order/tmp-o
 import { getOrderRepository } from '@src/module/backoffice/domain/order/order.entity';
 import { getHotelOrderRepository } from '@src/module/backoffice/domain/order/hotel-order.entity';
 import { getPaymentRepository } from '@src/module/backoffice/domain/order/payment.entity';
+import { getClaimRepository } from '@src/module/backoffice/domain/order/claim.entity';
 import { getMemberRepository } from '@src/module/backoffice/domain/shop/member.entity';
 import { getMemberAddressRepository } from '@src/module/backoffice/domain/shop/member-address.entity';
 import { getPhoneVerificationRepository } from '@src/module/backoffice/domain/shop/phone-verification.entity';
@@ -178,5 +179,9 @@ export class RepositoryProvider {
 
   get BrandSettlementRepository() {
     return getBrandSettlementRepository(this.transaction);
+  }
+
+  get ClaimRepository() {
+    return getClaimRepository(this.transaction);
   }
 }
