@@ -27,17 +27,24 @@ export const Route = createFileRoute('/my-orders')({
   component: MyOrdersPage,
 });
 
+/** 호텔 취소 가능 상태 */
+const HOTEL_CANCELLABLE_STATUSES = [
+  'PAID',
+  'PENDING_RESERVATION',
+  'RESERVATION_CONFIRMED',
+];
+
+/** 배송 취소 가능 상태 */
+const DELIVERY_CANCELLABLE_STATUSES = ['PAID', 'PREPARING_SHIPMENT'];
+
 /**
  * 주문 취소 가능 여부 확인
  */
-function canCancelOrder(status: string): boolean {
-  const cancelableStatuses = [
-    'PENDING',
-    'PAID',
-    'PENDING_RESERVATION',
-    'RESERVATION_CONFIRMED',
-  ];
-  return cancelableStatuses.includes(status);
+function canCancelOrder(type: 'HOTEL' | 'DELIVERY', status: string): boolean {
+  if (type === 'HOTEL') {
+    return HOTEL_CANCELLABLE_STATUSES.includes(status);
+  }
+  return DELIVERY_CANCELLABLE_STATUSES.includes(status);
 }
 
 function MyOrdersPage() {
@@ -112,6 +119,27 @@ function MyOrdersContent() {
     navigate({ to: '/' });
   };
 
+  const handleCancelRequest = (orderNumber: string) => {
+    navigate({ to: '/cancel-request/$orderNumber', params: { orderNumber } });
+  };
+
+  const handleCancelWithdraw = (orderNumber: string) => {
+    // TODO: 취소 철회 API 연동
+    // - shopClaim.withdraw 뮤테이션 구현 필요
+    // - 클레임 상태 확인 (REQUESTED 상태에서만 철회 가능)
+    // - 철회 시 주문 상태 → previousOrderStatus로 복원
+    // - 클레임 삭제 또는 상태를 WITHDRAWN으로 변경
+    console.log('취소 철회:', orderNumber);
+  };
+
+  const handleCancelDetail = (orderNumber: string) => {
+    // TODO: 취소 상세 페이지 또는 모달
+    // - shopClaim.findByOrderNumber 쿼리 구현 필요
+    // - 클레임 정보: 사유, 요청일, 상태, 예상 환불금액 표시
+    // - 거절된 경우 거절 사유 표시
+    console.log('취소 상세:', orderNumber);
+  };
+
   return (
     <HeaderLayout
       title="주문내역"
@@ -165,10 +193,37 @@ function MyOrdersContent() {
                         onProductClick={handleProductClick}
                       />
                     )}
-                    {canCancelOrder(order.status) && (
+                    {canCancelOrder(order.type, order.status) && (
                       <OrderStatusCard.Actions>
-                        <OrderStatusCard.SubtleButton>
+                        <OrderStatusCard.SubtleButton
+                          onClick={() => handleCancelRequest(order.orderNumber)}
+                        >
                           취소 요청
+                        </OrderStatusCard.SubtleButton>
+                      </OrderStatusCard.Actions>
+                    )}
+                    {order.status === 'CANCEL_REQUESTED' && (
+                      <OrderStatusCard.Actions>
+                        <OrderStatusCard.SubtleButton
+                          onClick={() =>
+                            handleCancelWithdraw(order.orderNumber)
+                          }
+                        >
+                          취소 철회
+                        </OrderStatusCard.SubtleButton>
+                        <OrderStatusCard.SubtleButton
+                          onClick={() => handleCancelDetail(order.orderNumber)}
+                        >
+                          취소 상세
+                        </OrderStatusCard.SubtleButton>
+                      </OrderStatusCard.Actions>
+                    )}
+                    {order.status === 'CANCELLED' && (
+                      <OrderStatusCard.Actions>
+                        <OrderStatusCard.SubtleButton
+                          onClick={() => handleCancelDetail(order.orderNumber)}
+                        >
+                          취소 상세
                         </OrderStatusCard.SubtleButton>
                       </OrderStatusCard.Actions>
                     )}
