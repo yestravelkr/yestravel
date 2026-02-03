@@ -5,7 +5,14 @@
 import { z } from 'zod';
 import { MicroserviceClient } from '@src/module/trpc/microserviceClient';
 import { BaseTrpcRouter } from '@src/module/trpc/baseTrpcRouter';
-import { Router, Mutation, Ctx, Input, UseMiddlewares } from 'nestjs-trpc';
+import {
+  Router,
+  Mutation,
+  Query,
+  Ctx,
+  Input,
+  UseMiddlewares,
+} from 'nestjs-trpc';
 import { BackofficeAuthMiddleware } from '@src/module/backoffice/auth/backoffice.auth.middleware';
 import type { BackofficeAuthorizedContext } from '@src/module/backoffice/auth/backoffice.auth.middleware';
 import {
@@ -13,6 +20,8 @@ import {
   approveClaimResponseSchema,
   rejectClaimInputSchema,
   rejectClaimResponseSchema,
+  findByOrderIdInputSchema,
+  findByOrderIdOutputSchema,
 } from './claim.schema';
 
 @Router({ alias: 'backofficeClaim' })
@@ -43,5 +52,17 @@ export class ClaimRouter extends BaseTrpcRouter {
     @Input() input: z.infer<typeof rejectClaimInputSchema>
   ) {
     return this.microserviceClient.send('backofficeClaim.reject', input);
+  }
+
+  @UseMiddlewares(BackofficeAuthMiddleware)
+  @Query({
+    input: findByOrderIdInputSchema,
+    output: findByOrderIdOutputSchema,
+  })
+  async findByOrderId(
+    @Ctx() ctx: BackofficeAuthorizedContext,
+    @Input() input: z.infer<typeof findByOrderIdInputSchema>
+  ) {
+    return this.microserviceClient.send('backofficeClaim.findByOrderId', input);
   }
 }

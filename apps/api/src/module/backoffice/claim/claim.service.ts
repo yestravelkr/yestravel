@@ -9,6 +9,8 @@ import type {
   ApproveClaimResponse,
   RejectClaimInput,
   RejectClaimResponse,
+  FindByOrderIdInput,
+  FindByOrderIdOutput,
 } from './claim.dto';
 
 @Injectable()
@@ -113,6 +115,34 @@ export class ClaimService {
       success: true,
       orderId,
       newOrderStatus: previousStatus,
+    };
+  }
+
+  /**
+   * 주문 ID로 클레임 조회
+   */
+  async findByOrderId(input: FindByOrderIdInput): Promise<FindByOrderIdOutput> {
+    const { orderId } = input;
+
+    const claim = await this.repositoryProvider.ClaimRepository.findOne({
+      where: { orderId },
+      order: { createdAt: 'DESC' },
+    });
+
+    if (!claim) {
+      return null;
+    }
+
+    return {
+      id: claim.id,
+      type: claim.type,
+      status: claim.status,
+      reasonCategory: claim.reason.category,
+      reasonDetail: claim.reason.detail,
+      evidenceUrls: claim.reason.evidenceUrls,
+      originalAmount: claim.amount.original,
+      refundAmount: claim.amount.refund,
+      createdAt: claim.createdAt,
     };
   }
 }

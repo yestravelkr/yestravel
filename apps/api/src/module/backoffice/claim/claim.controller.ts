@@ -12,6 +12,8 @@ import type {
   ApproveClaimResponse,
   RejectClaimInput,
   RejectClaimResponse,
+  FindByOrderIdInput,
+  FindByOrderIdOutput,
 } from './claim.dto';
 
 @Controller()
@@ -31,5 +33,10 @@ export class ClaimController {
   @Transactional
   async reject(input: RejectClaimInput): Promise<RejectClaimResponse> {
     return await this.claimService.reject(input);
+  }
+
+  @MessagePattern('backofficeClaim.findByOrderId')
+  async findByOrderId(input: FindByOrderIdInput): Promise<FindByOrderIdOutput> {
+    return await this.claimService.findByOrderId(input);
   }
 }

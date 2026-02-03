@@ -8,6 +8,8 @@ import type {
   approveClaimResponseSchema,
   rejectClaimInputSchema,
   rejectClaimResponseSchema,
+  findByOrderIdInputSchema,
+  findByOrderIdOutputSchema,
 } from './claim.schema';
 
 /** 취소 승인 입력 */
@@ -21,3 +23,9 @@ export type RejectClaimInput = z.infer<typeof rejectClaimInputSchema>;
 
 /** 취소 거절 응답 */
 export type RejectClaimResponse = z.infer<typeof rejectClaimResponseSchema>;
+
+/** 주문 ID로 클레임 조회 입력 */
+export type FindByOrderIdInput = z.infer<typeof findByOrderIdInputSchema>;
+
+/** 주문 ID로 클레임 조회 응답 */
+export type FindByOrderIdOutput = z.infer<typeof findByOrderIdOutputSchema>;
