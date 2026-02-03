@@ -9,7 +9,7 @@ import { Copy } from 'lucide-react';
 
 import { OrderStatusCard, ORDER_STATUS } from './OrderStatusCard';
 
-const meta = {
+const meta: Meta<typeof OrderStatusCard> = {
   title: 'Order/OrderStatusCard',
   component: OrderStatusCard,
   parameters: {
@@ -22,10 +22,10 @@ const meta = {
       </div>
     ),
   ],
-} satisfies Meta<typeof OrderStatusCard>;
+};
 
 export default meta;
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj<typeof OrderStatusCard>;
 
 /**
  * 숙박 - 결제대기 (계좌번호 복사 버튼)
@@ -33,7 +33,7 @@ type Story = StoryObj<typeof meta>;
 export const AccommodationPendingPayment: Story = {
   render: () => (
     <OrderStatusCard>
-      <OrderStatusCard.Header status={ORDER_STATUS.PENDING_PAYMENT}>
+      <OrderStatusCard.Header status={ORDER_STATUS.PENDING}>
         12월 12일(목)까지 13,000원을 입금해 주세요.
       </OrderStatusCard.Header>
       <OrderStatusCard.AccommodationInfo
@@ -64,7 +64,7 @@ export const AccommodationPendingPayment: Story = {
 export const AccommodationPaymentCompleted: Story = {
   render: () => (
     <OrderStatusCard>
-      <OrderStatusCard.Header status={ORDER_STATUS.PAYMENT_COMPLETED}>
+      <OrderStatusCard.Header status={ORDER_STATUS.PAID}>
         결제가 완료되었습니다.
       </OrderStatusCard.Header>
       <OrderStatusCard.AccommodationInfo
@@ -122,7 +122,7 @@ export const AccommodationReservationConfirmed: Story = {
 export const ShippingPaymentCompleted: Story = {
   render: () => (
     <OrderStatusCard>
-      <OrderStatusCard.Header status={ORDER_STATUS.PAYMENT_COMPLETED}>
+      <OrderStatusCard.Header status={ORDER_STATUS.PAID}>
         결제가 완료되었습니다.
       </OrderStatusCard.Header>
       <OrderStatusCard.ProductList>
@@ -240,7 +240,7 @@ export const Cancelled: Story = {
 export const HeaderOnly: Story = {
   render: () => (
     <OrderStatusCard>
-      <OrderStatusCard.Header status={ORDER_STATUS.PAYMENT_COMPLETED} />
+      <OrderStatusCard.Header status={ORDER_STATUS.PAID} />
     </OrderStatusCard>
   ),
 };
@@ -306,7 +306,7 @@ export const AllCases: Story = {
           <div>
             <p className="text-sm text-fg-muted mb-2">결제대기</p>
             <OrderStatusCard>
-              <OrderStatusCard.Header status={ORDER_STATUS.PENDING_PAYMENT}>
+              <OrderStatusCard.Header status={ORDER_STATUS.PENDING}>
                 12월 12일(목)까지 13,000원을 입금해 주세요.
               </OrderStatusCard.Header>
               <OrderStatusCard.AccommodationInfo {...accommodationData} />
@@ -327,7 +327,7 @@ export const AllCases: Story = {
           <div>
             <p className="text-sm text-fg-muted mb-2">결제완료</p>
             <OrderStatusCard>
-              <OrderStatusCard.Header status={ORDER_STATUS.PAYMENT_COMPLETED} />
+              <OrderStatusCard.Header status={ORDER_STATUS.PAID} />
               <OrderStatusCard.AccommodationInfo {...accommodationData} />
               <OrderStatusCard.Divider />
               <OrderStatusCard.CheckTime
@@ -451,7 +451,7 @@ export const AllCases: Story = {
           <div>
             <p className="text-sm text-fg-muted mb-2">결제대기</p>
             <OrderStatusCard>
-              <OrderStatusCard.Header status={ORDER_STATUS.PENDING_PAYMENT}>
+              <OrderStatusCard.Header status={ORDER_STATUS.PENDING}>
                 12월 12일(목)까지 13,000원을 입금해 주세요.
               </OrderStatusCard.Header>
               <OrderStatusCard.ProductList>
@@ -469,7 +469,7 @@ export const AllCases: Story = {
           <div>
             <p className="text-sm text-fg-muted mb-2">결제완료</p>
             <OrderStatusCard>
-              <OrderStatusCard.Header status={ORDER_STATUS.PAYMENT_COMPLETED} />
+              <OrderStatusCard.Header status={ORDER_STATUS.PAID} />
               <OrderStatusCard.ProductList>
                 <OrderStatusCard.ProductItem {...shippingProduct} />
               </OrderStatusCard.ProductList>
@@ -624,7 +624,7 @@ export const AllCases: Story = {
           <div>
             <p className="text-sm text-fg-muted mb-2">반품완료</p>
             <OrderStatusCard>
-              <OrderStatusCard.Header status={ORDER_STATUS.RETURN_COMPLETED} />
+              <OrderStatusCard.Header status={ORDER_STATUS.RETURNED} />
               <OrderStatusCard.ProductList>
                 <OrderStatusCard.ProductItem {...shippingProduct} />
               </OrderStatusCard.ProductList>

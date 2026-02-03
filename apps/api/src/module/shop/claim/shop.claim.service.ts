@@ -6,7 +6,6 @@ import {
 import { RepositoryProvider } from '@src/module/shared/transaction/repository.provider';
 import { ClaimEntity } from '@src/module/backoffice/domain/order/claim.entity';
 import type { ClaimDetail } from '@src/module/backoffice/domain/order/claim-detail.type';
-import type { OrderStatusEnumType } from '@src/module/backoffice/domain/order/order-status';
 import type {
   CreateClaimInput,
   CreateClaimOutput,
@@ -17,20 +16,17 @@ import type {
 } from './shop.claim.dto';
 
 /** 취소 가능한 주문 상태 (HOTEL) */
-const HOTEL_CANCELLABLE_STATUSES: OrderStatusEnumType[] = [
+const HOTEL_CANCELLABLE_STATUSES = [
   'PAID',
   'PENDING_RESERVATION',
   'RESERVATION_CONFIRMED',
-];
+] as const;
 
 /** 취소 가능한 주문 상태 (DELIVERY) */
-const DELIVERY_CANCELLABLE_STATUSES: OrderStatusEnumType[] = [
-  'PAID',
-  'PREPARING_SHIPMENT',
-];
+const DELIVERY_CANCELLABLE_STATUSES = ['PAID', 'PREPARING_SHIPMENT'] as const;
 
 /** 반품 가능한 주문 상태 (DELIVERY only) */
-const DELIVERY_RETURNABLE_STATUSES: OrderStatusEnumType[] = ['DELIVERED'];
+const DELIVERY_RETURNABLE_STATUSES = ['DELIVERED'] as const;
 
 @Injectable()
 export class ShopClaimService {
@@ -96,14 +92,13 @@ export class ShopClaimService {
     const originalAmount = order.totalAmount;
     const refundAmount = originalAmount - cancelFee;
 
-    // 6. 클레임 생성
+    // 6. 클레임 생성 (Order.status는 변경하지 않음 - Claim.status로 상태 관리)
     const claim = new ClaimEntity();
     claim.type = type;
     claim.productType = order.type;
     claim.status = 'REQUESTED';
     claim.orderId = orderId;
     claim.memberId = memberId;
-    claim.previousOrderStatus = order.status; // 이전 상태 저장 (거절 시 복원용)
     claim.reason = {
       category: reasonCategory,
       detail: reasonDetail ?? null,
@@ -117,14 +112,6 @@ export class ShopClaimService {
 
     const savedClaim =
       await this.repositoryProvider.ClaimRepository.save(claim);
-
-    // 7. 주문 상태 변경
-    const newOrderStatus: OrderStatusEnumType =
-      type === 'CANCEL' ? 'CANCEL_REQUESTED' : 'RETURN_REQUESTED';
-    await this.repositoryProvider.OrderRepository.update(
-      { id: orderId },
-      { status: newOrderStatus }
-    );
 
     return {
       claimId: savedClaim.id,
@@ -179,7 +166,7 @@ export class ShopClaimService {
    * 취소 철회
    * - REQUESTED 상태의 클레임만 철회 가능
    * - 클레임 상태: REQUESTED → WITHDRAWN
-   * - 주문 상태: CANCEL_REQUESTED/RETURN_REQUESTED → previousOrderStatus로 복원
+   * - Order.status는 변경하지 않음 (클레임 생성 시에도 변경하지 않았으므로)
    */
   async withdraw(input: WithdrawClaimInput): Promise<WithdrawClaimOutput> {
     const { orderId, memberId } = input;
@@ -207,15 +194,11 @@ export class ShopClaimService {
     claim.status = 'WITHDRAWN';
     await this.repositoryProvider.ClaimRepository.save(claim);
 
-    // 4. 주문 상태 복원: previousOrderStatus
-    const previousStatus = claim.previousOrderStatus;
-    order.status = previousStatus;
-    await this.repositoryProvider.OrderRepository.save(order);
-
+    // Order.status는 변경하지 않음 (기존 상태 유지)
     return {
       success: true,
       orderId,
-      newOrderStatus: previousStatus,
+      newOrderStatus: order.status,
     };
   }
 
@@ -224,19 +207,27 @@ export class ShopClaimService {
    */
   private validateClaimable(
     productType: string,
-    orderStatus: OrderStatusEnumType,
+    orderStatus: string,
     claimType: 'CANCEL' | 'RETURN'
   ): void {
     if (claimType === 'CANCEL') {
       // 취소 요청
       if (productType === 'HOTEL') {
-        if (!HOTEL_CANCELLABLE_STATUSES.includes(orderStatus)) {
+        if (
+          !HOTEL_CANCELLABLE_STATUSES.includes(
+            orderStatus as (typeof HOTEL_CANCELLABLE_STATUSES)[number]
+          )
+        ) {
           throw new BadRequestException(
             `현재 주문 상태에서는 취소할 수 없습니다. (상태: ${orderStatus})`
           );
         }
       } else if (productType === 'DELIVERY') {
-        if (!DELIVERY_CANCELLABLE_STATUSES.includes(orderStatus)) {
+        if (
+          !DELIVERY_CANCELLABLE_STATUSES.includes(
+            orderStatus as (typeof DELIVERY_CANCELLABLE_STATUSES)[number]
+          )
+        ) {
           throw new BadRequestException(
             `현재 주문 상태에서는 취소할 수 없습니다. (상태: ${orderStatus})`
           );
@@ -252,7 +243,11 @@ export class ShopClaimService {
       if (productType !== 'DELIVERY') {
         throw new BadRequestException('반품은 배송 상품만 가능합니다.');
       }
-      if (!DELIVERY_RETURNABLE_STATUSES.includes(orderStatus)) {
+      if (
+        !DELIVERY_RETURNABLE_STATUSES.includes(
+          orderStatus as (typeof DELIVERY_RETURNABLE_STATUSES)[number]
+        )
+      ) {
         throw new BadRequestException(
           `현재 주문 상태에서는 반품할 수 없습니다. (상태: ${orderStatus})`
         );

@@ -41,9 +41,10 @@ function HotelOrderDetailPage() {
   });
 
   // 클레임 정보 조회 (취소 사유 표시용)
+  // Order.status와 별개로 REQUESTED 클레임이 있을 수 있으므로 항상 조회
   const { data: claimData } = trpc.backofficeClaim.findByOrderId.useQuery(
     { orderId: Number(orderId) },
-    { enabled: orderDetail?.status === 'CANCEL_REQUESTED' },
+    { enabled: !!orderDetail },
   );
 
   const approveClaimMutation = trpc.backofficeClaim.approve.useMutation({
@@ -130,6 +131,23 @@ function HotelOrderDetailPage() {
       (claimData.reasonDetail ? ` - ${claimData.reasonDetail}` : '')
     : null;
 
+  // displayStatus: Order.status + Claim.status 합성
+  // REQUESTED 클레임이 있으면 CANCEL_REQUESTED / RETURN_REQUESTED
+  const displayStatus =
+    claimData?.status === 'REQUESTED'
+      ? claimData.type === 'CANCEL'
+        ? 'CANCEL_REQUESTED'
+        : 'RETURN_REQUESTED'
+      : orderDetail.status;
+
+  // displayStatusLabel: displayStatus에 따른 라벨
+  const displayStatusLabel =
+    displayStatus === 'CANCEL_REQUESTED'
+      ? '취소요청'
+      : displayStatus === 'RETURN_REQUESTED'
+        ? '반품요청'
+        : orderDetail.statusLabel;
+
   return (
     <PageContainer>
       <OrderDetailHeader
@@ -142,8 +160,8 @@ function HotelOrderDetailPage() {
       <DetailPageLayout
         main={
           <OrderStatusCard
-            status={orderDetail.status}
-            statusLabel={orderDetail.statusLabel}
+            status={displayStatus}
+            statusLabel={displayStatusLabel}
             statusDate={
               orderDetail.statusDate
                 ? dayjs(orderDetail.statusDate).format('YY.MM.DD HH:mm')

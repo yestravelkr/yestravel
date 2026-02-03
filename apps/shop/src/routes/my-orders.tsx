@@ -191,7 +191,7 @@ function MyOrdersContent() {
                 <OrderCard>
                   <OrderStatusCard>
                     <OrderStatusCard.Header
-                      status={order.status as OrderStatusType}
+                      status={order.displayStatus as OrderStatusType}
                     >
                       {order.statusDescription}
                     </OrderStatusCard.Header>
@@ -206,16 +206,19 @@ function MyOrdersContent() {
                         onProductClick={handleProductClick}
                       />
                     )}
-                    {canCancelOrder(order.type, order.status) && (
-                      <OrderStatusCard.Actions>
-                        <OrderStatusCard.SubtleButton
-                          onClick={() => handleCancelRequest(order.orderNumber)}
-                        >
-                          취소 요청
-                        </OrderStatusCard.SubtleButton>
-                      </OrderStatusCard.Actions>
-                    )}
-                    {order.status === 'CANCEL_REQUESTED' && (
+                    {canCancelOrder(order.type, order.status) &&
+                      order.displayStatus !== 'CANCEL_REQUESTED' && (
+                        <OrderStatusCard.Actions>
+                          <OrderStatusCard.SubtleButton
+                            onClick={() =>
+                              handleCancelRequest(order.orderNumber)
+                            }
+                          >
+                            취소 요청
+                          </OrderStatusCard.SubtleButton>
+                        </OrderStatusCard.Actions>
+                      )}
+                    {order.displayStatus === 'CANCEL_REQUESTED' && (
                       <OrderStatusCard.Actions>
                         <OrderStatusCard.SubtleButton
                           onClick={() => handleCancelWithdraw(order.orderId)}
@@ -229,7 +232,7 @@ function MyOrdersContent() {
                         </OrderStatusCard.SubtleButton>
                       </OrderStatusCard.Actions>
                     )}
-                    {order.status === 'CANCELLED' && (
+                    {order.displayStatus === 'CANCELLED' && (
                       <OrderStatusCard.Actions>
                         <OrderStatusCard.SubtleButton
                           onClick={() => handleCancelDetail(order.orderNumber)}

@@ -36,7 +36,7 @@ type Story = StoryObj<typeof meta>;
 
 // 기본 배송 상품 데이터
 const baseShippingData: ShippingOrderData = {
-  status: 'PAYMENT_COMPLETED',
+  status: 'PAID',
   statusDescription: '결제가 완료되었습니다.',
   products: [
     {
@@ -132,7 +132,7 @@ export const ReturnCompleted: Story = {
   args: {
     data: {
       ...baseShippingData,
-      status: 'RETURN_COMPLETED',
+      status: 'RETURNED',
       statusDescription: '반품이 완료되었습니다.',
     },
   },

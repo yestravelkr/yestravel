@@ -253,7 +253,7 @@ function CancelDetailContent({ orderNumber }: { orderNumber: string }) {
             <RefundRow>
               <RefundRowLabel>환불방법</RefundRowLabel>
               <RefundRowValue>
-                {orderData.payment.method || '결제수단'}
+                {orderData.payment.paymentMethod || '결제수단'}
               </RefundRowValue>
             </RefundRow>
           </RefundDetails>

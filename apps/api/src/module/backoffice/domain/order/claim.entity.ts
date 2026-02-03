@@ -15,7 +15,6 @@ import { ClaimReasonInfo, ClaimAmountInfo } from './claim-embedded';
 import type { ProductTypeEnumType } from '@src/module/backoffice/admin/admin.schema';
 import type { ClaimType, ClaimStatus } from './claim-type';
 import type { ClaimDetail } from './claim-detail.type';
-import type { OrderStatusEnumType } from './order-status';
 
 /**
  * ClaimEntity - 클레임(취소/반품 요청) 엔티티
@@ -53,10 +52,6 @@ export class ClaimEntity extends BaseEntity {
   @ManyToOne(() => OrderEntity)
   @JoinColumn({ name: 'order_id' })
   order: OrderEntity;
-
-  /** 클레임 요청 전 주문 상태 (거절 시 복원용) */
-  @Column({ name: 'previous_order_status', type: 'varchar', length: 30 })
-  previousOrderStatus: OrderStatusEnumType;
 
   // ===== 회원 관계 (내 클레임 조회용) =====
 

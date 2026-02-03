@@ -27,7 +27,7 @@ import {
 } from '@/shared/components';
 import { trpc } from '@/shared/trpc';
 
-/** 주문 상태 (14개) */
+/** 주문 상태 (12개 - CANCEL_REQUESTED, RETURN_REQUESTED 제외) */
 type OrderStatus =
   | 'PENDING'
   | 'PAID'
@@ -38,9 +38,7 @@ type OrderStatus =
   | 'SHIPPING'
   | 'DELIVERED'
   | 'PURCHASE_CONFIRMED'
-  | 'CANCEL_REQUESTED'
   | 'CANCELLED'
-  | 'RETURN_REQUESTED'
   | 'RETURNING'
   | 'RETURNED';
 
@@ -59,9 +57,7 @@ const ORDER_STATUS_LABELS: Record<OrderStatusTab, string> = {
   SHIPPING: '배송중',
   DELIVERED: '배송완료',
   PURCHASE_CONFIRMED: '구매확정',
-  CANCEL_REQUESTED: '취소요청',
   CANCELLED: '취소완료',
-  RETURN_REQUESTED: '반품요청',
   RETURNING: '반품중',
   RETURNED: '반품완료',
 };
@@ -92,7 +88,6 @@ const ORDER_STATUS_OPTIONS = [
   { value: 'PENDING_RESERVATION', label: '예약대기' },
   { value: 'RESERVATION_CONFIRMED', label: '예약확정' },
   { value: 'COMPLETED', label: '이용완료' },
-  { value: 'CANCEL_REQUESTED', label: '취소요청' },
   { value: 'CANCELLED', label: '취소완료' },
 ];
 
@@ -452,13 +447,13 @@ function HotelOrderListPage() {
   };
 
   // 상태 탭 목록 생성 (숙박용)
+  // 취소요청(CANCEL_REQUESTED)은 Claim으로 관리되어 별도 탭 없음
   const tabOrder: OrderStatusTab[] = [
     'ALL',
     'PAID',
     'PENDING_RESERVATION',
     'RESERVATION_CONFIRMED',
     'COMPLETED',
-    'CANCEL_REQUESTED',
     'CANCELLED',
   ];
 

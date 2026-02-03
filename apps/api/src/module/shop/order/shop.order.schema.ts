@@ -101,7 +101,10 @@ const orderListItemBaseSchema = z.object({
   orderId: z.number(),
   orderNumber: z.string(),
   orderDate: z.string(),
+  /** 주문 상태 (DB 값) */
   status: z.string(),
+  /** 표시용 상태 (Order.status + Claim.status 합성) */
+  displayStatus: z.string(),
   statusDescription: z.string().nullish(),
   totalAmount: z.number(),
   /** 상품 상세 페이지 이동용 */

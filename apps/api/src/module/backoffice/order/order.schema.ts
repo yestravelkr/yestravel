@@ -3,6 +3,7 @@ import { z } from 'zod';
 // ===== Enum Schemas =====
 // Note: 인라인으로 정의 (nestjs-trpc가 import된 상수를 해결하지 못함)
 
+// 취소/반품 요청 상태(CANCEL_REQUESTED, RETURN_REQUESTED)는 Claim.status로 관리
 export const orderStatusSchema = z.enum([
   'PENDING',
   'PAID',
@@ -13,9 +14,7 @@ export const orderStatusSchema = z.enum([
   'SHIPPING',
   'DELIVERED',
   'PURCHASE_CONFIRMED',
-  'CANCEL_REQUESTED',
   'CANCELLED',
-  'RETURN_REQUESTED',
   'RETURNING',
   'RETURNED',
 ]);
@@ -105,9 +104,7 @@ export const statusCountsSchema = z.object({
   SHIPPING: z.number(),
   DELIVERED: z.number(),
   PURCHASE_CONFIRMED: z.number(),
-  CANCEL_REQUESTED: z.number(),
   CANCELLED: z.number(),
-  RETURN_REQUESTED: z.number(),
   RETURNING: z.number(),
   RETURNED: z.number(),
 });

@@ -54,7 +54,12 @@ import { formatPriceExact } from '@/shared';
 // Types
 // ============================================================================
 
-/** 주문 상태 타입 (백엔드 order-status.ts와 동일) */
+/**
+ * 주문 표시 상태 타입
+ * - 실제 Order.status와 Claim.status를 합성한 displayStatus에서 사용
+ * - CANCEL_REQUESTED, RETURN_REQUESTED는 Order.status에는 없지만
+ *   displayStatus에서 REQUESTED 클레임이 있을 때 사용됨
+ */
 export const ORDER_STATUS = {
   // 공통 상태
   PENDING: 'PENDING',
@@ -71,12 +76,14 @@ export const ORDER_STATUS = {
   DELIVERED: 'DELIVERED',
   PURCHASE_CONFIRMED: 'PURCHASE_CONFIRMED',
 
-  // 취소 상태
+  // 취소 요청 상태 (displayStatus용 - Claim.status가 REQUESTED일 때)
   CANCEL_REQUESTED: 'CANCEL_REQUESTED',
+  // 취소 완료 상태
   CANCELLED: 'CANCELLED',
 
-  // 반품 상태 (배송 전용)
+  // 반품 요청 상태 (displayStatus용 - Claim.status가 REQUESTED일 때)
   RETURN_REQUESTED: 'RETURN_REQUESTED',
+  // 반품 진행 상태 (배송 전용)
   RETURNING: 'RETURNING',
   RETURNED: 'RETURNED',
 } as const;
@@ -100,11 +107,11 @@ const STATUS_LABELS: Record<OrderStatusType, string> = {
   DELIVERED: '배송완료',
   PURCHASE_CONFIRMED: '구매확정',
 
-  // 취소
+  // 취소 (displayStatus용)
   CANCEL_REQUESTED: '취소요청',
   CANCELLED: '취소완료',
 
-  // 반품
+  // 반품 (displayStatus용)
   RETURN_REQUESTED: '반품요청',
   RETURNING: '반품중',
   RETURNED: '반품완료',

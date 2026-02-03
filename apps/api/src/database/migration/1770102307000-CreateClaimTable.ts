@@ -5,6 +5,7 @@ export class CreateClaimTable1770102307000 implements MigrationInterface {
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     // claim 테이블 생성
+    // previous_order_status 컬럼 제거됨 (클레임 생성 시 Order.status 변경하지 않음)
     await queryRunner.query(`
       CREATE TABLE "claim" (
         "id" SERIAL NOT NULL,
@@ -15,7 +16,6 @@ export class CreateClaimTable1770102307000 implements MigrationInterface {
         "status" varchar(20) NOT NULL DEFAULT 'REQUESTED',
         "order_id" integer NOT NULL,
         "member_id" integer NOT NULL,
-        "previous_order_status" varchar(30) NOT NULL,
         "reason_category" varchar(30) NOT NULL,
         "reason_detail" text,
         "reason_evidence_urls" jsonb,

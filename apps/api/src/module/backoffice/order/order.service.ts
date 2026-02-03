@@ -192,7 +192,7 @@ export class OrderService {
 
     const results = await qb.getRawMany<{ status: string; count: string }>();
 
-    // 초기값 설정
+    // 초기값 설정 (취소/반품 요청 상태는 Claim.status로 관리)
     const counts: StatusCounts = {
       ALL: 0,
       PENDING: 0,
@@ -204,9 +204,7 @@ export class OrderService {
       SHIPPING: 0,
       DELIVERED: 0,
       PURCHASE_CONFIRMED: 0,
-      CANCEL_REQUESTED: 0,
       CANCELLED: 0,
-      RETURN_REQUESTED: 0,
       RETURNING: 0,
       RETURNED: 0,
     };
