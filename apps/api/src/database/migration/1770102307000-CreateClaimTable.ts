@@ -1,7 +1,7 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class CreateClaimTable1770600000000 implements MigrationInterface {
-  name = 'CreateClaimTable1770600000000';
+export class CreateClaimTable1770102307000 implements MigrationInterface {
+  name = 'CreateClaimTable1770102307000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     // claim 테이블 생성
