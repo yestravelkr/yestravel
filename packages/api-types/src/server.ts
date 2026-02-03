@@ -1388,9 +1388,6 @@ const appRouter = t.router({
       // 주문 일시
       orderedAt: z.date(),
 
-      // 취소 사유 (취소요청 상태일 때)
-      cancelReason: z.string().nullish(),
-
       // 주문 아이템 목록
       items: z.array(z.object({
         id: z.number(),
@@ -1690,7 +1687,20 @@ const appRouter = t.router({
       success: z.boolean(),
       orderId: z.number(),
       newOrderStatus: z.string(),
-    })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
+    })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    findByOrderId: publicProcedure.input(z.object({
+      orderId: z.number().int().positive(),
+    })).output(z.object({
+      id: z.number(),
+      type: z.enum(CLAIM_TYPE),
+      status: z.enum(CLAIM_STATUS),
+      reasonCategory: z.enum(CLAIM_REASON_CATEGORY),
+      reasonDetail: z.string().nullish(),
+      evidenceUrls: z.array(z.string()).nullish(),
+      originalAmount: z.number(),
+      refundAmount: z.number(),
+      createdAt: z.date(),
+    }).nullish()).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
   }),
   backofficeCategory: t.router({
     create: publicProcedure.input(z.object({
