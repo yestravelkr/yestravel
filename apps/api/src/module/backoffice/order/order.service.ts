@@ -17,8 +17,6 @@ import {
   ORDER_STATUS_LABELS,
   canTransition,
 } from '@src/module/backoffice/domain/order/order-status';
-import { CLAIM_REASON_CATEGORY_LABELS } from '@src/module/backoffice/domain/order/claim-type';
-import type { ClaimReasonCategory } from '@src/module/backoffice/domain/order/claim-type';
 import type { HotelOrderOptionData } from '@src/module/backoffice/domain/order/hotel-order.entity';
 import type {
   FindAllOrdersInput,
@@ -348,26 +346,6 @@ export class OrderService {
       ? latestPayment.paidAmount - latestPayment.nowAmount
       : 0;
 
-    // 취소 요청 상태일 때 클레임 정보 조회
-    let cancelReason: string | null = null;
-    if (order.status === 'CANCEL_REQUESTED') {
-      const claim = await this.repositoryProvider.ClaimRepository.findOne({
-        where: { orderId: order.id, status: 'REQUESTED' },
-        order: { createdAt: 'DESC' },
-      });
-      if (claim) {
-        // 사유 카테고리를 한글로 변환
-        const categoryLabel =
-          CLAIM_REASON_CATEGORY_LABELS[
-            claim.reason.category as ClaimReasonCategory
-          ] ?? claim.reason.category;
-        // 상세 사유가 있으면 함께 표시
-        cancelReason = claim.reason.detail
-          ? `${categoryLabel} - ${claim.reason.detail}`
-          : categoryLabel;
-      }
-    }
-
     return {
       id: order.id,
       orderNumber: orderNumberParser.encode([order.id], order.createdAt),
@@ -384,9 +362,6 @@ export class OrderService {
 
       // 주문 일시
       orderedAt: order.createdAt,
-
-      // 취소 사유
-      cancelReason,
 
       // 주문 아이템 목록 (현재는 단일 아이템)
       items: [
