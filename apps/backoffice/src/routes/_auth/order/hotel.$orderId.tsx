@@ -6,6 +6,8 @@
  */
 
 import { createFileRoute } from '@tanstack/react-router';
+import { CLAIM_REASON_CATEGORY_LABELS } from '@yestravelkr/api-types';
+import type { ClaimReasonCategory } from '@yestravelkr/api-types';
 import dayjs from 'dayjs';
 import { toast } from 'sonner';
 import tw from 'tailwind-styled-components';
@@ -37,6 +39,12 @@ function HotelOrderDetailPage() {
   } = trpc.backofficeOrder.findById.useQuery({
     id: Number(orderId),
   });
+
+  // 클레임 정보 조회 (취소 사유 표시용)
+  const { data: claimData } = trpc.backofficeClaim.findByOrderId.useQuery(
+    { orderId: Number(orderId) },
+    { enabled: orderDetail?.status === 'CANCEL_REQUESTED' },
+  );
 
   const approveClaimMutation = trpc.backofficeClaim.approve.useMutation({
     onSuccess: (data) => {
@@ -114,6 +122,14 @@ function HotelOrderDetailPage() {
     rejectClaimMutation.mutate({ orderId: Number(orderId) });
   };
 
+  // 클레임 데이터에서 취소 사유 생성
+  const cancelReason = claimData
+    ? (CLAIM_REASON_CATEGORY_LABELS[
+        claimData.reasonCategory as ClaimReasonCategory
+      ] ?? claimData.reasonCategory) +
+      (claimData.reasonDetail ? ` - ${claimData.reasonDetail}` : '')
+    : null;
+
   return (
     <PageContainer>
       <OrderDetailHeader
@@ -141,7 +157,7 @@ function HotelOrderDetailPage() {
               checkOutDate: item.checkOutDate ?? '-',
               amount: item.amount,
             }))}
-            cancelReason={orderDetail.cancelReason}
+            cancelReason={cancelReason}
             onConfirm={handleConfirm}
             onManage={handleManage}
             onHistory={handleHistory}
