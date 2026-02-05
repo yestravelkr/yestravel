@@ -36,13 +36,29 @@ Main Agent의 Context Window는 제한적입니다.
 - Main Agent에서 직접 여러 파일 Read (2개 이상)
 - Main Agent에서 복잡한 분석/계획 수행
 - Main Agent에서 3개 이상 파일 수정
+- **Main Agent에서 직접 Git 명령어 실행 (git add, commit, push 등)**
 
 ### ✅ Main Agent 허용 작업 (이것만 직접 수행)
 
 - 단일~소수(1-2개) 파일 수정 (Edit)
 - 단일~소수(1-2개) 파일 생성 (Write)
-- 단순 명령 실행 (Bash)
+- 단순 명령 실행 (Bash) - **단, Git 명령어 제외**
 - 사용자와 대화/질문 응답
+
+### 🔒 Git 작업은 반드시 Subagent 사용
+
+**모든 Git 작업은 `git-manager` Agent에 위임하세요!**
+
+```
+Task(subagent_type="git-manager", prompt="현재 변경사항을 커밋해줘")
+Task(subagent_type="git-manager", prompt="PR을 생성해줘")
+```
+
+| Git 작업 | 위임 필수 | 이유 |
+|----------|----------|------|
+| 단순 커밋 | **필수** | 커밋 규칙 자동 준수 |
+| PR 생성 | **필수** | PR 템플릿 자동 적용 |
+| 브랜치 관리 | **필수** | 안전 규칙 자동 적용 |
 
 ### 💡 왜 Subagent를 사용해야 하는가?
 
