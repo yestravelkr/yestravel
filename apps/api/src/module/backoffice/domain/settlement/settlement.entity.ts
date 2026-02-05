@@ -1,4 +1,5 @@
-import { Column } from 'typeorm';
+import { Column, ValueTransformer } from 'typeorm';
+import dayjs from 'dayjs';
 import { BaseEntity } from '@src/module/backoffice/domain/base.entity';
 
 /**
@@ -9,6 +10,20 @@ export type SettlementStatusType = 'PENDING' | 'COMPLETED';
 export const SETTLEMENT_STATUS = {
   PENDING: 'PENDING' as const,
   COMPLETED: 'COMPLETED' as const,
+};
+
+/**
+ * DateTransformer - date 타입 컬럼의 string → Date 변환
+ */
+const dateTransformer: ValueTransformer = {
+  to: (value: Date | string | null): Date | null => {
+    if (!value) return null;
+    return value instanceof Date ? value : dayjs(value).toDate();
+  },
+  from: (value: string | Date | null): Date | null => {
+    if (!value) return null;
+    return value instanceof Date ? value : dayjs(value).toDate();
+  },
 };
 
 /**
@@ -31,11 +46,11 @@ export abstract class BaseSettlementEntity extends BaseEntity {
   status: SettlementStatusType;
 
   /** 정산 예정일 */
-  @Column({ name: 'scheduled_at', type: 'date' })
+  @Column({ name: 'scheduled_at', type: 'date', transformer: dateTransformer })
   scheduledAt: Date;
 
   /** 정산 완료일 */
-  @Column({ name: 'completed_at', nullable: true })
+  @Column({ name: 'completed_at', type: 'timestamp', nullable: true })
   completedAt: Date | null;
 
   /** 총 매출 (캐시) */

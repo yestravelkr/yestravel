@@ -1,6 +1,7 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
 import { Transactional } from '@src/module/shared/transaction/transaction.decorator';
+import { TransactionService } from '@src/module/shared/transaction/transaction.service';
 import { SettlementService } from './settlement.service';
 import type {
   FindAllSettlementsInput,
@@ -24,7 +25,10 @@ import type {
  */
 @Controller()
 export class SettlementController {
-  constructor(private readonly settlementService: SettlementService) {}
+  constructor(
+    private readonly settlementService: SettlementService,
+    private readonly transactionService: TransactionService
+  ) {}
 
   @MessagePattern('backofficeSettlement.findAll')
   async findAll(
