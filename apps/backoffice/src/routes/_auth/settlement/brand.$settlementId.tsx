@@ -114,8 +114,10 @@ function BrandSettlementDetailPage() {
               })
             }
           >
-            <ArrowLeftIcon className="w-4 h-4 mr-2" />
-            목록으로
+            <span className="flex items-center">
+              <ArrowLeftIcon className="w-4 h-4 mr-2" />
+              목록으로
+            </span>
           </Button>
           <Button
             kind="neutral"
@@ -123,8 +125,10 @@ function BrandSettlementDetailPage() {
             size="medium"
             onClick={handleExcelDownload}
           >
-            <DownloadIcon className="w-4 h-4 mr-2" />
-            엑셀 다운로드
+            <span className="flex items-center">
+              <DownloadIcon className="w-4 h-4 mr-2" />
+              엑셀 다운로드
+            </span>
           </Button>
           {settlement.status === 'PENDING' && (
             <Button
