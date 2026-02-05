@@ -10,11 +10,12 @@
 클라이언트 → tRPC Router → MicroserviceClient → EventBus → NestJS Controller → Service
 ```
 
-## Context 절약 원칙 (최우선)
+## ⚠️ Context 절약 원칙 (최우선 - 반드시 준수)
 
-Main Agent의 Context Window는 제한적입니다. **Subagent가 할 수 있는 작업은 반드시 Subagent에 위임**하세요.
+Main Agent의 Context Window는 제한적입니다.
+**Subagent가 할 수 있는 작업은 반드시 Subagent에 위임하세요!**
 
-### Subagent에 위임해야 하는 작업
+### 🚨 필수 위임 작업 (Main Agent 직접 수행 금지)
 
 | 작업 | Agent | 이유 |
 |------|-------|------|
@@ -25,7 +26,30 @@ Main Agent의 Context Window는 제한적입니다. **Subagent가 할 수 있는
 | 영향 분석 | `impact-analyzer` | 분석 결과만 받음 |
 | 코드 리뷰 | `code-reviewer` | 리뷰 결과만 받음 |
 | 테스트/빌드 검증 | `qa-tester` | 검증 결과만 받음 |
+| 여러 파일 코드 작성 | `code-writer`, `designer` | 구현 결과만 받음 |
+| Git 작업 | `git-manager` | 커밋/PR 결과만 받음 |
 | Context 문서 정리 | `context-manager` | 파일 분리, 토큰 최적화 |
+
+### ❌ 절대 금지 (Main Agent에서 직접 수행 금지)
+
+- Main Agent에서 직접 Glob/Grep으로 여러 파일 탐색
+- Main Agent에서 직접 여러 파일 Read (2개 이상)
+- Main Agent에서 복잡한 분석/계획 수행
+- Main Agent에서 3개 이상 파일 수정
+
+### ✅ Main Agent 허용 작업 (이것만 직접 수행)
+
+- 단일~소수(1-2개) 파일 수정 (Edit)
+- 단일~소수(1-2개) 파일 생성 (Write)
+- 단순 명령 실행 (Bash)
+- 사용자와 대화/질문 응답
+
+### 💡 왜 Subagent를 사용해야 하는가?
+
+1. **Context 절약**: Subagent의 탐색/분석 결과는 요약되어 Main에 전달
+2. **대화 지속성**: Main Context가 절약되어 더 긴 대화 가능
+3. **전문성**: 각 Agent는 특정 작업에 최적화됨
+4. **병렬 처리**: 여러 Agent를 동시에 실행 가능
 
 ### 코드 작성 위임 기준
 
@@ -34,19 +58,6 @@ Main Agent의 Context Window는 제한적입니다. **Subagent가 할 수 있는
 | 1~2개 파일 수정/생성 | Main Agent 직접 처리 |
 | 3개 이상 파일 수정/생성 | `code-writer` Agent에 위임 |
 | 여러 파일 대규모 리팩토링 | `code-writer` Agent에 위임 |
-
-### Main Agent가 직접 해야 하는 작업
-
-- 단일~소수 파일 수정 (Edit)
-- 단일~소수 파일 생성 (Write)
-- 단순 명령 실행 (Bash)
-- 사용자와 대화
-
-### 금지 사항
-
-- Main Agent에서 직접 Glob/Grep으로 여러 파일 탐색
-- Main Agent에서 직접 여러 파일 Read
-- Main Agent에서 복잡한 분석 수행
 
 ## 작업 워크플로우 (필수)
 
