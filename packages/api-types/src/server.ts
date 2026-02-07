@@ -12,7 +12,6 @@ import {
   campaignInfluencerInputSchema,
   CLAIM_TYPE,
   CLAIM_STATUS,
-  CLAIM_REASON_CATEGORY,
   DATE_FILTER_TYPE_ENUM_VALUE,
   BUSINESS_TYPE_ENUM_VALUE,
   paginationQuerySchema,
@@ -414,10 +413,8 @@ const appRouter = t.router({
       orderId: z.number().int().positive(),
       /** 클레임 타입: CANCEL | RETURN */
       type: z.enum(CLAIM_TYPE),
-      /** 사유 카테고리 */
-      reasonCategory: z.enum(CLAIM_REASON_CATEGORY),
-      /** 상세 사유 (선택) */
-      reasonDetail: z.string().nullish(),
+      /** 취소/반품 사유 */
+      reason: z.string(),
       /** 증빙자료 URL 목록 (선택) */
       evidenceUrls: z.array(z.string().url()).nullish(),
     })).output(z.object({
@@ -438,8 +435,7 @@ const appRouter = t.router({
       id: z.number(),
       type: z.enum(CLAIM_TYPE),
       status: z.enum(CLAIM_STATUS),
-      reasonCategory: z.enum(CLAIM_REASON_CATEGORY),
-      reasonDetail: z.string().nullish(),
+      reason: z.string(),
       evidenceUrls: z.array(z.string()).nullish(),
       originalAmount: z.number(),
       refundAmount: z.number(),
@@ -1678,17 +1674,16 @@ const appRouter = t.router({
     })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
     findByOrderId: publicProcedure.input(z.object({
       orderId: z.number().int().positive(),
-    })).output(z.object({
+    })).output(z.array(z.object({
       id: z.number(),
       type: z.enum(CLAIM_TYPE),
       status: z.enum(CLAIM_STATUS),
-      reasonCategory: z.enum(CLAIM_REASON_CATEGORY),
-      reasonDetail: z.string().nullish(),
+      reason: z.string(),
       evidenceUrls: z.array(z.string()).nullish(),
       originalAmount: z.number(),
       refundAmount: z.number(),
       createdAt: z.date(),
-    }).nullish()).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
+    }))).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
   }),
   backofficeCategory: t.router({
     create: publicProcedure.input(z.object({
