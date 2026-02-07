@@ -13,6 +13,7 @@ import {
   Input,
   UseMiddlewares,
 } from 'nestjs-trpc';
+import { Injectable } from '@nestjs/common';
 import { BackofficeAuthMiddleware } from '@src/module/backoffice/auth/backoffice.auth.middleware';
 import type { BackofficeAuthorizedContext } from '@src/module/backoffice/auth/backoffice.auth.middleware';
 import {
@@ -25,6 +26,7 @@ import {
 } from './claim.schema';
 
 @Router({ alias: 'backofficeClaim' })
+@Injectable()
 export class ClaimRouter extends BaseTrpcRouter {
   constructor(protected readonly microserviceClient: MicroserviceClient) {
     super(microserviceClient);
