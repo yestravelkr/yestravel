@@ -5,7 +5,7 @@ import { TransactionService } from '@src/module/shared/transaction/transaction.s
 import { Transactional } from '@src/module/shared/transaction/transaction.decorator';
 import {
   createClaimOutputSchema,
-  getClaimByOrderIdOutputSchema,
+  claimDetailSchema,
   withdrawClaimOutputSchema,
 } from './shop.claim.schema';
 import type {
@@ -35,8 +35,22 @@ export class ShopClaimController {
   async findByOrderId(
     input: GetClaimByOrderIdInput
   ): Promise<GetClaimByOrderIdOutput> {
-    const result = await this.shopClaimService.findByOrderId(input);
-    return getClaimByOrderIdOutputSchema.parse(result);
+    const claim = await this.shopClaimService.findByOrderId(input);
+
+    if (!claim) {
+      return null;
+    }
+
+    return claimDetailSchema.parse({
+      id: claim.id,
+      type: claim.type,
+      status: claim.status,
+      reason: claim.reason.text,
+      evidenceUrls: claim.reason.evidenceUrls,
+      originalAmount: claim.amount.original,
+      refundAmount: claim.amount.refund,
+      createdAt: claim.createdAt,
+    });
   }
 
   @MessagePattern('shopClaim.withdraw')

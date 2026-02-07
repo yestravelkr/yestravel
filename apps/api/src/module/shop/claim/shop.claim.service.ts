@@ -10,7 +10,6 @@ import type {
   CreateClaimInput,
   CreateClaimOutput,
   GetClaimByOrderIdInput,
-  GetClaimByOrderIdOutput,
   WithdrawClaimInput,
   WithdrawClaimOutput,
 } from './shop.claim.dto';
@@ -115,11 +114,11 @@ export class ShopClaimService {
   }
 
   /**
-   * 주문 ID로 클레임 조회
+   * 주문 ID로 클레임 조회 (가장 최근 것)
    */
   async findByOrderId(
     input: GetClaimByOrderIdInput
-  ): Promise<GetClaimByOrderIdOutput> {
+  ): Promise<ClaimEntity | null> {
     const { orderId, memberId } = input;
 
     // 주문 권한 확인
@@ -132,25 +131,10 @@ export class ShopClaimService {
     }
 
     // 클레임 조회 (가장 최근 것)
-    const claim = await this.repositoryProvider.ClaimRepository.findOne({
+    return this.repositoryProvider.ClaimRepository.findOne({
       where: { orderId },
       order: { createdAt: 'DESC' },
     });
-
-    if (!claim) {
-      return null;
-    }
-
-    return {
-      id: claim.id,
-      type: claim.type,
-      status: claim.status,
-      reason: claim.reason.text,
-      evidenceUrls: claim.reason.evidenceUrls,
-      originalAmount: claim.amount.original,
-      refundAmount: claim.amount.refund,
-      createdAt: claim.createdAt,
-    };
   }
 
   /**

@@ -40,12 +40,17 @@ function HotelOrderDetailPage() {
     id: Number(orderId),
   });
 
-  // 클레임 정보 조회 (취소 사유 표시용)
+  // 클레임 이력 조회 (취소 사유 표시용)
   // Order.status와 별개로 REQUESTED 클레임이 있을 수 있으므로 항상 조회
-  const { data: claimData } = trpc.backofficeClaim.findByOrderId.useQuery(
+  const { data: claims } = trpc.backofficeClaim.findByOrderId.useQuery(
     { orderId: Number(orderId) },
     { enabled: !!orderDetail },
   );
+
+  // 가장 최근 REQUESTED 클레임 (승인/거절 대상)
+  const activeClaim = claims?.find((c) => c.status === 'REQUESTED') ?? null;
+  // 표시용: 활성 클레임 우선, 없으면 가장 최근 클레임
+  const claimData = activeClaim ?? claims?.[0] ?? null;
 
   const approveClaimMutation = trpc.backofficeClaim.approve.useMutation({
     onSuccess: (data) => {

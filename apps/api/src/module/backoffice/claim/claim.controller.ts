@@ -7,6 +7,11 @@ import { MessagePattern } from '@nestjs/microservices';
 import { Transactional } from '@src/module/shared/transaction/transaction.decorator';
 import { TransactionService } from '@src/module/shared/transaction/transaction.service';
 import { ClaimService } from './claim.service';
+import {
+  approveClaimResponseSchema,
+  rejectClaimResponseSchema,
+  claimDetailSchema,
+} from './claim.schema';
 import type {
   ApproveClaimInput,
   ApproveClaimResponse,
@@ -26,17 +31,31 @@ export class ClaimController {
   @MessagePattern('backofficeClaim.approve')
   @Transactional
   async approve(input: ApproveClaimInput): Promise<ApproveClaimResponse> {
-    return await this.claimService.approve(input);
+    const result = await this.claimService.approve(input);
+    return approveClaimResponseSchema.parse(result);
   }
 
   @MessagePattern('backofficeClaim.reject')
   @Transactional
   async reject(input: RejectClaimInput): Promise<RejectClaimResponse> {
-    return await this.claimService.reject(input);
+    const result = await this.claimService.reject(input);
+    return rejectClaimResponseSchema.parse(result);
   }
 
   @MessagePattern('backofficeClaim.findByOrderId')
   async findByOrderId(input: FindByOrderIdInput): Promise<FindByOrderIdOutput> {
-    return await this.claimService.findByOrderId(input);
+    const claims = await this.claimService.findByOrderId(input);
+    return claims.map(claim =>
+      claimDetailSchema.parse({
+        id: claim.id,
+        type: claim.type,
+        status: claim.status,
+        reason: claim.reason.text,
+        evidenceUrls: claim.reason.evidenceUrls,
+        originalAmount: claim.amount.original,
+        refundAmount: claim.amount.refund,
+        createdAt: claim.createdAt,
+      })
+    );
   }
 }

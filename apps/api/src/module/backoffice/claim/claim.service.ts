@@ -4,13 +4,13 @@
 
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { RepositoryProvider } from '@src/module/shared/transaction/repository.provider';
+import type { ClaimEntity } from '@src/module/backoffice/domain/order/claim.entity';
 import type {
   ApproveClaimInput,
   ApproveClaimResponse,
   RejectClaimInput,
   RejectClaimResponse,
   FindByOrderIdInput,
-  FindByOrderIdOutput,
 } from './claim.dto';
 
 @Injectable()
@@ -115,29 +115,14 @@ export class ClaimService {
   }
 
   /**
-   * 주문 ID로 클레임 조회
+   * 주문 ID로 클레임 전체 조회 (최신순)
    */
-  async findByOrderId(input: FindByOrderIdInput): Promise<FindByOrderIdOutput> {
+  async findByOrderId(input: FindByOrderIdInput): Promise<ClaimEntity[]> {
     const { orderId } = input;
 
-    const claim = await this.repositoryProvider.ClaimRepository.findOne({
+    return this.repositoryProvider.ClaimRepository.find({
       where: { orderId },
       order: { createdAt: 'DESC' },
     });
-
-    if (!claim) {
-      return null;
-    }
-
-    return {
-      id: claim.id,
-      type: claim.type,
-      status: claim.status,
-      reason: claim.reason.text,
-      evidenceUrls: claim.reason.evidenceUrls,
-      originalAmount: claim.amount.original,
-      refundAmount: claim.amount.refund,
-      createdAt: claim.createdAt,
-    };
   }
 }

@@ -53,5 +53,5 @@ export const claimDetailSchema = z.object({
   createdAt: z.date(),
 });
 
-/** 주문 ID로 클레임 조회 응답 스키마 */
-export const findByOrderIdOutputSchema = claimDetailSchema.nullish();
+/** 주문 ID로 클레임 조회 응답 스키마 (배열: 주문의 모든 클레임 이력) */
+export const findByOrderIdOutputSchema = z.array(claimDetailSchema);
