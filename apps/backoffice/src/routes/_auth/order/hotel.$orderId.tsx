@@ -6,8 +6,6 @@
  */
 
 import { createFileRoute } from '@tanstack/react-router';
-import { CLAIM_REASON_CATEGORY_LABELS } from '@yestravelkr/api-types';
-import type { ClaimReasonCategory } from '@yestravelkr/api-types';
 import dayjs from 'dayjs';
 import { toast } from 'sonner';
 import tw from 'tailwind-styled-components';
@@ -128,13 +126,8 @@ function HotelOrderDetailPage() {
     rejectClaimMutation.mutate({ orderId: Number(orderId) });
   };
 
-  // 클레임 데이터에서 취소 사유 생성
-  const cancelReason = claimData
-    ? (CLAIM_REASON_CATEGORY_LABELS[
-        claimData.reasonCategory as ClaimReasonCategory
-      ] ?? claimData.reasonCategory) +
-      (claimData.reasonDetail ? ` - ${claimData.reasonDetail}` : '')
-    : null;
+  // 클레임 데이터에서 취소 사유 표시
+  const cancelReason = claimData?.reason ?? null;
 
   // displayStatus: Order.status + Claim.status 합성
   // REQUESTED 클레임이 있으면 CANCEL_REQUESTED / RETURN_REQUESTED
