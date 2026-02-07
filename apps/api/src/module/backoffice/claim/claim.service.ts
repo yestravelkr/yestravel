@@ -24,7 +24,7 @@ export class ClaimService {
    * - Payment 환불금액 업데이트
    */
   async approve(input: ApproveClaimInput): Promise<ApproveClaimResponse> {
-    const { orderId, cancelFee, refundAmount } = input;
+    const { orderId, cancelFee } = input;
 
     // 1. REQUESTED 상태인 클레임 조회
     const claim = await this.repositoryProvider.ClaimRepository.findOne({
@@ -40,7 +40,14 @@ export class ClaimService {
 
     // 2. 클레임 상태 및 금액 업데이트
     claim.status = 'APPROVED';
-    claim.amount.refund = refundAmount;
+    claim.detail = { ...claim.detail, cancelFee };
+
+    // 환불금액 계산: originalAmount = sum(item.quantity * item.unitPrice)
+    const originalAmount = claim.claimOptionItems.reduce(
+      (sum, item) => sum + item.quantity * item.unitPrice,
+      0
+    );
+    const refundAmount = originalAmount - cancelFee;
     // TODO: history 테이블에 처리 이력 기록
 
     await this.repositoryProvider.ClaimRepository.save(claim);

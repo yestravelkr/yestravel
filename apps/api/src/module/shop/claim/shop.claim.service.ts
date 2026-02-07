@@ -37,15 +37,10 @@ export class ShopClaimService {
    * TODO: 부분 환불 지원
    * - 현재: 주문 전체 금액 기준으로 클레임 생성
    * - 추후: 관리자가 승인 시 환불 금액 조정 가능하도록 구현
-   *
-   * TODO: 부분 옵션 반품 지원 (배송 상품)
-   * - 현재: 주문 전체 반품만 가능
-   * - 추후: returnItems 입력받아 특정 옵션/수량만 반품 가능하도록 구현
-   *   - CreateClaimInput에 returnItems?: { optionId: number; quantity: number; }[] 추가
-   *   - 부분 반품 시 환불 금액 계산 로직 추가
    */
   async create(input: CreateClaimInput): Promise<CreateClaimOutput> {
-    const { orderId, memberId, type, reason, evidenceUrls } = input;
+    const { orderId, memberId, type, reason, evidenceUrls, claimOptionItems } =
+      input;
 
     // 1. 주문 조회 및 권한 확인
     const order = await this.repositoryProvider.OrderRepository.findOneOrFail({
@@ -81,7 +76,10 @@ export class ShopClaimService {
     const { cancelFee, detail } = await this.calculateCancelFee(order, type);
 
     // 5. 환불 금액 계산
-    const originalAmount = order.totalAmount;
+    const originalAmount = claimOptionItems.reduce(
+      (sum, item) => sum + item.quantity * item.unitPrice,
+      0
+    );
     const refundAmount = originalAmount - cancelFee;
 
     // 6. 클레임 생성 (Order.status는 변경하지 않음 - Claim.status로 상태 관리)
@@ -95,10 +93,7 @@ export class ShopClaimService {
       text: reason,
       evidenceUrls: evidenceUrls ?? null,
     };
-    claim.amount = {
-      original: originalAmount,
-      refund: refundAmount,
-    };
+    claim.claimOptionItems = claimOptionItems;
     claim.detail = detail;
 
     const savedClaim =

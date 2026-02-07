@@ -11,10 +11,10 @@ import { OrderEntity } from '@src/module/backoffice/domain/order/order.entity';
 import { MemberEntity } from '@src/module/backoffice/domain/shop/member.entity';
 import { TransactionService } from '@src/module/shared/transaction/transaction.service';
 import { getEntityManager } from '@src/database/datasources';
-import { ClaimReasonInfo, ClaimAmountInfo } from './claim-embedded';
+import { ClaimReasonInfo } from './claim-embedded';
 import type { ProductTypeEnumType } from '@src/module/backoffice/admin/admin.schema';
 import type { ClaimType, ClaimStatus } from './claim-type';
-import type { ClaimDetail } from './claim-detail.type';
+import type { ClaimDetail, ClaimOptionItem } from './claim-detail.type';
 
 /**
  * ClaimEntity - 클레임(취소/반품 요청) 엔티티
@@ -70,11 +70,11 @@ export class ClaimEntity extends BaseEntity {
   @Column(() => ClaimReasonInfo)
   reason: ClaimReasonInfo;
 
-  // ===== 금액 정보 (Embedded) =====
+  // ===== 클레임 옵션 아이템 =====
 
-  /** 금액 정보 */
-  @Column(() => ClaimAmountInfo)
-  amount: ClaimAmountInfo;
+  /** 클레임 대상 옵션 목록 (JSONB) */
+  @Column({ name: 'claim_option_items', type: 'jsonb' })
+  claimOptionItems: ClaimOptionItem[];
 
   // ===== 타입별 상세 정보 =====
 

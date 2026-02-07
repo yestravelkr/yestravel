@@ -111,7 +111,6 @@ function HotelOrderDetailPage() {
     approveClaimMutation.mutate({
       orderId: Number(orderId),
       cancelFee: result.cancelFee,
-      refundAmount: result.refundAmount,
     });
   };
 

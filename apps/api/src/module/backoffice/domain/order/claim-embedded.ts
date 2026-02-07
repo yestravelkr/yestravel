@@ -22,22 +22,3 @@ export class ClaimReasonInfo {
   @Column({ name: 'evidence_urls', type: 'jsonb', nullable: true })
   evidenceUrls: Nullish<string[]>;
 }
-
-/**
- * 금액 정보 Embedded
- * 참고: TypeORM이 프로퍼티명(amount)을 prefix로 자동 추가함
- *       → amount_original, amount_refund
- *
- * TODO: 부분 환불 지원
- * - 요청 시: refund = original - cancelFee (자동 계산)
- * - 승인 시: 관리자가 refund 금액 조정 가능 (부분 환불)
- */
-export class ClaimAmountInfo {
-  /** 원래 금액 (주문 금액) */
-  @Column({ name: 'original', type: 'int' })
-  original: number;
-
-  /** 환불 금액 (관리자 승인 시 조정 가능) */
-  @Column({ name: 'refund', type: 'int' })
-  refund: number;
-}

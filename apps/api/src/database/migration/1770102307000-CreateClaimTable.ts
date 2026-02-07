@@ -18,8 +18,7 @@ export class CreateClaimTable1770102307000 implements MigrationInterface {
         "member_id" integer NOT NULL,
         "reason_text" text NOT NULL,
         "reason_evidence_urls" jsonb,
-        "amount_original" integer NOT NULL,
-        "amount_refund" integer NOT NULL,
+        "claim_option_items" jsonb NOT NULL DEFAULT '[]',
         "detail" jsonb NOT NULL,
         CONSTRAINT "PK_claim" PRIMARY KEY ("id")
       )

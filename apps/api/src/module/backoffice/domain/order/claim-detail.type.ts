@@ -4,9 +4,27 @@
  *
  * TODO: 각 타입별 상세 정보는 다음 기능 구현 시 활용
  * - HOTEL: 취소 정책 기반 수수료 계산 시 appliedPolicy, cancelPolicySnapshot 저장
- * - DELIVERY: 반품 처리 시 returnTrackingNumber, returnCourier, pickupAddress, returnItems 저장
+ * - DELIVERY: 반품 처리 시 returnTrackingNumber, returnCourier, pickupAddress 저장
  * - E-TICKET: 이티켓 사용 여부 기반 취소 수수료 계산 시 활용
  */
+
+/**
+ * 클레임 옵션 아이템
+ * claimOptionItems JSONB 컬럼에 저장되는 개별 옵션 정보
+ *
+ * 원래금액 = sum(quantity * unitPrice)
+ * 환불금액 = 원래금액 - detail.cancelFee
+ */
+export interface ClaimOptionItem {
+  /** 옵션 ID (호텔: hotelOptionId, 배송: productOptionId) */
+  optionId: number;
+  /** 옵션명 스냅샷 */
+  optionName: string;
+  /** 수량 (호텔: 1, 배송: N) */
+  quantity: number;
+  /** 단가 */
+  unitPrice: number;
+}
 
 /**
  * 호텔 취소 정책 항목
@@ -50,11 +68,6 @@ export interface DeliveryClaimDetail {
     detail: string;
     postalCode: string;
   };
-  /** 반품 상품 목록 */
-  returnItems?: {
-    optionId: number;
-    quantity: number;
-  }[];
 }
 
 /**

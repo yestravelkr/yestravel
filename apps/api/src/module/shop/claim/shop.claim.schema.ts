@@ -15,6 +15,17 @@ export const createClaimInputSchema = z.object({
   reason: z.string(),
   /** 증빙자료 URL 목록 (선택) */
   evidenceUrls: z.array(z.string().url()).nullish(),
+  /** 클레임 옵션 아이템 목록 */
+  claimOptionItems: z
+    .array(
+      z.object({
+        optionId: z.number().int().positive(),
+        optionName: z.string(),
+        quantity: z.number().int().positive(),
+        unitPrice: z.number().int().nonnegative(),
+      })
+    )
+    .min(1),
 });
 
 export const createClaimOutputSchema = z.object({
@@ -42,8 +53,15 @@ export const claimDetailSchema = z.object({
   status: z.enum(CLAIM_STATUS),
   reason: z.string(),
   evidenceUrls: z.array(z.string()).nullish(),
-  originalAmount: z.number(),
-  refundAmount: z.number(),
+  claimOptionItems: z.array(
+    z.object({
+      optionId: z.number(),
+      optionName: z.string(),
+      quantity: z.number(),
+      unitPrice: z.number(),
+    })
+  ),
+  cancelFee: z.number(),
   createdAt: z.date(),
 });
 

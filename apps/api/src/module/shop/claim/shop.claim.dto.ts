@@ -11,10 +11,6 @@ import type {
 
 // ===== Create Claim =====
 
-/**
- * TODO: 부분 옵션 반품 지원 시 추가 필요
- * returnItems?: { optionId: number; quantity: number; }[]
- */
 export type CreateClaimInput = z.infer<typeof createClaimInputSchema> & {
   memberId: number;
 };

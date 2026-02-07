@@ -12,7 +12,6 @@ import {
 export const approveClaimInputSchema = z.object({
   orderId: z.number(),
   cancelFee: z.number(),
-  refundAmount: z.number(),
 });
 
 /** 취소 승인 응답 스키마 */
@@ -48,8 +47,15 @@ export const claimDetailSchema = z.object({
   status: z.enum(CLAIM_STATUS),
   reason: z.string(),
   evidenceUrls: z.array(z.string()).nullish(),
-  originalAmount: z.number(),
-  refundAmount: z.number(),
+  claimOptionItems: z.array(
+    z.object({
+      optionId: z.number(),
+      optionName: z.string(),
+      quantity: z.number(),
+      unitPrice: z.number(),
+    })
+  ),
+  cancelFee: z.number(),
   createdAt: z.date(),
 });
 

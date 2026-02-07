@@ -417,6 +417,17 @@ const appRouter = t.router({
       reason: z.string(),
       /** 증빙자료 URL 목록 (선택) */
       evidenceUrls: z.array(z.string().url()).nullish(),
+      /** 클레임 옵션 아이템 목록 */
+      claimOptionItems: z
+        .array(
+          z.object({
+            optionId: z.number().int().positive(),
+            optionName: z.string(),
+            quantity: z.number().int().positive(),
+            unitPrice: z.number().int().nonnegative(),
+          })
+        )
+        .min(1),
     })).output(z.object({
       /** 생성된 클레임 ID */
       claimId: z.number(),
@@ -437,8 +448,15 @@ const appRouter = t.router({
       status: z.enum(CLAIM_STATUS),
       reason: z.string(),
       evidenceUrls: z.array(z.string()).nullish(),
-      originalAmount: z.number(),
-      refundAmount: z.number(),
+      claimOptionItems: z.array(
+        z.object({
+          optionId: z.number(),
+          optionName: z.string(),
+          quantity: z.number(),
+          unitPrice: z.number(),
+        })
+      ),
+      cancelFee: z.number(),
       createdAt: z.date(),
     }).nullish()).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
     withdraw: publicProcedure.input(z.object({
@@ -1657,7 +1675,6 @@ const appRouter = t.router({
     approve: publicProcedure.input(z.object({
       orderId: z.number(),
       cancelFee: z.number(),
-      refundAmount: z.number(),
     })).output(z.object({
       success: z.boolean(),
       orderId: z.number(),
@@ -1680,8 +1697,15 @@ const appRouter = t.router({
       status: z.enum(CLAIM_STATUS),
       reason: z.string(),
       evidenceUrls: z.array(z.string()).nullish(),
-      originalAmount: z.number(),
-      refundAmount: z.number(),
+      claimOptionItems: z.array(
+        z.object({
+          optionId: z.number(),
+          optionName: z.string(),
+          quantity: z.number(),
+          unitPrice: z.number(),
+        })
+      ),
+      cancelFee: z.number(),
       createdAt: z.date(),
     }))).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
   }),

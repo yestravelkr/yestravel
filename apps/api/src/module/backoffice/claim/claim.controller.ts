@@ -52,8 +52,8 @@ export class ClaimController {
         status: claim.status,
         reason: claim.reason.text,
         evidenceUrls: claim.reason.evidenceUrls,
-        originalAmount: claim.amount.original,
-        refundAmount: claim.amount.refund,
+        claimOptionItems: claim.claimOptionItems,
+        cancelFee: claim.detail.cancelFee,
         createdAt: claim.createdAt,
       })
     );
