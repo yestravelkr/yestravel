@@ -7,21 +7,16 @@
 
 import { Column } from 'typeorm';
 import type { Nullish } from '@src/types/utility.type';
-import type { ClaimReasonCategory } from './claim-type';
 
 /**
  * 사유 정보 Embedded
  * 참고: TypeORM이 프로퍼티명(reason)을 prefix로 자동 추가함
- *       → reason_category, reason_detail, reason_evidence_urls
+ *       → reason_text, reason_evidence_urls
  */
 export class ClaimReasonInfo {
-  /** 사유 카테고리 */
-  @Column({ name: 'category', type: 'varchar', length: 30 })
-  category: ClaimReasonCategory;
-
-  /** 상세 사유 */
-  @Column({ name: 'detail', type: 'text', nullable: true })
-  detail: Nullish<string>;
+  /** 사유 (한글 텍스트) */
+  @Column({ name: 'text', type: 'text' })
+  text: string;
 
   /** 증빙자료 URL 목록 */
   @Column({ name: 'evidence_urls', type: 'jsonb', nullable: true })

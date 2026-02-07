@@ -6,7 +6,6 @@ import { z } from 'zod';
 import {
   CLAIM_TYPE,
   CLAIM_STATUS,
-  CLAIM_REASON_CATEGORY,
 } from '@src/module/backoffice/domain/order/claim-type';
 
 /** 취소 승인 입력 스키마 */
@@ -47,8 +46,7 @@ export const claimDetailSchema = z.object({
   id: z.number(),
   type: z.enum(CLAIM_TYPE),
   status: z.enum(CLAIM_STATUS),
-  reasonCategory: z.enum(CLAIM_REASON_CATEGORY),
-  reasonDetail: z.string().nullish(),
+  reason: z.string(),
   evidenceUrls: z.array(z.string()).nullish(),
   originalAmount: z.number(),
   refundAmount: z.number(),

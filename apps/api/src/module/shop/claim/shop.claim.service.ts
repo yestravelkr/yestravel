@@ -46,14 +46,7 @@ export class ShopClaimService {
    *   - 부분 반품 시 환불 금액 계산 로직 추가
    */
   async create(input: CreateClaimInput): Promise<CreateClaimOutput> {
-    const {
-      orderId,
-      memberId,
-      type,
-      reasonCategory,
-      reasonDetail,
-      evidenceUrls,
-    } = input;
+    const { orderId, memberId, type, reason, evidenceUrls } = input;
 
     // 1. 주문 조회 및 권한 확인
     const order = await this.repositoryProvider.OrderRepository.findOneOrFail({
@@ -100,8 +93,7 @@ export class ShopClaimService {
     claim.orderId = orderId;
     claim.memberId = memberId;
     claim.reason = {
-      category: reasonCategory,
-      detail: reasonDetail ?? null,
+      text: reason,
       evidenceUrls: evidenceUrls ?? null,
     };
     claim.amount = {
@@ -153,8 +145,7 @@ export class ShopClaimService {
       id: claim.id,
       type: claim.type,
       status: claim.status,
-      reasonCategory: claim.reason.category,
-      reasonDetail: claim.reason.detail,
+      reason: claim.reason.text,
       evidenceUrls: claim.reason.evidenceUrls,
       originalAmount: claim.amount.original,
       refundAmount: claim.amount.refund,

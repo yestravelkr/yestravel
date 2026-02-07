@@ -1,7 +1,6 @@
 import { z } from 'zod';
 import {
   CLAIM_TYPE,
-  CLAIM_REASON_CATEGORY,
   CLAIM_STATUS,
 } from '@src/module/backoffice/domain/order/claim-type';
 
@@ -12,10 +11,8 @@ export const createClaimInputSchema = z.object({
   orderId: z.number().int().positive(),
   /** 클레임 타입: CANCEL | RETURN */
   type: z.enum(CLAIM_TYPE),
-  /** 사유 카테고리 */
-  reasonCategory: z.enum(CLAIM_REASON_CATEGORY),
-  /** 상세 사유 (선택) */
-  reasonDetail: z.string().nullish(),
+  /** 취소/반품 사유 */
+  reason: z.string(),
   /** 증빙자료 URL 목록 (선택) */
   evidenceUrls: z.array(z.string().url()).nullish(),
 });
@@ -43,8 +40,7 @@ export const claimDetailSchema = z.object({
   id: z.number(),
   type: z.enum(CLAIM_TYPE),
   status: z.enum(CLAIM_STATUS),
-  reasonCategory: z.enum(CLAIM_REASON_CATEGORY),
-  reasonDetail: z.string().nullish(),
+  reason: z.string(),
   evidenceUrls: z.array(z.string()).nullish(),
   originalAmount: z.number(),
   refundAmount: z.number(),
