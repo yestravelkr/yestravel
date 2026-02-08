@@ -66,6 +66,50 @@ estimated_tokens: ~600
 | **모듈 간 통신** | Service 직접 주입 대신 MicroserviceClient 사용 |
 | **Repository 주입** | 구체 클래스 대신 `getXxxRepository` 토큰 사용 |
 
+### 레이어 간 객체 변환 규칙
+
+**Service → Controller 반환 규칙:**
+
+| 규칙 | 설명 |
+|------|------|
+| **Service 반환 타입** | 항상 Entity 또는 Entity를 포함한 일반 객체 |
+| **Service에서 금지** | Entity → DTO/Interface 변환 금지 (map() 사용 금지) |
+| **Controller 역할** | Entity → Response DTO 변환 담당 |
+
+```typescript
+// ❌ Service에서 DTO로 변환 (금지)
+async findAll(): Promise<UserListResponse> {
+  const users = await this.userRepository.find();
+  return {
+    data: users.map(u => ({
+      id: u.id,
+      name: u.name,
+      email: u.email,
+    })),
+  };
+}
+
+// ✅ Service: Entity 그대로 반환
+async findAll(): Promise<{ data: UserEntity[]; total: number }> {
+  const [data, total] = await this.userRepository.findAndCount();
+  return { data, total };
+}
+
+// ✅ Controller: Entity → Response DTO 변환
+@MessagePattern('user.findAll')
+async findAll(input: FindAllInput): Promise<UserListResponse> {
+  const result = await this.userService.findAll(input);
+  return {
+    data: result.data.map(user => ({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+    })),
+    total: result.total,
+  };
+}
+```
+
 ### TypeORM 쿼리 규칙
 
 | 규칙 | 설명 |
@@ -155,6 +199,7 @@ interface OrderInput {
 |-----|------|
 | DTO 분리 | Service 내 interface 금지, `*.dto.ts` 분리 |
 | Entity 위치 | `apps/api/src/module/backoffice/domain/` |
+| Service 반환 | Entity 그대로 반환, Controller에서 DTO 변환 |
 | Repository | `TypeOrmModule.forFeature()` 금지, `RepositoryProvider` 사용 |
 | 트랜잭션 | Mutation에 `@Transactional`, Controller에 `TransactionService` 주입 |
 | Router | Module providers에 추가 금지 (자동 발견) |
@@ -169,6 +214,8 @@ interface OrderInput {
 - [ ] Repository가 RepositoryProvider에 등록되었는가?
 - [ ] Controller에 TransactionService가 주입되었는가?
 - [ ] Mutation에만 @Transactional이 적용되었는가? (Query 제외)
+- [ ] Service 메서드가 Entity를 직접 반환하는가? (DTO/Interface 변환 금지)
+- [ ] Entity → Response DTO 변환이 Controller에서 수행되는가?
 - [ ] 단순 조회에 `find`를 사용했는가? (QueryBuilder 최소화)
 - [ ] `| null | undefined` 대신 `Nullish<T>`를 사용했는가?
 - [ ] Router가 Module providers에 없는가?

@@ -19,6 +19,8 @@ import type {
   CompleteSettlementsResponse,
   ExportSettlementToExcelResponse,
 } from './settlement.dto';
+import type { InfluencerSettlementEntity } from '@src/module/backoffice/domain/settlement/influencer-settlement.entity';
+import type { BrandSettlementEntity } from '@src/module/backoffice/domain/settlement/brand-settlement.entity';
 
 /**
  * SettlementController - 정산 관리 컨트롤러
@@ -34,7 +36,50 @@ export class SettlementController {
   async findAll(
     input: FindAllSettlementsInput
   ): Promise<SettlementListResponse> {
-    return await this.settlementService.findAll(input);
+    const result = await this.settlementService.findAll(input);
+
+    const data = [
+      ...result.influencerSettlements.map((s: InfluencerSettlementEntity) => ({
+        id: s.id,
+        targetType: 'INFLUENCER' as const,
+        targetId: s.influencerId,
+        targetName: s.influencer?.name ?? '',
+        periodYear: s.periodYear,
+        periodMonth: s.periodMonth,
+        status: s.status,
+        scheduledAt: s.scheduledAt,
+        completedAt: s.completedAt,
+        totalSales: s.totalSales,
+        totalQuantity: s.totalQuantity,
+        totalAmount: s.totalAmount,
+        campaignNames: [],
+        createdAt: s.createdAt,
+      })),
+      ...result.brandSettlements.map((s: BrandSettlementEntity) => ({
+        id: s.id,
+        targetType: 'BRAND' as const,
+        targetId: s.brandId,
+        targetName: s.brand?.name ?? '',
+        periodYear: s.periodYear,
+        periodMonth: s.periodMonth,
+        status: s.status,
+        scheduledAt: s.scheduledAt,
+        completedAt: s.completedAt,
+        totalSales: s.totalSales,
+        totalQuantity: s.totalQuantity,
+        totalAmount: s.totalAmount,
+        campaignNames: [],
+        createdAt: s.createdAt,
+      })),
+    ].sort((a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime());
+
+    return {
+      data,
+      total: result.total,
+      page: result.page,
+      limit: result.limit,
+      totalPages: result.totalPages,
+    };
   }
 
   @MessagePattern('backofficeSettlement.findInfluencerSettlementById')

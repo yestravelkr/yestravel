@@ -3,7 +3,7 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
-import { In, IsNull } from 'typeorm';
+import { Between, FindOptionsWhere, In, IsNull } from 'typeorm';
 import * as ExcelJS from 'exceljs';
 import dayjs from 'dayjs';
 import { RepositoryProvider } from '@src/module/shared/transaction/repository.provider';
@@ -28,7 +28,6 @@ import type {
   CreateBrandSettlementInput,
   CompleteSettlementsInput,
   ExportSettlementToExcelInput,
-  SettlementListResponse,
   InfluencerSettlementDetailResponse,
   BrandSettlementDetailResponse,
   SettlementFilterOptionsResponse,
@@ -36,6 +35,15 @@ import type {
   CompleteSettlementsResponse,
   ExportSettlementToExcelResponse,
 } from './settlement.dto';
+
+interface FindAllSettlementsResult {
+  influencerSettlements: InfluencerSettlementEntity[];
+  brandSettlements: BrandSettlementEntity[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
 
 @Injectable()
 export class SettlementService {
@@ -50,7 +58,7 @@ export class SettlementService {
    */
   async findAll(
     input: FindAllSettlementsInput
-  ): Promise<SettlementListResponse> {
+  ): Promise<FindAllSettlementsResult> {
     const {
       page = 1,
       limit = 50,
@@ -62,60 +70,56 @@ export class SettlementService {
       periodMonth,
     } = input;
 
-    const items: Array<{
-      id: number;
-      targetType: 'INFLUENCER' | 'BRAND';
-      targetId: number;
-      targetName: string;
-      periodYear: number;
-      periodMonth: number;
-      status: 'PENDING' | 'COMPLETED';
-      scheduledAt: Date;
-      completedAt: Date | null;
-      totalSales: number;
-      totalQuantity: number;
-      totalAmount: number;
-      campaignNames: string[];
-      createdAt: Date;
-    }> = [];
+    const skip = (page - 1) * limit;
+    const filterBase = { status, targetId, periodYear, periodMonth, campaignId };
 
-    // 인플루언서 정산 조회
-    if (!targetType || targetType === 'INFLUENCER') {
-      const influencerSettlements = await this.findInfluencerSettlements({
-        status,
-        targetId,
-        periodYear,
-        periodMonth,
-        campaignId,
+    if (targetType === 'INFLUENCER') {
+      const { data, total } = await this.findInfluencerSettlements({
+        ...filterBase,
+        skip,
+        take: limit,
       });
-      items.push(...influencerSettlements);
+
+      return {
+        influencerSettlements: data,
+        brandSettlements: [],
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      };
     }
 
-    // 브랜드 정산 조회
-    if (!targetType || targetType === 'BRAND') {
-      const brandSettlements = await this.findBrandSettlements({
-        status,
-        targetId,
-        periodYear,
-        periodMonth,
-        campaignId,
+    if (targetType === 'BRAND') {
+      const { data, total } = await this.findBrandSettlements({
+        ...filterBase,
+        skip,
+        take: limit,
       });
-      items.push(...brandSettlements);
+
+      return {
+        influencerSettlements: [],
+        brandSettlements: data,
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      };
     }
 
-    // 정렬 (예정일 기준 오름차순)
-    items.sort((a, b) => a.scheduledAt.getTime() - b.scheduledAt.getTime());
-
-    // 페이지네이션
-    const total = items.length;
-    const paginatedData = items.slice((page - 1) * limit, page * limit);
+    // targetType 미지정: 양쪽 모두 조회
+    const [influencerResult, brandResult] = await Promise.all([
+      this.findInfluencerSettlements({ ...filterBase, skip, take: limit }),
+      this.findBrandSettlements({ ...filterBase, skip, take: limit }),
+    ]);
 
     return {
-      data: paginatedData,
-      total,
+      influencerSettlements: influencerResult.data,
+      brandSettlements: brandResult.data,
+      total: influencerResult.total + brandResult.total,
       page,
       limit,
-      totalPages: Math.ceil(total / limit),
+      totalPages: Math.ceil((influencerResult.total + brandResult.total) / limit),
     };
   }
 
@@ -125,57 +129,25 @@ export class SettlementService {
     periodYear?: number | null;
     periodMonth?: number | null;
     campaignId?: number | null;
-  }) {
-    const qb = getInfluencerSettlementRepository()
-      .createQueryBuilder('s')
-      .leftJoinAndSelect('s.influencer', 'influencer')
-      .leftJoinAndSelect('s.orders', 'orders')
-      .leftJoinAndSelect('orders.campaign', 'campaign');
+    skip?: number;
+    take?: number;
+  }): Promise<{ data: InfluencerSettlementEntity[]; total: number }> {
+    const where: FindOptionsWhere<InfluencerSettlementEntity> = {};
 
-    if (filter.status) {
-      qb.andWhere('s.status = :status', { status: filter.status });
-    }
-    if (filter.targetId) {
-      qb.andWhere('s.influencerId = :influencerId', {
-        influencerId: filter.targetId,
-      });
-    }
-    if (filter.periodYear) {
-      qb.andWhere('s.periodYear = :periodYear', {
-        periodYear: filter.periodYear,
-      });
-    }
-    if (filter.periodMonth) {
-      qb.andWhere('s.periodMonth = :periodMonth', {
-        periodMonth: filter.periodMonth,
-      });
-    }
-    if (filter.campaignId) {
-      qb.andWhere('orders.campaignId = :campaignId', {
-        campaignId: filter.campaignId,
-      });
-    }
+    if (filter.status) where.status = filter.status as InfluencerSettlementEntity['status'];
+    if (filter.targetId) where.influencerId = filter.targetId;
+    if (filter.periodYear) where.periodYear = filter.periodYear;
+    if (filter.periodMonth) where.periodMonth = filter.periodMonth;
 
-    const settlements = await qb.getMany();
+    const [data, total] = await getInfluencerSettlementRepository().findAndCount({
+      where,
+      relations: ['influencer'],
+      order: { scheduledAt: 'ASC' },
+      skip: filter.skip,
+      take: filter.take,
+    });
 
-    return settlements.map(s => ({
-      id: s.id,
-      targetType: 'INFLUENCER' as const,
-      targetId: s.influencerId,
-      targetName: s.influencer?.name ?? '',
-      periodYear: s.periodYear,
-      periodMonth: s.periodMonth,
-      status: s.status,
-      scheduledAt: s.scheduledAt,
-      completedAt: s.completedAt,
-      totalSales: s.totalSales,
-      totalQuantity: s.totalQuantity,
-      totalAmount: s.totalAmount,
-      campaignNames: [
-        ...new Set(s.orders?.map(o => o.campaign?.title).filter(Boolean)),
-      ] as string[],
-      createdAt: s.createdAt,
-    }));
+    return { data, total };
   }
 
   private async findBrandSettlements(filter: {
@@ -184,55 +156,25 @@ export class SettlementService {
     periodYear?: number | null;
     periodMonth?: number | null;
     campaignId?: number | null;
-  }) {
-    const qb = getBrandSettlementRepository()
-      .createQueryBuilder('s')
-      .leftJoinAndSelect('s.brand', 'brand')
-      .leftJoinAndSelect('s.orders', 'orders')
-      .leftJoinAndSelect('orders.campaign', 'campaign');
+    skip?: number;
+    take?: number;
+  }): Promise<{ data: BrandSettlementEntity[]; total: number }> {
+    const where: FindOptionsWhere<BrandSettlementEntity> = {};
 
-    if (filter.status) {
-      qb.andWhere('s.status = :status', { status: filter.status });
-    }
-    if (filter.targetId) {
-      qb.andWhere('s.brandId = :brandId', { brandId: filter.targetId });
-    }
-    if (filter.periodYear) {
-      qb.andWhere('s.periodYear = :periodYear', {
-        periodYear: filter.periodYear,
-      });
-    }
-    if (filter.periodMonth) {
-      qb.andWhere('s.periodMonth = :periodMonth', {
-        periodMonth: filter.periodMonth,
-      });
-    }
-    if (filter.campaignId) {
-      qb.andWhere('orders.campaignId = :campaignId', {
-        campaignId: filter.campaignId,
-      });
-    }
+    if (filter.status) where.status = filter.status as BrandSettlementEntity['status'];
+    if (filter.targetId) where.brandId = filter.targetId;
+    if (filter.periodYear) where.periodYear = filter.periodYear;
+    if (filter.periodMonth) where.periodMonth = filter.periodMonth;
 
-    const settlements = await qb.getMany();
+    const [data, total] = await getBrandSettlementRepository().findAndCount({
+      where,
+      relations: ['brand'],
+      order: { scheduledAt: 'ASC' },
+      skip: filter.skip,
+      take: filter.take,
+    });
 
-    return settlements.map(s => ({
-      id: s.id,
-      targetType: 'BRAND' as const,
-      targetId: s.brandId,
-      targetName: s.brand?.name ?? '',
-      periodYear: s.periodYear,
-      periodMonth: s.periodMonth,
-      status: s.status,
-      scheduledAt: s.scheduledAt,
-      completedAt: s.completedAt,
-      totalSales: s.totalSales,
-      totalQuantity: s.totalQuantity,
-      totalAmount: s.totalAmount,
-      campaignNames: [
-        ...new Set(s.orders?.map(o => o.campaign?.title).filter(Boolean)),
-      ] as string[],
-      createdAt: s.createdAt,
-    }));
+    return { data, total };
   }
 
   /**
@@ -475,26 +417,18 @@ export class SettlementService {
     }
 
     // 정산 대상 주문 조회 (해당 기간, 해당 인플루언서, 아직 정산 안된 주문)
-    const orders = await this.repositoryProvider.OrderRepository.find({
-      where: {
-        influencerId,
-        influencerSettlementId: IsNull(),
-      },
-    });
-
-    // 해당 기간 필터링
     const periodStart = dayjs()
       .year(periodYear)
       .month(periodMonth - 1)
       .startOf('month');
     const periodEnd = periodStart.endOf('month');
 
-    const periodOrders = orders.filter(order => {
-      const orderDate = dayjs(order.createdAt);
-      return (
-        orderDate.isAfter(periodStart) &&
-        orderDate.isBefore(periodEnd.add(1, 'day'))
-      );
+    const periodOrders = await this.repositoryProvider.OrderRepository.find({
+      where: {
+        influencerId,
+        influencerSettlementId: IsNull(),
+        createdAt: Between(periodStart.toDate(), periodEnd.endOf('day').toDate()),
+      },
     });
 
     // 정산금액 계산
@@ -555,28 +489,20 @@ export class SettlementService {
       );
     }
 
-    // 정산 대상 주문 조회 (해당 브랜드 상품, 아직 정산 안된 주문)
-    // brand_id는 product를 통해 조회해야 함
-    const orders =
-      await this.repositoryProvider.OrderRepository.createQueryBuilder('order')
-        .leftJoin('order.product', 'product')
-        .where('product.brandId = :brandId', { brandId })
-        .andWhere('order.brandSettlementId IS NULL')
-        .getMany();
-
-    // 해당 기간 필터링
+    // 정산 대상 주문 조회 (해당 브랜드 상품, 해당 기간, 아직 정산 안된 주문)
+    // brand_id는 product를 통해 조회해야 하므로 QueryBuilder 사용
     const periodStart = dayjs()
       .year(periodYear)
       .month(periodMonth - 1)
       .startOf('month');
     const periodEnd = periodStart.endOf('month');
 
-    const periodOrders = orders.filter(order => {
-      const orderDate = dayjs(order.createdAt);
-      return (
-        orderDate.isAfter(periodStart) &&
-        orderDate.isBefore(periodEnd.add(1, 'day'))
-      );
+    const periodOrders = await this.repositoryProvider.OrderRepository.find({
+      where: {
+        product: { brandId },
+        brandSettlementId: IsNull(),
+        createdAt: Between(periodStart.toDate(), periodEnd.endOf('day').toDate()),
+      },
     });
 
     // 정산금액 계산
