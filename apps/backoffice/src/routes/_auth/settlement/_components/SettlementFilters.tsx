@@ -3,6 +3,7 @@
  */
 
 import { Button } from '@yestravelkr/min-design-system';
+import tw from 'tailwind-styled-components';
 
 import { SearchableSelect } from '@/shared/components';
 
@@ -40,7 +41,7 @@ export function SettlementFilters({
     filters.targetType === 'BRAND' ? brandOptions : influencerOptions;
 
   return (
-    <div className="flex items-center gap-3 flex-wrap">
+    <FilterContainer>
       {/* 정산 대상 타입 */}
       <SearchableSelect
         placeholder="정산대상 유형"
@@ -97,6 +98,11 @@ export function SettlementFilters({
           엑셀 다운로드
         </Button>
       )}
-    </div>
+    </FilterContainer>
   );
 }
+
+// Styled Components
+const FilterContainer = tw.div`
+  flex items-center gap-3 flex-wrap
+`;

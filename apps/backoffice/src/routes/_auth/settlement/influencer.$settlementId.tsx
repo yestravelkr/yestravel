@@ -10,6 +10,7 @@ import { Button } from '@yestravelkr/min-design-system';
 import dayjs from 'dayjs';
 import { ArrowLeftIcon, DownloadIcon } from 'lucide-react';
 import { toast } from 'sonner';
+import tw from 'tailwind-styled-components';
 
 import { MajorPageLayout } from '@/components/layout';
 import { Card, openConfirmModal } from '@/shared/components';
@@ -95,7 +96,7 @@ function InfluencerSettlementDetailPage() {
     <MajorPageLayout
       title="인플루언서 정산 상세"
       headerActions={
-        <div className="flex gap-2">
+        <HeaderActions>
           <Button
             kind="neutral"
             variant="outline"
@@ -116,10 +117,10 @@ function InfluencerSettlementDetailPage() {
               })
             }
           >
-            <span className="flex items-center">
+            <ButtonContent>
               <ArrowLeftIcon className="w-4 h-4 mr-2" />
               목록으로
-            </span>
+            </ButtonContent>
           </Button>
           <Button
             kind="neutral"
@@ -127,10 +128,10 @@ function InfluencerSettlementDetailPage() {
             size="medium"
             onClick={handleExcelDownload}
           >
-            <span className="flex items-center">
+            <ButtonContent>
               <DownloadIcon className="w-4 h-4 mr-2" />
               엑셀 다운로드
-            </span>
+            </ButtonContent>
           </Button>
           {settlement.status === 'PENDING' && (
             <Button
@@ -142,158 +143,247 @@ function InfluencerSettlementDetailPage() {
               정산완료
             </Button>
           )}
-        </div>
+        </HeaderActions>
       }
     >
-      <div className="flex gap-6">
+      <ContentContainer>
         {/* 좌측: 캠페인별 상품 목록 */}
-        <div className="flex-1 space-y-4">
+        <LeftSection>
           {settlement.campaignGroups.map((group) => (
             <Card key={group.campaignId}>
-              <div className="p-4 border-b border-gray-200">
-                <h3 className="font-semibold text-lg">{group.campaignName}</h3>
-                <p className="text-sm text-gray-500">{group.campaignPeriod}</p>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-50">
+              <CardHeader>
+                <CampaignTitle>{group.campaignName}</CampaignTitle>
+                <CampaignPeriod>{group.campaignPeriod}</CampaignPeriod>
+              </CardHeader>
+              <TableWrapper>
+                <ProductTable>
+                  <TableHead>
                     <tr>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
-                        상품
-                      </th>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
-                        옵션
-                      </th>
-                      <th className="px-4 py-3 text-right text-sm font-medium text-gray-500">
-                        수량
-                      </th>
-                      <th className="px-4 py-3 text-right text-sm font-medium text-gray-500">
-                        매출
-                      </th>
-                      <th className="px-4 py-3 text-right text-sm font-medium text-gray-500">
-                        정산금액
-                      </th>
+                      <TableHeaderCell $align="left">상품</TableHeaderCell>
+                      <TableHeaderCell $align="left">옵션</TableHeaderCell>
+                      <TableHeaderCell $align="right">수량</TableHeaderCell>
+                      <TableHeaderCell $align="right">매출</TableHeaderCell>
+                      <TableHeaderCell $align="right">정산금액</TableHeaderCell>
                     </tr>
-                  </thead>
+                  </TableHead>
                   <tbody>
                     {group.products.map((product, idx) => (
-                      <tr key={idx} className="border-b border-gray-100">
-                        <td className="px-4 py-3 text-sm">
-                          {product.productName}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-500">
+                      <ProductRow key={idx}>
+                        <TableCell>{product.productName}</TableCell>
+                        <TableCell $color="gray">
                           {product.optionName || '-'}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-right">
-                          {product.quantity}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-right">
+                        </TableCell>
+                        <TableCell $align="right">{product.quantity}</TableCell>
+                        <TableCell $align="right">
                           {formatPrice(product.sales)}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-right font-medium">
+                        </TableCell>
+                        <TableCell $align="right" $bold>
                           {formatPrice(product.settlementAmount)}
-                        </td>
-                      </tr>
+                        </TableCell>
+                      </ProductRow>
                     ))}
-                    <tr className="bg-gray-50 font-medium">
-                      <td className="px-4 py-3 text-sm" colSpan={2}>
-                        소계
-                      </td>
-                      <td className="px-4 py-3 text-sm text-right">
+                    <SubtotalRow>
+                      <TableCell colSpan={2}>소계</TableCell>
+                      <TableCell $align="right">
                         {group.subtotalQuantity}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-right">
+                      </TableCell>
+                      <TableCell $align="right">
                         {formatPrice(group.subtotalSales)}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-right">
+                      </TableCell>
+                      <TableCell $align="right">
                         {formatPrice(group.subtotalAmount)}
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </SubtotalRow>
                   </tbody>
-                </table>
-              </div>
+                </ProductTable>
+              </TableWrapper>
             </Card>
           ))}
-        </div>
+        </LeftSection>
 
         {/* 우측: 정산 정보 */}
-        <div className="w-80 space-y-4">
+        <RightSection>
           {/* 정산 정보 카드 */}
           <Card>
-            <div className="p-4">
-              <h3 className="font-semibold mb-4">정산 정보</h3>
-              <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-gray-500">인플루언서</span>
-                  <span className="font-medium">
-                    {settlement.influencerName}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-500">정산 기간</span>
-                  <span>
+            <CardContent>
+              <SectionTitle>정산 정보</SectionTitle>
+              <InfoList>
+                <InfoRow>
+                  <InfoLabel>인플루언서</InfoLabel>
+                  <InfoValue $bold>{settlement.influencerName}</InfoValue>
+                </InfoRow>
+                <InfoRow>
+                  <InfoLabel>정산 기간</InfoLabel>
+                  <InfoValue>
                     {settlement.periodYear}년 {settlement.periodMonth}월
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-500">정산 예정일</span>
-                  <span>
+                  </InfoValue>
+                </InfoRow>
+                <InfoRow>
+                  <InfoLabel>정산 예정일</InfoLabel>
+                  <InfoValue>
                     {dayjs(settlement.scheduledAt).format('YYYY.MM.DD')}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-500">상태</span>
-                  <span
-                    className={
-                      settlement.status === 'PENDING'
-                        ? 'text-orange-500'
-                        : 'text-green-500'
-                    }
-                  >
+                  </InfoValue>
+                </InfoRow>
+                <InfoRow>
+                  <InfoLabel>상태</InfoLabel>
+                  <StatusText $status={settlement.status}>
                     {settlement.status === 'PENDING' ? '정산대기' : '정산완료'}
-                  </span>
-                </div>
+                  </StatusText>
+                </InfoRow>
                 <hr />
-                <div className="flex justify-between">
-                  <span className="text-gray-500">총 매출</span>
-                  <span>{formatPrice(settlement.totalSales)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-500">총 수량</span>
-                  <span>{settlement.totalQuantity}건</span>
-                </div>
-                <div className="flex justify-between text-lg font-semibold">
+                <InfoRow>
+                  <InfoLabel>총 매출</InfoLabel>
+                  <InfoValue>{formatPrice(settlement.totalSales)}</InfoValue>
+                </InfoRow>
+                <InfoRow>
+                  <InfoLabel>총 수량</InfoLabel>
+                  <InfoValue>{settlement.totalQuantity}건</InfoValue>
+                </InfoRow>
+                <TotalRow>
                   <span>총 정산금액</span>
-                  <span className="text-blue-600">
+                  <TotalAmount>
                     {formatPrice(settlement.totalAmount)}
-                  </span>
-                </div>
-              </div>
-            </div>
+                  </TotalAmount>
+                </TotalRow>
+              </InfoList>
+            </CardContent>
           </Card>
 
           {/* 정산 계좌 카드 */}
           <Card>
-            <div className="p-4">
-              <h3 className="font-semibold mb-4">정산 계좌</h3>
-              <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-gray-500">은행</span>
-                  <span>{settlement.bankAccount.bankName || '-'}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-500">계좌번호</span>
-                  <span>{settlement.bankAccount.accountNumber || '-'}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-500">예금주</span>
-                  <span>{settlement.bankAccount.accountHolder || '-'}</span>
-                </div>
-              </div>
-            </div>
+            <CardContent>
+              <SectionTitle>정산 계좌</SectionTitle>
+              <InfoList>
+                <InfoRow>
+                  <InfoLabel>은행</InfoLabel>
+                  <InfoValue>
+                    {settlement.bankAccount.bankName || '-'}
+                  </InfoValue>
+                </InfoRow>
+                <InfoRow>
+                  <InfoLabel>계좌번호</InfoLabel>
+                  <InfoValue>
+                    {settlement.bankAccount.accountNumber || '-'}
+                  </InfoValue>
+                </InfoRow>
+                <InfoRow>
+                  <InfoLabel>예금주</InfoLabel>
+                  <InfoValue>
+                    {settlement.bankAccount.accountHolder || '-'}
+                  </InfoValue>
+                </InfoRow>
+              </InfoList>
+            </CardContent>
           </Card>
-        </div>
-      </div>
+        </RightSection>
+      </ContentContainer>
     </MajorPageLayout>
   );
 }
+
+// Styled Components
+const HeaderActions = tw.div`
+  flex gap-2
+`;
+
+const ButtonContent = tw.span`
+  flex items-center
+`;
+
+const ContentContainer = tw.div`
+  flex gap-6
+`;
+
+const LeftSection = tw.div`
+  flex-1 space-y-4
+`;
+
+const RightSection = tw.div`
+  w-80 space-y-4
+`;
+
+const CardHeader = tw.div`
+  p-4 border-b border-gray-200
+`;
+
+const CampaignTitle = tw.h3`
+  font-semibold text-lg
+`;
+
+const CampaignPeriod = tw.p`
+  text-sm text-gray-500
+`;
+
+const TableWrapper = tw.div`
+  overflow-x-auto
+`;
+
+const ProductTable = tw.table`
+  w-full
+`;
+
+const TableHead = tw.thead`
+  bg-gray-50
+`;
+
+const TableHeaderCell = tw.th<{ $align: 'left' | 'right' }>`
+  px-4 py-3
+  text-sm font-medium text-gray-500
+  ${({ $align }) => ($align === 'left' ? 'text-left' : 'text-right')}
+`;
+
+const ProductRow = tw.tr`
+  border-b border-gray-100
+`;
+
+const SubtotalRow = tw.tr`
+  bg-gray-50 font-medium
+`;
+
+const TableCell = tw.td<{
+  $align?: 'left' | 'right';
+  $color?: 'gray';
+  $bold?: boolean;
+}>`
+  px-4 py-3 text-sm
+  ${({ $align }) => ($align === 'right' ? 'text-right' : '')}
+  ${({ $color }) => ($color === 'gray' ? 'text-gray-500' : '')}
+  ${({ $bold }) => ($bold ? 'font-medium' : '')}
+`;
+
+const CardContent = tw.div`
+  p-4
+`;
+
+const SectionTitle = tw.h3`
+  font-semibold mb-4
+`;
+
+const InfoList = tw.div`
+  space-y-3
+`;
+
+const InfoRow = tw.div`
+  flex justify-between
+`;
+
+const InfoLabel = tw.span`
+  text-gray-500
+`;
+
+const InfoValue = tw.span<{ $bold?: boolean }>`
+  ${({ $bold }) => ($bold ? 'font-medium' : '')}
+`;
+
+const StatusText = tw.span<{ $status: string }>`
+  ${({ $status }) => ($status === 'PENDING' ? 'text-orange-500' : 'text-green-500')}
+`;
+
+const TotalRow = tw.div`
+  flex justify-between
+  text-lg font-semibold
+`;
+
+const TotalAmount = tw.span`
+  text-blue-600
+`;
