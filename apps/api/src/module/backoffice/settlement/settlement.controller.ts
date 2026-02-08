@@ -71,7 +71,10 @@ export class SettlementController {
         campaignNames: [],
         createdAt: s.createdAt,
       })),
-    ].sort((a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime());
+    ].sort(
+      (a, b) =>
+        new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime()
+    );
 
     return {
       data,
@@ -79,6 +82,7 @@ export class SettlementController {
       page: result.page,
       limit: result.limit,
       totalPages: result.totalPages,
+      statusCounts: result.statusCounts,
     };
   }
 

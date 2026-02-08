@@ -237,11 +237,9 @@ function SettlementListPage() {
   const totalCount = settlementsData.total;
   const totalPages = settlementsData.totalPages;
 
-  // 상태별 카운트 계산 (클라이언트 사이드)
-  const pendingCount = settlements.filter((s) => s.status === 'PENDING').length;
-  const completedCount = settlements.filter(
-    (s) => s.status === 'COMPLETED',
-  ).length;
+  // 상태별 카운트 (API 응답에서 제공)
+  const pendingCount = settlementsData.statusCounts?.pending ?? 0;
+  const completedCount = settlementsData.statusCounts?.completed ?? 0;
 
   const statusTabs = [
     { key: 'ALL' as const, label: '전체', count: totalCount },

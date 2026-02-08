@@ -16,7 +16,7 @@ import {
   BrandSettlementEntity,
   getBrandSettlementRepository,
 } from '@src/module/backoffice/domain/settlement/brand-settlement.entity';
-import { SETTLEMENT_STATUS } from '@src/module/backoffice/domain/settlement/settlement.entity';
+import { SettlementStatusEnum } from '@src/module/backoffice/domain/settlement/settlement.entity';
 import { OrderEntity } from '@src/module/backoffice/domain/order/order.entity';
 import type { HotelOrderOptionData } from '@src/module/backoffice/domain/order/hotel-order.entity';
 import { SettlementCalculatorFactory } from './calculator/settlement-calculator.factory';
@@ -43,6 +43,10 @@ interface FindAllSettlementsResult {
   page: number;
   limit: number;
   totalPages: number;
+  statusCounts: {
+    pending: number;
+    completed: number;
+  };
 }
 
 @Injectable()
@@ -71,14 +75,19 @@ export class SettlementService {
     } = input;
 
     const skip = (page - 1) * limit;
-    const filterBase = { status, targetId, periodYear, periodMonth, campaignId };
+    const filterBase = {
+      status,
+      targetId,
+      periodYear,
+      periodMonth,
+      campaignId,
+    };
 
     if (targetType === 'INFLUENCER') {
-      const { data, total } = await this.findInfluencerSettlements({
-        ...filterBase,
-        skip,
-        take: limit,
-      });
+      const [{ data, total }, statusCounts] = await Promise.all([
+        this.findInfluencerSettlements({ ...filterBase, skip, take: limit }),
+        this.countInfluencerSettlementsByStatus(filterBase),
+      ]);
 
       return {
         influencerSettlements: data,
@@ -87,15 +96,15 @@ export class SettlementService {
         page,
         limit,
         totalPages: Math.ceil(total / limit),
+        statusCounts,
       };
     }
 
     if (targetType === 'BRAND') {
-      const { data, total } = await this.findBrandSettlements({
-        ...filterBase,
-        skip,
-        take: limit,
-      });
+      const [{ data, total }, statusCounts] = await Promise.all([
+        this.findBrandSettlements({ ...filterBase, skip, take: limit }),
+        this.countBrandSettlementsByStatus(filterBase),
+      ]);
 
       return {
         influencerSettlements: [],
@@ -104,14 +113,18 @@ export class SettlementService {
         page,
         limit,
         totalPages: Math.ceil(total / limit),
+        statusCounts,
       };
     }
 
     // targetType 미지정: 양쪽 모두 조회
-    const [influencerResult, brandResult] = await Promise.all([
-      this.findInfluencerSettlements({ ...filterBase, skip, take: limit }),
-      this.findBrandSettlements({ ...filterBase, skip, take: limit }),
-    ]);
+    const [influencerResult, brandResult, influencerCounts, brandCounts] =
+      await Promise.all([
+        this.findInfluencerSettlements({ ...filterBase, skip, take: limit }),
+        this.findBrandSettlements({ ...filterBase, skip, take: limit }),
+        this.countInfluencerSettlementsByStatus(filterBase),
+        this.countBrandSettlementsByStatus(filterBase),
+      ]);
 
     return {
       influencerSettlements: influencerResult.data,
@@ -119,7 +132,13 @@ export class SettlementService {
       total: influencerResult.total + brandResult.total,
       page,
       limit,
-      totalPages: Math.ceil((influencerResult.total + brandResult.total) / limit),
+      totalPages: Math.ceil(
+        (influencerResult.total + brandResult.total) / limit
+      ),
+      statusCounts: {
+        pending: influencerCounts.pending + brandCounts.pending,
+        completed: influencerCounts.completed + brandCounts.completed,
+      },
     };
   }
 
@@ -134,18 +153,20 @@ export class SettlementService {
   }): Promise<{ data: InfluencerSettlementEntity[]; total: number }> {
     const where: FindOptionsWhere<InfluencerSettlementEntity> = {};
 
-    if (filter.status) where.status = filter.status as InfluencerSettlementEntity['status'];
+    if (filter.status)
+      where.status = filter.status as InfluencerSettlementEntity['status'];
     if (filter.targetId) where.influencerId = filter.targetId;
     if (filter.periodYear) where.periodYear = filter.periodYear;
     if (filter.periodMonth) where.periodMonth = filter.periodMonth;
 
-    const [data, total] = await getInfluencerSettlementRepository().findAndCount({
-      where,
-      relations: ['influencer'],
-      order: { scheduledAt: 'ASC' },
-      skip: filter.skip,
-      take: filter.take,
-    });
+    const [data, total] =
+      await getInfluencerSettlementRepository().findAndCount({
+        where,
+        relations: ['influencer'],
+        order: { scheduledAt: 'ASC' },
+        skip: filter.skip,
+        take: filter.take,
+      });
 
     return { data, total };
   }
@@ -161,7 +182,8 @@ export class SettlementService {
   }): Promise<{ data: BrandSettlementEntity[]; total: number }> {
     const where: FindOptionsWhere<BrandSettlementEntity> = {};
 
-    if (filter.status) where.status = filter.status as BrandSettlementEntity['status'];
+    if (filter.status)
+      where.status = filter.status as BrandSettlementEntity['status'];
     if (filter.targetId) where.brandId = filter.targetId;
     if (filter.periodYear) where.periodYear = filter.periodYear;
     if (filter.periodMonth) where.periodMonth = filter.periodMonth;
@@ -175,6 +197,62 @@ export class SettlementService {
     });
 
     return { data, total };
+  }
+
+  /**
+   * 인플루언서 정산 상태별 카운트 조회
+   */
+  private async countInfluencerSettlementsByStatus(filter: {
+    status?: string | null;
+    targetId?: number | null;
+    periodYear?: number | null;
+    periodMonth?: number | null;
+    campaignId?: number | null;
+  }): Promise<{ pending: number; completed: number }> {
+    const baseWhere: FindOptionsWhere<InfluencerSettlementEntity> = {};
+
+    if (filter.targetId) baseWhere.influencerId = filter.targetId;
+    if (filter.periodYear) baseWhere.periodYear = filter.periodYear;
+    if (filter.periodMonth) baseWhere.periodMonth = filter.periodMonth;
+
+    const [pending, completed] = await Promise.all([
+      getInfluencerSettlementRepository().count({
+        where: { ...baseWhere, status: SettlementStatusEnum.PENDING },
+      }),
+      getInfluencerSettlementRepository().count({
+        where: { ...baseWhere, status: SettlementStatusEnum.COMPLETED },
+      }),
+    ]);
+
+    return { pending, completed };
+  }
+
+  /**
+   * 브랜드 정산 상태별 카운트 조회
+   */
+  private async countBrandSettlementsByStatus(filter: {
+    status?: string | null;
+    targetId?: number | null;
+    periodYear?: number | null;
+    periodMonth?: number | null;
+    campaignId?: number | null;
+  }): Promise<{ pending: number; completed: number }> {
+    const baseWhere: FindOptionsWhere<BrandSettlementEntity> = {};
+
+    if (filter.targetId) baseWhere.brandId = filter.targetId;
+    if (filter.periodYear) baseWhere.periodYear = filter.periodYear;
+    if (filter.periodMonth) baseWhere.periodMonth = filter.periodMonth;
+
+    const [pending, completed] = await Promise.all([
+      getBrandSettlementRepository().count({
+        where: { ...baseWhere, status: SettlementStatusEnum.PENDING },
+      }),
+      getBrandSettlementRepository().count({
+        where: { ...baseWhere, status: SettlementStatusEnum.COMPLETED },
+      }),
+    ]);
+
+    return { pending, completed };
   }
 
   /**
@@ -282,36 +360,33 @@ export class SettlementService {
     orders: OrderEntity[],
     targetType: 'INFLUENCER' | 'BRAND'
   ) {
-    const campaignMap = new Map<
-      number,
-      {
-        campaignId: number;
-        campaignName: string;
-        campaignPeriod: string;
-        products: Array<{
-          productId: number;
-          productName: string;
-          optionName: string | null;
-          quantity: number;
-          sales: number;
-          settlementAmount: number;
-        }>;
-        subtotalQuantity: number;
-        subtotalSales: number;
-        subtotalAmount: number;
-      }
-    >();
+    type CampaignGroup = {
+      campaignId: number;
+      campaignName: string;
+      campaignPeriod: string;
+      products: Array<{
+        productId: number;
+        productName: string;
+        optionName: string | null;
+        quantity: number;
+        sales: number;
+        settlementAmount: number;
+      }>;
+      subtotalQuantity: number;
+      subtotalSales: number;
+      subtotalAmount: number;
+    };
 
-    for (const order of orders) {
+    const campaignMap = orders.reduce((map, order) => {
       const campaignId = order.campaignId;
       const campaign = order.campaign;
 
-      if (!campaignMap.has(campaignId)) {
+      if (!map.has(campaignId)) {
         const periodStr = campaign
           ? `${dayjs(campaign.startAt).format('YYYY.MM.DD')} ~ ${dayjs(campaign.endAt).format('YYYY.MM.DD')}`
           : '';
 
-        campaignMap.set(campaignId, {
+        map.set(campaignId, {
           campaignId,
           campaignName: campaign?.title ?? '',
           campaignPeriod: periodStr,
@@ -322,12 +397,17 @@ export class SettlementService {
         });
       }
 
-      const group = campaignMap.get(campaignId)!;
+      const group = map.get(campaignId)!;
       const calculator = this.calculatorFactory.getCalculator(order.type);
       const result = calculator.calculate(order);
 
       const orderOptionSnapshot =
         order.orderOptionSnapshot as HotelOrderOptionData;
+
+      const settlementAmount =
+        targetType === 'INFLUENCER'
+          ? result.influencerAmount
+          : result.brandAmount;
 
       group.products.push({
         productId: order.productId,
@@ -335,19 +415,15 @@ export class SettlementService {
         optionName: orderOptionSnapshot?.hotelOptionName ?? null,
         quantity: result.totalQuantity,
         sales: result.totalSales,
-        settlementAmount:
-          targetType === 'INFLUENCER'
-            ? result.influencerAmount
-            : result.brandAmount,
+        settlementAmount,
       });
 
       group.subtotalQuantity += result.totalQuantity;
       group.subtotalSales += result.totalSales;
-      group.subtotalAmount +=
-        targetType === 'INFLUENCER'
-          ? result.influencerAmount
-          : result.brandAmount;
-    }
+      group.subtotalAmount += settlementAmount;
+
+      return map;
+    }, new Map<number, CampaignGroup>());
 
     return Array.from(campaignMap.values());
   }
@@ -427,22 +503,26 @@ export class SettlementService {
       where: {
         influencerId,
         influencerSettlementId: IsNull(),
-        createdAt: Between(periodStart.toDate(), periodEnd.endOf('day').toDate()),
+        createdAt: Between(
+          periodStart.toDate(),
+          periodEnd.endOf('day').toDate()
+        ),
       },
     });
 
     // 정산금액 계산
-    let totalSales = 0;
-    let totalQuantity = 0;
-    let totalAmount = 0;
-
-    for (const order of periodOrders) {
-      const calculator = this.calculatorFactory.getCalculator(order.type);
-      const result = calculator.calculate(order);
-      totalSales += result.totalSales;
-      totalQuantity += result.totalQuantity;
-      totalAmount += result.influencerAmount;
-    }
+    const { totalSales, totalQuantity, totalAmount } = periodOrders.reduce(
+      (acc, order) => {
+        const calculator = this.calculatorFactory.getCalculator(order.type);
+        const result = calculator.calculate(order);
+        return {
+          totalSales: acc.totalSales + result.totalSales,
+          totalQuantity: acc.totalQuantity + result.totalQuantity,
+          totalAmount: acc.totalAmount + result.influencerAmount,
+        };
+      },
+      { totalSales: 0, totalQuantity: 0, totalAmount: 0 }
+    );
 
     // 정산 생성
     const settlement = new InfluencerSettlementEntity();
@@ -453,7 +533,7 @@ export class SettlementService {
     settlement.totalSales = totalSales;
     settlement.totalQuantity = totalQuantity;
     settlement.totalAmount = totalAmount;
-    settlement.status = SETTLEMENT_STATUS.PENDING;
+    settlement.status = SettlementStatusEnum.PENDING;
 
     const saved = await getInfluencerSettlementRepository().save(settlement);
 
@@ -501,22 +581,26 @@ export class SettlementService {
       where: {
         product: { brandId },
         brandSettlementId: IsNull(),
-        createdAt: Between(periodStart.toDate(), periodEnd.endOf('day').toDate()),
+        createdAt: Between(
+          periodStart.toDate(),
+          periodEnd.endOf('day').toDate()
+        ),
       },
     });
 
     // 정산금액 계산
-    let totalSales = 0;
-    let totalQuantity = 0;
-    let totalAmount = 0;
-
-    for (const order of periodOrders) {
-      const calculator = this.calculatorFactory.getCalculator(order.type);
-      const result = calculator.calculate(order);
-      totalSales += result.totalSales;
-      totalQuantity += result.totalQuantity;
-      totalAmount += result.brandAmount;
-    }
+    const { totalSales, totalQuantity, totalAmount } = periodOrders.reduce(
+      (acc, order) => {
+        const calculator = this.calculatorFactory.getCalculator(order.type);
+        const result = calculator.calculate(order);
+        return {
+          totalSales: acc.totalSales + result.totalSales,
+          totalQuantity: acc.totalQuantity + result.totalQuantity,
+          totalAmount: acc.totalAmount + result.brandAmount,
+        };
+      },
+      { totalSales: 0, totalQuantity: 0, totalAmount: 0 }
+    );
 
     // 정산 생성
     const settlement = new BrandSettlementEntity();
@@ -527,7 +611,7 @@ export class SettlementService {
     settlement.totalSales = totalSales;
     settlement.totalQuantity = totalQuantity;
     settlement.totalAmount = totalAmount;
-    settlement.status = SETTLEMENT_STATUS.PENDING;
+    settlement.status = SettlementStatusEnum.PENDING;
 
     const saved = await getBrandSettlementRepository().save(settlement);
 
@@ -551,9 +635,9 @@ export class SettlementService {
     const { ids } = input;
 
     await getInfluencerSettlementRepository().update(
-      { id: In(ids), status: SETTLEMENT_STATUS.PENDING },
+      { id: In(ids), status: SettlementStatusEnum.PENDING },
       {
-        status: SETTLEMENT_STATUS.COMPLETED,
+        status: SettlementStatusEnum.COMPLETED,
         completedAt: new Date(),
       }
     );
@@ -570,9 +654,9 @@ export class SettlementService {
     const { ids } = input;
 
     await getBrandSettlementRepository().update(
-      { id: In(ids), status: SETTLEMENT_STATUS.PENDING },
+      { id: In(ids), status: SettlementStatusEnum.PENDING },
       {
-        status: SETTLEMENT_STATUS.COMPLETED,
+        status: SettlementStatusEnum.COMPLETED,
         completedAt: new Date(),
       }
     );

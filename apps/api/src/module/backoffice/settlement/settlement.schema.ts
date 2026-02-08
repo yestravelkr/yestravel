@@ -102,6 +102,10 @@ export const settlementListResponseSchema = z.object({
   page: z.number(),
   limit: z.number(),
   totalPages: z.number(),
+  statusCounts: z.object({
+    pending: z.number(),
+    completed: z.number(),
+  }),
 });
 
 /**
