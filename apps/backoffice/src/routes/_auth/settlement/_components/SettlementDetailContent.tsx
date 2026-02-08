@@ -24,9 +24,9 @@ export interface SettlementDetailData {
   totalQuantity: number;
   totalAmount: number;
   bankAccount: {
-    bankName: string | null;
-    accountNumber: string | null;
-    accountHolder: string | null;
+    bankName?: string | null;
+    accountNumber?: string | null;
+    accountHolder?: string | null;
   };
   campaignGroups: Array<{
     campaignId: number;
@@ -37,7 +37,7 @@ export interface SettlementDetailData {
     subtotalAmount: number;
     products: Array<{
       productName: string;
-      optionName: string | null;
+      optionName?: string | null;
       quantity: number;
       sales: number;
       settlementAmount: number;
