@@ -9,7 +9,7 @@ import {
 } from 'typeorm';
 import {
   BaseSettlementEntity,
-  SettlementStatusType,
+  SettlementStatusEnumType,
 } from './settlement.entity';
 import { InfluencerEntity } from '@src/module/backoffice/domain/influencer.entity';
 import { OrderEntity } from '@src/module/backoffice/domain/order/order.entity';
@@ -63,7 +63,7 @@ export const getInfluencerSettlementRepository = (
        * 상태별 정산 목록 조회
        */
       async findByStatus(
-        status: SettlementStatusType
+        status: SettlementStatusEnumType
       ): Promise<InfluencerSettlementEntity[]> {
         return this.find({
           where: { status },

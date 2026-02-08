@@ -9,7 +9,7 @@ import {
 } from 'typeorm';
 import {
   BaseSettlementEntity,
-  SettlementStatusType,
+  SettlementStatusEnumType,
 } from './settlement.entity';
 import { BrandEntity } from '@src/module/backoffice/domain/brand.entity';
 import { OrderEntity } from '@src/module/backoffice/domain/order/order.entity';
@@ -63,7 +63,7 @@ export const getBrandSettlementRepository = (
        * 상태별 정산 목록 조회
        */
       async findByStatus(
-        status: SettlementStatusType
+        status: SettlementStatusEnumType
       ): Promise<BrandSettlementEntity[]> {
         return this.find({
           where: { status },

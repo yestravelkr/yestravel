@@ -3,11 +3,13 @@ import dayjs from 'dayjs';
 import { BaseEntity } from '@src/module/backoffice/domain/base.entity';
 
 /**
- * SettlementStatusType - 정산 상태 타입
+ * SettlementStatusEnumType - 정산 상태 타입
  */
-export type SettlementStatusType = 'PENDING' | 'COMPLETED';
+export type SettlementStatusEnumType = 'PENDING' | 'COMPLETED';
 
-export const SETTLEMENT_STATUS = {
+export const SETTLEMENT_STATUS_ENUM_VALUE = ['PENDING', 'COMPLETED'] as const;
+
+export const SettlementStatusEnum = {
   PENDING: 'PENDING' as const,
   COMPLETED: 'COMPLETED' as const,
 };
@@ -42,8 +44,8 @@ export abstract class BaseSettlementEntity extends BaseEntity {
   periodMonth: number;
 
   /** 정산 상태 (PENDING / COMPLETED) */
-  @Column({ default: SETTLEMENT_STATUS.PENDING })
-  status: SettlementStatusType;
+  @Column({ default: SettlementStatusEnum.PENDING })
+  status: SettlementStatusEnumType;
 
   /** 정산 예정일 */
   @Column({ name: 'scheduled_at', type: 'date', transformer: dateTransformer })
