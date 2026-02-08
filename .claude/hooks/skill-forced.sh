@@ -11,10 +11,13 @@ MANDATORY SKILL & AGENT EVALUATION PROTOCOL
 작업을 시작하기 전에 반드시 아래 단계를 순서대로 완료하세요:
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-CONTEXT 절약 원칙 (최우선)
+⚠️ CONTEXT 절약 원칙 (최우선 - 반드시 준수) ⚠️
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Main Agent의 Context Window는 제한적입니다. 다음 작업은 **반드시 Subagent에 위임**하세요:
+Main Agent의 Context Window는 제한적입니다.
+**Subagent가 할 수 있는 작업은 반드시 Subagent에 위임하세요!**
+
+### 🚨 필수 위임 작업 (Main Agent 직접 수행 금지)
 
 | 작업 유형 | 사용할 Agent | 이유 |
 |----------|-------------|------|
@@ -25,16 +28,45 @@ Main Agent의 Context Window는 제한적입니다. 다음 작업은 **반드시
 | 영향 분석 | impact-analyzer | 분석 결과만 받음 |
 | 코드 리뷰 | code-reviewer | 리뷰 결과만 받음 |
 | 테스트/빌드 검증 | qa-tester | 검증 결과만 받음 |
+| 여러 파일 코드 작성 | code-writer / designer | 구현 결과만 받음 |
+| Git 작업 | git-manager | 커밋/PR 결과만 받음 |
 
-**절대 금지:**
+### ❌ 절대 금지 (Main Agent에서 직접 수행 금지)
+
 - Main Agent에서 직접 Glob/Grep으로 여러 파일 탐색
-- Main Agent에서 직접 여러 파일 Read
-- Main Agent에서 복잡한 분석 수행
+- Main Agent에서 직접 여러 파일 Read (2개 이상)
+- Main Agent에서 복잡한 분석/계획 수행
+- Main Agent에서 3개 이상 파일 수정
+- **Main Agent에서 직접 Git 명령어 실행 (git add, commit, push 등)**
 
-**허용:**
-- 단일 파일 수정 (Edit)
-- 새 파일 생성 (Write)
-- 단순 명령 실행 (Bash)
+### ✅ Main Agent 허용 작업 (이것만 직접 수행)
+
+- 단일~소수(1-2개) 파일 수정 (Edit)
+- 단일~소수(1-2개) 파일 생성 (Write)
+- 단순 명령 실행 (Bash) - **단, Git 명령어 제외**
+- 사용자와 대화/질문 응답
+
+### 🔒 Git 작업은 반드시 Subagent 사용 (필수)
+
+**모든 Git 작업은 `git-manager` Agent에 위임하세요!**
+
+\`\`\`
+Task(subagent_type="git-manager", prompt="현재 변경사항을 커밋해줘")
+Task(subagent_type="git-manager", prompt="PR을 생성해줘")
+\`\`\`
+
+| Git 작업 | 위임 필수 | 이유 |
+|----------|----------|------|
+| 단순 커밋 | **필수** | 커밋 규칙 자동 준수 |
+| PR 생성 | **필수** | PR 템플릿 자동 적용 |
+| 브랜치 관리 | **필수** | 안전 규칙 자동 적용 |
+
+### 💡 왜 Subagent를 사용해야 하는가?
+
+1. **Context 절약**: Subagent의 탐색/분석 결과는 요약되어 Main에 전달
+2. **대화 지속성**: Main Context가 절약되어 더 긴 대화 가능
+3. **전문성**: 각 Agent는 특정 작업에 최적화됨
+4. **병렬 처리**: 여러 Agent를 동시에 실행 가능
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 PART 1: SKILL 평가

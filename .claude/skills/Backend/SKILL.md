@@ -66,7 +66,108 @@ estimated_tokens: ~600
 | **모듈 간 통신** | Service 직접 주입 대신 MicroserviceClient 사용 |
 | **Repository 주입** | 구체 클래스 대신 `getXxxRepository` 토큰 사용 |
 
+### 레이어 간 객체 변환 규칙
+
+> **객체 변환은 필요한 시점에 해당 레이어에서 수행한다.**
+
+#### 핵심 원칙
+
+| 레이어 | 입력 | 출력 | 변환 책임 |
+|--------|------|------|----------|
+| **Controller** | Request DTO | Response DTO/Schema | Entity → Response 변환 |
+| **Service** | DTO (그대로 사용) | Entity 또는 일반 객체 | DTO → Entity 변환 (필요시) |
+| **Repository** | Entity | Entity | 없음 |
+
+#### Controller → Service 호출
+
+```typescript
+// ❌ Controller에서 미리 Entity로 변환
+@Post()
+async create(@Body() dto: CreateUserDto) {
+  const entity = new User();
+  entity.name = dto.name;
+  entity.email = dto.email;
+  return this.userService.create(entity);  // Entity 전달
+}
+
+// ✅ DTO 그대로 전달
+@Post()
+async create(@Body() dto: CreateUserDto) {
+  return this.userService.create(dto);  // DTO 전달
+}
+```
+
+#### Service 내부 처리
+
+```typescript
+// ✅ Service에서 DTO로 사용하다가 필요한 시점에 Entity로 변환
+async create(dto: CreateUserDto) {
+  // DTO로 비즈니스 로직 처리
+  const isValid = this.validateEmail(dto.email);
+
+  // Entity가 필요한 시점에 변환
+  const user = new User();
+  user.name = dto.name;
+  user.email = dto.email;
+
+  return this.userRepository.save(user);
+}
+```
+
+#### Service → Controller 반환
+
+**반환 규칙:**
+
+| 규칙 | 설명 |
+|------|------|
+| **Service 반환 타입** | 항상 Entity 또는 Entity를 포함한 일반 객체 |
+| **Service에서 금지** | Entity → DTO/Interface 변환 금지 (map() 사용 금지) |
+| **Controller 역할** | Entity → Response DTO 변환 담당 |
+
+```typescript
+// ❌ Service에서 DTO로 변환 (금지)
+async findAll(): Promise<UserListResponse> {
+  const users = await this.userRepository.find();
+  return {
+    data: users.map(u => ({
+      id: u.id,
+      name: u.name,
+      email: u.email,
+    })),
+  };
+}
+
+// ✅ Service: Entity 그대로 반환
+async findAll(): Promise<{ data: UserEntity[]; total: number }> {
+  const [data, total] = await this.userRepository.findAndCount();
+  return { data, total };
+}
+
+// ✅ Service: Entity + 추가 데이터 복합 반환
+async findWithStats(id: number): Promise<{ user: User; orderCount: number }> {
+  const user = await this.userRepository.findOneBy({ id });
+  const orderCount = await this.orderRepository.countBy({ userId: id });
+  return { user, orderCount };
+}
+
+// ✅ Controller: Entity → Response DTO 변환
+@MessagePattern('user.findAll')
+async findAll(input: FindAllInput): Promise<UserListResponse> {
+  const result = await this.userService.findAll(input);
+  return {
+    data: result.data.map(user => ({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+    })),
+    total: result.total,
+  };
+}
+```
+
 ### TypeORM 쿼리 규칙
+
+> **find 메서드를 기본으로 사용하고, QueryBuilder는 꼭 필요한 경우에만 사용한다.**
 
 | 규칙 | 설명 |
 |------|------|
@@ -74,8 +175,11 @@ estimated_tokens: ~600
 | **QueryBuilder** | `find`로 불가능할 때만 사용 (GROUP BY, 복잡한 JOIN 등) |
 | **relations** | LEFT JOIN은 `relations` 옵션 사용 |
 
+#### find 메서드 우선 사용
+
 ```typescript
-// ✅ 기본: find + relations
+// ✅ 기본 조회
+const user = await this.userRepository.findOneBy({ id });
 const orders = await repository.find({
   where: { status: 'PAID', campaignId: In([1, 2, 3]) },
   relations: ['product', 'campaign'],
@@ -83,10 +187,32 @@ const orders = await repository.find({
   take: 50,
 });
 
-// ✅ QueryBuilder 허용: GROUP BY 필요 시
+// ✅ OR 조건 조합 (where 배열)
+const users = await this.userRepository.find({
+  where: [
+    { status: 'active', role: 'admin' },
+    { status: 'active', role: 'manager' },
+  ],
+});
+```
+
+#### QueryBuilder 허용 케이스
+
+**다음 경우에만 QueryBuilder 사용:**
+
+| 케이스 | 예시 |
+|--------|------|
+| **groupBy** | 집계 쿼리 |
+| **getRawMany/getRawOne** | 원시 데이터 필요 |
+| **복잡한 서브쿼리** | 중첩 쿼리 |
+| **복잡한 JOIN 조건** | ON 절 커스텀 |
+
+```typescript
+// ✅ QueryBuilder 허용: groupBy + getRawMany
 const counts = await repository.createQueryBuilder('ord')
   .select('ord.status', 'status')
   .addSelect('COUNT(*)', 'count')
+  .addSelect('SUM(ord.amount)', 'total')
   .groupBy('ord.status')
   .getRawMany();
 
@@ -94,6 +220,11 @@ const counts = await repository.createQueryBuilder('ord')
 const orders = await repository.createQueryBuilder('order')
   .where('order.status = :status', { status: 'PAID' })
   .getMany();
+
+// ✅ find로 대체
+const orders = await repository.find({
+  where: { status: 'PAID' },
+});
 ```
 
 ### 트랜잭션 규칙
@@ -155,6 +286,7 @@ interface OrderInput {
 |-----|------|
 | DTO 분리 | Service 내 interface 금지, `*.dto.ts` 분리 |
 | Entity 위치 | `apps/api/src/module/backoffice/domain/` |
+| Service 반환 | Entity 그대로 반환, Controller에서 DTO 변환 |
 | Repository | `TypeOrmModule.forFeature()` 금지, `RepositoryProvider` 사용 |
 | 트랜잭션 | Mutation에 `@Transactional`, Controller에 `TransactionService` 주입 |
 | Router | Module providers에 추가 금지 (자동 발견) |
@@ -164,12 +296,18 @@ interface OrderInput {
 
 ## 필수 체크리스트
 
+- [ ] Controller에서 Entity로 변환하지 않고 DTO를 그대로 Service에 전달하는가?
+- [ ] Service에서 DTO를 사용하다가 Entity가 필요한 시점에 변환하는가?
+- [ ] Service 메서드가 Entity를 직접 반환하는가? (DTO/Interface 변환 금지)
+- [ ] Entity → Response DTO 변환이 Controller에서 수행되는가?
 - [ ] DTO가 `*.dto.ts` 파일로 분리되었는가?
 - [ ] Entity가 `domain/`에 생성되었는가?
 - [ ] Repository가 RepositoryProvider에 등록되었는가?
 - [ ] Controller에 TransactionService가 주입되었는가?
 - [ ] Mutation에만 @Transactional이 적용되었는가? (Query 제외)
 - [ ] 단순 조회에 `find`를 사용했는가? (QueryBuilder 최소화)
+- [ ] OR 조건 조합은 `where` 배열을 사용했는가?
+- [ ] QueryBuilder는 groupBy, getRawMany 등 필요한 경우에만 사용하는가?
 - [ ] `| null | undefined` 대신 `Nullish<T>`를 사용했는가?
 - [ ] Router가 Module providers에 없는가?
 - [ ] `import type`을 사용했는가?

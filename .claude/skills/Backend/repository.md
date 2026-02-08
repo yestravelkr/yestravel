@@ -85,12 +85,21 @@ const entity = await repository.findOneOrFail({
 
 ## 트랜잭션 관리
 
+### @Transactional 데코레이터 사용 시 필수 조건
+
+**⚠️ 중요: `@Transactional` 데코레이터를 사용하는 Controller에는 반드시 `TransactionService`를 주입해야 합니다.**
+
+| 조건 | 필수 여부 | 이유 |
+|------|----------|------|
+| `TransactionService` 주입 | **필수** | 데코레이터가 내부적으로 트랜잭션 컨텍스트 관리에 사용 |
+| 주입하지 않으면 | 런타임 에러 | 트랜잭션이 시작되지 않아 데이터 정합성 문제 발생 |
+
 ```typescript
 @Controller()
 export class ModuleController {
   constructor(
     private readonly moduleService: ModuleService,
-    private readonly transactionService: TransactionService // ⚠️ 필수
+    private readonly transactionService: TransactionService // ⚠️ @Transactional 사용 시 필수 주입
   ) {}
 
   // Mutation에 @Transactional 필수
@@ -107,6 +116,12 @@ export class ModuleController {
   }
 }
 ```
+
+### 체크리스트
+
+- [ ] `@Transactional` 데코레이터 사용 시 `TransactionService` 주입 확인
+- [ ] Mutation 메서드(create, update, delete)에 `@Transactional` 적용
+- [ ] Query 메서드(find, list)는 트랜잭션 불필요
 
 ## Soft Delete
 
