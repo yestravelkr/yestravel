@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { Input, Mutation, Router, UseMiddlewares } from 'nestjs-trpc';
+import { Input, Mutation, Router, UseMiddlewares } from 'nestjs-trpc-v2';
 import { Injectable } from '@nestjs/common';
 import { BackofficeAuthMiddleware } from '@src/module/backoffice/auth/backoffice.auth.middleware';
 import { S3Service } from '@src/module/shared/aws/s3.service';

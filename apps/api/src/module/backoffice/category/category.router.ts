@@ -6,7 +6,7 @@ import {
   Mutation,
   Input,
   Ctx,
-} from 'nestjs-trpc';
+} from 'nestjs-trpc-v2';
 import { BackofficeAuthMiddleware } from '@src/module/backoffice/auth/backoffice.auth.middleware';
 import { BackofficeAuthorizedContext } from '@src/module/backoffice/auth/backoffice.auth.middleware';
 import { BaseTrpcRouter } from '@src/module/trpc/baseTrpcRouter';

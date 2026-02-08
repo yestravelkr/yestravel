@@ -1,7 +1,7 @@
-import { Router, Query, UseMiddlewares, Mutation, Input } from 'nestjs-trpc';
+import { Router, Query, UseMiddlewares, Mutation, Input } from 'nestjs-trpc-v2';
 import { BackofficeAuthMiddleware } from '@src/module/backoffice/auth/backoffice.auth.middleware';
 import { BackofficeAuthorizedContext } from '@src/module/backoffice/auth/backoffice.auth.middleware';
-import { Ctx } from 'nestjs-trpc';
+import { Ctx } from 'nestjs-trpc-v2';
 import { BaseTrpcRouter } from '@src/module/trpc/baseTrpcRouter';
 import { z } from 'zod';
 import {

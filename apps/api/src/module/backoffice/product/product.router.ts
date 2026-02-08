@@ -8,7 +8,7 @@ import {
   Ctx,
   Input,
   UseMiddlewares,
-} from 'nestjs-trpc';
+} from 'nestjs-trpc-v2';
 import { BackofficeAuthMiddleware } from '@src/module/backoffice/auth/backoffice.auth.middleware';
 import type { BackofficeAuthorizedContext } from '@src/module/backoffice/auth/backoffice.auth.middleware';
 import {
