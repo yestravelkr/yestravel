@@ -1,4 +1,4 @@
-import { Router, Mutation, Input, UseMiddlewares, Ctx } from 'nestjs-trpc';
+import { Router, Mutation, Input, UseMiddlewares, Ctx } from 'nestjs-trpc-v2';
 import { BaseTrpcRouter } from '@src/module/trpc/baseTrpcRouter';
 import { z } from 'zod';
 import {

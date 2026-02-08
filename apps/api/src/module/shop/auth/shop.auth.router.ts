@@ -1,4 +1,4 @@
-import { Router, Mutation, Input } from 'nestjs-trpc';
+import { Router, Mutation, Input } from 'nestjs-trpc-v2';
 import { z } from 'zod';
 import { Injectable } from '@nestjs/common';
 import { BaseTrpcRouter } from '@src/module/trpc/baseTrpcRouter';

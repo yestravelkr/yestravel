@@ -5,7 +5,7 @@ import {
   Query,
   Router,
   UseMiddlewares,
-} from 'nestjs-trpc';
+} from 'nestjs-trpc-v2';
 import { BaseTrpcRouter } from '@src/module/trpc/baseTrpcRouter';
 import {
   BackofficeAuthMiddleware,
