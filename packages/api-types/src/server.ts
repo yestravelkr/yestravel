@@ -512,6 +512,10 @@ const appRouter = t.router({
       page: z.number(),
       limit: z.number(),
       totalPages: z.number(),
+      statusCounts: z.object({
+        pending: z.number(),
+        completed: z.number(),
+      }),
     })).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
     findInfluencerSettlementById: publicProcedure.input(z.object({
       id: z.number().int().positive(),
