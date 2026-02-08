@@ -24,21 +24,22 @@ export class HotelSettlementCalculator implements SettlementCalculator {
   calculate(order: OrderEntity): SettlementCalculationResult {
     const snapshot = order.orderOptionSnapshot as HotelOrderOptionData;
 
-    let totalSales = 0;
-    let influencerAmount = 0;
-    let brandAmount = 0;
+    const { totalSales, influencerAmount, brandAmount } = Object.entries(
+      snapshot.priceByDate
+    ).reduce(
+      (acc, [date, price]) => {
+        acc.totalSales += price;
 
-    // priceByDate에서 총 매출 계산
-    for (const date of Object.keys(snapshot.priceByDate)) {
-      totalSales += snapshot.priceByDate[date];
+        const another = snapshot.anotherPriceByDate?.[date];
+        if (another) {
+          acc.brandAmount += another.supplyPrice;
+          acc.influencerAmount += another.commission;
+        }
 
-      // anotherPriceByDate에서 정산금액 계산
-      const another = snapshot.anotherPriceByDate?.[date];
-      if (another) {
-        brandAmount += another.supplyPrice;
-        influencerAmount += another.commission;
-      }
-    }
+        return acc;
+      },
+      { totalSales: 0, influencerAmount: 0, brandAmount: 0 }
+    );
 
     return {
       totalSales,
