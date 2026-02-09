@@ -23,12 +23,15 @@ type AuthState = {
   accessToken: string | null;
   refreshToken: string | null;
   isLoggedIn: boolean;
+  /** persist hydration 완료 여부 (localStorage에 저장되지 않음) */
+  isHydrated: boolean;
 };
 
 type AuthActions = {
   login: (tokens: AuthTokens, member: Member) => void;
   logout: () => void;
   setMember: (member: Member) => void;
+  setHydrated: () => void;
 };
 
 type AuthStore = AuthState & AuthActions;
@@ -48,6 +51,7 @@ export const useAuthStore = create<AuthStore>()(
       accessToken: null,
       refreshToken: null,
       isLoggedIn: false,
+      isHydrated: false,
 
       login: (tokens, member) => {
         set({
@@ -70,6 +74,10 @@ export const useAuthStore = create<AuthStore>()(
       setMember: (member: Member) => {
         set({ member });
       },
+
+      setHydrated: () => {
+        set({ isHydrated: true });
+      },
     }),
     {
       name: 'shop-auth-storage',
@@ -79,6 +87,34 @@ export const useAuthStore = create<AuthStore>()(
         refreshToken: state.refreshToken,
         isLoggedIn: state.isLoggedIn,
       }),
+      onRehydrateStorage: () => state => {
+        state?.setHydrated();
+      },
     }
   )
 );
+
+/**
+ * waitForHydration - persist hydration이 완료될 때까지 대기
+ *
+ * hydration 전에 API 호출 시 토큰이 null이 되어
+ * 불필요한 401 → 로그아웃이 발생하는 것을 방지
+ *
+ * Usage:
+ * await waitForHydration();
+ * const { accessToken } = useAuthStore.getState();
+ */
+export const waitForHydration = (): Promise<void> => {
+  return new Promise(resolve => {
+    if (useAuthStore.getState().isHydrated) {
+      resolve();
+      return;
+    }
+    const unsub = useAuthStore.subscribe(state => {
+      if (state.isHydrated) {
+        unsub();
+        resolve();
+      }
+    });
+  });
+};

@@ -3,7 +3,7 @@ import { createTRPCReact } from '@trpc/react-query';
 import type { inferRouterInputs, inferRouterOutputs } from '@trpc/server';
 import type { AppRouter } from '@yestravelkr/api-types';
 
-import { useAuthStore } from '@/store/authStore';
+import { useAuthStore, waitForHydration } from '@/store/authStore';
 
 // Infer types from the tRPC router
 export type RouterInput = inferRouterInputs<AppRouter>;
@@ -36,6 +36,9 @@ let refreshPromise: Promise<boolean> | null = null;
 
 /**
  * Refresh token을 사용해서 새 access token 발급
+ *
+ * - 401/403 (인증 실패): logout 수행
+ * - 5xx/네트워크 에러: logout하지 않고 false 반환 (일시적 장애)
  */
 const refreshAccessToken = async (): Promise<boolean> => {
   // 이미 refresh 진행 중이면 기존 Promise 재사용
@@ -47,6 +50,10 @@ const refreshAccessToken = async (): Promise<boolean> => {
     const { refreshToken } = useAuthStore.getState();
 
     if (!refreshToken) {
+      // hydration 미완료 시 토큰이 null일 수 있으므로 바로 logout하지 않음
+      if (!useAuthStore.getState().isHydrated) {
+        return false;
+      }
       useAuthStore.getState().logout();
       return false;
     }
@@ -61,8 +68,15 @@ const refreshAccessToken = async (): Promise<boolean> => {
         body: JSON.stringify({ json: { refreshToken } }),
       });
 
+      // 인증 실패 (refresh token 만료/무효): logout
+      if (response.status === 401 || response.status === 403) {
+        useAuthStore.getState().logout();
+        return false;
+      }
+
+      // 서버 에러 (5xx 등): 일시적 장애이므로 logout하지 않음
       if (!response.ok) {
-        throw new Error('Token refresh failed');
+        return false;
       }
 
       const data = await response.json();
@@ -81,7 +95,7 @@ const refreshAccessToken = async (): Promise<boolean> => {
 
       return false;
     } catch {
-      useAuthStore.getState().logout();
+      // 네트워크 에러 (TypeError 등): 일시적 장애이므로 logout하지 않음
       return false;
     } finally {
       refreshPromise = null;
@@ -108,6 +122,9 @@ export const trpcClient = trpc.createClient({
             },
           });
         };
+
+        // hydration 완료 대기 후 토큰 사용
+        await waitForHydration();
 
         // 첫 번째 시도
         const token = useAuthStore.getState().accessToken;

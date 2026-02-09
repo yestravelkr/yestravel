@@ -16,9 +16,7 @@ import { FormProvider, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import tw from 'tailwind-styled-components';
 
-import { openLoginBottomSheet } from '@/components/auth/LoginBottomSheet';
 import {
-  AuthPromptSection,
   HotelProductSection,
   UserInputSection,
   PaymentMethodSection,
@@ -39,7 +37,7 @@ export interface NewOrderFormData {
   paymentMethod: PaymentMethod;
 }
 
-export const Route = createFileRoute('/new-order/$orderNumber')({
+export const Route = createFileRoute('/_auth/new-order/$orderNumber')({
   component: NewOrderPage,
 });
 
@@ -55,7 +53,6 @@ function NewOrderPage() {
 
 function NewOrderContent({ orderNumber }: { orderNumber: string }) {
   const navigate = useNavigate();
-  const { isLoggedIn } = useAuthStore();
   const [data] = trpc.shopOrder.getTmpOrder.useSuspenseQuery({ orderNumber });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -70,13 +67,6 @@ function NewOrderContent({ orderNumber }: { orderNumber: string }) {
   });
 
   const updateTmpOrderMutation = trpc.shopOrder.updateTmpOrder.useMutation();
-
-  const handleAuthClick = async () => {
-    const result = await openLoginBottomSheet();
-    if (result?.success) {
-      window.location.reload();
-    }
-  };
 
   const handleClose = () => {
     window.history.back();
@@ -205,8 +195,6 @@ function NewOrderContent({ orderNumber }: { orderNumber: string }) {
         </Header>
 
         <ContentWrapper>
-          {!isLoggedIn && <AuthPromptSection onAuthClick={handleAuthClick} />}
-
           <HotelProductSection
             thumbnailUrl={data.product.thumbnailUrl ?? null}
             productName={data.product.name}
@@ -217,25 +205,19 @@ function NewOrderContent({ orderNumber }: { orderNumber: string }) {
             checkOutTime={data.product.checkOutTime}
           />
 
-          {isLoggedIn && (
-            <>
-              <UserInputSection />
-              <PaymentMethodSection />
-            </>
-          )}
+          <UserInputSection />
+          <PaymentMethodSection />
 
           <PaymentAmountSection
             productAmount={data.totalAmount}
             totalAmount={data.totalAmount}
           />
 
-          {isLoggedIn && (
-            <PaymentAgreementSection
-              totalAmount={data.totalAmount}
-              onSubmit={handleSubmit}
-              isSubmitting={isSubmitting}
-            />
-          )}
+          <PaymentAgreementSection
+            totalAmount={data.totalAmount}
+            onSubmit={handleSubmit}
+            isSubmitting={isSubmitting}
+          />
         </ContentWrapper>
       </Container>
     </FormProvider>

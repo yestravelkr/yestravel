@@ -20,7 +20,7 @@ import { trpc } from '@/shared';
 // Route Definition
 // ============================================================================
 
-export const Route = createFileRoute('/cancel-detail/$orderNumber')({
+export const Route = createFileRoute('/_auth/cancel-detail/$orderNumber')({
   component: CancelDetailPage,
 });
 
