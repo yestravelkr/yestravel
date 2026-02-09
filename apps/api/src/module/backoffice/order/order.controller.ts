@@ -15,6 +15,8 @@ import type {
   UpdateStatusResponse,
   ExportToExcelInput,
   ExportToExcelResponse,
+  CancelOrderInput,
+  CancelOrderResponse,
 } from './order.dto';
 
 /**
@@ -51,6 +53,12 @@ export class OrderController {
   @Transactional
   async updateStatus(input: UpdateStatusInput): Promise<UpdateStatusResponse> {
     return await this.orderService.updateStatus(input);
+  }
+
+  @MessagePattern('backofficeOrder.cancelOrder')
+  @Transactional
+  async cancelOrder(input: CancelOrderInput): Promise<CancelOrderResponse> {
+    return await this.orderService.cancelOrder(input);
   }
 
   @MessagePattern('backofficeOrder.exportToExcel')

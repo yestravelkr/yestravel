@@ -23,6 +23,8 @@ import {
   updateStatusResponseSchema,
   exportToExcelInputSchema,
   exportToExcelResponseSchema,
+  cancelOrderInputSchema,
+  cancelOrderResponseSchema,
 } from './order.schema';
 
 @Router({ alias: 'backofficeOrder' })
@@ -88,6 +90,18 @@ export class OrderRouter extends BaseTrpcRouter {
     @Input() input: z.infer<typeof updateStatusInputSchema>
   ) {
     return this.microserviceClient.send('backofficeOrder.updateStatus', input);
+  }
+
+  @UseMiddlewares(BackofficeAuthMiddleware)
+  @Mutation({
+    input: cancelOrderInputSchema,
+    output: cancelOrderResponseSchema,
+  })
+  async cancelOrder(
+    @Ctx() ctx: BackofficeAuthorizedContext,
+    @Input() input: z.infer<typeof cancelOrderInputSchema>
+  ) {
+    return this.microserviceClient.send('backofficeOrder.cancelOrder', input);
   }
 
   @UseMiddlewares(BackofficeAuthMiddleware)

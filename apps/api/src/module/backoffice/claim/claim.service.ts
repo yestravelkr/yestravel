@@ -4,6 +4,8 @@
 
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { RepositoryProvider } from '@src/module/shared/transaction/repository.provider';
+import { orderNumberParser } from '@src/module/backoffice/domain/order/order.entity';
+import { ShopPaymentService } from '@src/module/shop/payment/shop.payment.service';
 import type { ClaimEntity } from '@src/module/backoffice/domain/order/claim.entity';
 import type {
   ApproveClaimInput,
@@ -15,7 +17,10 @@ import type {
 
 @Injectable()
 export class ClaimService {
-  constructor(private readonly repositoryProvider: RepositoryProvider) {}
+  constructor(
+    private readonly repositoryProvider: RepositoryProvider,
+    private readonly shopPaymentService: ShopPaymentService
+  ) {}
 
   /**
    * 취소 승인
@@ -62,12 +67,20 @@ export class ClaimService {
     order.status = 'CANCELLED';
     await this.repositoryProvider.OrderRepository.save(order);
 
-    // 4. Payment 환불금액 업데이트 (nowAmount 차감)
+    // 4. 포트원 결제 취소 API 호출 (실패 시 @Transactional이 DB 롤백)
     const payment = await this.repositoryProvider.PaymentRepository.findOne({
       where: { orderId },
     });
 
     if (payment) {
+      const paymentId = orderNumberParser.encode([orderId], order.createdAt);
+      await this.shopPaymentService.cancelPayment(
+        paymentId,
+        `클레임 승인 - 주문 ${orderId} 취소`,
+        refundAmount
+      );
+
+      // 5. Payment 환불금액 업데이트 (nowAmount 차감)
       payment.nowAmount = payment.paidAmount - refundAmount;
       await this.repositoryProvider.PaymentRepository.save(payment);
     }

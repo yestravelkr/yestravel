@@ -85,8 +85,39 @@ function OrderDetailContent({ orderNumber }: { orderNumber: string }) {
     navigate({ to: '/my-orders' });
   };
 
+  const cancelOrderMutation = trpc.shopClaim.create.useMutation({
+    onSuccess: () => {
+      toast.success('주문이 취소되었습니다.');
+      navigate({ to: '/my-orders' });
+    },
+    onError: error => {
+      toast.error(error.message || '주문 취소에 실패했습니다.');
+    },
+  });
+
+  const handleCancelOrder = () => {
+    if (!confirm('주문을 취소하시겠습니까?')) return;
+
+    cancelOrderMutation.mutate({
+      orderId: data.orderId,
+      type: 'CANCEL',
+      reason: '고객 직접 취소',
+      claimOptionItems: [
+        {
+          optionId: data.accommodation.hotelOptionId,
+          optionName: data.accommodation.optionName,
+          quantity: 1,
+          unitPrice: data.payment.productAmount,
+        },
+      ],
+    });
+  };
+
   const handleCancelRequest = () => {
-    toast.success('취소 신청이 완료되었습니다.');
+    navigate({
+      to: '/cancel-request/$orderNumber',
+      params: { orderNumber },
+    });
   };
 
   return (
@@ -123,6 +154,7 @@ function OrderDetailContent({ orderNumber }: { orderNumber: string }) {
             checkIn: data.checkIn,
             checkOut: data.checkOut,
           }}
+          onCancelOrder={handleCancelOrder}
           onCancelRequest={handleCancelRequest}
         />
 

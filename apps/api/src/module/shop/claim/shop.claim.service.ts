@@ -5,6 +5,8 @@ import {
 } from '@nestjs/common';
 import { RepositoryProvider } from '@src/module/shared/transaction/repository.provider';
 import { ClaimEntity } from '@src/module/backoffice/domain/order/claim.entity';
+import { orderNumberParser } from '@src/module/backoffice/domain/order/order.entity';
+import { ShopPaymentService } from '@src/module/shop/payment/shop.payment.service';
 import type { ClaimDetail } from '@src/module/backoffice/domain/order/claim-detail.type';
 import type {
   CreateClaimInput,
@@ -29,7 +31,10 @@ const DELIVERY_RETURNABLE_STATUSES = ['DELIVERED'] as const;
 
 @Injectable()
 export class ShopClaimService {
-  constructor(private readonly repositoryProvider: RepositoryProvider) {}
+  constructor(
+    private readonly repositoryProvider: RepositoryProvider,
+    private readonly shopPaymentService: ShopPaymentService
+  ) {}
 
   /**
    * 클레임 생성 (취소/반품 요청)
@@ -98,6 +103,41 @@ export class ShopClaimService {
 
     const savedClaim =
       await this.repositoryProvider.ClaimRepository.save(claim);
+
+    // 7. PAID 상태이고 취소 요청인 경우 → 자동 승인 + 포트원 환불
+    if (order.status === 'PAID' && type === 'CANCEL') {
+      savedClaim.status = 'APPROVED';
+      await this.repositoryProvider.ClaimRepository.save(savedClaim);
+
+      // 포트원 결제 취소 (실패 시 @Transactional이 DB 롤백)
+      const paymentId = orderNumberParser.encode([orderId], order.createdAt);
+      await this.shopPaymentService.cancelPayment(
+        paymentId,
+        `고객 직접 취소 - 주문 ${orderId}`,
+        refundAmount
+      );
+
+      // 주문 상태 CANCELLED로 변경
+      order.status = 'CANCELLED';
+      await this.repositoryProvider.OrderRepository.save(order);
+
+      // Payment nowAmount 차감
+      const payment = await this.repositoryProvider.PaymentRepository.findOne({
+        where: { orderId },
+      });
+      if (payment) {
+        payment.nowAmount = payment.paidAmount - refundAmount;
+        await this.repositoryProvider.PaymentRepository.save(payment);
+      }
+
+      return {
+        claimId: savedClaim.id,
+        status: 'APPROVED' as const,
+        estimatedRefundAmount: refundAmount,
+        cancelFee,
+        originalAmount,
+      };
+    }
 
     return {
       claimId: savedClaim.id,

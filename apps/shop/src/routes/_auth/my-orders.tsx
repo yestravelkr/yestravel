@@ -95,6 +95,16 @@ function MyOrdersContent() {
     },
   });
 
+  const cancelOrderMutation = trpc.shopClaim.create.useMutation({
+    onSuccess: () => {
+      toast.success('주문이 취소되었습니다.');
+      utils.shopOrder.getMyOrders.invalidate();
+    },
+    onError: error => {
+      toast.error(error.message || '주문 취소에 실패했습니다.');
+    },
+  });
+
   const handleCancelWithdraw = async (orderId: number) => {
     const confirmed = await openConfirmModal({
       title: '취소 철회',
@@ -105,6 +115,35 @@ function MyOrdersContent() {
 
     if (confirmed) {
       withdrawMutation.mutate({ orderId });
+    }
+  };
+
+  const handleCancelOrder = async (order: {
+    orderId: number;
+    totalAmount: number;
+    accommodation: { hotelOptionId: number; optionName: string };
+  }) => {
+    const confirmed = await openConfirmModal({
+      title: '주문 취소',
+      description: '주문을 취소하시겠습니까?',
+      confirmText: '주문 취소',
+      cancelText: '닫기',
+    });
+
+    if (confirmed) {
+      cancelOrderMutation.mutate({
+        orderId: order.orderId,
+        type: 'CANCEL',
+        reason: '고객 직접 취소',
+        claimOptionItems: [
+          {
+            optionId: order.accommodation.hotelOptionId,
+            optionName: order.accommodation.optionName,
+            quantity: 1,
+            unitPrice: order.totalAmount,
+          },
+        ],
+      });
     }
   };
 
@@ -165,7 +204,19 @@ function MyOrdersContent() {
                         onProductClick={handleProductClick}
                       />
                     )}
-                    {canCancelOrder(order.type, order.status) &&
+                    {order.status === 'PAID' &&
+                      order.type === 'HOTEL' &&
+                      order.displayStatus !== 'CANCEL_REQUESTED' && (
+                        <OrderStatusCard.Actions>
+                          <OrderStatusCard.SubtleButton
+                            onClick={() => handleCancelOrder(order)}
+                          >
+                            주문 취소
+                          </OrderStatusCard.SubtleButton>
+                        </OrderStatusCard.Actions>
+                      )}
+                    {order.status === 'PAID' &&
+                      order.type === 'DELIVERY' &&
                       order.displayStatus !== 'CANCEL_REQUESTED' && (
                         <OrderStatusCard.Actions>
                           <OrderStatusCard.SubtleButton
@@ -173,7 +224,20 @@ function MyOrdersContent() {
                               handleCancelRequest(order.orderNumber)
                             }
                           >
-                            취소 요청
+                            취소 신청
+                          </OrderStatusCard.SubtleButton>
+                        </OrderStatusCard.Actions>
+                      )}
+                    {order.status !== 'PAID' &&
+                      canCancelOrder(order.type, order.status) &&
+                      order.displayStatus !== 'CANCEL_REQUESTED' && (
+                        <OrderStatusCard.Actions>
+                          <OrderStatusCard.SubtleButton
+                            onClick={() =>
+                              handleCancelRequest(order.orderNumber)
+                            }
+                          >
+                            취소 신청
                           </OrderStatusCard.SubtleButton>
                         </OrderStatusCard.Actions>
                       )}

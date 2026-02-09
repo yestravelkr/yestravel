@@ -673,6 +673,7 @@ export class ShopOrderService {
             hotelName: hotelProduct?.name ?? '',
             roomName: hotelProduct?.name ?? '',
             optionName: order.orderOptionSnapshot.hotelOptionName,
+            hotelOptionId: order.orderOptionSnapshot.hotelOptionId,
           },
           checkIn: {
             date: this.formatDateWithDay(order.orderOptionSnapshot.checkInDate),

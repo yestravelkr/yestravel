@@ -34,21 +34,23 @@ export interface AccommodationOrderData {
 
 export interface AccommodationOrderStatusCardProps {
   data: AccommodationOrderData;
+  onCancelOrder?: () => void;
   onCancelRequest?: () => void;
 }
 
-/** 취소 신청이 가능한 상태 */
-const CANCELABLE_STATUSES: OrderStatusType[] = [
-  'PAID',
+/** 취소 신청이 가능한 상태 (어드민 승인 필요) */
+const CANCEL_REQUEST_STATUSES: OrderStatusType[] = [
   'PENDING_RESERVATION',
   'RESERVATION_CONFIRMED',
 ];
 
 export function AccommodationOrderStatusCard({
   data,
+  onCancelOrder,
   onCancelRequest,
 }: AccommodationOrderStatusCardProps) {
-  const canCancel = CANCELABLE_STATUSES.includes(data.status);
+  const isPaid = data.status === 'PAID';
+  const canCancelRequest = CANCEL_REQUEST_STATUSES.includes(data.status);
 
   return (
     <OrderStatusCard>
@@ -66,7 +68,14 @@ export function AccommodationOrderStatusCard({
         checkIn={data.checkIn}
         checkOut={data.checkOut}
       />
-      {canCancel && (
+      {isPaid && (
+        <OrderStatusCard.Actions>
+          <OrderStatusCard.SubtleButton onClick={onCancelOrder}>
+            주문 취소
+          </OrderStatusCard.SubtleButton>
+        </OrderStatusCard.Actions>
+      )}
+      {canCancelRequest && (
         <OrderStatusCard.Actions>
           <OrderStatusCard.SubtleButton onClick={onCancelRequest}>
             취소 신청

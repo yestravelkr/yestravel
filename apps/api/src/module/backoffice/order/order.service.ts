@@ -8,6 +8,7 @@ import * as ExcelJS from 'exceljs';
 import dayjs from 'dayjs';
 import { RepositoryProvider } from '@src/module/shared/transaction/repository.provider';
 import { S3Service } from '@src/module/shared/aws/s3.service';
+import { ShopPaymentService } from '@src/module/shop/payment/shop.payment.service';
 import {
   ORDER_STATUS_ENUM_VALUE,
   OrderEntity,
@@ -31,6 +32,8 @@ import type {
   UpdateStatusResponse,
   ExportToExcelInput,
   ExportToExcelResponse,
+  CancelOrderInput,
+  CancelOrderResponse,
 } from './order.dto';
 import type { Nullish } from '@src/types/utility.type';
 
@@ -38,7 +41,8 @@ import type { Nullish } from '@src/types/utility.type';
 export class OrderService {
   constructor(
     private readonly repositoryProvider: RepositoryProvider,
-    private readonly s3Service: S3Service
+    private readonly s3Service: S3Service,
+    private readonly shopPaymentService: ShopPaymentService
   ) {}
 
   /**
@@ -450,6 +454,62 @@ export class OrderService {
       orderId: order.id,
       previousStatus,
       newStatus,
+    };
+  }
+
+  /**
+   * 어드민 직접 주문 취소 (Claim 없이)
+   * - 포트원 환불 API 호출
+   * - Order 상태: (현재 상태) → CANCELLED
+   * - Payment nowAmount 차감
+   */
+  async cancelOrder(input: CancelOrderInput): Promise<CancelOrderResponse> {
+    const { orderId, reason, refundAmount } = input;
+
+    // 1. 주문 조회
+    const order = await this.repositoryProvider.OrderRepository.findOneOrFail({
+      where: { id: orderId },
+    }).catch(() => {
+      throw new NotFoundException(`주문을 찾을 수 없습니다. (id: ${orderId})`);
+    });
+
+    // CANCELLED 상태에서는 취소 불가
+    if (order.status === 'CANCELLED') {
+      throw new BadRequestException('이미 취소된 주문입니다.');
+    }
+
+    // 2. Payment 조회 및 취소수수료 계산
+    const payment = await this.repositoryProvider.PaymentRepository.findOne({
+      where: { orderId },
+    });
+
+    if (!payment) {
+      throw new BadRequestException('결제 정보를 찾을 수 없습니다.');
+    }
+
+    const cancelFee = payment.paidAmount - refundAmount;
+
+    // 3. 포트원 결제 취소 (실패 시 @Transactional이 DB 롤백)
+    const paymentId = orderNumberParser.encode([orderId], order.createdAt);
+    await this.shopPaymentService.cancelPayment(
+      paymentId,
+      `어드민 직접 취소 - ${reason}`,
+      refundAmount
+    );
+
+    // 4. 주문 상태 변경
+    order.status = 'CANCELLED';
+    await this.repositoryProvider.OrderRepository.save(order);
+
+    // 5. Payment nowAmount 차감
+    payment.nowAmount = payment.paidAmount - refundAmount;
+    await this.repositoryProvider.PaymentRepository.save(payment);
+
+    return {
+      success: true,
+      orderId,
+      refundAmount,
+      cancelFee,
     };
   }
 

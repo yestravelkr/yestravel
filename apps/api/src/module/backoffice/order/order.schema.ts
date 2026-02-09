@@ -270,3 +270,24 @@ export const exportToExcelResponseSchema = z.object({
   fileName: z.string(),
   totalCount: z.number(),
 });
+
+// ===== 어드민 직접 취소 Schemas =====
+
+/**
+ * 어드민 직접 취소 Input Schema
+ */
+export const cancelOrderInputSchema = z.object({
+  orderId: z.number().int().positive(),
+  reason: z.string().min(1),
+  refundAmount: z.number().positive(),
+});
+
+/**
+ * 어드민 직접 취소 Response Schema
+ */
+export const cancelOrderResponseSchema = z.object({
+  success: z.boolean(),
+  orderId: z.number(),
+  refundAmount: z.number(),
+  cancelFee: z.number(),
+});
