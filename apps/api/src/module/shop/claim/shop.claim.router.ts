@@ -5,7 +5,7 @@ import {
   Input,
   Ctx,
   UseMiddlewares,
-} from 'nestjs-trpc';
+} from 'nestjs-trpc-v2';
 import { Injectable } from '@nestjs/common';
 import { BaseTrpcRouter } from '@src/module/trpc/baseTrpcRouter';
 import {
