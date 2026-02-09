@@ -272,4 +272,58 @@ export class ShopPaymentService {
     };
     this.logger.log('PortOne access token generated');
   }
+
+  /**
+   * PortOne 결제 취소 API 호출
+   * @param paymentId 결제 ID (orderNumber)
+   * @param reason 취소 사유
+   * @param amount 부분 취소 금액 (미지정 시 전액 취소)
+   * @returns 취소 결과
+   */
+  async cancelPayment(
+    paymentId: string,
+    reason: string,
+    amount?: number
+  ): Promise<{ success: boolean; cancellation?: Record<string, any> }> {
+    await this.generatePortoneAccessToken();
+
+    const requestBody: { reason: string; amount?: number } = { reason };
+    if (amount !== undefined) {
+      requestBody.amount = amount;
+    }
+
+    try {
+      const response = await axios.post(
+        `${this.PORTONE_API_URL}/payments/${paymentId}/cancel`,
+        requestBody,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${this.portoneToken.accessToken}`,
+          },
+        }
+      );
+
+      this.logger.log(
+        `Payment cancelled successfully: paymentId=${paymentId}, amount=${amount ?? '전액'}`
+      );
+
+      return {
+        success: true,
+        cancellation: response.data,
+      };
+    } catch (error: any) {
+      const errorType = error.response?.data?.type;
+      const errorMessage = error.response?.data?.message;
+
+      this.logger.error(
+        `Payment cancellation failed: paymentId=${paymentId}, type=${errorType}, message=${errorMessage}`,
+        error.stack
+      );
+
+      throw new BadRequestException(
+        errorMessage || '결제 취소에 실패했습니다.'
+      );
+    }
+  }
 }
