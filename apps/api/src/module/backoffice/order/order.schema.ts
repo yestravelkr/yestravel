@@ -20,8 +20,20 @@ export const orderStatusSchema = z.enum([
 ]);
 
 /** 표시용 상태 (Order.status + Claim 기반 합성 상태) */
+// Note: orderStatusSchema.options 스프레드 대신 인라인 정의 (nestjs-trpc 코드 생성 호환)
 export const displayStatusSchema = z.enum([
-  ...orderStatusSchema.options,
+  'PENDING',
+  'PAID',
+  'PENDING_RESERVATION',
+  'RESERVATION_CONFIRMED',
+  'COMPLETED',
+  'PREPARING_SHIPMENT',
+  'SHIPPING',
+  'DELIVERED',
+  'PURCHASE_CONFIRMED',
+  'CANCELLED',
+  'RETURNING',
+  'RETURNED',
   'CANCEL_REQUESTED',
   'RETURN_REQUESTED',
 ]);
