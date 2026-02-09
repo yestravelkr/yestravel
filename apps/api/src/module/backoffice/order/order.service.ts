@@ -65,7 +65,11 @@ export class OrderService {
     const baseWhere: FindOptionsWhere<OrderEntity> = {};
 
     if (type) baseWhere.type = type;
-    if (status) baseWhere.status = status;
+    // 클레임 기반 상태 필터 (CANCEL_REQUESTED, RETURN_REQUESTED)
+    const isClaimStatus =
+      status === 'CANCEL_REQUESTED' || status === 'RETURN_REQUESTED';
+    if (status && !isClaimStatus)
+      baseWhere.status = status as OrderEntity['status'];
     if (campaignId) baseWhere.campaignId = campaignId;
     if (productId) baseWhere.productId = productId;
     if (influencerIds && influencerIds.length > 0) {
@@ -92,15 +96,72 @@ export class OrderService {
       whereConditions = [baseWhere];
     }
 
-    // 데이터 조회 (find + relations 사용)
-    const [orders, total] =
-      await this.repositoryProvider.OrderRepository.findAndCount({
-        where: whereConditions,
-        relations: ['product', 'campaign', 'influencer'],
-        order: { [this.getSortColumn(orderBy)]: order },
-        skip: (page - 1) * limit,
-        take: limit,
-      });
+    // 데이터 조회
+    let orders: OrderEntity[];
+    let total: number;
+
+    if (isClaimStatus) {
+      // 클레임 기반 필터: QueryBuilder + INNER JOIN
+      const claimType = status === 'CANCEL_REQUESTED' ? 'CANCEL' : 'RETURN';
+      const qb = this.repositoryProvider.OrderRepository.createQueryBuilder(
+        'ord'
+      )
+        .innerJoin(
+          'ord.claims',
+          'claim',
+          'claim.status = :claimStatus AND claim.type = :claimType',
+          {
+            claimStatus: 'REQUESTED',
+            claimType,
+          }
+        )
+        .leftJoinAndSelect('ord.product', 'product')
+        .leftJoinAndSelect('ord.campaign', 'campaign')
+        .leftJoinAndSelect('ord.influencer', 'influencer')
+        .leftJoinAndSelect('ord.claims', 'allClaims');
+
+      // 기본 필터 적용
+      if (type) qb.andWhere('ord.type = :type', { type });
+      if (campaignId)
+        qb.andWhere('ord.campaignId = :campaignId', { campaignId });
+      if (productId) qb.andWhere('ord.productId = :productId', { productId });
+      if (influencerIds && influencerIds.length > 0) {
+        qb.andWhere('ord.influencerId IN (:...influencerIds)', {
+          influencerIds,
+        });
+      }
+      if (startDate && endDate) {
+        const dateColumn = this.getDateColumn(periodFilterType);
+        qb.andWhere(`ord.${dateColumn} BETWEEN :startDate AND :endDate`, {
+          startDate,
+          endDate,
+        });
+      }
+      if (searchQuery) {
+        qb.andWhere(
+          '(ord.customerName ILIKE :searchQuery OR ord.customerPhone ILIKE :searchQuery)',
+          {
+            searchQuery: `%${searchQuery}%`,
+          }
+        );
+      }
+
+      qb.orderBy(`ord.${this.getSortColumn(orderBy)}`, order)
+        .skip((page - 1) * limit)
+        .take(limit);
+
+      [orders, total] = await qb.getManyAndCount();
+    } else {
+      // 일반 필터: 기존 로직 + claims relation 추가
+      [orders, total] =
+        await this.repositoryProvider.OrderRepository.findAndCount({
+          where: whereConditions,
+          relations: ['product', 'campaign', 'influencer', 'claims'],
+          order: { [this.getSortColumn(orderBy)]: order },
+          skip: (page - 1) * limit,
+          take: limit,
+        });
+    }
 
     // Response 포맷팅
     const data: OrderListItem[] = orders.map(order => {
@@ -112,6 +173,7 @@ export class OrderService {
         orderNumber: orderNumberParser.encode([order.id], order.createdAt),
         type: order.type,
         status: order.status,
+        displayStatus: this.computeDisplayStatus(order),
         customerName: order.customerName,
         customerPhone: order.customerPhone,
         totalAmount: order.totalAmount,
@@ -204,6 +266,8 @@ export class OrderService {
       SHIPPING: 0,
       DELIVERED: 0,
       PURCHASE_CONFIRMED: 0,
+      CANCEL_REQUESTED: 0,
+      RETURN_REQUESTED: 0,
       CANCELLED: 0,
       RETURNING: 0,
       RETURNED: 0,
@@ -212,7 +276,10 @@ export class OrderService {
     // 결과 매핑
     let totalCount = 0;
     for (const result of results) {
-      const status = result.status as keyof Omit<StatusCounts, 'ALL'>;
+      const status = result.status as keyof Omit<
+        StatusCounts,
+        'ALL' | 'CANCEL_REQUESTED' | 'RETURN_REQUESTED'
+      >;
       const count = parseInt(result.count, 10);
       if (ORDER_STATUS_ENUM_VALUE.includes(status as any)) {
         counts[status] = count;
@@ -220,6 +287,55 @@ export class OrderService {
       }
     }
     counts.ALL = totalCount;
+
+    // 클레임 기반 카운트 (CANCEL_REQUESTED, RETURN_REQUESTED)
+    const claimQb = this.repositoryProvider.ClaimRepository.createQueryBuilder(
+      'claim'
+    )
+      .innerJoin('claim.order', 'ord')
+      .select('claim.type', 'type')
+      .addSelect('COUNT(*)', 'count')
+      .where('claim.status = :claimStatus', { claimStatus: 'REQUESTED' });
+
+    // 동일 필터 적용
+    if (type) claimQb.andWhere('ord.type = :type', { type });
+    if (startDate && endDate) {
+      const dateColumn = this.getDateColumn(periodFilterType);
+      claimQb.andWhere(`ord.${dateColumn} BETWEEN :startDate AND :endDate`, {
+        startDate,
+        endDate,
+      });
+    }
+    if (campaignId)
+      claimQb.andWhere('ord.campaignId = :campaignId', { campaignId });
+    if (influencerIds && influencerIds.length > 0) {
+      claimQb.andWhere('ord.influencerId IN (:...influencerIds)', {
+        influencerIds,
+      });
+    }
+    if (productId)
+      claimQb.andWhere('ord.productId = :productId', { productId });
+    if (searchQuery) {
+      claimQb.andWhere(
+        '(ord.customerName ILIKE :searchQuery OR ord.customerPhone ILIKE :searchQuery)',
+        { searchQuery: `%${searchQuery}%` }
+      );
+    }
+
+    claimQb.groupBy('claim.type');
+
+    const claimResults = await claimQb.getRawMany<{
+      type: string;
+      count: string;
+    }>();
+    for (const result of claimResults) {
+      const count = parseInt(result.count, 10);
+      if (result.type === 'CANCEL') {
+        counts.CANCEL_REQUESTED = count;
+      } else if (result.type === 'RETURN') {
+        counts.RETURN_REQUESTED = count;
+      }
+    }
 
     return counts;
   }
@@ -256,6 +372,22 @@ export class OrderService {
       influencers: influencers.map(i => ({ id: i.id, name: i.name })),
       products: products.map(p => ({ id: p.id, name: p.name })),
     };
+  }
+
+  /**
+   * Order + Claims 기반 displayStatus 합성
+   * REQUESTED 상태의 클레임이 있으면 CANCEL_REQUESTED / RETURN_REQUESTED
+   */
+  private computeDisplayStatus(
+    order: OrderEntity
+  ): OrderListItem['displayStatus'] {
+    const activeClaim = order.claims?.find(c => c.status === 'REQUESTED');
+    if (activeClaim) {
+      return activeClaim.type === 'CANCEL'
+        ? 'CANCEL_REQUESTED'
+        : 'RETURN_REQUESTED';
+    }
+    return order.status;
   }
 
   /**
@@ -415,7 +547,14 @@ export class OrderService {
     const baseWhere: FindOptionsWhere<OrderEntity> = {};
 
     if (type) baseWhere.type = type;
-    if (status) baseWhere.status = status;
+    // 클레임 기반 상태는 엑셀에서는 기본 상태로만 필터
+    if (
+      status &&
+      status !== 'CANCEL_REQUESTED' &&
+      status !== 'RETURN_REQUESTED'
+    ) {
+      baseWhere.status = status as OrderEntity['status'];
+    }
     if (campaignId) baseWhere.campaignId = campaignId;
     if (productId) baseWhere.productId = productId;
     if (influencerIds && influencerIds.length > 0) {

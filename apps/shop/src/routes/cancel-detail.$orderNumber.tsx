@@ -37,6 +37,15 @@ const CLAIM_STATUS_MESSAGE: Record<string, string> = {
   WITHDRAWN: '취소 요청이 철회되었습니다.',
 };
 
+/** 클레임 상태별 섹션 제목 */
+const CLAIM_STATUS_TITLE: Record<string, string> = {
+  REQUESTED: '취소요청',
+  APPROVED: '취소승인',
+  REJECTED: '취소거절',
+  COMPLETED: '취소완료',
+  WITHDRAWN: '취소철회',
+};
+
 // ============================================================================
 // Skeleton Component
 // ============================================================================
@@ -182,7 +191,9 @@ function CancelDetailContent({ orderNumber }: { orderNumber: string }) {
 
         {/* Cancel Request Info */}
         <Section>
-          <SectionTitle>취소요청</SectionTitle>
+          <SectionTitle>
+            {CLAIM_STATUS_TITLE[claimData.status] || '취소요청'}
+          </SectionTitle>
 
           {/* Product Info */}
           <ProductInfo>

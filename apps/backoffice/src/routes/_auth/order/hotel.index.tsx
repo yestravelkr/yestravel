@@ -27,8 +27,8 @@ import {
 } from '@/shared/components';
 import { trpc } from '@/shared/trpc';
 
-/** 주문 상태 (12개 - CANCEL_REQUESTED, RETURN_REQUESTED 제외) */
-type OrderStatus =
+/** 주문 원본 상태 (12개 - DB 상태) */
+type OrderBaseStatus =
   | 'PENDING'
   | 'PAID'
   | 'PENDING_RESERVATION'
@@ -42,11 +42,17 @@ type OrderStatus =
   | 'RETURNING'
   | 'RETURNED';
 
+/** 표시용 상태 (14개 - 원본 + 클레임 합성 상태) */
+type OrderDisplayStatus =
+  | OrderBaseStatus
+  | 'CANCEL_REQUESTED'
+  | 'RETURN_REQUESTED';
+
 /** 상태 탭 타입 (전체 주문 포함) */
-type OrderStatusTab = 'ALL' | OrderStatus;
+type OrderStatusTab = 'ALL' | OrderDisplayStatus;
 
 /** 상태별 라벨 */
-const ORDER_STATUS_LABELS: Record<OrderStatusTab, string> = {
+const ORDER_STATUS_LABELS: Record<OrderDisplayStatus | 'ALL', string> = {
   ALL: '전체 주문',
   PENDING: '결제대기',
   PAID: '결제완료',
@@ -57,13 +63,15 @@ const ORDER_STATUS_LABELS: Record<OrderStatusTab, string> = {
   SHIPPING: '배송중',
   DELIVERED: '배송완료',
   PURCHASE_CONFIRMED: '구매확정',
+  CANCEL_REQUESTED: '취소요청',
+  RETURN_REQUESTED: '반품요청',
   CANCELLED: '취소완료',
   RETURNING: '반품중',
   RETURNED: '반품완료',
 };
 
 /** 알림 표시가 필요한 상태 (빨간 점) */
-const ALERT_STATUSES: OrderStatusTab[] = ['PAID'];
+const ALERT_STATUSES: OrderDisplayStatus[] = ['PAID', 'CANCEL_REQUESTED'];
 
 /** 기간 타입 옵션 */
 const PERIOD_TYPE_OPTIONS = [
@@ -131,7 +139,8 @@ interface HotelOrder {
   id: number;
   orderNumber: string;
   type: 'HOTEL' | 'E-TICKET' | 'DELIVERY';
-  status: OrderStatus;
+  status: OrderBaseStatus;
+  displayStatus: OrderDisplayStatus;
   customerName: string;
   customerPhone: string;
   totalAmount: number;
@@ -155,7 +164,7 @@ const formatPrice = (amount: number) =>
 
 /** 상태별 액션 버튼 정보 */
 const STATUS_ACTION_CONFIG: Partial<
-  Record<OrderStatus, { label: string; nextStatus: OrderStatus }>
+  Record<OrderBaseStatus, { label: string; nextStatus: OrderBaseStatus }>
 > = {
   PAID: { label: '주문확인', nextStatus: 'PENDING_RESERVATION' },
   PENDING_RESERVATION: {
@@ -228,7 +237,7 @@ function HotelOrderListPage() {
   /** 상태 변경 버튼 클릭 핸들러 */
   const handleStatusChange = async (
     order: HotelOrder,
-    nextStatus: OrderStatus,
+    nextStatus: OrderBaseStatus,
   ) => {
     const confirmed = await openConfirmModal({
       title: `${ORDER_STATUS_LABELS[nextStatus]} 상태로 변경됩니다.`,
@@ -248,7 +257,7 @@ function HotelOrderListPage() {
       header: '주문번호',
       size: 100,
     }),
-    columnHelper.accessor('status', {
+    columnHelper.accessor('displayStatus', {
       header: '주문상태',
       cell: (info) => ORDER_STATUS_LABELS[info.getValue()],
       size: 90,
@@ -326,7 +335,7 @@ function HotelOrderListPage() {
     }),
   ];
 
-  const orders = ordersData.data;
+  const orders = ordersData.data as HotelOrder[];
   const totalCount = ordersData.total;
   const totalPages = ordersData.totalPages;
 
@@ -447,13 +456,13 @@ function HotelOrderListPage() {
   };
 
   // 상태 탭 목록 생성 (숙박용)
-  // 취소요청(CANCEL_REQUESTED)은 Claim으로 관리되어 별도 탭 없음
   const tabOrder: OrderStatusTab[] = [
     'ALL',
     'PAID',
     'PENDING_RESERVATION',
     'RESERVATION_CONFIRMED',
     'COMPLETED',
+    'CANCEL_REQUESTED',
     'CANCELLED',
   ];
 
@@ -461,7 +470,8 @@ function HotelOrderListPage() {
     key,
     label: ORDER_STATUS_LABELS[key],
     count: statusCounts[key],
-    hasAlert: ALERT_STATUSES.includes(key) && statusCounts[key] > 0,
+    hasAlert:
+      (ALERT_STATUSES as string[]).includes(key) && statusCounts[key] > 0,
   }));
 
   const handleRowClick = (order: HotelOrder) => {

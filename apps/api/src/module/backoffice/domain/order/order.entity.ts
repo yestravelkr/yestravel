@@ -21,6 +21,7 @@ import Sqids from 'sqids';
 import dayjs from 'dayjs';
 import { ConfigProvider } from '@src/config';
 import { PaymentEntity } from '@src/module/backoffice/domain/order/payment.entity';
+import { ClaimEntity } from '@src/module/backoffice/domain/order/claim.entity';
 import type { HotelOrderOptionData } from '@src/module/backoffice/domain/order/hotel-order.entity';
 import type { TmpOrderRawData } from './tmp-order.entity';
 import {
@@ -201,6 +202,9 @@ export class OrderEntity extends BaseEntity {
 
   @OneToMany(() => PaymentEntity, payment => payment.order)
   payments: PaymentEntity[];
+
+  @OneToMany(() => ClaimEntity, claim => claim.order)
+  claims: ClaimEntity[];
 
   // ===== 회원 정보 (Shop 회원과 연결) =====
 
