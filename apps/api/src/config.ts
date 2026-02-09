@@ -28,6 +28,9 @@ type AwsConfigType = {
   s3: {
     bucket: string;
   };
+  cdn: {
+    baseUrl: string;
+  };
 };
 
 type PortOneConfigType = {
