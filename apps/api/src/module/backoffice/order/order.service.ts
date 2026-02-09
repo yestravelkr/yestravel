@@ -464,7 +464,7 @@ export class OrderService {
    * - Payment nowAmount 차감
    */
   async cancelOrder(input: CancelOrderInput): Promise<CancelOrderResponse> {
-    const { orderId, reason, refundAmount } = input;
+    const { orderId, reason, cancelFee } = input;
 
     // 1. 주문 조회
     const order = await this.repositoryProvider.OrderRepository.findOneOrFail({
@@ -473,12 +473,14 @@ export class OrderService {
       throw new NotFoundException(`주문을 찾을 수 없습니다. (id: ${orderId})`);
     });
 
+    const previousStatus = order.status;
+
     // CANCELLED 상태에서는 취소 불가
     if (order.status === 'CANCELLED') {
       throw new BadRequestException('이미 취소된 주문입니다.');
     }
 
-    // 2. Payment 조회 및 취소수수료 계산
+    // 2. Payment 조회 및 환불금액 계산
     const payment = await this.repositoryProvider.PaymentRepository.findOne({
       where: { orderId },
     });
@@ -487,7 +489,7 @@ export class OrderService {
       throw new BadRequestException('결제 정보를 찾을 수 없습니다.');
     }
 
-    const cancelFee = payment.paidAmount - refundAmount;
+    const refundAmount = payment.paidAmount - cancelFee;
 
     // 3. 포트원 결제 취소 (실패 시 @Transactional이 DB 롤백)
     const paymentId = orderNumberParser.encode([orderId], order.createdAt);
@@ -508,6 +510,8 @@ export class OrderService {
     return {
       success: true,
       orderId,
+      previousStatus,
+      newStatus: 'CANCELLED',
       refundAmount,
       cancelFee,
     };
