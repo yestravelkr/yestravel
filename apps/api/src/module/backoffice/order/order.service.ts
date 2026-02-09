@@ -507,7 +507,7 @@ export class OrderService {
 
       // 결제 정보
       payment: {
-        paymentMethod: latestPayment?.pgProvider ?? '미결제',
+        paymentMethod: this.getPaymentMethod(latestPayment?.pgRawData),
         productAmount,
         refundAmount,
         totalAmount: productAmount - refundAmount,
@@ -520,6 +520,35 @@ export class OrderService {
         phone: order.customerPhone,
       },
     };
+  }
+
+  private getPaymentMethod(
+    pgRawData: Record<string, any> | null | undefined
+  ): string {
+    if (!pgRawData?.method) return '미결제';
+
+    const method = pgRawData.method;
+
+    if (method.provider) {
+      const easyPayMap: Record<string, string> = {
+        KAKAOPAY: '카카오페이',
+        NAVERPAY: '네이버페이',
+        TOSSPAY: '토스페이',
+        PAYCO: '페이코',
+        SAMSUNGPAY: '삼성페이',
+        APPLEPAY: '애플페이',
+      };
+      return easyPayMap[method.provider] ?? method.provider;
+    }
+
+    const methodTypeMap: Record<string, string> = {
+      PaymentMethodCard: '신용카드',
+      PaymentMethodVirtualAccount: '무통장입금',
+      PaymentMethodTransfer: '계좌이체',
+      PaymentMethodMobile: '휴대폰결제',
+      PaymentMethodEasyPay: '간편결제',
+    };
+    return methodTypeMap[method.type] ?? '카드결제';
   }
 
   /**
@@ -675,7 +704,9 @@ export class OrderService {
         productRefundAmount: refundAmount > 0 ? refundAmount : '-',
         totalRefundAmount: refundAmount > 0 ? refundAmount : '-',
         finalAmount: nowAmount,
-        paymentMethod: latestPayment?.pgProvider ?? '-',
+        paymentMethod: latestPayment?.pgRawData
+          ? this.getPaymentMethod(latestPayment.pgRawData)
+          : '-',
         requestNote: '-', // 스키마에 없음
         impUid: latestPayment?.impUid ?? '-',
         customerName: order.customerName,
