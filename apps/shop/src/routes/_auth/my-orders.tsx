@@ -13,7 +13,6 @@ import { Suspense } from 'react';
 import { toast } from 'sonner';
 import tw from 'tailwind-styled-components';
 
-import { openLoginBottomSheet } from '@/components/auth/LoginBottomSheet';
 import { openConfirmModal } from '@/components/common';
 import {
   OrderStatusCard,
@@ -25,7 +24,7 @@ import { trpc } from '@/shared';
 import { HeaderLayout } from '@/shared/components/HeaderLayout';
 import { useAuthStore } from '@/store/authStore';
 
-export const Route = createFileRoute('/my-orders')({
+export const Route = createFileRoute('/_auth/my-orders')({
   component: MyOrdersPage,
 });
 
@@ -50,50 +49,10 @@ function canCancelOrder(type: 'HOTEL' | 'DELIVERY', status: string): boolean {
 }
 
 function MyOrdersPage() {
-  const { isLoggedIn } = useAuthStore();
-
-  if (!isLoggedIn) {
-    return <LoginRequiredView />;
-  }
-
   return (
     <Suspense fallback={<MyOrdersSkeleton />}>
       <MyOrdersContent />
     </Suspense>
-  );
-}
-
-/**
- * 로그인 필요 화면
- */
-function LoginRequiredView() {
-  const navigate = useNavigate();
-
-  const handleBack = () => {
-    navigate({ to: '/' });
-  };
-
-  const handleLogin = async () => {
-    const result = await openLoginBottomSheet();
-    if (result?.success) {
-      window.location.reload();
-    }
-  };
-
-  return (
-    <HeaderLayout
-      title="주문내역"
-      left={
-        <BackButton onClick={handleBack}>
-          <ArrowLeft size={24} />
-        </BackButton>
-      }
-    >
-      <EmptyContainer>
-        <EmptyText>로그인이 필요한 서비스입니다.</EmptyText>
-        <LoginButton onClick={handleLogin}>로그인</LoginButton>
-      </EmptyContainer>
-    </HeaderLayout>
   );
 }
 
@@ -359,13 +318,6 @@ const EmptyIcon = tw.div`
 const EmptyText = tw.p`
   text-fg-muted text-lg font-bold
   text-center
-`;
-
-const LoginButton = tw.button`
-  px-6 py-3
-  bg-primary text-white
-  rounded-xl
-  font-semibold
 `;
 
 // Skeleton Styles
