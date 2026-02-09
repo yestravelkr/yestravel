@@ -126,11 +126,23 @@ function CancelRequestContent() {
       return;
     }
 
+    const reasonText =
+      selectedReason === 'OTHER'
+        ? reasonDetail
+        : (CANCEL_REASONS.find(r => r.value === selectedReason)?.label ?? '');
+
     await createClaimMutation.mutateAsync({
       orderId: orderDetail.orderId,
       type: 'CANCEL',
-      reasonCategory: selectedReason,
-      reasonDetail: selectedReason === 'OTHER' ? reasonDetail : null,
+      reason: reasonText,
+      claimOptionItems: [
+        {
+          optionId: orderDetail.accommodation.hotelOptionId,
+          optionName: orderDetail.accommodation.optionName,
+          quantity: 1,
+          unitPrice: orderDetail.payment.productAmount,
+        },
+      ],
     });
   };
 

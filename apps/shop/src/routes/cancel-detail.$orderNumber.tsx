@@ -145,8 +145,13 @@ function CancelDetailContent({ orderNumber }: { orderNumber: string }) {
     CLAIM_STATUS_MESSAGE[claimData.status] || '취소 요청 처리 중입니다.';
   const canWithdraw = claimData.status === 'REQUESTED';
 
-  // 취소 수수료 계산
-  const cancelFee = claimData.originalAmount - claimData.refundAmount;
+  // 금액 계산
+  const originalAmount = claimData.claimOptionItems.reduce(
+    (sum, item) => sum + item.quantity * item.unitPrice,
+    0
+  );
+  const cancelFee = claimData.cancelFee;
+  const refundAmount = originalAmount - cancelFee;
 
   return (
     <Container>
@@ -232,16 +237,14 @@ function CancelDetailContent({ orderNumber }: { orderNumber: string }) {
         <Section>
           <RefundHeader>
             <RefundLabel>환불 예정금액</RefundLabel>
-            <RefundAmount>
-              {claimData.refundAmount.toLocaleString()}원
-            </RefundAmount>
+            <RefundAmount>{refundAmount.toLocaleString()}원</RefundAmount>
           </RefundHeader>
 
           <RefundDetails>
             <RefundRow>
               <RefundRowLabel>상품금액</RefundRowLabel>
               <RefundRowValue>
-                {claimData.originalAmount.toLocaleString()}원
+                {originalAmount.toLocaleString()}원
               </RefundRowValue>
             </RefundRow>
             {cancelFee > 0 && (
