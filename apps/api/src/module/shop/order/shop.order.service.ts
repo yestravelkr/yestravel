@@ -414,12 +414,15 @@ export class ShopOrderService {
       );
     }
 
-    const [hotelProduct, influencer] = await Promise.all([
+    const [hotelProduct, influencer, pendingClaim] = await Promise.all([
       this.repositoryProvider.HotelProductRepository.findOne({
         where: { id: order.productId, type: ProductTypeEnum.HOTEL },
       }),
       this.repositoryProvider.InfluencerRepository.findOne({
         where: { id: order.influencerId },
+      }),
+      this.repositoryProvider.ClaimRepository.findOne({
+        where: { orderId: order.id, status: 'REQUESTED' },
       }),
     ]);
 
@@ -434,7 +437,7 @@ export class ShopOrderService {
       orderId: order.id,
       orderNumber: order.orderNumber,
       orderDate: this.formatOrderDate(order.createdAt),
-      status: this.mapOrderStatusToFrontend(order.status),
+      status: this.getDisplayStatus(order.status, pendingClaim),
       statusDescription: null,
       influencerSlug: influencer?.slug ?? null,
       accommodation: {
@@ -442,6 +445,7 @@ export class ShopOrderService {
         hotelName: hotelProduct.name,
         roomName: hotelProduct.name,
         optionName: order.orderOptionSnapshot.hotelOptionName,
+        hotelOptionId: order.orderOptionSnapshot.hotelOptionId,
       },
       checkIn: {
         date: this.formatDateWithDay(order.orderOptionSnapshot.checkInDate),

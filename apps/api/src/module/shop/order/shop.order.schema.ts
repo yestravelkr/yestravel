@@ -70,6 +70,7 @@ export const getOrderDetailOutputSchema = z.object({
     hotelName: z.string(),
     roomName: z.string(),
     optionName: z.string(),
+    hotelOptionId: z.number(),
   }),
   checkIn: z.object({
     date: z.string(),

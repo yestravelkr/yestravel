@@ -18,6 +18,26 @@ export const orderStatusSchema = z.enum([
   'RETURNING',
   'RETURNED',
 ]);
+
+/** 표시용 상태 (Order.status + Claim 기반 합성 상태) */
+// Note: orderStatusSchema.options 스프레드 대신 인라인 정의 (nestjs-trpc 코드 생성 호환)
+export const displayStatusSchema = z.enum([
+  'PENDING',
+  'PAID',
+  'PENDING_RESERVATION',
+  'RESERVATION_CONFIRMED',
+  'COMPLETED',
+  'PREPARING_SHIPMENT',
+  'SHIPPING',
+  'DELIVERED',
+  'PURCHASE_CONFIRMED',
+  'CANCELLED',
+  'RETURNING',
+  'RETURNED',
+  'CANCEL_REQUESTED',
+  'RETURN_REQUESTED',
+]);
+
 export const productTypeSchema = z.enum(['HOTEL', 'E-TICKET', 'DELIVERY']);
 export const periodFilterTypeSchema = z.enum([
   'PAYMENT_DATE',
@@ -32,7 +52,7 @@ export const periodFilterTypeSchema = z.enum([
  */
 export const orderFilterSchema = z.object({
   type: productTypeSchema.nullish(),
-  status: orderStatusSchema.nullish(),
+  status: displayStatusSchema.nullish(),
   periodFilterType: periodFilterTypeSchema.nullish(),
   startDate: z.string().nullish(),
   endDate: z.string().nullish(),
@@ -68,6 +88,7 @@ export const orderListItemSchema = z.object({
   orderNumber: z.string(),
   type: productTypeSchema,
   status: orderStatusSchema,
+  displayStatus: displayStatusSchema,
   customerName: z.string(),
   customerPhone: z.string(),
   totalAmount: z.number(),
@@ -104,6 +125,8 @@ export const statusCountsSchema = z.object({
   SHIPPING: z.number(),
   DELIVERED: z.number(),
   PURCHASE_CONFIRMED: z.number(),
+  CANCEL_REQUESTED: z.number(),
+  RETURN_REQUESTED: z.number(),
   CANCELLED: z.number(),
   RETURNING: z.number(),
   RETURNED: z.number(),

@@ -37,6 +37,15 @@ const CLAIM_STATUS_MESSAGE: Record<string, string> = {
   WITHDRAWN: '취소 요청이 철회되었습니다.',
 };
 
+/** 클레임 상태별 섹션 제목 */
+const CLAIM_STATUS_TITLE: Record<string, string> = {
+  REQUESTED: '취소요청',
+  APPROVED: '취소승인',
+  REJECTED: '취소거절',
+  COMPLETED: '취소완료',
+  WITHDRAWN: '취소철회',
+};
+
 // ============================================================================
 // Skeleton Component
 // ============================================================================
@@ -145,8 +154,13 @@ function CancelDetailContent({ orderNumber }: { orderNumber: string }) {
     CLAIM_STATUS_MESSAGE[claimData.status] || '취소 요청 처리 중입니다.';
   const canWithdraw = claimData.status === 'REQUESTED';
 
-  // 취소 수수료 계산
-  const cancelFee = claimData.originalAmount - claimData.refundAmount;
+  // 금액 계산
+  const originalAmount = claimData.claimOptionItems.reduce(
+    (sum, item) => sum + item.quantity * item.unitPrice,
+    0
+  );
+  const cancelFee = claimData.cancelFee;
+  const refundAmount = originalAmount - cancelFee;
 
   return (
     <Container>
@@ -177,7 +191,9 @@ function CancelDetailContent({ orderNumber }: { orderNumber: string }) {
 
         {/* Cancel Request Info */}
         <Section>
-          <SectionTitle>취소요청</SectionTitle>
+          <SectionTitle>
+            {CLAIM_STATUS_TITLE[claimData.status] || '취소요청'}
+          </SectionTitle>
 
           {/* Product Info */}
           <ProductInfo>
@@ -232,16 +248,14 @@ function CancelDetailContent({ orderNumber }: { orderNumber: string }) {
         <Section>
           <RefundHeader>
             <RefundLabel>환불 예정금액</RefundLabel>
-            <RefundAmount>
-              {claimData.refundAmount.toLocaleString()}원
-            </RefundAmount>
+            <RefundAmount>{refundAmount.toLocaleString()}원</RefundAmount>
           </RefundHeader>
 
           <RefundDetails>
             <RefundRow>
               <RefundRowLabel>상품금액</RefundRowLabel>
               <RefundRowValue>
-                {claimData.originalAmount.toLocaleString()}원
+                {originalAmount.toLocaleString()}원
               </RefundRowValue>
             </RefundRow>
             {cancelFee > 0 && (
