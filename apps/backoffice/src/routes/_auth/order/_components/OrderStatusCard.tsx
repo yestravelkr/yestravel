@@ -19,18 +19,26 @@ export interface OrderItem {
 }
 
 interface OrderStatusCardProps {
+  /** 주문 상태 */
+  status: string;
   /** 상태 라벨 */
   statusLabel: string;
   /** 상태 날짜 */
   statusDate: string;
   /** 주문 아이템 목록 */
   items: OrderItem[];
+  /** 취소 사유 (취소요청 상태일 때) */
+  cancelReason?: string | null;
   /** 예약확정 핸들러 */
   onConfirm?: () => void;
   /** 주문관리 핸들러 */
   onManage?: () => void;
   /** 주문 히스토리 핸들러 */
   onHistory?: () => void;
+  /** 취소승인 핸들러 */
+  onCancelApprove?: () => void;
+  /** 취소거절 핸들러 */
+  onCancelReject?: () => void;
 }
 
 const formatPrice = (amount: number) =>
@@ -40,6 +48,7 @@ const formatPrice = (amount: number) =>
  * Usage:
  * ```tsx
  * <OrderStatusCard
+ *   status="PAID"
  *   statusLabel="결제완료"
  *   statusDate="25.01.01 13:00"
  *   items={orderItems}
@@ -49,13 +58,18 @@ const formatPrice = (amount: number) =>
  * ```
  */
 export function OrderStatusCard({
+  status,
   statusLabel,
   statusDate,
   items,
+  cancelReason,
   onConfirm,
   onManage,
   onHistory,
+  onCancelApprove,
+  onCancelReject,
 }: OrderStatusCardProps) {
+  const isCancelRequested = status === 'CANCEL_REQUESTED';
   return (
     <Container>
       <ContentSection>
@@ -73,6 +87,13 @@ export function OrderStatusCard({
             주문 히스토리
           </Button>
         </Header>
+
+        {isCancelRequested && cancelReason && (
+          <CancelReasonSection>
+            <CancelReasonLabel>취소사유</CancelReasonLabel>
+            <CancelReasonText>{cancelReason}</CancelReasonText>
+          </CancelReasonSection>
+        )}
 
         <ItemTable>
           <TableHeader>
@@ -98,18 +119,34 @@ export function OrderStatusCard({
         </ItemTable>
 
         <Actions>
-          <Button
-            kind="neutral"
-            variant="solid"
-            size="medium"
-            onClick={onConfirm}
-          >
-            예약확정
-          </Button>
-          <ManageButton onClick={onManage}>
-            주문관리
-            <ChevronDown size={22} />
-          </ManageButton>
+          {isCancelRequested ? (
+            <>
+              <Button
+                kind="neutral"
+                variant="solid"
+                size="medium"
+                onClick={onCancelApprove}
+              >
+                취소승인
+              </Button>
+              <GrayButton onClick={onCancelReject}>취소거절</GrayButton>
+            </>
+          ) : (
+            <>
+              <Button
+                kind="neutral"
+                variant="solid"
+                size="medium"
+                onClick={onConfirm}
+              >
+                예약확정
+              </Button>
+              <ManageButton onClick={onManage}>
+                주문관리
+                <ChevronDown size={22} />
+              </ManageButton>
+            </>
+          )}
         </Actions>
       </ContentSection>
     </Container>
@@ -232,4 +269,45 @@ const ManageButton = tw.button`
   leading-[22px]
   hover:bg-[var(--bg-neutral-subtle)]
   transition-colors
+`;
+
+const GrayButton = tw.button`
+  flex
+  items-center
+  justify-center
+  h-11
+  min-w-11
+  px-3
+  rounded-xl
+  bg-[var(--bg-neutral)]
+  text-[var(--fg-neutral)]
+  text-[16.5px]
+  font-medium
+  leading-[22px]
+  hover:bg-[var(--bg-neutral-subtle)]
+  transition-colors
+`;
+
+const CancelReasonSection = tw.div`
+  flex
+  items-center
+  gap-2
+  px-5
+  py-5
+  bg-[var(--bg-neutral)]
+  rounded-xl
+`;
+
+const CancelReasonLabel = tw.span`
+  text-[15px]
+  leading-5
+  text-[var(--fg-neutral)]
+  w-[100px]
+  shrink-0
+`;
+
+const CancelReasonText = tw.span`
+  text-[15px]
+  leading-5
+  text-[var(--fg-neutral)]
 `;

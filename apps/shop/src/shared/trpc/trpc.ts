@@ -1,8 +1,13 @@
 import { httpLink } from '@trpc/client';
 import { createTRPCReact } from '@trpc/react-query';
+import type { inferRouterInputs, inferRouterOutputs } from '@trpc/server';
 import type { AppRouter } from '@yestravelkr/api-types';
 
 import { useAuthStore } from '@/store/authStore';
+
+// Infer types from the tRPC router
+export type RouterInput = inferRouterInputs<AppRouter>;
+export type RouterOutput = inferRouterOutputs<AppRouter>;
 
 export const trpc = createTRPCReact<AppRouter>();
 

@@ -15,7 +15,11 @@ import { OrderDetailHeader } from './_components/OrderDetailHeader';
 import { OrderStatusCard } from './_components/OrderStatusCard';
 import { PaymentInfoCard } from './_components/PaymentInfoCard';
 
-import { DetailPageLayout } from '@/shared/components';
+import {
+  DetailPageLayout,
+  openCancelApproveModal,
+  openConfirmModal,
+} from '@/shared/components';
 import { trpc } from '@/shared/trpc';
 
 export const Route = createFileRoute('/_auth/order/hotel/$orderId')({
@@ -24,6 +28,7 @@ export const Route = createFileRoute('/_auth/order/hotel/$orderId')({
 
 function HotelOrderDetailPage() {
   const { orderId } = Route.useParams();
+  const utils = trpc.useUtils();
 
   const {
     data: orderDetail,
@@ -31,6 +36,40 @@ function HotelOrderDetailPage() {
     isError,
   } = trpc.backofficeOrder.findById.useQuery({
     id: Number(orderId),
+  });
+
+  // 클레임 이력 조회 (취소 사유 표시용)
+  // Order.status와 별개로 REQUESTED 클레임이 있을 수 있으므로 항상 조회
+  const { data: claims } = trpc.backofficeClaim.findByOrderId.useQuery(
+    { orderId: Number(orderId) },
+    { enabled: !!orderDetail },
+  );
+
+  // 가장 최근 REQUESTED 클레임 (승인/거절 대상)
+  const activeClaim = claims?.find((c) => c.status === 'REQUESTED') ?? null;
+  // 표시용: 활성 클레임 우선, 없으면 가장 최근 클레임
+  const claimData = activeClaim ?? claims?.[0] ?? null;
+
+  const approveClaimMutation = trpc.backofficeClaim.approve.useMutation({
+    onSuccess: (data) => {
+      toast.success(
+        `취소가 승인되었습니다. (환불금액: ${data.refundAmount.toLocaleString()}원)`,
+      );
+      utils.backofficeOrder.findById.invalidate({ id: Number(orderId) });
+    },
+    onError: (error) => {
+      toast.error(error.message || '취소 승인에 실패했습니다.');
+    },
+  });
+
+  const rejectClaimMutation = trpc.backofficeClaim.reject.useMutation({
+    onSuccess: () => {
+      toast.success('취소요청이 거절되었습니다.');
+      utils.backofficeOrder.findById.invalidate({ id: Number(orderId) });
+    },
+    onError: (error) => {
+      toast.error(error.message || '취소 거절에 실패했습니다.');
+    },
   });
 
   if (isLoading) {
@@ -61,6 +100,51 @@ function HotelOrderDetailPage() {
     toast.info('주문 히스토리를 확인합니다.');
   };
 
+  const handleCancelApprove = async () => {
+    const result = await openCancelApproveModal({
+      productAmount: orderDetail.payment.totalAmount,
+      defaultCancelFee: 0,
+    });
+
+    if (!result?.confirmed) return;
+
+    approveClaimMutation.mutate({
+      orderId: Number(orderId),
+      cancelFee: result.cancelFee,
+    });
+  };
+
+  const handleCancelReject = async () => {
+    const confirmed = await openConfirmModal({
+      title: '취소요청을 거절합니다.',
+      description: '이전 주문상태로 변경됩니다.',
+    });
+
+    if (!confirmed) return;
+
+    rejectClaimMutation.mutate({ orderId: Number(orderId) });
+  };
+
+  // 클레임 데이터에서 취소 사유 표시
+  const cancelReason = claimData?.reason ?? null;
+
+  // displayStatus: Order.status + Claim.status 합성
+  // REQUESTED 클레임이 있으면 CANCEL_REQUESTED / RETURN_REQUESTED
+  const displayStatus =
+    claimData?.status === 'REQUESTED'
+      ? claimData.type === 'CANCEL'
+        ? 'CANCEL_REQUESTED'
+        : 'RETURN_REQUESTED'
+      : orderDetail.status;
+
+  // displayStatusLabel: displayStatus에 따른 라벨
+  const displayStatusLabel =
+    displayStatus === 'CANCEL_REQUESTED'
+      ? '취소요청'
+      : displayStatus === 'RETURN_REQUESTED'
+        ? '반품요청'
+        : orderDetail.statusLabel;
+
   return (
     <PageContainer>
       <OrderDetailHeader
@@ -73,7 +157,8 @@ function HotelOrderDetailPage() {
       <DetailPageLayout
         main={
           <OrderStatusCard
-            statusLabel={orderDetail.statusLabel}
+            status={displayStatus}
+            statusLabel={displayStatusLabel}
             statusDate={
               orderDetail.statusDate
                 ? dayjs(orderDetail.statusDate).format('YY.MM.DD HH:mm')
@@ -87,9 +172,12 @@ function HotelOrderDetailPage() {
               checkOutDate: item.checkOutDate ?? '-',
               amount: item.amount,
             }))}
+            cancelReason={cancelReason}
             onConfirm={handleConfirm}
             onManage={handleManage}
             onHistory={handleHistory}
+            onCancelApprove={handleCancelApprove}
+            onCancelReject={handleCancelReject}
           />
         }
         side={

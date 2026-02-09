@@ -35,7 +35,7 @@ type Story = StoryObj<typeof meta>;
 
 // 기본 숙박 데이터
 const baseAccommodationData: AccommodationOrderData = {
-  status: 'PENDING_PAYMENT',
+  status: 'PENDING',
   statusDescription: '12월 12일(목)까지 13,000원을 입금해 주세요.',
   accommodation: {
     thumbnail:
@@ -70,7 +70,7 @@ export const PaymentCompleted: Story = {
   args: {
     data: {
       ...baseAccommodationData,
-      status: 'PAYMENT_COMPLETED',
+      status: 'PAID',
       statusDescription: '결제가 완료되었습니다.',
     },
   },

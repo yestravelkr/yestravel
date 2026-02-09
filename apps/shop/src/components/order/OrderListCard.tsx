@@ -45,9 +45,12 @@ export interface OrderListCardProps {
  * 주문 상태 한글 라벨
  */
 const STATUS_LABEL: Record<string, string> = {
-  [ORDER_STATUS.PENDING_PAYMENT]: '결제 대기',
+  [ORDER_STATUS.PENDING]: '결제 대기',
+  [ORDER_STATUS.PAID]: '결제 완료',
+  [ORDER_STATUS.PENDING_RESERVATION]: '예약 대기',
   [ORDER_STATUS.RESERVATION_CONFIRMED]: '예약 확정',
   [ORDER_STATUS.COMPLETED]: '이용 완료',
+  [ORDER_STATUS.CANCEL_REQUESTED]: '취소 요청',
   [ORDER_STATUS.CANCELLED]: '취소됨',
 };
 
@@ -56,12 +59,16 @@ const STATUS_LABEL: Record<string, string> = {
  */
 const getStatusColor = (status: string): string => {
   switch (status) {
-    case ORDER_STATUS.PENDING_PAYMENT:
+    case ORDER_STATUS.PENDING:
       return 'text-orange-500';
+    case ORDER_STATUS.PAID:
+    case ORDER_STATUS.PENDING_RESERVATION:
+      return 'text-blue-500';
     case ORDER_STATUS.RESERVATION_CONFIRMED:
       return 'text-green-600';
     case ORDER_STATUS.COMPLETED:
       return 'text-fg-muted';
+    case ORDER_STATUS.CANCEL_REQUESTED:
     case ORDER_STATUS.CANCELLED:
       return 'text-red-500';
     default:

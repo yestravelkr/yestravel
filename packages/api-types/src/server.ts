@@ -7,6 +7,8 @@ import { z } from "zod";
 // ============================================
 import {
   roleEnumSchema,
+  CLAIM_TYPE,
+  CLAIM_STATUS,
   BUSINESS_TYPE_ENUM_VALUE,
   paginationQuerySchema,
   createPaginatedResponseSchema,
@@ -300,7 +302,10 @@ const appRouter = t.router({
           orderId: z.number(),
           orderNumber: z.string(),
           orderDate: z.string(),
+          /** 주문 상태 (DB 값) */
           status: z.string(),
+          /** 표시용 상태 (Order.status + Claim.status 합성) */
+          displayStatus: z.string(),
           statusDescription: z.string().nullish(),
           totalAmount: z.number(),
           /** 상품 상세 페이지 이동용 */
@@ -327,7 +332,10 @@ const appRouter = t.router({
           orderId: z.number(),
           orderNumber: z.string(),
           orderDate: z.string(),
+          /** 주문 상태 (DB 값) */
           status: z.string(),
+          /** 표시용 상태 (Order.status + Claim.status 합성) */
+          displayStatus: z.string(),
           statusDescription: z.string().nullish(),
           totalAmount: z.number(),
           /** 상품 상세 페이지 이동용 */
@@ -394,6 +402,66 @@ const appRouter = t.router({
         price: z.number(),
       })),
     })).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
+  }),
+  shopClaim: t.router({
+    create: publicProcedure.input(z.object({
+      /** 주문 ID */
+      orderId: z.number().int().positive(),
+      /** 클레임 타입: CANCEL | RETURN */
+      type: z.enum(CLAIM_TYPE),
+      /** 취소/반품 사유 */
+      reason: z.string(),
+      /** 증빙자료 URL 목록 (선택) */
+      evidenceUrls: z.array(z.string().url()).nullish(),
+      /** 클레임 옵션 아이템 목록 */
+      claimOptionItems: z
+        .array(
+          z.object({
+            optionId: z.number().int().positive(),
+            optionName: z.string(),
+            quantity: z.number().int().positive(),
+            unitPrice: z.number().int().nonnegative(),
+          })
+        )
+        .min(1),
+    })).output(z.object({
+      /** 생성된 클레임 ID */
+      claimId: z.number(),
+      /** 클레임 상태 */
+      status: z.enum(CLAIM_STATUS),
+      /** 예상 환불 금액 */
+      estimatedRefundAmount: z.number(),
+      /** 취소 수수료 */
+      cancelFee: z.number(),
+      /** 원래 주문 금액 */
+      originalAmount: z.number(),
+    })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    findByOrderId: publicProcedure.input(z.object({
+      orderId: z.number().int().positive(),
+    })).output(z.object({
+      id: z.number(),
+      type: z.enum(CLAIM_TYPE),
+      status: z.enum(CLAIM_STATUS),
+      reason: z.string(),
+      evidenceUrls: z.array(z.string()).nullish(),
+      claimOptionItems: z.array(
+        z.object({
+          optionId: z.number(),
+          optionName: z.string(),
+          quantity: z.number(),
+          unitPrice: z.number(),
+        })
+      ),
+      cancelFee: z.number(),
+      createdAt: z.date(),
+    }).nullish()).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    withdraw: publicProcedure.input(z.object({
+      orderId: z.number().int().positive(),
+    })).output(z.object({
+      success: z.boolean(),
+      orderId: z.number(),
+      newOrderStatus: z.string(),
+    })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
   }),
   shopAuth: t.router({
     requestVerification: publicProcedure.input(z.object({
@@ -1343,9 +1411,7 @@ const appRouter = t.router({
         'SHIPPING',
         'DELIVERED',
         'PURCHASE_CONFIRMED',
-        'CANCEL_REQUESTED',
         'CANCELLED',
-        'RETURN_REQUESTED',
         'RETURNING',
         'RETURNED',
       ]).nullish(),
@@ -1381,9 +1447,7 @@ const appRouter = t.router({
           'SHIPPING',
           'DELIVERED',
           'PURCHASE_CONFIRMED',
-          'CANCEL_REQUESTED',
           'CANCELLED',
-          'RETURN_REQUESTED',
           'RETURNING',
           'RETURNED',
         ]),
@@ -1425,9 +1489,7 @@ const appRouter = t.router({
         'SHIPPING',
         'DELIVERED',
         'PURCHASE_CONFIRMED',
-        'CANCEL_REQUESTED',
         'CANCELLED',
-        'RETURN_REQUESTED',
         'RETURNING',
         'RETURNED',
       ]).nullish(),
@@ -1453,9 +1515,7 @@ const appRouter = t.router({
       SHIPPING: z.number(),
       DELIVERED: z.number(),
       PURCHASE_CONFIRMED: z.number(),
-      CANCEL_REQUESTED: z.number(),
       CANCELLED: z.number(),
-      RETURN_REQUESTED: z.number(),
       RETURNING: z.number(),
       RETURNED: z.number(),
     })).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
@@ -1495,9 +1555,7 @@ const appRouter = t.router({
         'SHIPPING',
         'DELIVERED',
         'PURCHASE_CONFIRMED',
-        'CANCEL_REQUESTED',
         'CANCELLED',
-        'RETURN_REQUESTED',
         'RETURNING',
         'RETURNED',
       ]),
@@ -1550,9 +1608,7 @@ const appRouter = t.router({
         'SHIPPING',
         'DELIVERED',
         'PURCHASE_CONFIRMED',
-        'CANCEL_REQUESTED',
         'CANCELLED',
-        'RETURN_REQUESTED',
         'RETURNING',
         'RETURNED',
       ]),
@@ -1569,9 +1625,7 @@ const appRouter = t.router({
         'SHIPPING',
         'DELIVERED',
         'PURCHASE_CONFIRMED',
-        'CANCEL_REQUESTED',
         'CANCELLED',
-        'RETURN_REQUESTED',
         'RETURNING',
         'RETURNED',
       ]),
@@ -1585,9 +1639,7 @@ const appRouter = t.router({
         'SHIPPING',
         'DELIVERED',
         'PURCHASE_CONFIRMED',
-        'CANCEL_REQUESTED',
         'CANCELLED',
-        'RETURN_REQUESTED',
         'RETURNING',
         'RETURNED',
       ]),
@@ -1604,9 +1656,7 @@ const appRouter = t.router({
         'SHIPPING',
         'DELIVERED',
         'PURCHASE_CONFIRMED',
-        'CANCEL_REQUESTED',
         'CANCELLED',
-        'RETURN_REQUESTED',
         'RETURNING',
         'RETURNED',
       ]).nullish(),
@@ -1811,6 +1861,44 @@ const appRouter = t.router({
       createdAt: z.date(),
       updatedAt: z.date(),
     })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
+  }),
+  backofficeClaim: t.router({
+    approve: publicProcedure.input(z.object({
+      orderId: z.number(),
+      cancelFee: z.number(),
+    })).output(z.object({
+      success: z.boolean(),
+      orderId: z.number(),
+      newOrderStatus: z.string(),
+      cancelFee: z.number(),
+      refundAmount: z.number(),
+    })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    reject: publicProcedure.input(z.object({
+      orderId: z.number(),
+    })).output(z.object({
+      success: z.boolean(),
+      orderId: z.number(),
+      newOrderStatus: z.string(),
+    })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    findByOrderId: publicProcedure.input(z.object({
+      orderId: z.number().int().positive(),
+    })).output(z.array(z.object({
+      id: z.number(),
+      type: z.enum(CLAIM_TYPE),
+      status: z.enum(CLAIM_STATUS),
+      reason: z.string(),
+      evidenceUrls: z.array(z.string()).nullish(),
+      claimOptionItems: z.array(
+        z.object({
+          optionId: z.number(),
+          optionName: z.string(),
+          quantity: z.number(),
+          unitPrice: z.number(),
+        })
+      ),
+      cancelFee: z.number(),
+      createdAt: z.date(),
+    }))).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
   }),
   backofficeCategory: t.router({
     create: publicProcedure.input(z.object({

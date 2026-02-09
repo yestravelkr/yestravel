@@ -506,6 +506,23 @@ export class ShopOrderService {
   }
 
   /**
+   * 표시용 상태 계산 (Order.status + Claim.status 합성)
+   * - REQUESTED 클레임이 있으면 → 클레임 타입에 따라 CANCEL_REQUESTED / RETURN_REQUESTED
+   * - 그 외에는 Order.status 그대로
+   */
+  private getDisplayStatus(
+    orderStatus: OrderStatusEnumType,
+    pendingClaim?: { type: 'CANCEL' | 'RETURN'; status: string } | null
+  ): string {
+    if (pendingClaim && pendingClaim.status === 'REQUESTED') {
+      return pendingClaim.type === 'CANCEL'
+        ? 'CANCEL_REQUESTED'
+        : 'RETURN_REQUESTED';
+    }
+    return orderStatus;
+  }
+
+  /**
    * 결제 수단 추출 (pgRawData에서 실제 결제 수단 확인)
    * PortOne v2 API 응답 구조 기준
    */
@@ -582,6 +599,7 @@ export class ShopOrderService {
 
     // N+1 방지: 필요한 데이터를 한 번에 조회
     const productIds = [...new Set(orders.map(o => o.productId))];
+    const orderIds = orders.map(o => o.id);
     const hotelProductIds = orders
       .filter(o => o.type === ProductTypeEnum.HOTEL)
       .map(o => o.productId);
@@ -610,16 +628,29 @@ export class ShopOrderService {
 
     const hotelProductMap = new Map(hotelProducts.map(hp => [hp.id, hp]));
 
-    // 3. 주문 목록 매핑
+    // 3. REQUESTED 상태 클레임 일괄 조회 (N+1 방지)
+    const pendingClaims = await this.repositoryProvider.ClaimRepository.find({
+      where: { orderId: In(orderIds), status: 'REQUESTED' },
+    });
+
+    // orderId -> Claim Map
+    const pendingClaimMap = new Map(pendingClaims.map(c => [c.orderId, c]));
+
+    // 4. 주문 목록 매핑
     const orderItems = orders.map(order => {
       const saleKey = `${order.productId}-${order.influencerId}-${order.campaignId}`;
       const saleId = saleIdMap.get(saleKey) ?? 0;
+      const pendingClaim = pendingClaimMap.get(order.id);
+
+      // displayStatus: Order.status + Claim.status 합성
+      const displayStatus = this.getDisplayStatus(order.status, pendingClaim);
 
       const baseFields = {
         orderId: order.id,
         orderNumber: order.orderNumber,
         orderDate: this.formatOrderDate(order.createdAt),
         status: this.mapOrderStatusToFrontend(order.status),
+        displayStatus,
         statusDescription: this.getStatusDescription(order.status),
         totalAmount: order.totalAmount,
         influencerSlug: order.influencer?.slug ?? '',
