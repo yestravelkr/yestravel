@@ -138,8 +138,12 @@ export const trpcClient = trpc.createClient({
             const newToken = useAuthStore.getState().accessToken;
             return makeRequest(newToken);
           }
+
+          // refresh 실패 + logout 완료: 토큰 없이 재요청 방지
+          return response;
         }
 
+        // 토큰 없이 401 받은 경우 (이미 logout 상태): 그대로 반환
         return response;
       },
     }),
