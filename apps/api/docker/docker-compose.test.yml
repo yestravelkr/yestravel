@@ -1,0 +1,14 @@
+version: '3'
+services:
+  yestravel-test-postgresql:
+    image: postgres:16.4
+    container_name: yestravel-test-postgresql
+    ports:
+      - '55432:5432'
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=yestravel_test
+    tmpfs:
+      - /var/lib/postgresql/data
+    restart: 'no'
