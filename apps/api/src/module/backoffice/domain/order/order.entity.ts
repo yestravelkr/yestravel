@@ -105,12 +105,19 @@ export class OrderEntity extends BaseEntity {
   /**
    * TmpOrderRawData에서 OrderEntity 인스턴스 생성
    *
-   * ⚠️ 주의: 이 메서드는 id를 설정하지 않습니다.
-   * 호출자가 반드시 `order.id = tmpOrder.id`를 수동으로 설정해야 합니다.
+   * @param raw - TmpOrder의 raw 데이터
+   * @param memberId - 회원 ID
+   * @param tmpOrderId - TmpOrder의 ID (Order.id로 재사용)
    */
-  static from(raw: TmpOrderRawData, memberId: number): OrderEntity {
+  static from(
+    raw: TmpOrderRawData,
+    memberId: number,
+    tmpOrderId: number
+  ): OrderEntity {
     const order = new OrderEntity();
 
+    // TmpOrder의 ID를 재사용하여 orderNumber 일관성 유지
+    order.id = tmpOrderId;
     order.type = raw.orderOptionSnapshot.type;
     order.memberId = memberId;
     order.customerName = raw.customerName;

@@ -74,11 +74,14 @@ export class ShopPaymentService {
         );
       }
 
-      // 2. Order Entity 생성
-      const order = this.createOrderFromTmpOrder(tmpOrder, memberId);
+      // 2. Order Entity 생성 (tmpOrder.id를 전달하여 재사용)
+      const order = this.createOrderFromTmpOrder(
+        tmpOrder,
+        memberId,
+        tmpOrder.id
+      );
 
-      // ⭐⭐⭐ 핵심: tmpOrder.id를 order.id로 강제 지정
-      order.id = tmpOrder.id;
+      // order.id는 이미 from() 메서드에서 설정됨
       order.status = OrderStatusEnum.PAID;
 
       // 3. Order 저장 (auto-increment 없음, 지정한 ID로 insert)
@@ -141,15 +144,16 @@ export class ShopPaymentService {
    */
   private createOrderFromTmpOrder(
     tmpOrder: Awaited<ReturnType<typeof this.getTmpOrderByOrderNumber>>,
-    memberId: number
+    memberId: number,
+    tmpOrderId: number
   ): OrderEntity {
     switch (tmpOrder.type) {
       case ProductTypeEnum.HOTEL:
-        return HotelOrderEntity.fromHotel(tmpOrder.raw, memberId);
+        return HotelOrderEntity.fromHotel(tmpOrder.raw, memberId, tmpOrderId);
 
       case ProductTypeEnum.DELIVERY:
       case ProductTypeEnum['E-TICKET']:
-        return OrderEntity.from(tmpOrder.raw, memberId);
+        return OrderEntity.from(tmpOrder.raw, memberId, tmpOrderId);
 
       default:
         throw new BadRequestException(
