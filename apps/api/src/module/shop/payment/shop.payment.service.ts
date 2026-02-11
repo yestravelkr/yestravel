@@ -19,6 +19,7 @@ import type {
   ShopPaymentCompleteOutput,
 } from './shop.payment.type';
 import { PaymentEntity } from '@src/module/backoffice/domain/order/payment.entity';
+import { TmpOrderEntity } from '@src/module/backoffice/domain/order/tmp-order.entity';
 import dayjs from 'dayjs';
 
 @Injectable()
@@ -94,42 +95,10 @@ export class ShopPaymentService {
   }
 
   /**
-   * orderNumber로 TmpOrder 조회
-   */
-  private async getTmpOrderByOrderNumber(orderNumber: string) {
-    const [orderId] = orderNumberParser.decode(orderNumber);
-
-    if (!orderId) {
-      throw new BadRequestException(
-        `유효하지 않은 주문번호입니다 (orderNumber: ${orderNumber})`
-      );
-    }
-
-    const tmpOrder = await this.repositoryProvider.TmpOrderRepository.findOne({
-      where: { id: orderId },
-    });
-
-    if (!tmpOrder) {
-      throw new NotFoundException(
-        `임시 주문을 찾을 수 없습니다 (orderNumber: ${orderNumber})`
-      );
-    }
-
-    return tmpOrder;
-  }
-
-  /**
-   * Order 저장 (저장된 엔티티 반환)
-   */
-  private async saveOrder(order: OrderEntity): Promise<OrderEntity> {
-    return this.repositoryProvider.OrderRepository.save(order);
-  }
-
-  /**
    * TmpOrder → Order 변환 (타입별로 적절한 엔티티 사용)
    */
   private createOrderFromTmpOrder(
-    tmpOrder: Awaited<ReturnType<typeof this.getTmpOrderByOrderNumber>>,
+    tmpOrder: TmpOrderEntity,
     memberId: number,
     tmpOrderId: number
   ): OrderEntity {
