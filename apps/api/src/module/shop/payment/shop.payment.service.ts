@@ -5,7 +5,6 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import axios from 'axios';
-import { DataSource } from 'typeorm';
 import { ConfigProvider } from '@src/config';
 import { RepositoryProvider } from '@src/module/shared/transaction/repository.provider';
 import {
@@ -20,7 +19,6 @@ import type {
   ShopPaymentCompleteOutput,
 } from './shop.payment.type';
 import { PaymentEntity } from '@src/module/backoffice/domain/order/payment.entity';
-import { TmpOrderEntity } from '@src/module/backoffice/domain/order/tmp-order.entity';
 import dayjs from 'dayjs';
 
 @Injectable()
@@ -38,10 +36,7 @@ export class ShopPaymentService {
     expiredAt: dayjs().add(-1, 'h'), // 처음에 바로 accessToken 발급하도록 처리
   };
 
-  constructor(
-    private readonly repositoryProvider: RepositoryProvider,
-    private readonly dataSource: DataSource
-  ) {}
+  constructor(private readonly repositoryProvider: RepositoryProvider) {}
 
   async handlePaymentComplete(
     data: ShopPaymentCompleteInput & { memberId: number }
@@ -59,45 +54,36 @@ export class ShopPaymentService {
       );
     }
 
-    // 트랜잭션: Order 생성 + TmpOrder 삭제를 atomic하게 처리
-    const savedOrder = await this.dataSource.transaction(async manager => {
-      const tmpOrderRepo = manager.getRepository(TmpOrderEntity);
-      const orderRepo = manager.getRepository(OrderEntity);
-
-      // 1. TmpOrder 조회
-      const tmpOrder = await tmpOrderRepo.findOne({
-        where: { id: tmpOrderId },
-      });
-      if (!tmpOrder) {
-        throw new NotFoundException(
-          `임시 주문을 찾을 수 없습니다 (orderNumber: ${paymentId})`
-        );
-      }
-
-      // 2. Order Entity 생성 (tmpOrder.id를 전달하여 재사용)
-      const order = this.createOrderFromTmpOrder(
-        tmpOrder,
-        memberId,
-        tmpOrder.id
+    // 1. TmpOrder 조회
+    const tmpOrder = await this.repositoryProvider.TmpOrderRepository.findOne({
+      where: { id: tmpOrderId },
+    });
+    if (!tmpOrder) {
+      throw new NotFoundException(
+        `임시 주문을 찾을 수 없습니다 (orderNumber: ${paymentId})`
       );
+    }
 
-      // order.id는 이미 from() 메서드에서 설정됨
-      order.status = OrderStatusEnum.PAID;
+    // 2. Order Entity 생성 (tmpOrder.id를 전달하여 재사용)
+    const order = this.createOrderFromTmpOrder(tmpOrder, memberId, tmpOrder.id);
 
-      // 3. Order 저장 (auto-increment 없음, 지정한 ID로 insert)
-      const savedOrder = await orderRepo.save(order);
+    // order.id는 이미 from() 메서드에서 설정됨
+    order.status = OrderStatusEnum.PAID;
 
-      // 4. TmpOrder 삭제 (더 이상 필요 없음)
-      await tmpOrderRepo.delete({ id: tmpOrder.id });
+    // 3. Order 저장 (auto-increment 없음, 지정한 ID로 insert)
+    const savedOrder =
+      await this.repositoryProvider.OrderRepository.save(order);
 
-      this.logger.log(
-        `Order created with tmpOrder.id: id=${savedOrder.id}, orderNumber=${savedOrder.orderNumber}`
-      );
-
-      return savedOrder;
+    // 4. TmpOrder 삭제 (더 이상 필요 없음)
+    await this.repositoryProvider.TmpOrderRepository.delete({
+      id: tmpOrder.id,
     });
 
-    // 5. 트랜잭션 성공 후 PortOne 결제 승인
+    this.logger.log(
+      `Order created with tmpOrder.id: id=${savedOrder.id}, orderNumber=${savedOrder.orderNumber}`
+    );
+
+    // 5. PortOne 결제 승인
     await this.confirmPayment(data, savedOrder);
 
     return {
