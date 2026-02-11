@@ -17,10 +17,20 @@ import type { TmpOrderRawData } from './tmp-order.entity';
 export class HotelOrderEntity extends OrderEntity {
   /**
    * TmpOrderRawData에서 HotelOrderEntity 인스턴스 생성
+   *
+   * @param raw - TmpOrder의 raw 데이터
+   * @param memberId - 회원 ID
+   * @param tmpOrderId - TmpOrder의 ID (Order.id로 재사용)
    */
-  static fromHotel(raw: TmpOrderRawData, memberId: number): HotelOrderEntity {
+  static fromHotel(
+    raw: TmpOrderRawData,
+    memberId: number,
+    tmpOrderId: number
+  ): HotelOrderEntity {
     const order = new HotelOrderEntity();
 
+    // TmpOrder의 ID를 재사용하여 orderNumber 일관성 유지
+    order.id = tmpOrderId;
     order.type = ProductTypeEnum.HOTEL;
     order.memberId = memberId;
     order.customerName = raw.customerName;

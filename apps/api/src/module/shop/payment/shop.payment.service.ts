@@ -19,6 +19,7 @@ import type {
   ShopPaymentCompleteOutput,
 } from './shop.payment.type';
 import { PaymentEntity } from '@src/module/backoffice/domain/order/payment.entity';
+import { TmpOrderEntity } from '@src/module/backoffice/domain/order/tmp-order.entity';
 import dayjs from 'dayjs';
 
 @Injectable()
@@ -46,84 +47,68 @@ export class ShopPaymentService {
 
     const { paymentId, memberId } = data;
 
-    // 1. TmpOrder 조회 (paymentId = orderNumber)
-    const tmpOrder = await this.getTmpOrderByOrderNumber(paymentId);
+    // paymentId decode하여 tmpOrder.id 추출
+    const [tmpOrderId] = orderNumberParser.decode(paymentId);
+    if (!tmpOrderId) {
+      throw new BadRequestException(
+        `유효하지 않은 주문번호입니다 (orderNumber: ${paymentId})`
+      );
+    }
 
-    // 2. TmpOrder → Order 변환 (타입별로 적절한 엔티티 사용)
-    const order = this.createOrderFromTmpOrder(tmpOrder, memberId);
+    // 1. TmpOrder 조회
+    const tmpOrder = await this.repositoryProvider.TmpOrderRepository.findOne({
+      where: { id: tmpOrderId },
+    });
+    if (!tmpOrder) {
+      throw new NotFoundException(
+        `임시 주문을 찾을 수 없습니다 (orderNumber: ${paymentId})`
+      );
+    }
 
-    // 3. Order 상태를 PAID로 업데이트 및 저장
+    // 2. Order Entity 생성 (tmpOrder.id를 전달하여 재사용)
+    const order = this.createOrderFromTmpOrder(tmpOrder, memberId, tmpOrder.id);
+
+    // order.id는 이미 from() 메서드에서 설정됨
     order.status = OrderStatusEnum.PAID;
-    const savedOrder = await this.saveOrder(order);
 
-    // 4. TmpOrder 삭제 (임시 데이터이므로 hard delete)
+    // 3. Order 저장 (auto-increment 없음, 지정한 ID로 insert)
+    const savedOrder =
+      await this.repositoryProvider.OrderRepository.save(order);
+
+    // 4. TmpOrder 삭제 (더 이상 필요 없음)
     await this.repositoryProvider.TmpOrderRepository.delete({
       id: tmpOrder.id,
     });
 
     this.logger.log(
-      `Order created successfully: id=${savedOrder.id}, orderNumber=${savedOrder.orderNumber}`
+      `Order created with tmpOrder.id: id=${savedOrder.id}, orderNumber=${savedOrder.orderNumber}`
     );
 
-    // 마지막. 내부로직 문제 없을 시 PortOne 결제 수동 승인 및 Payment 저장
+    // 5. PortOne 결제 승인
     await this.confirmPayment(data, savedOrder);
-
-    const resultOrderNumber = savedOrder.orderNumber;
-    this.logger.log(`Returning orderNumber: ${resultOrderNumber}`);
 
     return {
       success: true,
       message: 'Payment completed and order created',
-      orderNumber: resultOrderNumber,
+      orderNumber: savedOrder.orderNumber,
     };
-  }
-
-  /**
-   * orderNumber로 TmpOrder 조회
-   */
-  private async getTmpOrderByOrderNumber(orderNumber: string) {
-    const [orderId] = orderNumberParser.decode(orderNumber);
-
-    if (!orderId) {
-      throw new BadRequestException(
-        `유효하지 않은 주문번호입니다 (orderNumber: ${orderNumber})`
-      );
-    }
-
-    const tmpOrder = await this.repositoryProvider.TmpOrderRepository.findOne({
-      where: { id: orderId },
-    });
-
-    if (!tmpOrder) {
-      throw new NotFoundException(
-        `임시 주문을 찾을 수 없습니다 (orderNumber: ${orderNumber})`
-      );
-    }
-
-    return tmpOrder;
-  }
-
-  /**
-   * Order 저장 (저장된 엔티티 반환)
-   */
-  private async saveOrder(order: OrderEntity): Promise<OrderEntity> {
-    return this.repositoryProvider.OrderRepository.save(order);
   }
 
   /**
    * TmpOrder → Order 변환 (타입별로 적절한 엔티티 사용)
    */
   private createOrderFromTmpOrder(
-    tmpOrder: Awaited<ReturnType<typeof this.getTmpOrderByOrderNumber>>,
-    memberId: number
+    tmpOrder: TmpOrderEntity,
+    memberId: number,
+    tmpOrderId: number
   ): OrderEntity {
     switch (tmpOrder.type) {
       case ProductTypeEnum.HOTEL:
-        return HotelOrderEntity.fromHotel(tmpOrder.raw, memberId);
+        return HotelOrderEntity.fromHotel(tmpOrder.raw, memberId, tmpOrderId);
 
       case ProductTypeEnum.DELIVERY:
       case ProductTypeEnum['E-TICKET']:
-        return OrderEntity.from(tmpOrder.raw, memberId);
+        return OrderEntity.from(tmpOrder.raw, memberId, tmpOrderId);
 
       default:
         throw new BadRequestException(

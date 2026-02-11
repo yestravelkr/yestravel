@@ -6,6 +6,7 @@ import {
   EntityManager,
   Index,
   OneToMany,
+  PrimaryColumn,
 } from 'typeorm';
 import { BaseEntity } from '@src/module/backoffice/domain/base.entity';
 import { ProductEntity } from '@src/module/backoffice/domain/product/product.entity';
@@ -92,11 +93,31 @@ export const orderNumberParser = {
 @Index('IDX_order_brand_settlement_id', ['brandSettlementId'])
 export class OrderEntity extends BaseEntity {
   /**
-   * TmpOrderRawData에서 OrderEntity 인스턴스 생성
+   * 주문 ID
+   *
+   * ⚠️ BaseEntity의 auto-increment를 override합니다.
+   * insert 시 반드시 `order.id = tmpOrder.id`로 수동 지정해야 합니다.
+   * (TmpOrder의 ID를 재사용하여 orderNumber 일관성 유지)
    */
-  static from(raw: TmpOrderRawData, memberId: number): OrderEntity {
+  @PrimaryColumn()
+  id: number;
+
+  /**
+   * TmpOrderRawData에서 OrderEntity 인스턴스 생성
+   *
+   * @param raw - TmpOrder의 raw 데이터
+   * @param memberId - 회원 ID
+   * @param tmpOrderId - TmpOrder의 ID (Order.id로 재사용)
+   */
+  static from(
+    raw: TmpOrderRawData,
+    memberId: number,
+    tmpOrderId: number
+  ): OrderEntity {
     const order = new OrderEntity();
 
+    // TmpOrder의 ID를 재사용하여 orderNumber 일관성 유지
+    order.id = tmpOrderId;
     order.type = raw.orderOptionSnapshot.type;
     order.memberId = memberId;
     order.customerName = raw.customerName;
