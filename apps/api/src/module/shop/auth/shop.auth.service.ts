@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  Logger,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService, JwtSignOptions } from '@nestjs/jwt';
@@ -22,6 +23,7 @@ import {
 } from './shop.auth.dto';
 import { KakaoService } from './kakao/kakao.service';
 import { SocialProviderEnum } from '@src/module/backoffice/domain/shop/social-account.entity';
+import { SmtntService } from '@src/module/shared/notification/smtnt/smtnt.service';
 
 const jwtService = new JwtService();
 
@@ -33,9 +35,12 @@ const jwtService = new JwtService();
  */
 @Injectable()
 export class ShopAuthService {
+  private readonly logger = new Logger(ShopAuthService.name);
+
   constructor(
     private readonly repositoryProvider: RepositoryProvider,
-    private readonly kakaoService: KakaoService
+    private readonly kakaoService: KakaoService,
+    private readonly smtntService: SmtntService
   ) {}
 
   /**
@@ -60,12 +65,21 @@ export class ShopAuthService {
         expiresAt,
       });
 
-    // TODO: SMTNT 알림톡 서비스 연동
-    // await this.alrimtalkService.send({
-    //   phone: input.phone,
-    //   templateCode: 'SHOP_VERIFICATION',
-    //   variables: { code },
-    // });
+    // SMTNT 알림톡 발송
+    try {
+      await this.smtntService.sendAlimtalk({
+        phone: input.phone,
+        message: `[예스트래블] 인증번호 안내\n\n인증번호: ${code}\n\n인증번호는 3분간 유효합니다.\n본인이 요청하지 않은 경우 무시해주세요.`,
+        templateCode: 'SHOP_VERIFICATION',
+        failedType: 'SMS',
+        failedMessage: `[예스트래블] 인증번호: ${code} (3분간 유효)`,
+      });
+    } catch (error) {
+      this.logger.error(
+        `인증번호 알림톡 발송 실패: ${input.phone}`,
+        error instanceof Error ? error.message : error
+      );
+    }
 
     const response: RequestVerificationResponse = {
       id: verification.id,

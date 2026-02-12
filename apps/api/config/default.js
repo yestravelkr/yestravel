@@ -95,4 +95,9 @@ module.exports = {
     clientId: process.env.KAKAO_CLIENT_ID,
     clientSecret: process.env.KAKAO_CLIENT_SECRET,
   },
+  smtnt: {
+    userId: process.env.SMTNT_ID,
+    senderKey: process.env.SMTNT_PROFILE_KEY,
+    callback: process.env.SMTNT_SEND_PHONE,
+  },
 };
