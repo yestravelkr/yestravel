@@ -279,7 +279,7 @@ export const exportToExcelResponseSchema = z.object({
 export const cancelOrderInputSchema = z.object({
   orderId: z.number().int().positive(),
   reason: z.string().min(1),
-  refundAmount: z.number().positive(),
+  refundAmount: z.number().min(0),
 });
 
 /**
@@ -289,5 +289,4 @@ export const cancelOrderResponseSchema = z.object({
   success: z.boolean(),
   orderId: z.number(),
   refundAmount: z.number(),
-  cancelFee: z.number(),
 });

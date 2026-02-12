@@ -1671,12 +1671,11 @@ const appRouter = t.router({
     cancelOrder: publicProcedure.input(z.object({
       orderId: z.number().int().positive(),
       reason: z.string().min(1),
-      refundAmount: z.number().positive(),
+      refundAmount: z.number().min(0),
     })).output(z.object({
       success: z.boolean(),
       orderId: z.number(),
       refundAmount: z.number(),
-      cancelFee: z.number(),
     })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
     exportToExcel: publicProcedure.input(z.object({
       type: z.enum(['HOTEL', 'E-TICKET', 'DELIVERY']).nullish(),

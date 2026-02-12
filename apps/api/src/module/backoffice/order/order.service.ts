@@ -478,7 +478,7 @@ export class OrderService {
       throw new BadRequestException('이미 취소된 주문입니다.');
     }
 
-    // 2. Payment 조회 및 취소수수료 계산
+    // 2. Payment 조회
     const payment = await this.repositoryProvider.PaymentRepository.findOne({
       where: { orderId },
     });
@@ -486,8 +486,6 @@ export class OrderService {
     if (!payment) {
       throw new BadRequestException('결제 정보를 찾을 수 없습니다.');
     }
-
-    const cancelFee = payment.paidAmount - refundAmount;
 
     // 3. 포트원 결제 취소 (실패 시 @Transactional이 DB 롤백)
     const paymentId = orderNumberParser.encode([orderId], order.createdAt);
@@ -509,7 +507,6 @@ export class OrderService {
       success: true,
       orderId,
       refundAmount,
-      cancelFee,
     };
   }
 
