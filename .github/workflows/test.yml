@@ -1,0 +1,46 @@
+name: Integration Tests
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Start Docker Compose services
+        working-directory: apps/api
+        run: yarn docker:test:up
+
+      - name: Run integration tests
+        working-directory: apps/api
+        env:
+          NODE_ENV: test
+        run: yarn test:integration
+
+      - name: Stop Docker Compose services
+        working-directory: apps/api
+        if: always()
+        run: yarn docker:test:down
+
+      - name: Upload coverage reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: apps/api/coverage
+          if-no-files-found: ignore
