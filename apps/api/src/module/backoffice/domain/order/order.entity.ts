@@ -7,8 +7,9 @@ import {
   Index,
   OneToMany,
   PrimaryColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
 } from 'typeorm';
-import { BaseEntity } from '@src/module/backoffice/domain/base.entity';
 import { ProductEntity } from '@src/module/backoffice/domain/product/product.entity';
 import { InfluencerEntity } from '@src/module/backoffice/domain/influencer.entity';
 import { CampaignEntity } from '@src/module/backoffice/domain/campaign.entity';
@@ -91,16 +92,22 @@ export const orderNumberParser = {
 @Index('IDX_order_member_id', ['memberId'])
 @Index('IDX_order_influencer_settlement_id', ['influencerSettlementId'])
 @Index('IDX_order_brand_settlement_id', ['brandSettlementId'])
-export class OrderEntity extends BaseEntity {
+export class OrderEntity {
   /**
-   * 주문 ID
+   * 주문 ID (TmpOrder ID 재사용)
    *
-   * ⚠️ BaseEntity의 auto-increment를 override합니다.
-   * insert 시 반드시 `order.id = tmpOrder.id`로 수동 지정해야 합니다.
-   * (TmpOrder의 ID를 재사용하여 orderNumber 일관성 유지)
+   * BaseEntity를 상속하지 않고 직접 @PrimaryColumn()을 선언합니다.
+   * TypeORM의 메타데이터 병합 문제로 BaseEntity의 @PrimaryGeneratedColumn()을
+   * 자식에서 @PrimaryColumn()으로 override할 수 없기 때문입니다.
    */
   @PrimaryColumn()
   id: number;
+
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt: Date;
+
+  @UpdateDateColumn({ name: 'updated_at' })
+  updatedAt: Date;
 
   /**
    * TmpOrderRawData에서 OrderEntity 인스턴스 생성

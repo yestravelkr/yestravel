@@ -71,7 +71,7 @@ export class ShopPaymentService {
     // order.id는 이미 from() 메서드에서 설정됨
     order.status = OrderStatusEnum.PAID;
 
-    // 3. Order 저장 (auto-increment 없음, 지정한 ID로 insert)
+    // 3. Order 저장
     const savedOrder =
       await this.repositoryProvider.OrderRepository.save(order);
 
@@ -311,4 +311,5 @@ export class ShopPaymentService {
       );
     }
   }
+
 }
