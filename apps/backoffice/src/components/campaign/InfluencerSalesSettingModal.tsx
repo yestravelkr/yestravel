@@ -16,15 +16,19 @@ import {
 } from '@yestravelkr/min-design-system';
 import dayjs from 'dayjs';
 import { Calendar, FileSpreadsheet } from 'lucide-react';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import SnappyModal, { useCurrentModal } from 'react-snappy-modal';
+import { toast } from 'sonner';
 import tw from 'tailwind-styled-components';
+
+import { openCommissionExcelModal } from './CommissionExcelModal';
 
 import type {
   CampaignInfluencerFormData,
   CampaignInfluencerProductFormData,
 } from '@/routes/_auth/campaign/_components/types';
 import { openDateRangePickerModal } from '@/shared/components/DateRangePickerModal';
+import { trpc, type RouterOutputs } from '@/shared/trpc';
 
 interface DefaultDateRange {
   startDate: string;
@@ -41,6 +45,10 @@ interface InfluencerSalesSettingModalProps {
   influencerName: string;
   defaultDateRange: DefaultDateRange;
   campaignProducts: CampaignProduct[];
+  campaign: {
+    startAt: string;
+    endAt: string;
+  };
 }
 
 interface InfluencerSalesSettingResult {
@@ -168,6 +176,9 @@ function ProductSalesSettingTabContent({
   onSelectProduct,
   influencerProducts,
   onInfluencerProductsChange,
+  product,
+  loadingProduct,
+  onOpenExcelModal,
 }: {
   campaignProducts: CampaignProduct[];
   selectedProductIndex: number;
@@ -176,6 +187,9 @@ function ProductSalesSettingTabContent({
   onInfluencerProductsChange: (
     products: CampaignInfluencerProductFormData[],
   ) => void;
+  product: RouterOutputs['backofficeProduct']['findById'] | null | undefined;
+  loadingProduct: boolean;
+  onOpenExcelModal: () => void;
 }) {
   // 현재 선택된 상품의 인플루언서 설정 찾기
   const currentProduct = campaignProducts[selectedProductIndex];
@@ -244,7 +258,7 @@ function ProductSalesSettingTabContent({
             </ProductChip>
           ))}
         </ProductTabs>
-        <ExcelButton type="button">
+        <ExcelButton type="button" onClick={onOpenExcelModal}>
           <FileSpreadsheet size={20} />
           <ExcelButtonLabel>엑셀 처리</ExcelButtonLabel>
         </ExcelButton>
@@ -297,28 +311,91 @@ function ProductSalesSettingTabContent({
         </SettingRow>
       </SettingCard>
 
-      {/* 수수료 테이블 - TODO: 호텔 옵션 데이터 연동 필요 */}
+      {/* 수수료 테이블 */}
       {currentInfluencerProduct?.useCustomCommission && (
         <CommissionTableContainer>
-          <Table>
-            <THead>
-              <TR>
-                <TH>날짜</TH>
-                <TH>옵션명</TH>
-                <TH>판매가</TH>
-                <TH>수수료</TH>
-              </TR>
-            </THead>
-            <TBody>
-              <TR>
-                <TD colSpan={4}>
-                  <EmptyProductMessage>
-                    호텔 옵션 데이터 연동이 필요합니다.
-                  </EmptyProductMessage>
-                </TD>
-              </TR>
-            </TBody>
-          </Table>
+          {loadingProduct ? (
+            <EmptyProductMessage>
+              호텔 옵션 정보를 불러오는 중입니다...
+            </EmptyProductMessage>
+          ) : !product ||
+            product.type !== 'HOTEL' ||
+            !product.hotelOptions?.length ? (
+            <EmptyProductMessage>호텔 옵션이 없습니다.</EmptyProductMessage>
+          ) : (
+            <>
+              <TableHeader>
+                <TableTitle>설정된 수수료</TableTitle>
+                <TableStats>
+                  총{' '}
+                  {currentInfluencerProduct.hotelOptions.reduce(
+                    (sum, opt) =>
+                      sum + Object.keys(opt.commissionByDate).length,
+                    0,
+                  )}
+                  건
+                </TableStats>
+              </TableHeader>
+              <Table>
+                <THead>
+                  <TR>
+                    <TH>옵션명</TH>
+                    <TH>날짜</TH>
+                    <TH>판매가</TH>
+                    <TH>기본수수료</TH>
+                    <TH>설정수수료</TH>
+                  </TR>
+                </THead>
+                <TBody>
+                  {(() => {
+                    const rows: React.ReactElement[] = [];
+                    product.hotelOptions.forEach((option) => {
+                      const customOption =
+                        currentInfluencerProduct.hotelOptions.find(
+                          (o) => o.hotelOptionId === option.id,
+                        );
+
+                      if (!customOption) return;
+
+                      Object.keys(customOption.commissionByDate).forEach(
+                        (date) => {
+                          const commission =
+                            customOption.commissionByDate[date];
+                          const price = option.priceByDate[date];
+                          const defaultCommission =
+                            option.anotherPriceByDate[date]?.commission;
+
+                          rows.push(
+                            <TR key={`${option.id}-${date}`}>
+                              <TD>{option.name}</TD>
+                              <TD>{date}</TD>
+                              <TD>{price?.toLocaleString() || '-'}원</TD>
+                              <TD>
+                                {defaultCommission?.toLocaleString() || '-'}원
+                              </TD>
+                              <TD>{commission.toLocaleString()}원</TD>
+                            </TR>,
+                          );
+                        },
+                      );
+                    });
+
+                    return rows.length > 0 ? (
+                      rows
+                    ) : (
+                      <TR>
+                        <TD colSpan={5}>
+                          <EmptyProductMessage>
+                            설정된 수수료가 없습니다.
+                          </EmptyProductMessage>
+                        </TD>
+                      </TR>
+                    );
+                  })()}
+                </TBody>
+              </Table>
+            </>
+          )}
         </CommissionTableContainer>
       )}
     </ProductSalesContainer>
@@ -330,6 +407,7 @@ function InfluencerSalesSettingModal({
   influencerName,
   defaultDateRange,
   campaignProducts,
+  campaign,
 }: InfluencerSalesSettingModalProps) {
   const { resolveModal } = useCurrentModal();
   const { selectedTab, TabComponents: MainTabComponents } = useTabs(MAIN_TABS);
@@ -349,6 +427,85 @@ function InfluencerSalesSettingModal({
   const [influencerProducts, setInfluencerProducts] = useState<
     CampaignInfluencerProductFormData[]
   >(influencer.products);
+
+  // Product 조회
+  const currentProduct = campaignProducts[selectedProductIndex];
+  const { data: product, isLoading: loadingProduct } =
+    trpc.backofficeProduct.findById.useQuery(
+      {
+        id: currentProduct?.id || 0,
+      },
+      {
+        enabled: !!currentProduct,
+      },
+    );
+
+  const handleOpenExcelModal = async () => {
+    if (!currentProduct || !product) {
+      toast.error('상품을 먼저 선택해주세요');
+      return;
+    }
+
+    if (product.type !== 'HOTEL' || !product.hotelOptions?.length) {
+      toast.error('호텔 옵션이 없습니다');
+      return;
+    }
+
+    // Type narrowing
+    const hotelProduct = product as Extract<typeof product, { type: 'HOTEL' }>;
+
+    // 현재 react-hook-form 데이터에서 commissionData 추출
+    const currentInfluencerProduct = influencerProducts.find(
+      (p) => p.productId === currentProduct.id,
+    );
+    const currentCommissionData = currentInfluencerProduct?.hotelOptions || [];
+
+    await openCommissionExcelModal({
+      product: {
+        id: hotelProduct.id,
+        name: hotelProduct.name,
+        hotelOptions: hotelProduct.hotelOptions,
+      },
+      campaignStartDate: campaign.startAt,
+      campaignEndDate: campaign.endAt,
+      currentCommissionData,
+      onApply: handleApplyCommission,
+    });
+  };
+
+  const handleApplyCommission = (
+    commissionData: Array<{
+      hotelOptionId: number;
+      commissionByDate: Record<string, number>;
+    }>,
+  ) => {
+    if (!currentProduct) return;
+
+    // react-hook-form의 setValue로 데이터 주입
+    const existingIndex = influencerProducts.findIndex(
+      (p) => p.productId === currentProduct.id,
+    );
+
+    const updatedProducts = [...influencerProducts];
+
+    if (existingIndex >= 0) {
+      updatedProducts[existingIndex] = {
+        ...updatedProducts[existingIndex],
+        useCustomCommission: true,
+        hotelOptions: commissionData,
+      };
+    } else {
+      updatedProducts.push({
+        productId: currentProduct.id,
+        status: 'VISIBLE',
+        useCustomCommission: true,
+        hotelOptions: commissionData,
+      });
+    }
+
+    setInfluencerProducts(updatedProducts);
+    toast.success('수수료가 적용되었습니다');
+  };
 
   const handleConfirm = () => {
     const result: InfluencerSalesSettingResult = {
@@ -395,6 +552,9 @@ function InfluencerSalesSettingModal({
             onSelectProduct={setSelectedProductIndex}
             influencerProducts={influencerProducts}
             onInfluencerProductsChange={setInfluencerProducts}
+            product={product}
+            loadingProduct={loadingProduct}
+            onOpenExcelModal={handleOpenExcelModal}
           />
         )}
       </Content>
@@ -417,6 +577,10 @@ export function openInfluencerSalesSettingModal(
   influencerName: string,
   defaultDateRange: DefaultDateRange,
   campaignProducts: CampaignProduct[],
+  campaign: {
+    startAt: string;
+    endAt: string;
+  },
 ): Promise<InfluencerSalesSettingResult | null> {
   return SnappyModal.show(
     <InfluencerSalesSettingModal
@@ -424,6 +588,7 @@ export function openInfluencerSalesSettingModal(
       influencerName={influencerName}
       defaultDateRange={defaultDateRange}
       campaignProducts={campaignProducts}
+      campaign={campaign}
     />,
     {
       position: 'center',
@@ -776,6 +941,29 @@ const CommissionTableContainer = tw.div`
   border
   border-[var(--stroke-neutral)]
   rounded-lg
+`;
+
+const TableHeader = tw.div`
+  px-4
+  py-2
+  bg-[var(--bg-neutral)]
+  flex
+  justify-between
+  items-center
+`;
+
+const TableTitle = tw.div`
+  text-[var(--fg-neutral)]
+  text-sm
+  font-medium
+  leading-4
+`;
+
+const TableStats = tw.div`
+  text-[var(--fg-muted)]
+  text-sm
+  font-normal
+  leading-4
 `;
 
 const Footer = tw.div`

@@ -114,7 +114,7 @@ export function CampaignInfluencerSection() {
           fee: formInfluencer.fee,
           status: formInfluencer.status,
           products: formInfluencer.products,
-        } as CampaignInfluencerDisplay;
+        };
       })
       .filter(
         (influencer): influencer is CampaignInfluencerDisplay =>
@@ -238,6 +238,10 @@ export function CampaignInfluencerSection() {
       influencer.name,
       dateRange,
       campaignProducts,
+      {
+        startAt: dateRange.startDate,
+        endAt: dateRange.endDate,
+      },
     );
 
     if (result) {
