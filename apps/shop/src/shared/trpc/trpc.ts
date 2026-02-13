@@ -67,7 +67,7 @@ const refreshAccessToken = async (): Promise<boolean> => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ json: { refreshToken } }),
+        body: JSON.stringify({ refreshToken }),
       });
 
       // 인증 실패 (refresh token 만료/무효/잘못된 요청): logout
