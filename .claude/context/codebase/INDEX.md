@@ -10,3 +10,4 @@ description: 코드베이스 모듈 참조 목록
 | 모듈 | 설명 | 문서 |
 |------|------|------|
 | Shop Payment | Shop 결제 처리 - PortOne 연동, 결제 승인/취소, TmpOrder->Order 변환 | [shop-payment.md](./shop-payment.md) |
+| Shop tRPC Client | Shop tRPC 클라이언트 - API 통신, 인증 토큰 관리, 자동 갱신 | [shop-trpc-client.md](./shop-trpc-client.md) |
