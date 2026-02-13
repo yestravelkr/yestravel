@@ -2,6 +2,7 @@ import { httpLink } from '@trpc/client';
 import { createTRPCReact } from '@trpc/react-query';
 import type { inferRouterInputs, inferRouterOutputs } from '@trpc/server';
 import type { AppRouter } from '@yestravelkr/api-types';
+import { toast } from 'sonner';
 
 import { useAuthStore, waitForHydration } from '@/store/authStore';
 
@@ -55,6 +56,7 @@ const refreshAccessToken = async (): Promise<boolean> => {
         return false;
       }
       useAuthStore.getState().logout();
+      toast.error('세션이 만료되어 로그아웃되었습니다.');
       return false;
     }
 
@@ -68,9 +70,14 @@ const refreshAccessToken = async (): Promise<boolean> => {
         body: JSON.stringify({ json: { refreshToken } }),
       });
 
-      // 인증 실패 (refresh token 만료/무효): logout
-      if (response.status === 401 || response.status === 403) {
+      // 인증 실패 (refresh token 만료/무효/잘못된 요청): logout
+      if (
+        response.status === 400 ||
+        response.status === 401 ||
+        response.status === 403
+      ) {
         useAuthStore.getState().logout();
+        toast.error('세션이 만료되어 로그아웃되었습니다.');
         return false;
       }
 
