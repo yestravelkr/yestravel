@@ -19,6 +19,7 @@ keywords: [워크플로우, 개발프로세스, 자동화, 위임, 안전, Claud
 | 4단계 워크플로우 강제 | 계획→검증→구현→리뷰 순서 보장 | 사이드이펙트 사전 방지 |
 | 위험 명령 차단 | rm -rf, force push 등 위험 명령 자동 차단 | 실수로 인한 데이터 손실 방지 |
 | 세션 태스크 로딩 | GitHub Project 태스크를 세션 시작 시 표시 | 작업 연속성 및 우선순위 파악 |
+| 인덱싱 최적화 | .claudeignore로 불필요한 파일 제외 | 빠른 코드베이스 탐색 및 토큰 절약 |
 
 ## 사용자 흐름
 
@@ -33,3 +34,4 @@ keywords: [워크플로우, 개발프로세스, 자동화, 위임, 안전, Claud
 - [Claude Agents](../codebase/claude-agents.md)
 - [Claude Hooks](../codebase/claude-hooks.md)
 - [Claude Skills](../codebase/claude-skills.md)
+- [Claude Settings](../codebase/claude-settings.md)
