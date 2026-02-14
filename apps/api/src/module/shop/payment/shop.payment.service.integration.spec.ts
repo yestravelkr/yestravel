@@ -5,14 +5,11 @@ import {
   getTestingEntityManager,
   releaseTestContext,
   TestContext,
-} from '@src/test-utils/test-helpers';
-import { createTestRepositoryProvider } from '@src/test-utils/mock-repository-provider';
-import { destroyTestDataSource } from '@src/test-utils/test-datasource';
-import {
-  setupPortoneMocks,
-  clearPortoneMocks,
-} from '@src/test-utils/axios-mock';
-// import { makeBrand, makeProduct, makeMember, makeTmpOrder } from '@src/test-utils/entity-makers';
+} from '@test-utils/test-helpers';
+import { createTestRepositoryProvider } from '@test-utils/mock-repository-provider';
+import { destroyTestDataSource } from '@test-utils/test-datasource';
+import { setupPortoneMocks, clearPortoneMocks } from '@test-utils/axios-mock';
+// import { makeBrand, makeProduct, makeMember, makeTmpOrder } from '@test-utils/entity-makers';
 // import { orderNumberParser } from '@src/module/backoffice/domain/order/order.entity';
 
 describe('ShopPaymentService (Integration)', () => {
