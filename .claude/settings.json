@@ -22,6 +22,27 @@
             "command": ".claude/hooks/workflow-enforced.sh"
           }
         ]
+      },
+    ],
+    "SubagentStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/skill-forced-subagent.sh"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/dangerous-command-blocker.sh"
+          }
+        ]
       }
     ]
   }
