@@ -1,0 +1,54 @@
+# Lock 파일 (616KB - Claude가 읽을 필요 없음)
+yarn.lock
+
+# Docker DB 데이터
+docker/postgresql/data/
+
+# 바이너리/미디어 파일
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.ico
+*.woff
+*.woff2
+*.ttf
+*.eot
+
+# IDE 설정
+.idea/
+.vscode/
+
+# Storybook 빌드/캐시
+apps/shop/.storybook/
+
+# TanStack Router 자동생성 캐시
+.tanstack/
+
+# TypeScript 빌드 캐시
+*.tsbuildinfo
+
+# 테스트 커버리지
+coverage/
+.nyc_output/
+
+# 환경 파일
+.env
+.env.*
+!.env.example
+
+# OS
+.DS_Store
+
+# Husky git hooks (작은 파일이지만 Claude에 불필요)
+.husky/
+
+# AWS 배포 설정
+apps/api/.ebextensions/
+apps/api/.platform/
+apps/api/Dockerrun.aws.json
+
+# 기타 설정
+.mcp.json
+.envrc
+lint-staged.config.js
