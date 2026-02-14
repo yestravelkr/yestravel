@@ -22,6 +22,18 @@
             "command": ".claude/hooks/workflow-enforced.sh"
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./.claude/hooks/skill-forced.sh"
+          },
+          {
+            "type": "command",
+            "command": "./.claude/hooks/workflow-enforced.sh"
+          }
+        ]
       }
     ],
     "SubagentStart": [
@@ -30,6 +42,14 @@
           {
             "type": "command",
             "command": ".claude/hooks/skill-forced-subagent.sh"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./.claude/hooks/skill-forced-subagent.sh"
           }
         ]
       }
@@ -41,6 +61,15 @@
           {
             "type": "command",
             "command": ".claude/hooks/dangerous-command-blocker.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./.claude/hooks/dangerous-command-blocker.sh"
           }
         ]
       }
