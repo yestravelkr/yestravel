@@ -142,14 +142,15 @@ describe('ShopPaymentService - 재고 동시성 (Integration)', () => {
         tmpOrder.createdAt
       );
 
-      const service = createService(dataSource.manager);
-      await service.handlePaymentComplete({
-        paymentId,
-        paymentToken: 'test-token',
-        transactionType: 'PAYMENT',
-        txId: 'test-tx-id',
-        memberId: member.id,
-      });
+      await executeInIsolatedTransaction(svc =>
+        svc.handlePaymentComplete({
+          paymentId,
+          paymentToken: 'test-token',
+          transactionType: 'PAYMENT',
+          txId: 'test-tx-id',
+          memberId: member.id,
+        })
+      );
 
       // Assert: HotelSku quantity가 1 → 0으로 차감됨
       const updatedSku = await dataSource.manager.findOneBy(HotelSkuEntity, {
@@ -179,17 +180,17 @@ describe('ShopPaymentService - 재고 동시성 (Integration)', () => {
         tmpOrder.createdAt
       );
 
-      const service = createService(dataSource.manager);
-
       // 재고 부족으로 에러 발생해야 함
       await expect(
-        service.handlePaymentComplete({
-          paymentId,
-          paymentToken: 'test-token',
-          transactionType: 'PAYMENT',
-          txId: 'test-tx-id',
-          memberId: member.id,
-        })
+        executeInIsolatedTransaction(svc =>
+          svc.handlePaymentComplete({
+            paymentId,
+            paymentToken: 'test-token',
+            transactionType: 'PAYMENT',
+            txId: 'test-tx-id',
+            memberId: member.id,
+          })
+        )
       ).rejects.toThrow();
 
       // Assert: Order가 생성되지 않음
