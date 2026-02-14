@@ -115,139 +115,199 @@ describe('ShopPaymentService (Integration)', () => {
   }
 
   describe('handlePaymentComplete', () => {
-    it('호텔 상품 결제 완료 시 Order 생성(status=PAID) 및 TmpOrder 삭제', async () => {
-      const { product, option, member, influencer, campaign } =
-        await setupHotelTestData(10);
+    describe('정상 결제', () => {
+      it('should create Order with PAID status and delete TmpOrder when hotel payment completed', async () => {
+        // Given
+        const { product, option, member, influencer, campaign } =
+          await setupHotelTestData(10);
 
-      const tmpOrder = await makeTmpOrder(dataSource.manager, {
-        productId: product.id,
-        memberId: member.id,
-        raw: buildHotelTmpOrderRaw({
+        const tmpOrder = await makeTmpOrder(dataSource.manager, {
           productId: product.id,
-          influencerId: influencer.id,
-          campaignId: campaign.id,
-          hotelOptionId: option.id,
-          hotelOptionName: option.name,
-        }),
-      });
-
-      const paymentId = orderNumberParser.encode(
-        [tmpOrder.id],
-        tmpOrder.createdAt
-      );
-
-      const result = await executeInIsolatedTransaction(svc =>
-        svc.handlePaymentComplete({
-          paymentId,
-          paymentToken: 'test-token',
-          transactionType: 'PAYMENT',
-          txId: 'test-tx-id',
           memberId: member.id,
-        })
-      );
+          raw: buildHotelTmpOrderRaw({
+            productId: product.id,
+            influencerId: influencer.id,
+            campaignId: campaign.id,
+            hotelOptionId: option.id,
+            hotelOptionName: option.name,
+          }),
+        });
 
-      // Assert: 성공 응답
-      expect(result.success).toBe(true);
-      expect(result.message).toBe('Payment completed and order created');
-      expect(result.orderNumber).toBeDefined();
+        const paymentId = orderNumberParser.encode(
+          [tmpOrder.id],
+          tmpOrder.createdAt
+        );
 
-      // Assert: Order가 PAID 상태로 생성됨
-      const order = await dataSource.manager.findOneBy(OrderEntity, {
-        id: tmpOrder.id,
-      });
-      expect(order).not.toBeNull();
-      expect(order!.status).toBe(OrderStatusEnum.PAID);
-      expect(order!.memberId).toBe(member.id);
-      expect(order!.productId).toBe(product.id);
-      expect(order!.totalAmount).toBe(100000);
-
-      // Assert: TmpOrder가 삭제됨
-      const deletedTmpOrder = await dataSource.manager.findOneBy(
-        TmpOrderEntity,
-        { id: tmpOrder.id }
-      );
-      expect(deletedTmpOrder).toBeNull();
-    });
-
-    it('유효하지 않은 paymentId 시 BadRequestException 발생', async () => {
-      // sqids는 알파벳 밖 문자(소문자 등)를 디코딩하면 빈 배열 반환 -> tmpOrderId가 undefined
-      const invalidPaymentId = 'ORD-invalid';
-
-      await expect(
-        executeInIsolatedTransaction(svc =>
+        // When
+        const result = await executeInIsolatedTransaction(svc =>
           svc.handlePaymentComplete({
-            paymentId: invalidPaymentId,
+            paymentId,
             paymentToken: 'test-token',
             transactionType: 'PAYMENT',
             txId: 'test-tx-id',
-            memberId: 1,
+            memberId: member.id,
           })
-        )
-      ).rejects.toThrow(BadRequestException);
+        );
+
+        // Then
+        expect(result.success).toBe(true);
+        expect(result.message).toBe('Payment completed and order created');
+        expect(result.orderNumber).toBeDefined();
+
+        const order = await dataSource.manager.findOneBy(OrderEntity, {
+          id: tmpOrder.id,
+        });
+        expect(order).not.toBeNull();
+        expect(order!.status).toBe(OrderStatusEnum.PAID);
+        expect(order!.memberId).toBe(member.id);
+        expect(order!.productId).toBe(product.id);
+        expect(order!.totalAmount).toBe(100000);
+
+        const deletedTmpOrder = await dataSource.manager.findOneBy(
+          TmpOrderEntity,
+          { id: tmpOrder.id }
+        );
+        expect(deletedTmpOrder).toBeNull();
+      });
+
+      it('should save Payment entity after payment confirmed', async () => {
+        // Given
+        const { product, option, member, influencer, campaign } =
+          await setupHotelTestData(10);
+
+        const tmpOrder = await makeTmpOrder(dataSource.manager, {
+          productId: product.id,
+          memberId: member.id,
+          raw: buildHotelTmpOrderRaw({
+            productId: product.id,
+            influencerId: influencer.id,
+            campaignId: campaign.id,
+            hotelOptionId: option.id,
+            hotelOptionName: option.name,
+          }),
+        });
+
+        const paymentId = orderNumberParser.encode(
+          [tmpOrder.id],
+          tmpOrder.createdAt
+        );
+        const txId = 'test-tx-id-payment';
+
+        // When
+        await executeInIsolatedTransaction(svc =>
+          svc.handlePaymentComplete({
+            paymentId,
+            paymentToken: 'test-token',
+            transactionType: 'PAYMENT',
+            txId,
+            memberId: member.id,
+          })
+        );
+
+        // Then
+        const payment = await dataSource.manager.findOneBy(PaymentEntity, {
+          impUid: txId,
+        });
+        expect(payment).not.toBeNull();
+        expect(payment!.orderId).toBe(tmpOrder.id);
+        expect(payment!.pgProvider).toBe('portone');
+        expect(payment!.paidAmount).toBe(100000);
+        expect(payment!.nowAmount).toBe(100000);
+        expect(payment!.paidAt).toBeDefined();
+      });
     });
 
-    it('존재하지 않는 TmpOrder 시 NotFoundException 발생', async () => {
-      // 유효한 형식이지만 존재하지 않는 TmpOrder ID를 encode
-      const nonExistentPaymentId = orderNumberParser.encode(
-        [999999],
-        new Date()
-      );
+    describe('예외 처리', () => {
+      it('should throw BadRequestException when paymentId is invalid', async () => {
+        // Given
+        const invalidPaymentId = 'ORD-invalid';
 
-      await expect(
-        executeInIsolatedTransaction(svc =>
+        // When & Then
+        await expect(
+          executeInIsolatedTransaction(svc =>
+            svc.handlePaymentComplete({
+              paymentId: invalidPaymentId,
+              paymentToken: 'test-token',
+              transactionType: 'PAYMENT',
+              txId: 'test-tx-id',
+              memberId: 1,
+            })
+          )
+        ).rejects.toThrow(BadRequestException);
+      });
+
+      it('should throw NotFoundException when TmpOrder does not exist', async () => {
+        // Given
+        const nonExistentPaymentId = orderNumberParser.encode(
+          [999999],
+          new Date()
+        );
+
+        // When & Then
+        await expect(
+          executeInIsolatedTransaction(svc =>
+            svc.handlePaymentComplete({
+              paymentId: nonExistentPaymentId,
+              paymentToken: 'test-token',
+              transactionType: 'PAYMENT',
+              txId: 'test-tx-id',
+              memberId: 1,
+            })
+          )
+        ).rejects.toThrow(NotFoundException);
+      });
+
+      it('should not create duplicate order when same paymentId called twice', async () => {
+        // Given
+        const { product, option, member, influencer, campaign } =
+          await setupHotelTestData(10);
+
+        const tmpOrder = await makeTmpOrder(dataSource.manager, {
+          productId: product.id,
+          memberId: member.id,
+          raw: buildHotelTmpOrderRaw({
+            productId: product.id,
+            influencerId: influencer.id,
+            campaignId: campaign.id,
+            hotelOptionId: option.id,
+            hotelOptionName: option.name,
+          }),
+        });
+
+        const paymentId = orderNumberParser.encode(
+          [tmpOrder.id],
+          tmpOrder.createdAt
+        );
+
+        // When - 첫 번째 호출은 성공
+        await executeInIsolatedTransaction(svc =>
           svc.handlePaymentComplete({
-            paymentId: nonExistentPaymentId,
+            paymentId,
             paymentToken: 'test-token',
             transactionType: 'PAYMENT',
             txId: 'test-tx-id',
-            memberId: 1,
+            memberId: member.id,
           })
-        )
-      ).rejects.toThrow(NotFoundException);
-    });
+        );
 
-    it('결제 승인 후 Payment 엔티티가 저장됨', async () => {
-      const { product, option, member, influencer, campaign } =
-        await setupHotelTestData(10);
+        // When - 두 번째 호출은 TmpOrder가 삭제되어 실패
+        await expect(
+          executeInIsolatedTransaction(svc =>
+            svc.handlePaymentComplete({
+              paymentId,
+              paymentToken: 'test-token',
+              transactionType: 'PAYMENT',
+              txId: 'test-tx-id-2',
+              memberId: member.id,
+            })
+          )
+        ).rejects.toThrow(NotFoundException);
 
-      const tmpOrder = await makeTmpOrder(dataSource.manager, {
-        productId: product.id,
-        memberId: member.id,
-        raw: buildHotelTmpOrderRaw({
-          productId: product.id,
-          influencerId: influencer.id,
-          campaignId: campaign.id,
-          hotelOptionId: option.id,
-          hotelOptionName: option.name,
-        }),
+        // Then - Order는 1개만 존재
+        const orders = await dataSource.manager.find(OrderEntity);
+        expect(orders).toHaveLength(1);
+        expect(orders[0].status).toBe(OrderStatusEnum.PAID);
       });
-
-      const paymentId = orderNumberParser.encode(
-        [tmpOrder.id],
-        tmpOrder.createdAt
-      );
-      const txId = 'test-tx-id-payment';
-
-      await executeInIsolatedTransaction(svc =>
-        svc.handlePaymentComplete({
-          paymentId,
-          paymentToken: 'test-token',
-          transactionType: 'PAYMENT',
-          txId,
-          memberId: member.id,
-        })
-      );
-
-      // Assert: Payment 엔티티가 저장됨
-      const payment = await dataSource.manager.findOneBy(PaymentEntity, {
-        impUid: txId,
-      });
-      expect(payment).not.toBeNull();
-      expect(payment!.orderId).toBe(tmpOrder.id);
-      expect(payment!.pgProvider).toBe('portone');
-      expect(payment!.paidAmount).toBe(100000);
-      expect(payment!.nowAmount).toBe(100000);
-      expect(payment!.paidAt).toBeDefined();
     });
   });
 });
