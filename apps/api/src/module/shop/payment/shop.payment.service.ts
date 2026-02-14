@@ -122,7 +122,14 @@ export class ShopPaymentService {
     const skus = await this.repositoryProvider.HotelSkuRepository.find({
       where: { productId, date: In(dates) },
       lock: { mode: 'pessimistic_write' },
+      order: { date: 'ASC' },
     });
+
+    if (skus.length !== dates.length) {
+      throw new Error(
+        `SKU not found: expected ${dates.length} SKUs but found ${skus.length}`
+      );
+    }
 
     for (const sku of skus) {
       if (sku.quantity <= 0) {
