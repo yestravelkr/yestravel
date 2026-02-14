@@ -44,3 +44,4 @@ docker/postgresql/data
 
 */**/CLAUDE.md
 !./CLAUDE.md
+!./claude/CLAUDE.md
