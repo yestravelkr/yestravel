@@ -118,69 +118,32 @@ describe('ShopPaymentService - 재고 동시성 (Integration)', () => {
     return { brand, product, option, sku, member, influencer, campaign };
   }
 
-  describe('handlePaymentComplete 재고 차감', () => {
-    it('결제 완료 시 HotelSku quantity를 1 차감한다', async () => {
-      const { product, option, sku, member, influencer, campaign } =
-        await setupHotelTestData(1);
+  describe('deductHotelSkuQuantity', () => {
+    describe('재고 차감', () => {
+      it('should deduct HotelSku quantity by 1 when payment completed', async () => {
+        // Given
+        const { product, option, sku, member, influencer, campaign } =
+          await setupHotelTestData(1);
 
-      const tmpOrder = await makeTmpOrder(dataSource.manager, {
-        productId: product.id,
-        memberId: member.id,
-        raw: buildHotelTmpOrderRaw({
+        const tmpOrder = await makeTmpOrder(dataSource.manager, {
           productId: product.id,
-          influencerId: influencer.id,
-          campaignId: campaign.id,
-          hotelOptionId: option.id,
-          hotelOptionName: option.name,
-        }),
-      });
-
-      const paymentId = orderNumberParser.encode(
-        [tmpOrder.id],
-        tmpOrder.createdAt
-      );
-
-      await executeInIsolatedTransaction(svc =>
-        svc.handlePaymentComplete({
-          paymentId,
-          paymentToken: 'test-token',
-          transactionType: 'PAYMENT',
-          txId: 'test-tx-id',
           memberId: member.id,
-        })
-      );
+          raw: buildHotelTmpOrderRaw({
+            productId: product.id,
+            influencerId: influencer.id,
+            campaignId: campaign.id,
+            hotelOptionId: option.id,
+            hotelOptionName: option.name,
+          }),
+        });
 
-      // Assert: HotelSku quantity가 1 → 0으로 차감됨
-      const updatedSku = await dataSource.manager.findOneBy(HotelSkuEntity, {
-        id: sku.id,
-      });
-      expect(updatedSku!.quantity).toBe(0);
-    });
+        const paymentId = orderNumberParser.encode(
+          [tmpOrder.id],
+          tmpOrder.createdAt
+        );
 
-    it('재고 0인 날짜 결제 시 실패 + 결제 취소', async () => {
-      const { product, option, member, influencer, campaign } =
-        await setupHotelTestData(0); // quantity=0
-
-      const tmpOrder = await makeTmpOrder(dataSource.manager, {
-        productId: product.id,
-        memberId: member.id,
-        raw: buildHotelTmpOrderRaw({
-          productId: product.id,
-          influencerId: influencer.id,
-          campaignId: campaign.id,
-          hotelOptionId: option.id,
-          hotelOptionName: option.name,
-        }),
-      });
-
-      const paymentId = orderNumberParser.encode(
-        [tmpOrder.id],
-        tmpOrder.createdAt
-      );
-
-      // 재고 부족으로 에러 발생해야 함
-      await expect(
-        executeInIsolatedTransaction(svc =>
+        // When
+        await executeInIsolatedTransaction(svc =>
           svc.handlePaymentComplete({
             paymentId,
             paymentToken: 'test-token',
@@ -188,117 +151,565 @@ describe('ShopPaymentService - 재고 동시성 (Integration)', () => {
             txId: 'test-tx-id',
             memberId: member.id,
           })
-        )
-      ).rejects.toThrow();
+        );
 
-      // Assert: Order가 생성되지 않음
-      const orders = await dataSource.manager.find(OrderEntity);
-      expect(orders).toHaveLength(0);
+        // Then
+        const updatedSku = await dataSource.manager.findOneBy(HotelSkuEntity, {
+          id: sku.id,
+        });
+        expect(updatedSku!.quantity).toBe(0);
+      });
+
+      it('should fail and cancel payment when date has zero stock', async () => {
+        // Given
+        const { product, option, member, influencer, campaign } =
+          await setupHotelTestData(0); // quantity=0
+
+        const tmpOrder = await makeTmpOrder(dataSource.manager, {
+          productId: product.id,
+          memberId: member.id,
+          raw: buildHotelTmpOrderRaw({
+            productId: product.id,
+            influencerId: influencer.id,
+            campaignId: campaign.id,
+            hotelOptionId: option.id,
+            hotelOptionName: option.name,
+          }),
+        });
+
+        const paymentId = orderNumberParser.encode(
+          [tmpOrder.id],
+          tmpOrder.createdAt
+        );
+
+        // When & Then
+        await expect(
+          executeInIsolatedTransaction(svc =>
+            svc.handlePaymentComplete({
+              paymentId,
+              paymentToken: 'test-token',
+              transactionType: 'PAYMENT',
+              txId: 'test-tx-id',
+              memberId: member.id,
+            })
+          )
+        ).rejects.toThrow();
+
+        // Then
+        const orders = await dataSource.manager.find(OrderEntity);
+        expect(orders).toHaveLength(0);
+      });
     });
-  });
 
-  describe('동시 결제 - Pessimistic Lock', () => {
-    let skuId: number;
-    let results: PromiseSettledResult<unknown>[];
+    describe('동시 결제 - Pessimistic Lock', () => {
+      let skuId: number;
+      let results: PromiseSettledResult<unknown>[];
 
-    beforeEach(async () => {
-      const { product, option, sku, influencer, campaign } =
-        await setupHotelTestData(1);
-      skuId = sku.id;
+      beforeEach(async () => {
+        // Given
+        const { product, option, sku, influencer, campaign } =
+          await setupHotelTestData(1);
+        skuId = sku.id;
 
-      const member1 = await makeMember(dataSource.manager, {
-        phone: '01011111111',
+        const member1 = await makeMember(dataSource.manager, {
+          phone: '01011111111',
+        });
+        const member2 = await makeMember(dataSource.manager, {
+          phone: '01022222222',
+        });
+
+        const raw = buildHotelTmpOrderRaw({
+          productId: product.id,
+          influencerId: influencer.id,
+          campaignId: campaign.id,
+          hotelOptionId: option.id,
+          hotelOptionName: option.name,
+        });
+
+        const tmpOrder1 = await makeTmpOrder(dataSource.manager, {
+          productId: product.id,
+          memberId: member1.id,
+          raw,
+        });
+        const tmpOrder2 = await makeTmpOrder(dataSource.manager, {
+          productId: product.id,
+          memberId: member2.id,
+          raw,
+        });
+
+        const paymentId1 = orderNumberParser.encode(
+          [tmpOrder1.id],
+          tmpOrder1.createdAt
+        );
+        const paymentId2 = orderNumberParser.encode(
+          [tmpOrder2.id],
+          tmpOrder2.createdAt
+        );
+
+        // When
+        results = await Promise.allSettled([
+          executeInIsolatedTransaction(svc =>
+            svc.handlePaymentComplete({
+              paymentId: paymentId1,
+              paymentToken: 'test-token-1',
+              transactionType: 'PAYMENT',
+              txId: 'test-tx-1',
+              memberId: member1.id,
+            })
+          ),
+          executeInIsolatedTransaction(svc =>
+            svc.handlePaymentComplete({
+              paymentId: paymentId2,
+              paymentToken: 'test-token-2',
+              transactionType: 'PAYMENT',
+              txId: 'test-tx-2',
+              memberId: member2.id,
+            })
+          ),
+        ]);
       });
-      const member2 = await makeMember(dataSource.manager, {
-        phone: '01022222222',
+
+      it('should allow 1 succeed and cancel 1 when stock is 1 and 2 concurrent payments', async () => {
+        // Then
+        const fulfilled = results.filter(r => r.status === 'fulfilled');
+        const rejected = results.filter(r => r.status === 'rejected');
+        expect(fulfilled).toHaveLength(1);
+        expect(rejected).toHaveLength(1);
+
+        const updatedSku = await dataSource.manager.findOneBy(HotelSkuEntity, {
+          id: skuId,
+        });
+        expect(updatedSku!.quantity).toBe(0);
       });
 
-      const raw = buildHotelTmpOrderRaw({
-        productId: product.id,
-        influencerId: influencer.id,
-        campaignId: campaign.id,
-        hotelOptionId: option.id,
-        hotelOptionName: option.name,
+      it('should call PortOne cancel API when payment is cancelled due to stock shortage', () => {
+        // Then
+        const cancelCalls = (axios.post as jest.Mock).mock.calls.filter(
+          ([url]: [string]) => url.includes('/cancel')
+        );
+        expect(cancelCalls).toHaveLength(1);
       });
 
-      const tmpOrder1 = await makeTmpOrder(dataSource.manager, {
-        productId: product.id,
-        memberId: member1.id,
-        raw,
-      });
-      const tmpOrder2 = await makeTmpOrder(dataSource.manager, {
-        productId: product.id,
-        memberId: member2.id,
-        raw,
+      it('should not create order or set CANCELLED status for cancelled payment', async () => {
+        // Then
+        const orders = await dataSource.manager.find(OrderEntity);
+        const paidOrders = orders.filter(o => o.status === 'PAID');
+        expect(paidOrders).toHaveLength(1);
+
+        const nonPaidOrders = orders.filter(o => o.status !== 'PAID');
+        nonPaidOrders.forEach(order => {
+          expect(order.status).toBe('CANCELLED');
+        });
       });
 
-      const paymentId1 = orderNumberParser.encode(
-        [tmpOrder1.id],
-        tmpOrder1.createdAt
-      );
-      const paymentId2 = orderNumberParser.encode(
-        [tmpOrder2.id],
-        tmpOrder2.createdAt
-      );
+      it('should allow 2 succeed and cancel 1 when stock is 2 and 3 concurrent payments', async () => {
+        // Given
+        // Note: This test runs independently from the beforeEach above.
+        // We need fresh data, so truncate and re-setup.
+        await truncateAllTables(dataSource.manager);
+        clearPortoneMocks();
+        setupPortoneMocks();
 
-      // 2명이 동시에 결제 완료 요청
-      results = await Promise.allSettled([
-        executeInIsolatedTransaction(svc =>
+        const em = dataSource.manager;
+        const brand = await makeBrand(em);
+        const product = await makeHotelProduct(em, { brandId: brand.id });
+        const option = await makeHotelOption(em, {
+          productId: product.id,
+          name: 'Standard Room',
+          priceByDate: { '2026-03-01': 100000 },
+        });
+        const sku = await makeHotelSku(em, {
+          productId: product.id,
+          date: '2026-03-01',
+          quantity: 2,
+        });
+        const influencer = await makeInfluencer(em);
+        const campaign = await makeCampaign(em);
+        const member1 = await makeMember(em, { phone: '01011111111' });
+        const member2 = await makeMember(em, { phone: '01022222222' });
+        const member3 = await makeMember(em, { phone: '01033333333' });
+
+        const raw = buildHotelTmpOrderRaw({
+          productId: product.id,
+          influencerId: influencer.id,
+          campaignId: campaign.id,
+          hotelOptionId: option.id,
+          hotelOptionName: option.name,
+        });
+
+        const tmpOrder1 = await makeTmpOrder(em, {
+          productId: product.id,
+          memberId: member1.id,
+          raw,
+        });
+        const tmpOrder2 = await makeTmpOrder(em, {
+          productId: product.id,
+          memberId: member2.id,
+          raw,
+        });
+        const tmpOrder3 = await makeTmpOrder(em, {
+          productId: product.id,
+          memberId: member3.id,
+          raw,
+        });
+
+        const paymentId1 = orderNumberParser.encode(
+          [tmpOrder1.id],
+          tmpOrder1.createdAt
+        );
+        const paymentId2 = orderNumberParser.encode(
+          [tmpOrder2.id],
+          tmpOrder2.createdAt
+        );
+        const paymentId3 = orderNumberParser.encode(
+          [tmpOrder3.id],
+          tmpOrder3.createdAt
+        );
+
+        // When
+        const threeResults = await Promise.allSettled([
+          executeInIsolatedTransaction(svc =>
+            svc.handlePaymentComplete({
+              paymentId: paymentId1,
+              paymentToken: 'test-token-1',
+              transactionType: 'PAYMENT',
+              txId: 'test-tx-1',
+              memberId: member1.id,
+            })
+          ),
+          executeInIsolatedTransaction(svc =>
+            svc.handlePaymentComplete({
+              paymentId: paymentId2,
+              paymentToken: 'test-token-2',
+              transactionType: 'PAYMENT',
+              txId: 'test-tx-2',
+              memberId: member2.id,
+            })
+          ),
+          executeInIsolatedTransaction(svc =>
+            svc.handlePaymentComplete({
+              paymentId: paymentId3,
+              paymentToken: 'test-token-3',
+              transactionType: 'PAYMENT',
+              txId: 'test-tx-3',
+              memberId: member3.id,
+            })
+          ),
+        ]);
+
+        // Then
+        const fulfilled = threeResults.filter(r => r.status === 'fulfilled');
+        const rejected = threeResults.filter(r => r.status === 'rejected');
+        expect(fulfilled).toHaveLength(2);
+        expect(rejected).toHaveLength(1);
+
+        const updatedSku = await em.findOneBy(HotelSkuEntity, {
+          id: sku.id,
+        });
+        expect(updatedSku!.quantity).toBe(0);
+      });
+
+      it('should propagate error when cancelPayment fails during stock shortage', async () => {
+        // Given
+        // Note: This test runs independently from the beforeEach above.
+        await truncateAllTables(dataSource.manager);
+        clearPortoneMocks();
+        setupPortoneMocks();
+
+        const em = dataSource.manager;
+        const brand = await makeBrand(em);
+        const product = await makeHotelProduct(em, { brandId: brand.id });
+        const option = await makeHotelOption(em, {
+          productId: product.id,
+          name: 'Standard Room',
+          priceByDate: { '2026-03-01': 100000 },
+        });
+        await makeHotelSku(em, {
+          productId: product.id,
+          date: '2026-03-01',
+          quantity: 0,
+        });
+        const member = await makeMember(em);
+        const influencer = await makeInfluencer(em);
+        const campaign = await makeCampaign(em);
+
+        const tmpOrder = await makeTmpOrder(em, {
+          productId: product.id,
+          memberId: member.id,
+          raw: buildHotelTmpOrderRaw({
+            productId: product.id,
+            influencerId: influencer.id,
+            campaignId: campaign.id,
+            hotelOptionId: option.id,
+            hotelOptionName: option.name,
+          }),
+        });
+
+        const paymentId = orderNumberParser.encode(
+          [tmpOrder.id],
+          tmpOrder.createdAt
+        );
+
+        // Override cancel mock to throw an error
+        const postSpy = axios.post as jest.Mock;
+        const originalImpl = postSpy.getMockImplementation()!;
+        postSpy.mockImplementation(
+          async (url: string, data?: unknown, config?: unknown) => {
+            if (url.includes('/cancel')) {
+              throw {
+                response: {
+                  data: {
+                    type: 'CANCEL_FAILED',
+                    message: '취소 API 실패',
+                  },
+                },
+              };
+            }
+            return originalImpl(url, data, config);
+          }
+        );
+
+        // When & Then
+        // cancelPayment wraps the error in BadRequestException
+        await expect(
+          executeInIsolatedTransaction(svc =>
+            svc.handlePaymentComplete({
+              paymentId,
+              paymentToken: 'test-token',
+              transactionType: 'PAYMENT',
+              txId: 'test-tx-id',
+              memberId: member.id,
+            })
+          )
+        ).rejects.toThrow('취소 API 실패');
+      });
+    });
+
+    describe('엣지케이스', () => {
+      it('should fail entire payment when one date has no stock in multi-date order', async () => {
+        // Given - 2개 날짜 SKU: 3/1은 재고 1, 3/2는 재고 0
+        const em = dataSource.manager;
+        const brand = await makeBrand(em);
+        const product = await makeHotelProduct(em, { brandId: brand.id });
+        const option = await makeHotelOption(em, {
+          productId: product.id,
+          name: 'Standard Room',
+          priceByDate: { '2026-03-01': 100000, '2026-03-02': 100000 },
+        });
+        const sku1 = await makeHotelSku(em, {
+          productId: product.id,
+          date: '2026-03-01',
+          quantity: 1,
+        });
+        await makeHotelSku(em, {
+          productId: product.id,
+          date: '2026-03-02',
+          quantity: 0,
+        });
+        const member = await makeMember(em);
+        const influencer = await makeInfluencer(em);
+        const campaign = await makeCampaign(em);
+
+        const tmpOrder = await makeTmpOrder(em, {
+          productId: product.id,
+          memberId: member.id,
+          raw: buildHotelTmpOrderRaw({
+            productId: product.id,
+            influencerId: influencer.id,
+            campaignId: campaign.id,
+            hotelOptionId: option.id,
+            hotelOptionName: option.name,
+            checkInDate: '2026-03-01',
+            checkOutDate: '2026-03-03',
+            priceByDate: { '2026-03-01': 100000, '2026-03-02': 100000 },
+            totalAmount: 200000,
+          }),
+        });
+
+        const paymentId = orderNumberParser.encode(
+          [tmpOrder.id],
+          tmpOrder.createdAt
+        );
+
+        // When & Then
+        await expect(
+          executeInIsolatedTransaction(svc =>
+            svc.handlePaymentComplete({
+              paymentId,
+              paymentToken: 'test-token',
+              transactionType: 'PAYMENT',
+              txId: 'test-tx-id',
+              memberId: member.id,
+            })
+          )
+        ).rejects.toThrow('재고 부족');
+
+        // Then - 결제 취소 API 호출됨
+        const cancelCalls = (axios.post as jest.Mock).mock.calls.filter(
+          ([url]: [string]) => url.includes('/cancel')
+        );
+        expect(cancelCalls).toHaveLength(1);
+
+        // Then - quantity=1인 SKU는 차감되지 않음 (트랜잭션 롤백)
+        const unchangedSku = await em.findOneBy(HotelSkuEntity, {
+          id: sku1.id,
+        });
+        expect(unchangedSku!.quantity).toBe(1);
+
+        // Then - Order 생성되지 않음
+        const orders = await em.find(OrderEntity);
+        expect(orders).toHaveLength(0);
+      });
+
+      it('should throw error when SKU not found for given dates', async () => {
+        // Given - SKU가 존재하지 않는 날짜로 tmpOrder 생성
+        const em = dataSource.manager;
+        const brand = await makeBrand(em);
+        const product = await makeHotelProduct(em, { brandId: brand.id });
+        const option = await makeHotelOption(em, {
+          productId: product.id,
+          name: 'Standard Room',
+          priceByDate: { '2026-04-01': 100000 },
+        });
+        // SKU는 3/1에만 생성, 하지만 주문은 4/1로
+        await makeHotelSku(em, {
+          productId: product.id,
+          date: '2026-03-01',
+          quantity: 5,
+        });
+        const member = await makeMember(em);
+        const influencer = await makeInfluencer(em);
+        const campaign = await makeCampaign(em);
+
+        const tmpOrder = await makeTmpOrder(em, {
+          productId: product.id,
+          memberId: member.id,
+          raw: buildHotelTmpOrderRaw({
+            productId: product.id,
+            influencerId: influencer.id,
+            campaignId: campaign.id,
+            hotelOptionId: option.id,
+            hotelOptionName: option.name,
+            checkInDate: '2026-04-01',
+            checkOutDate: '2026-04-02',
+            priceByDate: { '2026-04-01': 100000 },
+          }),
+        });
+
+        const paymentId = orderNumberParser.encode(
+          [tmpOrder.id],
+          tmpOrder.createdAt
+        );
+
+        // When & Then
+        await expect(
+          executeInIsolatedTransaction(svc =>
+            svc.handlePaymentComplete({
+              paymentId,
+              paymentToken: 'test-token',
+              transactionType: 'PAYMENT',
+              txId: 'test-tx-id',
+              memberId: member.id,
+            })
+          )
+        ).rejects.toThrow('SKU not found: expected 1 SKUs but found 0');
+
+        // Then - 결제 취소 API 호출됨
+        const cancelCalls = (axios.post as jest.Mock).mock.calls.filter(
+          ([url]: [string]) => url.includes('/cancel')
+        );
+        expect(cancelCalls).toHaveLength(1);
+      });
+
+      it('should acquire locks in consistent order for multi-date orders', async () => {
+        // Given - 3개 날짜 SKU 생성 (재고 충분)
+        const em = dataSource.manager;
+        const brand = await makeBrand(em);
+        const product = await makeHotelProduct(em, { brandId: brand.id });
+        const option = await makeHotelOption(em, {
+          productId: product.id,
+          name: 'Standard Room',
+          priceByDate: {
+            '2026-03-01': 100000,
+            '2026-03-02': 100000,
+            '2026-03-03': 100000,
+          },
+        });
+        const sku1 = await makeHotelSku(em, {
+          productId: product.id,
+          date: '2026-03-01',
+          quantity: 5,
+        });
+        const sku2 = await makeHotelSku(em, {
+          productId: product.id,
+          date: '2026-03-02',
+          quantity: 5,
+        });
+        const sku3 = await makeHotelSku(em, {
+          productId: product.id,
+          date: '2026-03-03',
+          quantity: 5,
+        });
+        const member = await makeMember(em);
+        const influencer = await makeInfluencer(em);
+        const campaign = await makeCampaign(em);
+
+        const tmpOrder = await makeTmpOrder(em, {
+          productId: product.id,
+          memberId: member.id,
+          raw: buildHotelTmpOrderRaw({
+            productId: product.id,
+            influencerId: influencer.id,
+            campaignId: campaign.id,
+            hotelOptionId: option.id,
+            hotelOptionName: option.name,
+            checkInDate: '2026-03-01',
+            checkOutDate: '2026-03-04',
+            priceByDate: {
+              '2026-03-01': 100000,
+              '2026-03-02': 100000,
+              '2026-03-03': 100000,
+            },
+            totalAmount: 300000,
+          }),
+        });
+
+        const paymentId = orderNumberParser.encode(
+          [tmpOrder.id],
+          tmpOrder.createdAt
+        );
+
+        // When
+        await executeInIsolatedTransaction(svc =>
           svc.handlePaymentComplete({
-            paymentId: paymentId1,
-            paymentToken: 'test-token-1',
+            paymentId,
+            paymentToken: 'test-token',
             transactionType: 'PAYMENT',
-            txId: 'test-tx-1',
-            memberId: member1.id,
+            txId: 'test-tx-id',
+            memberId: member.id,
           })
-        ),
-        executeInIsolatedTransaction(svc =>
-          svc.handlePaymentComplete({
-            paymentId: paymentId2,
-            paymentToken: 'test-token-2',
-            transactionType: 'PAYMENT',
-            txId: 'test-tx-2',
-            memberId: member2.id,
-          })
-        ),
-      ]);
-    });
+        );
 
-    it('재고 1개, 2명 동시 결제 → 1명 성공, 1명 결제 취소', async () => {
-      const fulfilled = results.filter(r => r.status === 'fulfilled');
-      const rejected = results.filter(r => r.status === 'rejected');
-      expect(fulfilled).toHaveLength(1);
-      expect(rejected).toHaveLength(1);
-
-      // Assert: 재고가 정확히 0 (마이너스가 아님)
-      const updatedSku = await dataSource.manager.findOneBy(HotelSkuEntity, {
-        id: skuId,
-      });
-      expect(updatedSku!.quantity).toBe(0);
-    });
-
-    it('결제 취소 시 PortOne cancel API 호출됨', () => {
-      const cancelCalls = (axios.post as jest.Mock).mock.calls.filter(
-        ([url]: [string]) => url.includes('/cancel')
-      );
-      expect(cancelCalls).toHaveLength(1);
-    });
-
-    it('취소된 주문은 Order가 생성되지 않거나 CANCELLED 상태', async () => {
-      const orders = await dataSource.manager.find(OrderEntity);
-      const paidOrders = orders.filter(o => o.status === 'PAID');
-      expect(paidOrders).toHaveLength(1);
-
-      const nonPaidOrders = orders.filter(o => o.status !== 'PAID');
-      nonPaidOrders.forEach(order => {
-        expect(order.status).toBe('CANCELLED');
+        // Then - 3개 날짜 모두 재고 차감됨
+        const updatedSku1 = await em.findOneBy(HotelSkuEntity, {
+          id: sku1.id,
+        });
+        const updatedSku2 = await em.findOneBy(HotelSkuEntity, {
+          id: sku2.id,
+        });
+        const updatedSku3 = await em.findOneBy(HotelSkuEntity, {
+          id: sku3.id,
+        });
+        expect(updatedSku1!.quantity).toBe(4);
+        expect(updatedSku2!.quantity).toBe(4);
+        expect(updatedSku3!.quantity).toBe(4);
       });
     });
   });
 
   describe('재고 공유 조건', () => {
-    it('같은 날짜, 같은 room, 같은 옵션 → 재고 공유 (1명 성공, 1명 실패)', async () => {
-      // Given: product1에 option1, sku(date=2026-03-01, qty=1)
+    it('should share stock when same date, same room, same option', async () => {
+      // Given
       const em = dataSource.manager;
       const brand = await makeBrand(em);
       const product = await makeHotelProduct(em, { brandId: brand.id });
@@ -346,7 +757,7 @@ describe('ShopPaymentService - 재고 동시성 (Integration)', () => {
         tmpOrder2.createdAt
       );
 
-      // When: option1으로 2명이 동시 결제
+      // When
       const [result1, result2] = await Promise.allSettled([
         executeInIsolatedTransaction(svc =>
           svc.handlePaymentComplete({
@@ -368,7 +779,7 @@ describe('ShopPaymentService - 재고 동시성 (Integration)', () => {
         ),
       ]);
 
-      // Then: 1명 성공, 1명 실패 (같은 sku를 공유하므로)
+      // Then
       const fulfilled = [result1, result2].filter(
         r => r.status === 'fulfilled'
       );
@@ -377,8 +788,8 @@ describe('ShopPaymentService - 재고 동시성 (Integration)', () => {
       expect(rejected).toHaveLength(1);
     });
 
-    it('같은 날짜, 같은 room, 다른 옵션 → 재고 공유 (1명 성공, 1명 실패)', async () => {
-      // Given: product1에 option1, option2, sku(date=2026-03-01, qty=1)
+    it('should share stock when same date, same room, different option', async () => {
+      // Given
       const em = dataSource.manager;
       const brand = await makeBrand(em);
       const product = await makeHotelProduct(em, { brandId: brand.id });
@@ -439,7 +850,7 @@ describe('ShopPaymentService - 재고 동시성 (Integration)', () => {
         tmpOrder2.createdAt
       );
 
-      // When: option1로 1명, option2로 1명 동시 결제
+      // When
       const [result1, result2] = await Promise.allSettled([
         executeInIsolatedTransaction(svc =>
           svc.handlePaymentComplete({
@@ -461,7 +872,7 @@ describe('ShopPaymentService - 재고 동시성 (Integration)', () => {
         ),
       ]);
 
-      // Then: 1명 성공, 1명 실패 (같은 productId+date이므로 같은 sku 공유)
+      // Then
       const fulfilled = [result1, result2].filter(
         r => r.status === 'fulfilled'
       );
@@ -470,8 +881,8 @@ describe('ShopPaymentService - 재고 동시성 (Integration)', () => {
       expect(rejected).toHaveLength(1);
     });
 
-    it('다른 날짜, 같은 room, 같은 옵션 → 재고 비공유 (둘 다 성공)', async () => {
-      // Given: product1에 option1, sku(3/1, qty=1), sku(3/2, qty=1)
+    it('should not share stock when different date, same room, same option', async () => {
+      // Given
       const em = dataSource.manager;
       const brand = await makeBrand(em);
       const product = await makeHotelProduct(em, { brandId: brand.id });
@@ -537,7 +948,7 @@ describe('ShopPaymentService - 재고 동시성 (Integration)', () => {
         tmpOrder2.createdAt
       );
 
-      // When: 3/1로 1명, 3/2로 1명 동시 결제
+      // When
       const [result1, result2] = await Promise.allSettled([
         executeInIsolatedTransaction(svc =>
           svc.handlePaymentComplete({
@@ -559,13 +970,13 @@ describe('ShopPaymentService - 재고 동시성 (Integration)', () => {
         ),
       ]);
 
-      // Then: 둘 다 성공 (날짜별 별도 sku이므로 동시 결제에도 비공유)
+      // Then
       expect(result1.status).toBe('fulfilled');
       expect(result2.status).toBe('fulfilled');
     });
 
-    it('같은 날짜, 다른 room, 같은 옵션명 → 재고 비공유 (둘 다 성공)', async () => {
-      // Given: product1 sku(3/1, qty=1), product2 sku(3/1, qty=1)
+    it('should not share stock when same date, different room, same option name', async () => {
+      // Given
       const em = dataSource.manager;
       const brand = await makeBrand(em);
       const product1 = await makeHotelProduct(em, { brandId: brand.id });
@@ -631,7 +1042,7 @@ describe('ShopPaymentService - 재고 동시성 (Integration)', () => {
         tmpOrder2.createdAt
       );
 
-      // When: product1로 1명, product2로 1명 동시 결제
+      // When
       const [result1, result2] = await Promise.allSettled([
         executeInIsolatedTransaction(svc =>
           svc.handlePaymentComplete({
@@ -653,7 +1064,7 @@ describe('ShopPaymentService - 재고 동시성 (Integration)', () => {
         ),
       ]);
 
-      // Then: 둘 다 성공 (다른 productId이므로 별도 sku, 동시 결제에도 비공유)
+      // Then
       expect(result1.status).toBe('fulfilled');
       expect(result2.status).toBe('fulfilled');
     });
