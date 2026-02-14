@@ -337,6 +337,7 @@ export function openCommissionExcelModal(
 const Container = tw.div`
   w-[800px]
   max-h-[90vh]
+  overflow-y-auto
   p-5
   bg-[var(--bg-layer)]
   rounded-[20px]

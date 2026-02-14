@@ -602,6 +602,8 @@ export function openInfluencerSalesSettingModal(
 
 const Container = tw.div`
   w-[640px]
+  max-h-[90vh]
+  overflow-y-auto
   p-5
   bg-[var(--bg-layer)]
   rounded-[20px]
