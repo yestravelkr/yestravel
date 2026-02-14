@@ -22,7 +22,7 @@
             "command": ".claude/hooks/workflow-enforced.sh"
           }
         ]
-      },
+      }
     ],
     "SubagentStart": [
       {
