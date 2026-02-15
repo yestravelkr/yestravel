@@ -87,6 +87,9 @@ module.exports = {
     s3: {
       bucket: 'yestravel-assets',
     },
+    cdn: {
+      baseUrl: 'https://cdn.yestravel.kr',
+    },
   },
   portone: {
     apiSecret: process.env.PORTONE_SECRET,

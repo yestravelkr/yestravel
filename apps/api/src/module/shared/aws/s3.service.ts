@@ -40,6 +40,7 @@ export class S3Service {
   private s3Client: S3Client;
   private readonly bucket: string;
   private readonly region: string;
+  private readonly cdnBaseUrl: string;
 
   constructor() {
     if (!ConfigProvider.aws) {
@@ -48,6 +49,7 @@ export class S3Service {
 
     this.region = ConfigProvider.aws.region;
     this.bucket = ConfigProvider.aws.s3.bucket;
+    this.cdnBaseUrl = ConfigProvider.aws.cdn.baseUrl;
 
     this.s3Client = new S3Client({
       region: this.region,
@@ -94,7 +96,7 @@ export class S3Service {
         expiresIn,
       });
 
-      const fileUrl = `https://${this.bucket}.s3.${this.region}.amazonaws.com/${key}`;
+      const fileUrl = `${this.cdnBaseUrl}/${key}`;
 
       return {
         uploadUrl,
@@ -126,7 +128,7 @@ export class S3Service {
   }
 
   getFileUrl(fileKey: string): string {
-    return `https://${this.bucket}.s3.${this.region}.amazonaws.com/${fileKey}`;
+    return `${this.cdnBaseUrl}/${fileKey}`;
   }
 
   /**
@@ -151,7 +153,7 @@ export class S3Service {
 
       await this.s3Client.send(command);
 
-      const fileUrl = `https://${this.bucket}.s3.${this.region}.amazonaws.com/${key}`;
+      const fileUrl = `${this.cdnBaseUrl}/${key}`;
 
       return {
         fileUrl,

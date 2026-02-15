@@ -1,85 +1,32 @@
 ---
 name: Backend
-description: YesTravel 백엔드 개발 스킬. Hybrid tRPC + NestJS 마이크로서비스 아키텍처, Repository 패턴, TypeORM, Migration.
-keywords: [백엔드, API, Router, Controller, Service, Repository, Migration, Entity, tRPC, NestJS, TypeORM, Zod, DTO]
-estimated_tokens: ~600
+description: NestJS/TypeORM 백엔드 개발 시 사용. 레이어 객체 변환, find vs queryBuilder 선택 기준, BDD 테스트 작성 규칙 제공.
+keywords: [Backend, 백엔드, 레이어, DTO, Entity, Service, Controller, TypeORM, find, queryBuilder, test, BDD, 테스트, Jest]
+estimated_tokens: ~400
 ---
 
-# 백엔드 개발 스킬
+# 백엔드 개발 원칙
 
-## 핵심 역할
+<rules>
 
-- **Hybrid tRPC + NestJS** 마이크로서비스 아키텍처
-- **PostgreSQL + TypeORM** 데이터베이스 설계 및 마이그레이션
-- **Repository 패턴** 및 트랜잭션 관리
-- **Zod 스키마** 기반 타입 안전성 보장
-
-## 통신 흐름
-
-```
-클라이언트 → tRPC Router → MicroserviceClient → EventBus → NestJS Controller → Service
-```
-
-## 이 스킬이 필요할 때
-
-- 새 모듈/API 생성
-- tRPC Router 작성
-- NestJS Controller/Service 작성
-- Repository 패턴 적용
-- DB Migration 작성
-- Entity 상속 구조 설계
-
-## 관련 문서
-
-| 주제 | 위치 |
-|-----|------|
-| 모듈 생성 순서 | `module-creation.md` |
-| Router/Controller | `trpc-nestjs.md` |
-| Schema/DTO 패턴 | `schema-dto.md` |
-| Repository 패턴 | `repository.md` |
-| Entity 상속 (STI) | `entity-inheritance.md` |
-| Migration | `migration.md` |
-| 로컬 DB 접근/디버깅 | `database.md` |
-
-## 새 모듈 생성 순서
-
-1. Schema 정의 (`module.schema.ts`)
-2. DTO 정의 (`module.dto.ts`)
-3. Entity 생성 (`domain/module.entity.ts`)
-4. Repository 등록 (getModuleRepository + RepositoryProvider)
-5. Service 구현 (`module.service.ts`)
-6. Controller 작성 (`module.controller.ts` + @Transactional)
-7. Router 정의 (`module.router.ts`)
-8. Module 설정 (`module.module.ts`)
-9. Migration 작성 (`yarn migration:create`)
-10. Migration 실행 (`yarn migration:run`)
-11. Lint 실행 (`cd apps/api && yarn lint`)
-
-## 설계 원칙
-
-> **참조**: `.claude/skills/Coding/SKILL.md` - SRP, 결합도, 응집도 공통 원칙
-
-### 백엔드 특화 규칙
-
-| 규칙 | 설명 |
-|------|------|
-| **모듈 간 통신** | Service 직접 주입 대신 MicroserviceClient 사용 |
-| **Repository 주입** | 구체 클래스 대신 `getXxxRepository` 토큰 사용 |
-
-### 레이어 간 객체 변환 규칙
+## 레이어 간 객체 변환 규칙
 
 > **객체 변환은 필요한 시점에 해당 레이어에서 수행한다.**
 
-#### 핵심 원칙
+### 핵심 원칙
 
 | 레이어 | 입력 | 출력 | 변환 책임 |
 |--------|------|------|----------|
-| **Controller** | Request DTO | Response DTO/Schema | Entity → Response 변환 |
-| **Service** | DTO (그대로 사용) | Entity 또는 일반 객체 | DTO → Entity 변환 (필요시) |
+| **Controller** | Request DTO | Response DTO/Schema | Entity -> Response 변환 |
+| **Service** | DTO (그대로 사용) | Entity 또는 일반 객체 | DTO -> Entity 변환 (필요시) |
 | **Repository** | Entity | Entity | 없음 |
 
-#### Controller → Service 호출
+</rules>
 
+### Controller -> Service 호출
+
+<examples>
+<example type="bad">
 ```typescript
 // ❌ Controller에서 미리 Entity로 변환
 @Post()
@@ -89,15 +36,20 @@ async create(@Body() dto: CreateUserDto) {
   entity.email = dto.email;
   return this.userService.create(entity);  // Entity 전달
 }
-
+```
+</example>
+<example type="good">
+```typescript
 // ✅ DTO 그대로 전달
 @Post()
 async create(@Body() dto: CreateUserDto) {
   return this.userService.create(dto);  // DTO 전달
 }
 ```
+</example>
+</examples>
 
-#### Service 내부 처리
+### Service 내부 처리
 
 ```typescript
 // ✅ Service에서 DTO로 사용하다가 필요한 시점에 Entity로 변환
@@ -114,80 +66,49 @@ async create(dto: CreateUserDto) {
 }
 ```
 
-#### Service → Controller 반환
-
-**반환 규칙:**
-
-| 규칙 | 설명 |
-|------|------|
-| **Service 반환 타입** | 항상 Entity 또는 Entity를 포함한 일반 객체 |
-| **Service에서 금지** | Entity → DTO/Interface 변환 금지 (map() 사용 금지) |
-| **Controller 역할** | Entity → Response DTO 변환 담당 |
+### Service -> Controller 반환
 
 ```typescript
-// ❌ Service에서 DTO로 변환 (금지)
-async findAll(): Promise<UserListResponse> {
-  const users = await this.userRepository.find();
-  return {
-    data: users.map(u => ({
-      id: u.id,
-      name: u.name,
-      email: u.email,
-    })),
-  };
+// ✅ Service: Entity 또는 일반 객체 반환
+async findById(id: number): Promise<User> {
+  return this.userRepository.findOneBy({ id });
 }
 
-// ✅ Service: Entity 그대로 반환
-async findAll(): Promise<{ data: UserEntity[]; total: number }> {
-  const [data, total] = await this.userRepository.findAndCount();
-  return { data, total };
-}
-
-// ✅ Service: Entity + 추가 데이터 복합 반환
 async findWithStats(id: number): Promise<{ user: User; orderCount: number }> {
   const user = await this.userRepository.findOneBy({ id });
   const orderCount = await this.orderRepository.countBy({ userId: id });
   return { user, orderCount };
 }
 
-// ✅ Controller: Entity → Response DTO 변환
-@MessagePattern('user.findAll')
-async findAll(input: FindAllInput): Promise<UserListResponse> {
-  const result = await this.userService.findAll(input);
-  return {
-    data: result.data.map(user => ({
-      id: user.id,
-      name: user.name,
-      email: user.email,
-    })),
-    total: result.total,
-  };
+// ✅ Controller: Response DTO/Schema로 변환
+@Get(':id')
+async findOne(@Param('id') id: number) {
+  const user = await this.userService.findById(id);
+  return UserResponseDto.from(user);  // Controller에서 변환
 }
 ```
 
-### TypeORM 쿼리 규칙
+---
 
-> **find 메서드를 기본으로 사용하고, QueryBuilder는 꼭 필요한 경우에만 사용한다.**
+<rules>
 
-| 규칙 | 설명 |
-|------|------|
-| **기본 조회** | `find`, `findOne`, `findAndCount` 사용 |
-| **QueryBuilder** | `find`로 불가능할 때만 사용 (GROUP BY, 복잡한 JOIN 등) |
-| **relations** | LEFT JOIN은 `relations` 옵션 사용 |
+## TypeORM 사용 규칙
 
-#### find 메서드 우선 사용
+> **find 메서드를 기본으로 사용하고, QueryBuilder는 필요한 경우에만 사용한다.**
+
+### find 메서드 우선 사용
 
 ```typescript
 // ✅ 기본 조회
 const user = await this.userRepository.findOneBy({ id });
-const orders = await repository.find({
-  where: { status: 'PAID', campaignId: In([1, 2, 3]) },
-  relations: ['product', 'campaign'],
+const users = await this.userRepository.find({
+  where: { status: 'active' },
+  relations: ['orders'],
   order: { createdAt: 'DESC' },
-  take: 50,
+  take: 10,
 });
 
-// ✅ OR 조건 조합 (where 배열)
+// ✅ 조건 조합
 const users = await this.userRepository.find({
   where: [
     { status: 'active', role: 'admin' },
@@ -196,7 +117,7 @@ const users = await this.userRepository.find({
 });
 ```
 
-#### QueryBuilder 허용 케이스
+### QueryBuilder 허용 케이스
 
 **다음 경우에만 QueryBuilder 사용:**
 
@@ -207,129 +128,59 @@ const users = await this.userRepository.find({
 | **복잡한 서브쿼리** | 중첩 쿼리 |
 | **복잡한 JOIN 조건** | ON 절 커스텀 |
 
+</rules>
+
+<examples>
+<example type="good">
 ```typescript
 // ✅ QueryBuilder 허용: groupBy + getRawMany
-const counts = await repository.createQueryBuilder('ord')
-  .select('ord.status', 'status')
+const stats = await this.orderRepository
+  .createQueryBuilder('order')
+  .select('order.status', 'status')
   .addSelect('COUNT(*)', 'count')
-  .addSelect('SUM(ord.amount)', 'total')
-  .groupBy('ord.status')
+  .addSelect('SUM(order.amount)', 'total')
+  .groupBy('order.status')
   .getRawMany();
-
-// ❌ 단순 조회에 QueryBuilder 사용 금지
-const orders = await repository.createQueryBuilder('order')
-  .where('order.status = :status', { status: 'PAID' })
-  .getMany();
-
+```
+</example>
+<example type="bad">
+```typescript
+// ❌ 불필요한 QueryBuilder 사용
+const user = await this.userRepository
+  .createQueryBuilder('user')
+  .where('user.id = :id', { id })
+  .getOne();
+```
+</example>
+<example type="good">
+```typescript
 // ✅ find로 대체
-const orders = await repository.find({
-  where: { status: 'PAID' },
-});
+const user = await this.userRepository.findOneBy({ id });
 ```
+</example>
+</examples>
 
-### 트랜잭션 규칙
+---
 
-| 규칙 | 설명 |
-|------|------|
-| **@Transactional 위치** | Mutation(CUD) Controller 메서드에만 적용 |
-| **Query 메서드** | @Transactional 불필요 (읽기 전용) |
-| **트랜잭션 범위** | 하나의 API 요청 = 하나의 트랜잭션 |
+<checklist>
 
-```typescript
-@Controller()
-export class OrderController {
-  constructor(private readonly transactionService: TransactionService) {}
+## 체크리스트
 
-  // ✅ Mutation: @Transactional 필요
-  @Transactional()
-  @MessagePattern('order.create')
-  async create(data: CreateOrderInput) { ... }
-
-  @Transactional()
-  @MessagePattern('order.update')
-  async update(data: UpdateOrderInput) { ... }
-
-  // ✅ Query: @Transactional 불필요
-  @MessagePattern('order.findAll')
-  async findAll(data: FindAllOrdersInput) { ... }
-
-  @MessagePattern('order.getById')
-  async getById(data: { id: number }) { ... }
-}
-```
-
-### 유틸리티 타입
-
-| 타입 | 위치 | 사용 |
-|------|------|------|
-| `Nullish<T>` | `@src/types/utility.type` | `T \| null \| undefined` 대체 |
-
-```typescript
-// ✅ Nullish 사용
-import type { Nullish } from '@src/types/utility.type';
-
-interface OrderInput {
-  status: Nullish<string>;
-  campaignId: Nullish<number>;
-}
-
-// ❌ 직접 union 타입 사용 금지
-interface OrderInput {
-  status: string | null | undefined;
-  campaignId: number | null | undefined;
-}
-```
-
-## 필수 준수 사항 (요약)
-
-| 규칙 | 설명 |
-|-----|------|
-| DTO 분리 | Service 내 interface 금지, `*.dto.ts` 분리 |
-| Entity 위치 | `apps/api/src/module/backoffice/domain/` |
-| Service 반환 | Entity 그대로 반환, Controller에서 DTO 변환 |
-| Repository | `TypeOrmModule.forFeature()` 금지, `RepositoryProvider` 사용 |
-| 트랜잭션 | Mutation에 `@Transactional`, Controller에 `TransactionService` 주입 |
-| Router | Module providers에 추가 금지 (자동 발견) |
-| Import | `import type` 사용, tRPC는 `'nestjs-trpc'`에서 import |
-| 조회 | `findOneOrFail().catch()` 패턴 사용 |
-| Nullish 타입 | `\| null \| undefined` 대신 `Nullish<T>` 사용 |
-
-## 필수 체크리스트
-
-- [ ] Controller에서 Entity로 변환하지 않고 DTO를 그대로 Service에 전달하는가?
-- [ ] Service에서 DTO를 사용하다가 Entity가 필요한 시점에 변환하는가?
-- [ ] Service 메서드가 Entity를 직접 반환하는가? (DTO/Interface 변환 금지)
-- [ ] Entity → Response DTO 변환이 Controller에서 수행되는가?
-- [ ] DTO가 `*.dto.ts` 파일로 분리되었는가?
-- [ ] Entity가 `domain/`에 생성되었는가?
-- [ ] Repository가 RepositoryProvider에 등록되었는가?
-- [ ] Controller에 TransactionService가 주입되었는가?
-- [ ] Mutation에만 @Transactional이 적용되었는가? (Query 제외)
-- [ ] 단순 조회에 `find`를 사용했는가? (QueryBuilder 최소화)
-- [ ] OR 조건 조합은 `where` 배열을 사용했는가?
+- [ ] Controller에서 DTO를 그대로 Service에 전달하는가? (Entity 변환은 Service에서)
+- [ ] Service에서 Entity가 필요한 시점에 변환하는가?
+- [ ] Service의 return은 Entity 또는 일반 객체인가?
+- [ ] Controller에서 Response DTO/Schema로 변환하는가?
+- [ ] TypeORM find 메서드를 우선 사용하는가?
 - [ ] QueryBuilder는 groupBy, getRawMany 등 필요한 경우에만 사용하는가?
-- [ ] `| null | undefined` 대신 `Nullish<T>`를 사용했는가?
-- [ ] Router가 Module providers에 없는가?
-- [ ] `import type`을 사용했는가?
-- [ ] `findOneOrFail`을 사용했는가?
-- [ ] Migration을 작성하고 실행했는가?
-- [ ] `yarn lint` 실행했는가?
 
-## 주요 명령어
+</checklist>
 
-```bash
-cd apps/api && yarn dev          # 개발 서버
-cd apps/api && yarn lint         # Lint
-yarn migration:create src/migration/Name  # Migration 생성
-yarn migration:run               # Migration 실행
-yarn migration:revert            # Migration 되돌리기
-yarn generateEnv                 # 환경 변수 생성
-```
+<reference>
 
-## 참고 파일
+## 관련 문서
 
-- Router: `apps/api/src/module/shop/order/shop.order.router.ts`
-- Controller: `apps/api/src/module/shop/order/shop.order.controller.ts`
-- Service: `apps/api/src/module/shop/order/shop.order.service.ts`
-- RepositoryProvider: `apps/api/src/module/shared/transaction/repository.provider.ts`
-- Utility Types: `apps/api/src/types/utility.type.ts`
+| 주제 | 위치 | 설명 |
+|-----|------|------|
+| BDD 테스트 | `bdd-testing.md` | NestJS + Jest BDD 스타일 테스트 작성 규칙 |
+
+</reference>
