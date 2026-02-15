@@ -15,11 +15,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": ".claude/hooks/skill-forced.sh"
+            "command": ".claude/hooks/workflow-enforced.sh"
           },
           {
             "type": "command",
-            "command": ".claude/hooks/workflow-enforced.sh"
+            "command": ".claude/hooks/skill-forced.sh"
           }
         ]
       }
