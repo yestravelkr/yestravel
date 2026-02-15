@@ -8,7 +8,8 @@
       ],
       "@yestravelkr/option-selector/*": [
         "../../../packages/option-selector/src/*"
-      ]
+      ],
+      "@test-utils/*": ["./tests/test-utils/*"]
     },
   }
 }

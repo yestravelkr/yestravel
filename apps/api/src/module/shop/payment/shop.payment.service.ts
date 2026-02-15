@@ -4,6 +4,7 @@ import {
   BadRequestException,
   NotFoundException,
 } from '@nestjs/common';
+import { In } from 'typeorm';
 import axios from 'axios';
 import { ConfigProvider } from '@src/config';
 import { RepositoryProvider } from '@src/module/shared/transaction/repository.provider';
@@ -65,17 +66,34 @@ export class ShopPaymentService {
       );
     }
 
-    // 2. Order Entity 생성 (tmpOrder.id를 전달하여 재사용)
+    // 2. 호텔 상품: 재고 차감 (Pessimistic Lock)
+    if (tmpOrder.type === ProductTypeEnum.HOTEL) {
+      const dates = Object.keys(
+        (
+          tmpOrder.raw.orderOptionSnapshot as {
+            priceByDate: Record<string, number>;
+          }
+        ).priceByDate
+      );
+      try {
+        await this.deductHotelSkuQuantity(tmpOrder.raw.productId, dates);
+      } catch (error) {
+        await this.cancelPayment(paymentId, '재고 부족');
+        throw error;
+      }
+    }
+
+    // 3. Order Entity 생성 (tmpOrder.id를 전달하여 재사용)
     const order = this.createOrderFromTmpOrder(tmpOrder, memberId, tmpOrder.id);
 
     // order.id는 이미 from() 메서드에서 설정됨
     order.status = OrderStatusEnum.PAID;
 
-    // 3. Order 저장
+    // 4. Order 저장
     const savedOrder =
       await this.repositoryProvider.OrderRepository.save(order);
 
-    // 4. TmpOrder 삭제 (더 이상 필요 없음)
+    // 5. TmpOrder 삭제 (더 이상 필요 없음)
     await this.repositoryProvider.TmpOrderRepository.delete({
       id: tmpOrder.id,
     });
@@ -84,7 +102,7 @@ export class ShopPaymentService {
       `Order created with tmpOrder.id: id=${savedOrder.id}, orderNumber=${savedOrder.orderNumber}`
     );
 
-    // 5. PortOne 결제 승인
+    // 6. PortOne 결제 승인
     await this.confirmPayment(data, savedOrder);
 
     return {
@@ -92,6 +110,37 @@ export class ShopPaymentService {
       message: 'Payment completed and order created',
       orderNumber: savedOrder.orderNumber,
     };
+  }
+
+  /**
+   * 호텔 SKU 재고 차감 (SELECT FOR UPDATE)
+   */
+  private async deductHotelSkuQuantity(
+    productId: number,
+    dates: string[]
+  ): Promise<void> {
+    const skus = await this.repositoryProvider.HotelSkuRepository.find({
+      where: { productId, date: In(dates) },
+      lock: { mode: 'pessimistic_write' },
+      order: { date: 'ASC' },
+    });
+
+    if (skus.length !== dates.length) {
+      throw new Error(
+        `SKU not found: expected ${dates.length} SKUs but found ${skus.length}`
+      );
+    }
+
+    for (const sku of skus) {
+      if (sku.quantity <= 0) {
+        throw new Error('재고 부족');
+      }
+    }
+
+    for (const sku of skus) {
+      sku.quantity -= 1;
+    }
+    await this.repositoryProvider.HotelSkuRepository.save(skus);
   }
 
   /**
@@ -311,5 +360,4 @@ export class ShopPaymentService {
       );
     }
   }
-
 }

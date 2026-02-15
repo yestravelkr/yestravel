@@ -18,7 +18,7 @@ export async function getTestDataSource(): Promise<DataSource> {
     namingStrategy: new SnakeNamingStrategy(),
     synchronize: false,
     logging: false,
-    entities: [__dirname + '/../module/**/*.entity.ts'],
+    entities: [__dirname + '/../../src/module/**/*.entity.ts'],
   });
 
   await testDataSource.initialize();
