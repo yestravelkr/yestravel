@@ -160,18 +160,12 @@ graph LR
 Generated with [Claude Code](https://claude.ai/code)
 ```
 
-### PR 제목 규칙
-
-- PREFIX 사용하지 않음 (커밋 메시지와 다름)
-- 변경 내용을 간결하게 요약
-- 예: `Shop refreshToken 자동 갱신 버그 수정`, `S3 파일 URL을 CDN URL로 변경`
-
 ### Step 5: PR 생성
 
 ```bash
 git push -u origin feature/branch-name
 
-gh pr create --base main --title "<간결한 제목 (PREFIX 없이)>" --body "$(cat <<'EOF'
+gh pr create --base main --title "<PREFIX 없이 간결한 제목>" --body "$(cat <<'EOF'
 ## Summary
 ...
 EOF
