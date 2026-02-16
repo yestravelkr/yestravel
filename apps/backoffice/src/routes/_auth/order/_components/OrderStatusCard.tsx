@@ -4,8 +4,20 @@
  * 상태 정보, 주문 아이템 테이블, 액션 버튼 포함
  */
 
+import {
+  useFloating,
+  useClick,
+  useDismiss,
+  useInteractions,
+  offset,
+  flip,
+  shift,
+  autoUpdate,
+  FloatingPortal,
+} from '@floating-ui/react';
 import { Button } from '@yestravelkr/min-design-system';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Undo2, X } from 'lucide-react';
+import { useState } from 'react';
 import tw from 'tailwind-styled-components';
 
 /** 주문 아이템 타입 */
@@ -29,10 +41,12 @@ interface OrderStatusCardProps {
   items: OrderItem[];
   /** 취소 사유 (취소요청 상태일 때) */
   cancelReason?: string | null;
-  /** 예약확정 핸들러 */
+  /** 예약확정/주문확인 핸들러 */
   onConfirm?: () => void;
-  /** 주문관리 핸들러 */
-  onManage?: () => void;
+  /** 이전 상태로 되돌리기 핸들러 */
+  onRevertStatus?: () => void;
+  /** 주문 취소 핸들러 */
+  onCancelOrder?: () => void;
   /** 주문 히스토리 핸들러 */
   onHistory?: () => void;
   /** 취소승인 핸들러 */
@@ -64,12 +78,80 @@ export function OrderStatusCard({
   items,
   cancelReason,
   onConfirm,
-  onManage,
+  onRevertStatus,
+  onCancelOrder,
   onHistory,
   onCancelApprove,
   onCancelReject,
 }: OrderStatusCardProps) {
-  const isCancelRequested = status === 'CANCEL_REQUESTED';
+  const renderActions = () => {
+    switch (status) {
+      case 'PAID':
+        return (
+          <>
+            <Button
+              kind="neutral"
+              variant="solid"
+              size="large"
+              onClick={onConfirm}
+            >
+              주문확인
+            </Button>
+            <ManageDropdown
+              status={status}
+              onRevertStatus={onRevertStatus}
+              onCancelOrder={onCancelOrder}
+            />
+          </>
+        );
+      case 'PENDING_RESERVATION':
+        return (
+          <>
+            <Button
+              kind="neutral"
+              variant="solid"
+              size="large"
+              onClick={onConfirm}
+            >
+              예약확정
+            </Button>
+            <ManageDropdown
+              status={status}
+              onRevertStatus={onRevertStatus}
+              onCancelOrder={onCancelOrder}
+            />
+          </>
+        );
+      case 'RESERVATION_CONFIRMED':
+      case 'COMPLETED':
+        return (
+          <ManageDropdown
+            status={status}
+            onRevertStatus={onRevertStatus}
+            onCancelOrder={onCancelOrder}
+          />
+        );
+      case 'CANCEL_REQUESTED':
+        return (
+          <>
+            <Button
+              kind="neutral"
+              variant="solid"
+              size="large"
+              onClick={onCancelApprove}
+            >
+              취소승인
+            </Button>
+            <GrayButton onClick={onCancelReject}>취소거절</GrayButton>
+          </>
+        );
+      default:
+        return null;
+    }
+  };
+
+  const actions = renderActions();
+
   return (
     <Container>
       <ContentSection>
@@ -88,7 +170,7 @@ export function OrderStatusCard({
           </Button>
         </Header>
 
-        {isCancelRequested && cancelReason && (
+        {status === 'CANCEL_REQUESTED' && cancelReason && (
           <CancelReasonSection>
             <CancelReasonLabel>취소사유</CancelReasonLabel>
             <CancelReasonText>{cancelReason}</CancelReasonText>
@@ -118,36 +200,7 @@ export function OrderStatusCard({
           </TableBody>
         </ItemTable>
 
-        <Actions>
-          {isCancelRequested ? (
-            <>
-              <Button
-                kind="neutral"
-                variant="solid"
-                size="medium"
-                onClick={onCancelApprove}
-              >
-                취소승인
-              </Button>
-              <GrayButton onClick={onCancelReject}>취소거절</GrayButton>
-            </>
-          ) : (
-            <>
-              <Button
-                kind="neutral"
-                variant="solid"
-                size="medium"
-                onClick={onConfirm}
-              >
-                예약확정
-              </Button>
-              <ManageButton onClick={onManage}>
-                주문관리
-                <ChevronDown size={22} />
-              </ManageButton>
-            </>
-          )}
-        </Actions>
+        {actions && <Actions>{actions}</Actions>}
       </ContentSection>
     </Container>
   );
@@ -253,6 +306,91 @@ const Actions = tw.div`
   gap-2
 `;
 
+/** 주문관리 드롭다운 메뉴 */
+function ManageDropdown({
+  status,
+  onRevertStatus,
+  onCancelOrder,
+}: {
+  status: string;
+  onRevertStatus?: () => void;
+  onCancelOrder?: () => void;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const { refs, floatingStyles, context } = useFloating({
+    open: isOpen,
+    onOpenChange: setIsOpen,
+    middleware: [offset(8), flip(), shift({ padding: 8 })],
+    whileElementsMounted: autoUpdate,
+    placement: 'bottom-end',
+  });
+
+  const click = useClick(context);
+  const dismiss = useDismiss(context);
+  const { getReferenceProps, getFloatingProps } = useInteractions([
+    click,
+    dismiss,
+  ]);
+
+  const revertLabel =
+    status === 'PENDING_RESERVATION'
+      ? '결제 완료 상태로 변경'
+      : status === 'RESERVATION_CONFIRMED'
+        ? '예약 대기 상태로 변경'
+        : null;
+
+  return (
+    <>
+      <ManageButton
+        ref={refs.setReference}
+        type="button"
+        {...getReferenceProps()}
+      >
+        주문관리
+        <ChevronDown size={22} />
+      </ManageButton>
+
+      {isOpen && (
+        <FloatingPortal>
+          <DropdownMenu
+            ref={refs.setFloating}
+            style={floatingStyles}
+            {...getFloatingProps()}
+          >
+            {revertLabel && (
+              <>
+                <MenuItem
+                  type="button"
+                  onClick={() => {
+                    onRevertStatus?.();
+                    setIsOpen(false);
+                  }}
+                >
+                  <Undo2 size={16} />
+                  {revertLabel}
+                </MenuItem>
+                <MenuDivider />
+              </>
+            )}
+            <MenuItem
+              type="button"
+              $danger
+              onClick={() => {
+                onCancelOrder?.();
+                setIsOpen(false);
+              }}
+            >
+              <X size={16} />
+              주문 취소
+            </MenuItem>
+          </DropdownMenu>
+        </FloatingPortal>
+      )}
+    </>
+  );
+}
+
 const ManageButton = tw.button`
   flex
   items-center
@@ -286,6 +424,42 @@ const GrayButton = tw.button`
   leading-[22px]
   hover:bg-[var(--bg-neutral-subtle)]
   transition-colors
+`;
+
+const DropdownMenu = tw.div`
+  z-50
+  w-[240px]
+  p-2
+  bg-white
+  rounded-[20px]
+  shadow-[0px_8px_32px_0px_rgba(0,0,0,0.12),0px_0px_2px_0px_rgba(0,0,0,0.12)]
+`;
+
+const MenuItem = tw.button<{ $danger?: boolean }>`
+  flex
+  items-center
+  gap-2
+  w-full
+  h-9
+  px-3
+  rounded-xl
+  text-[15px]
+  leading-5
+  text-left
+  cursor-pointer
+  transition-colors
+  hover:bg-[var(--bg-neutral,#f4f4f5)]
+  ${({ $danger }) =>
+    $danger
+      ? 'text-[var(--fg-critical,#eb3d3d)]'
+      : 'text-[var(--fg-neutral,#18181b)]'}
+`;
+
+const MenuDivider = tw.div`
+  h-px
+  mx-2
+  my-1
+  bg-[var(--stroke-neutral-subtle,#e4e4e7)]
 `;
 
 const CancelReasonSection = tw.div`
