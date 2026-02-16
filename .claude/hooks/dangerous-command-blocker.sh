@@ -6,8 +6,10 @@
 
 # Dedup: project 우선, global은 project 버전 존재 시 양보
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCRIPT_DIR/_dedup.sh"
-_hook_dedup_check "${BASH_SOURCE[0]}" || exit 0
+if [ -f "$SCRIPT_DIR/_dedup.sh" ]; then
+  source "$SCRIPT_DIR/_dedup.sh"
+  _hook_dedup_check "${BASH_SOURCE[0]}" || exit 0
+fi
 
 INPUT=$(cat)
 
@@ -49,7 +51,7 @@ if echo "$COMMAND" | grep -qE '(^|;|\||&&)\s*sudo\s'; then
 fi
 
 # 3. git push --force / -f (강제 푸시)
-if echo "$COMMAND" | grep -qE 'git\s+push\s+.*(-f|--force)'; then
+if echo "$COMMAND" | grep -qE 'git\s+push\s+.*\s(-f|--force)(\s|$)'; then
   block "git push --force 는 원격 히스토리를 덮어씁니다. 이 명령어는 차단됩니다."
 fi
 

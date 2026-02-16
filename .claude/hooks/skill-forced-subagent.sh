@@ -7,11 +7,14 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CLAUDE_DIR="$(dirname "$SCRIPT_DIR")"
 GLOBAL_CLAUDE_DIR="$HOME/.claude"
-PROJECT_CLAUDE_DIR="$(pwd)/.claude"
+PROJECT_ROOT="$(git rev-parse --show-toplevel 2>/dev/null)"
+PROJECT_CLAUDE_DIR="${PROJECT_ROOT:-.}/.claude"
 
 # Dedup: project 우선, global은 project 버전 존재 시 양보
-source "$SCRIPT_DIR/_dedup.sh"
-_hook_dedup_check "${BASH_SOURCE[0]}" || exit 0
+if [ -f "$SCRIPT_DIR/_dedup.sh" ]; then
+  source "$SCRIPT_DIR/_dedup.sh"
+  _hook_dedup_check "${BASH_SOURCE[0]}" || exit 0
+fi
 
 echo "✅ [Hook] Subagent Skill 평가 프로토콜 실행됨"
 
