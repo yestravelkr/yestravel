@@ -207,8 +207,6 @@ export const revertStatusInputSchema = z.object({
 export const revertStatusResponseSchema = z.object({
   success: z.boolean(),
   orderId: z.number(),
-  previousStatus: orderStatusSchema,
-  revertedStatus: orderStatusSchema,
 });
 
 /**

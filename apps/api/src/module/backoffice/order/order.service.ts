@@ -499,8 +499,6 @@ export class OrderService {
     return {
       success: true,
       orderId: order.id,
-      previousStatus,
-      revertedStatus,
     };
   }
 
