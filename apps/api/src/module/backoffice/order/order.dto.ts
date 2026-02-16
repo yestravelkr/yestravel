@@ -13,6 +13,8 @@ import type {
   orderDetailResponseSchema,
   updateStatusInputSchema,
   updateStatusResponseSchema,
+  revertStatusInputSchema,
+  revertStatusResponseSchema,
   exportToExcelInputSchema,
   exportToExcelResponseSchema,
   cancelOrderInputSchema,
@@ -48,6 +50,10 @@ export type OrderDetailResponse = z.infer<typeof orderDetailResponseSchema>;
 export type UpdateStatusInput = z.infer<typeof updateStatusInputSchema>;
 
 export type UpdateStatusResponse = z.infer<typeof updateStatusResponseSchema>;
+
+export type RevertStatusInput = z.infer<typeof revertStatusInputSchema>;
+
+export type RevertStatusResponse = z.infer<typeof revertStatusResponseSchema>;
 
 export type ExportToExcelInput = z.infer<typeof exportToExcelInputSchema>;
 

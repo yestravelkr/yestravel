@@ -195,6 +195,23 @@ export const updateStatusResponseSchema = z.object({
 });
 
 /**
+ * 주문 상태 되돌리기 Input Schema
+ */
+export const revertStatusInputSchema = z.object({
+  orderId: z.number().int().positive(),
+});
+
+/**
+ * 주문 상태 되돌리기 Response Schema
+ */
+export const revertStatusResponseSchema = z.object({
+  success: z.boolean(),
+  orderId: z.number(),
+  previousStatus: orderStatusSchema,
+  revertedStatus: orderStatusSchema,
+});
+
+/**
  * 주문 상세 아이템 Schema (호텔 예약 정보)
  */
 export const orderDetailItemSchema = z.object({

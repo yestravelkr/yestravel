@@ -13,6 +13,8 @@ import type {
   OrderDetailResponse,
   UpdateStatusInput,
   UpdateStatusResponse,
+  RevertStatusInput,
+  RevertStatusResponse,
   ExportToExcelInput,
   ExportToExcelResponse,
   CancelOrderInput,
@@ -53,6 +55,12 @@ export class OrderController {
   @Transactional
   async updateStatus(input: UpdateStatusInput): Promise<UpdateStatusResponse> {
     return await this.orderService.updateStatus(input);
+  }
+
+  @MessagePattern('backofficeOrder.revertStatus')
+  @Transactional
+  async revertStatus(input: RevertStatusInput): Promise<RevertStatusResponse> {
+    return await this.orderService.revertStatus(input);
   }
 
   @MessagePattern('backofficeOrder.cancelOrder')
