@@ -1668,6 +1668,12 @@ const appRouter = t.router({
         'RETURNED',
       ]),
     })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    revertStatus: publicProcedure.input(z.object({
+      orderId: z.number().int().positive(),
+    })).output(z.object({
+      success: z.boolean(),
+      orderId: z.number(),
+    })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
     cancelOrder: publicProcedure.input(z.object({
       orderId: z.number().int().positive(),
       reason: z.string().min(1),

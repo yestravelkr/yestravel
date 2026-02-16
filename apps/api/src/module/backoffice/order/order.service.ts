@@ -17,6 +17,7 @@ import {
 import {
   ORDER_STATUS_LABELS,
   canTransition,
+  type OrderStatusEnumType,
 } from '@src/module/backoffice/domain/order/order-status';
 import type { HotelOrderOptionData } from '@src/module/backoffice/domain/order/hotel-order.entity';
 import type {
@@ -30,6 +31,8 @@ import type {
   OrderDetailResponse,
   UpdateStatusInput,
   UpdateStatusResponse,
+  RevertStatusInput,
+  RevertStatusResponse,
   ExportToExcelInput,
   ExportToExcelResponse,
   CancelOrderInput,
@@ -454,6 +457,48 @@ export class OrderService {
       orderId: order.id,
       previousStatus,
       newStatus,
+    };
+  }
+
+  /**
+   * 주문 상태 되돌리기
+   * 이전 단계로 상태를 되돌림 (Hotel만 지원)
+   */
+  async revertStatus(input: RevertStatusInput): Promise<RevertStatusResponse> {
+    const { orderId } = input;
+
+    const order = await this.repositoryProvider.OrderRepository.findOneOrFail({
+      where: { id: orderId },
+    }).catch(() => {
+      throw new NotFoundException(`주문을 찾을 수 없습니다. (id: ${orderId})`);
+    });
+
+    const HOTEL_REVERT_MAP: Partial<
+      Record<OrderStatusEnumType, OrderStatusEnumType>
+    > = {
+      PENDING_RESERVATION: 'PAID',
+      RESERVATION_CONFIRMED: 'PENDING_RESERVATION',
+    };
+
+    // Delivery는 아직 미지원
+    const revertMap =
+      order.type === 'HOTEL' ? HOTEL_REVERT_MAP : {};
+
+    const previousStatus = order.status;
+    const revertedStatus = revertMap[previousStatus];
+
+    if (!revertedStatus) {
+      throw new BadRequestException(
+        `${ORDER_STATUS_LABELS[previousStatus]} 상태에서 이전 상태로 되돌릴 수 없습니다.`
+      );
+    }
+
+    order.status = revertedStatus;
+    await this.repositoryProvider.OrderRepository.save(order);
+
+    return {
+      success: true,
+      orderId: order.id,
     };
   }
 

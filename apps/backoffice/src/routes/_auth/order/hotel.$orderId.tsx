@@ -50,6 +50,20 @@ function HotelOrderDetailPage() {
   // 표시용: 활성 클레임 우선, 없으면 가장 최근 클레임
   const claimData = activeClaim ?? claims?.[0] ?? null;
 
+  const updateStatusMutation = trpc.backofficeOrder.updateStatus.useMutation({
+    onSuccess: (data) => {
+      const messages: Record<string, string> = {
+        PENDING_RESERVATION: '주문이 확인되었습니다.',
+        RESERVATION_CONFIRMED: '예약이 확정되었습니다.',
+      };
+      toast.success(messages[data.newStatus] ?? '상태가 변경되었습니다.');
+      utils.backofficeOrder.findById.invalidate({ id: Number(orderId) });
+    },
+    onError: (error) => {
+      toast.error(error.message || '상태 변경에 실패했습니다.');
+    },
+  });
+
   const approveClaimMutation = trpc.backofficeClaim.approve.useMutation({
     onSuccess: (data) => {
       toast.success(
@@ -59,6 +73,16 @@ function HotelOrderDetailPage() {
     },
     onError: (error) => {
       toast.error(error.message || '취소 승인에 실패했습니다.');
+    },
+  });
+
+  const revertStatusMutation = trpc.backofficeOrder.revertStatus.useMutation({
+    onSuccess: () => {
+      toast.success('상태가 변경되었습니다.');
+      utils.backofficeOrder.findById.invalidate({ id: Number(orderId) });
+    },
+    onError: (error) => {
+      toast.error(error.message);
     },
   });
 
@@ -88,12 +112,46 @@ function HotelOrderDetailPage() {
     );
   }
 
-  const handleConfirm = () => {
-    toast.success('예약이 확정되었습니다.');
+  const handleConfirm = async () => {
+    const isPaid = displayStatus === 'PAID';
+    const confirmed = await openConfirmModal({
+      title: isPaid ? '주문을 확인하시겠습니까?' : '예약을 확정하시겠습니까?',
+      description: isPaid
+        ? '예약대기 상태로 변경됩니다.'
+        : '예약확정 상태로 변경됩니다.',
+    });
+
+    if (!confirmed) return;
+
+    updateStatusMutation.mutate({
+      orderId: Number(orderId),
+      status: isPaid ? 'PENDING_RESERVATION' : 'RESERVATION_CONFIRMED',
+    });
   };
 
-  const handleManage = () => {
-    toast.info('주문관리 메뉴가 열립니다.');
+  const handleRevertStatus = async () => {
+    const revertLabelMap: Record<string, string> = {
+      PENDING_RESERVATION: '결제 완료',
+      RESERVATION_CONFIRMED: '예약 대기',
+    };
+    const targetLabel = revertLabelMap[displayStatus];
+    if (!targetLabel) return;
+
+    const confirmed = await openConfirmModal({
+      title: `${targetLabel} 상태로 변경하시겠습니까?`,
+      description: '주문 상태가 이전 단계로 되돌아갑니다.',
+    });
+
+    if (!confirmed) return;
+
+    revertStatusMutation.mutate({
+      orderId: Number(orderId),
+    });
+  };
+
+  // TODO: 주문취소 모달 구현 (수수료 입력 + 사유 입력) 후 연동 예정
+  const handleCancelOrder = () => {
+    toast.info('주문취소 기능은 준비 중입니다.');
   };
 
   const handleHistory = () => {
@@ -174,7 +232,8 @@ function HotelOrderDetailPage() {
             }))}
             cancelReason={cancelReason}
             onConfirm={handleConfirm}
-            onManage={handleManage}
+            onRevertStatus={handleRevertStatus}
+            onCancelOrder={handleCancelOrder}
             onHistory={handleHistory}
             onCancelApprove={handleCancelApprove}
             onCancelReject={handleCancelReject}
