@@ -13,6 +13,7 @@ export * from './layout';
 export * from './card';
 export * from './ConfirmModal';
 export * from './CancelApproveModal';
+export * from './CancelOrderModal';
 export * from './DeleteConfirmModal';
 export * from './SelectDropdown';
 export * from './ActionMenu';

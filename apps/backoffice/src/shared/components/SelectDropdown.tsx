@@ -245,7 +245,7 @@ const ChevronIcon = tw(ChevronDown)<{ $isOpen?: boolean }>`
 `;
 
 const Dropdown = tw.div`
-  z-50
+  z-[1100]
   p-2
   bg-white
   rounded-[20px]

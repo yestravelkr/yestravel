@@ -18,6 +18,7 @@ import { PaymentInfoCard } from './_components/PaymentInfoCard';
 import {
   DetailPageLayout,
   openCancelApproveModal,
+  openCancelOrderModal,
   openConfirmModal,
 } from '@/shared/components';
 import { trpc } from '@/shared/trpc';
@@ -96,6 +97,16 @@ function HotelOrderDetailPage() {
     },
   });
 
+  const cancelOrderMutation = trpc.backofficeOrder.cancelOrder.useMutation({
+    onSuccess: () => {
+      toast.success('주문이 취소되었습니다.');
+      utils.backofficeOrder.findById.invalidate({ id: Number(orderId) });
+    },
+    onError: (error) => {
+      toast.error(error.message || '주문 취소에 실패했습니다.');
+    },
+  });
+
   if (isLoading) {
     return (
       <PageContainer>
@@ -149,9 +160,20 @@ function HotelOrderDetailPage() {
     });
   };
 
-  // TODO: 주문취소 모달 구현 (수수료 입력 + 사유 입력) 후 연동 예정
-  const handleCancelOrder = () => {
-    toast.info('주문취소 기능은 준비 중입니다.');
+  const handleCancelOrder = async () => {
+    const result = await openCancelOrderModal({
+      productAmount: orderDetail.payment.totalAmount,
+      defaultCancelFee: 0,
+    });
+
+    if (!result?.confirmed) return;
+
+    cancelOrderMutation.mutate({
+      orderId: Number(orderId),
+      // TODO: 취소 사유 저장 구조 확정 후 연동 (Order 필드 or Claim)
+      reason: result.reason || '어드민 직접 취소',
+      refundAmount: result.refundAmount,
+    });
   };
 
   const handleHistory = () => {
