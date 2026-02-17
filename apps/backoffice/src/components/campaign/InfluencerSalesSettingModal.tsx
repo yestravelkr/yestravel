@@ -646,6 +646,8 @@ const Content = tw.div`
   flex
   flex-col
   gap-5
+  max-h-[80vh]
+  overflow-y-scroll
 `;
 
 const CampaignSettingContainer = tw.div`
