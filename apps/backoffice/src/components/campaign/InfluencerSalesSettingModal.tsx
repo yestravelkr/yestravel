@@ -508,17 +508,21 @@ function InfluencerSalesSettingModal({
   };
 
   const handleConfirm = () => {
-    const result: InfluencerSalesSettingResult = {
-      influencerId: influencer.influencerId,
-      periodType,
-      startAt: periodType === 'CUSTOM' ? customDateRange.startDate : null,
-      endAt: periodType === 'CUSTOM' ? customDateRange.endDate : null,
-      feeType: fee > 0 ? 'CUSTOM' : 'NONE',
-      fee: fee > 0 ? fee : null,
-      status: influencer.status,
-      products: influencerProducts,
-    };
-    resolveModal(result);
+    // 함수형 업데이트로 최신 상태 확보 (엑셀 수수료 적용 직후 클릭 시 대응)
+    setInfluencerProducts((latestProducts) => {
+      const result: InfluencerSalesSettingResult = {
+        influencerId: influencer.influencerId,
+        periodType,
+        startAt: periodType === 'CUSTOM' ? customDateRange.startDate : null,
+        endAt: periodType === 'CUSTOM' ? customDateRange.endDate : null,
+        feeType: fee > 0 ? 'CUSTOM' : 'NONE',
+        fee: fee > 0 ? fee : null,
+        status: influencer.status,
+        products: latestProducts,
+      };
+      resolveModal(result);
+      return latestProducts; // 상태는 변경하지 않음
+    });
   };
 
   const handleCancel = () => {

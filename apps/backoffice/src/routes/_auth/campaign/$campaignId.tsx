@@ -75,7 +75,7 @@ function convertApiToFormData(campaign: CampaignDetail): CampaignFormData {
       status: influencer.status,
       products: influencer.products.map((product) => ({
         productId: product.productId,
-        status: 'VISIBLE' as const, // API에서 status를 반환하지 않으므로 기본값 사용
+        status: product.status,
         useCustomCommission: product.useCustomCommission,
         hotelOptions: product.hotelOptions.map((option) => ({
           hotelOptionId: option.hotelOptionId,
@@ -170,6 +170,7 @@ function CampaignDetailContent() {
         status: influencer.status,
         products: influencer.products.map((product) => ({
           productId: product.productId,
+          status: product.status,
           useCustomCommission: product.useCustomCommission,
           hotelOptions: product.hotelOptions,
         })),
