@@ -764,7 +764,7 @@ export class OrderService {
     }
 
     // 버퍼로 변환
-    const buffer = await workbook.xlsx.writeBuffer();
+    const buffer = Buffer.from(await workbook.xlsx.writeBuffer());
 
     // 파일명 생성 (타임스탬프 포함)
     const timestamp = dayjs().format('YYYYMMDD_HHmmss');

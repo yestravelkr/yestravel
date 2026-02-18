@@ -729,7 +729,7 @@ export class SettlementService {
     ]);
 
     // 버퍼로 변환
-    const buffer = await workbook.xlsx.writeBuffer();
+    const buffer = Buffer.from(await workbook.xlsx.writeBuffer());
 
     // 파일명 생성
     const targetName =
