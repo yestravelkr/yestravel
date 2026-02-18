@@ -504,7 +504,6 @@ function InfluencerSalesSettingModal({
     }
 
     setInfluencerProducts(updatedProducts);
-    toast.success('수수료가 적용되었습니다');
   };
 
   const handleConfirm = () => {

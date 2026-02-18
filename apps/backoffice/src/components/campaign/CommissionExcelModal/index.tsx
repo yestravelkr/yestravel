@@ -126,10 +126,10 @@ function UploadTab({
     setSelectedFile(file);
     const reader = new FileReader();
 
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       try {
         const data = e.target?.result as ArrayBuffer;
-        const jsonData = parseExcelFile(data);
+        const jsonData = await parseExcelFile(data);
         const preview = validateExcelData(
           jsonData,
           product.hotelOptions,

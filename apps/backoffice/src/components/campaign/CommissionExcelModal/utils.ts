@@ -4,9 +4,7 @@
 
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
-import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import ExcelJS from 'exceljs';
-import * as XLSX from 'xlsx';
 
 import type {
   CommissionData,
@@ -18,7 +16,6 @@ import type {
 } from './types';
 
 dayjs.extend(customParseFormat);
-dayjs.extend(isSameOrBefore);
 
 /**
  * ExcelJS 워크북을 생성하여 수수료 데이터를 담은 Buffer를 반환한다.
@@ -75,26 +72,59 @@ export async function generateExcelWorkbook(
 }
 
 /**
- * XLSX 파일을 파싱하여 ExcelRow 배열을 반환한다.
+ * 엑셀 파일을 파싱하여 ExcelRow 배열을 반환한다.
  * 필수 컬럼이 없으면 에러를 throw 한다.
  */
-export function parseExcelFile(data: ArrayBuffer): ExcelRow[] {
-  const workbook = XLSX.read(new Uint8Array(data), {
-    type: 'array',
-    cellDates: true,
-  });
-  const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-  const jsonData = XLSX.utils.sheet_to_json<ExcelRow>(worksheet);
+export async function parseExcelFile(data: ArrayBuffer): Promise<ExcelRow[]> {
+  const workbook = new ExcelJS.Workbook();
+  await workbook.xlsx.load(data);
 
-  if (jsonData.length === 0) {
+  const worksheet = workbook.worksheets[0];
+  if (!worksheet || worksheet.rowCount <= 1) {
     throw new Error('엑셀 파일에 데이터가 없습니다');
   }
 
+  // 헤더 행에서 컬럼명 추출
+  const headerRow = worksheet.getRow(1);
+  const headers: string[] = [];
+  headerRow.eachCell((cell, colNumber) => {
+    headers[colNumber] = String(cell.value ?? '');
+  });
+
   const REQUIRED_COLUMNS = ['상품명', '옵션명', '날짜', '수수료'];
-  const firstRow = jsonData[0];
-  const missingColumns = REQUIRED_COLUMNS.filter((col) => !(col in firstRow));
+  const missingColumns = REQUIRED_COLUMNS.filter(
+    (col) => !headers.includes(col),
+  );
   if (missingColumns.length > 0) {
     throw new Error(`필수 컬럼이 없습니다: ${missingColumns.join(', ')}`);
+  }
+
+  // 데이터 행을 ExcelRow로 변환
+  const jsonData: ExcelRow[] = [];
+  worksheet.eachRow((row, rowNumber) => {
+    if (rowNumber === 1) return; // 헤더 행 스킵
+
+    const rowData: Record<string, unknown> = {};
+    row.eachCell((cell, colNumber) => {
+      const header = headers[colNumber];
+      if (header) {
+        rowData[header] = cell.value;
+      }
+    });
+
+    // 필수 필드가 하나라도 있는 행만 추가
+    if (rowData['옵션명'] || rowData['날짜'] || rowData['수수료']) {
+      jsonData.push({
+        상품명: String(rowData['상품명'] ?? ''),
+        옵션명: String(rowData['옵션명'] ?? ''),
+        날짜: String(rowData['날짜'] ?? ''),
+        수수료: Number(rowData['수수료']) || 0,
+      });
+    }
+  });
+
+  if (jsonData.length === 0) {
+    throw new Error('엑셀 파일에 데이터가 없습니다');
   }
 
   return jsonData;
@@ -216,23 +246,4 @@ export function convertToCommissionData(
       commissionByDate,
     }),
   );
-}
-
-/**
- * 시작일~종료일 사이의 날짜 배열을 생성한다.
- */
-export function generateDateRange(
-  startDate: string,
-  endDate: string,
-): string[] {
-  const dates: string[] = [];
-  let current = dayjs(startDate);
-  const end = dayjs(endDate);
-
-  while (current.isSameOrBefore(end, 'day')) {
-    dates.push(current.format('YYYY-MM-DD'));
-    current = current.add(1, 'day');
-  }
-
-  return dates;
 }
