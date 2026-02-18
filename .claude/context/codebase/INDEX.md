@@ -14,3 +14,6 @@ description: 코드베이스 모듈 참조 목록
 | Claude Agents | Claude Code 전문 Agent 15개 - 역할, 모델, 위임 체계 | [claude-agents.md](./claude-agents.md) |
 | Claude Hooks | Claude Code Hook 스크립트 - 세션/프롬프트/명령어 이벤트별 자동 실행 | [claude-hooks.md](./claude-hooks.md) |
 | Claude Skills | Claude Code Skill 7개 그룹 - 코딩/Git/문서화 가이드라인 | [claude-skills.md](./claude-skills.md) |
+| Backoffice Campaign | 캠페인 CRUD, 인플루언서 수수료/커미션, 호텔옵션 날짜별 커미션 (JSONB) | [backoffice-campaign.md](./backoffice-campaign.md) |
+| Backoffice Excel Export | ExcelJS 기반 주문/정산 엑셀 내보내기, S3 업로드, presigned URL | [backoffice-excel-export.md](./backoffice-excel-export.md) |
+| Campaign Influencer Fee UI | 인플루언서 판매설정 모달, 수수료 엑셀 처리 모달, xlsx→exceljs 마이그레이션 | [campaign-influencer-fee-ui.md](./campaign-influencer-fee-ui.md) |
