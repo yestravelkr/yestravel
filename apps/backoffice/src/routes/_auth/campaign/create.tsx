@@ -73,6 +73,7 @@ function CampaignCreatePage() {
         status: influencer.status,
         products: influencer.products.map((product) => ({
           productId: product.productId,
+          status: product.status,
           useCustomCommission: product.useCustomCommission,
           hotelOptions: product.hotelOptions,
         })),

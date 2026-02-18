@@ -5,11 +5,11 @@
  */
 
 import { Button } from '@yestravelkr/min-design-system';
+import ExcelJS from 'exceljs';
 import { Download, Upload } from 'lucide-react';
 import { useRef } from 'react';
 import { toast } from 'sonner';
 import tw from 'tailwind-styled-components';
-import * as XLSX from 'xlsx';
 
 /** 엑셀 행 데이터 타입 */
 export interface ExcelRowData {
@@ -60,7 +60,7 @@ export function ExcelProcessButtons({
   /**
    * 엑셀 폼 다운로드
    */
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (disabled) {
       toast.error('옵션을 먼저 설정해주세요.');
       return;
@@ -73,23 +73,35 @@ export function ExcelProcessButtons({
       return;
     }
 
-    // 워크시트 생성
-    const worksheet = XLSX.utils.json_to_sheet(excelData);
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('가격표');
 
-    // 컬럼 너비 설정
-    worksheet['!cols'] = [
-      { wch: 12 }, // 날짜
-      { wch: 15 }, // 옵션명
-      { wch: 10 }, // 재고
-      { wch: 12 }, // 공급가
-      { wch: 12 }, // 판매가
-      { wch: 10 }, // 수수료
+    // 컬럼 정의 (헤더 + 너비)
+    worksheet.columns = [
+      { header: '날짜', key: '날짜', width: 12 },
+      { header: '옵션명', key: '옵션명', width: 15 },
+      { header: '재고', key: '재고', width: 10 },
+      { header: '공급가', key: '공급가', width: 12 },
+      { header: '판매가', key: '판매가', width: 12 },
+      { header: '수수료', key: '수수료', width: 10 },
     ];
 
-    // 워크북 생성 및 다운로드
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, '가격표');
-    XLSX.writeFile(workbook, `${fileName}.xlsx`);
+    // 데이터 행 추가
+    excelData.forEach((row) => {
+      worksheet.addRow(row);
+    });
+
+    // 버퍼 생성 후 다운로드
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${fileName}.xlsx`;
+    link.click();
+    URL.revokeObjectURL(url);
 
     toast.success('엑셀 폼이 다운로드되었습니다.');
   };
@@ -113,27 +125,60 @@ export function ExcelProcessButtons({
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       try {
-        const data = new Uint8Array(e.target?.result as ArrayBuffer);
-        const workbook = XLSX.read(data, { type: 'array', cellDates: true });
-        const sheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[sheetName];
-        const jsonData = XLSX.utils.sheet_to_json<ExcelRowData>(worksheet);
+        const data = e.target?.result as ArrayBuffer;
+        const workbook = new ExcelJS.Workbook();
+        await workbook.xlsx.load(data);
+        const worksheet = workbook.getWorksheet(1);
 
-        if (jsonData.length === 0) {
+        if (!worksheet || worksheet.rowCount <= 1) {
           toast.error('엑셀 파일에 데이터가 없습니다.');
           return;
         }
 
+        // 헤더 행에서 컬럼명 추출 (row.values는 1-indexed)
+        const headerRow = worksheet.getRow(1);
+        const headers = (headerRow.values as unknown[])
+          .slice(1)
+          .map((h) => String(h ?? ''));
+
         // 유효성 검증
-        const firstRow = jsonData[0];
         const missingColumns = REQUIRED_COLUMNS.filter(
-          (col) => !(col in firstRow),
+          (col) => !headers.includes(col),
         );
 
         if (missingColumns.length > 0) {
           toast.error(`필수 컬럼이 없습니다: ${missingColumns.join(', ')}`);
+          return;
+        }
+
+        // 데이터 행을 ExcelRowData로 변환
+        const jsonData: ExcelRowData[] = [];
+        worksheet.eachRow((row, rowNumber) => {
+          if (rowNumber === 1) return;
+
+          const values = (row.values as unknown[]).slice(1);
+          const rowData: Record<string, unknown> = {};
+
+          headers.forEach((header, colIndex) => {
+            if (header) {
+              rowData[header] = values[colIndex];
+            }
+          });
+
+          jsonData.push({
+            날짜: String(rowData['날짜'] ?? ''),
+            옵션명: String(rowData['옵션명'] ?? ''),
+            재고: Number(rowData['재고']) || 0,
+            공급가: Number(rowData['공급가']) || 0,
+            판매가: Number(rowData['판매가']) || 0,
+            수수료: Number(rowData['수수료']) || 0,
+          });
+        });
+
+        if (jsonData.length === 0) {
+          toast.error('엑셀 파일에 데이터가 없습니다.');
           return;
         }
 

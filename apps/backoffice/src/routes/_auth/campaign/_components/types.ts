@@ -64,7 +64,7 @@ export type CampaignInfluencerDisplay = {
   feeType: 'NONE' | 'CUSTOM';
   fee: number | null;
   status: 'VISIBLE' | 'HIDDEN' | 'SOLD_OUT';
-  products: CampaignInfluencerProductDisplay[];
+  products: CampaignInfluencerProductFormData[];
 };
 
 export type CampaignFormData = {

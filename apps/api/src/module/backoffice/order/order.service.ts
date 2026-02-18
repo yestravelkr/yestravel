@@ -723,45 +723,36 @@ export class OrderService {
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('주문목록');
 
-    // 컬럼 정의 (27개)
+    // 컬럼 정의 (헤더 + 너비)
     worksheet.columns = [
       { header: '주문번호', key: 'orderNumber', width: 15 },
       { header: '타입', key: 'type', width: 10 },
       { header: '주문상태', key: 'status', width: 12 },
-      { header: '주문일시', key: 'createdAt', width: 18 },
+      { header: '주문일시', key: 'orderedAt', width: 18 },
       { header: '결제일시', key: 'paidAt', width: 18 },
-      { header: '캠페인', key: 'campaignName', width: 20 },
-      { header: '인플루언서', key: 'influencerName', width: 15 },
-      { header: '상품', key: 'productName', width: 25 },
-      { header: '옵션', key: 'optionName', width: 15 },
+      { header: '캠페인', key: 'campaign', width: 20 },
+      { header: '인플루언서', key: 'influencer', width: 15 },
+      { header: '상품', key: 'product', width: 25 },
+      { header: '옵션', key: 'option', width: 15 },
       { header: '이용일', key: 'usageDate', width: 25 },
-      { header: '주문수량', key: 'orderQuantity', width: 10 },
-      { header: '환불수량', key: 'refundQuantity', width: 10 },
-      { header: '총 수량', key: 'totalQuantity', width: 10 },
-      { header: '상품금액', key: 'productAmount', width: 12 },
-      { header: '상품 결제금액', key: 'productPaidAmount', width: 14 },
+      { header: '주문수량', key: 'orderQty', width: 10 },
+      { header: '환불수량', key: 'refundQty', width: 10 },
+      { header: '총 수량', key: 'totalQty', width: 10 },
+      { header: '상품금액', key: 'productPrice', width: 12 },
+      { header: '상품 결제금액', key: 'productAmount', width: 14 },
       { header: '총 배송비', key: 'shippingFee', width: 12 },
-      { header: '총 결제금액', key: 'totalPaidAmount', width: 14 },
-      { header: '상품 환불금액', key: 'productRefundAmount', width: 14 },
-      { header: '총 환불금액', key: 'totalRefundAmount', width: 14 },
+      { header: '총 결제금액', key: 'totalAmount', width: 14 },
+      { header: '상품 환불금액', key: 'productRefund', width: 14 },
+      { header: '총 환불금액', key: 'totalRefund', width: 14 },
       { header: '최종 주문금액', key: 'finalAmount', width: 14 },
       { header: '결제수단', key: 'paymentMethod', width: 12 },
-      { header: '요청사항', key: 'requestNote', width: 20 },
+      { header: '요청사항', key: 'request', width: 20 },
       { header: 'imp_uid', key: 'impUid', width: 20 },
-      { header: '구매자', key: 'customerName', width: 10 },
-      { header: '구매자 연락처', key: 'customerPhone', width: 15 },
+      { header: '구매자', key: 'buyerName', width: 10 },
+      { header: '구매자 연락처', key: 'buyerPhone', width: 15 },
       { header: '수령인 (이용자)', key: 'recipientName', width: 12 },
       { header: '수령인 연락처', key: 'recipientPhone', width: 15 },
     ];
-
-    // 헤더 스타일 적용
-    const headerRow = worksheet.getRow(1);
-    headerRow.font = { bold: true };
-    headerRow.fill = {
-      type: 'pattern',
-      pattern: 'solid',
-      fgColor: { argb: 'FFE0E0E0' },
-    };
 
     // 데이터 추가
     for (const order of orders) {
@@ -780,46 +771,45 @@ export class OrderService {
           ? `${orderOptionSnapshot.checkInDate} ~ ${orderOptionSnapshot.checkOutDate ?? ''}`
           : '-';
 
-      worksheet.addRow({
-        orderNumber: orderNumberParser.encode([order.id], order.createdAt),
-        type: order.type,
-        status: ORDER_STATUS_LABELS[order.status],
-        createdAt: dayjs(order.createdAt).format('YYYY-MM-DD HH:mm'),
-        paidAt: latestPayment?.paidAt
+      worksheet.addRow([
+        orderNumberParser.encode([order.id], order.createdAt),
+        order.type,
+        ORDER_STATUS_LABELS[order.status],
+        dayjs(order.createdAt).format('YYYY-MM-DD HH:mm'),
+        latestPayment?.paidAt
           ? dayjs(latestPayment.paidAt).format('YYYY-MM-DD HH:mm')
           : '-',
-        campaignName: order.campaign.title,
-        influencerName: order.influencer.name,
-        productName: order.product.name,
-        optionName:
-          order.type === 'HOTEL'
-            ? (orderOptionSnapshot?.hotelOptionName ?? '-')
-            : '-',
+        order.campaign.title,
+        order.influencer.name,
+        order.product.name,
+        order.type === 'HOTEL'
+          ? (orderOptionSnapshot?.hotelOptionName ?? '-')
+          : '-',
         usageDate,
-        orderQuantity: '-', // 호텔은 수량 개념 없음
-        refundQuantity: '-',
-        totalQuantity: '-',
-        productAmount: order.product.price,
-        productPaidAmount: order.totalAmount,
-        shippingFee: '-', // 호텔은 배송비 없음
-        totalPaidAmount: order.totalAmount,
-        productRefundAmount: refundAmount > 0 ? refundAmount : '-',
-        totalRefundAmount: refundAmount > 0 ? refundAmount : '-',
-        finalAmount: nowAmount,
-        paymentMethod: latestPayment?.pgRawData
+        '-', // 주문수량 - 호텔은 수량 개념 없음
+        '-', // 환불수량
+        '-', // 총 수량
+        order.product.price,
+        order.totalAmount,
+        '-', // 총 배송비 - 호텔은 배송비 없음
+        order.totalAmount,
+        refundAmount > 0 ? refundAmount : '-',
+        refundAmount > 0 ? refundAmount : '-',
+        nowAmount,
+        latestPayment?.pgRawData
           ? this.getPaymentMethod(latestPayment.pgRawData)
           : '-',
-        requestNote: '-', // 스키마에 없음
-        impUid: latestPayment?.impUid ?? '-',
-        customerName: order.customerName,
-        customerPhone: order.customerPhone,
-        recipientName: order.customerName, // 호텔은 구매자=이용자
-        recipientPhone: order.customerPhone,
-      });
+        '-', // 요청사항 - 스키마에 없음
+        latestPayment?.impUid ?? '-',
+        order.customerName,
+        order.customerPhone,
+        order.customerName, // 수령인 - 호텔은 구매자=이용자
+        order.customerPhone,
+      ]);
     }
 
     // 버퍼로 변환
-    const buffer = await workbook.xlsx.writeBuffer();
+    const buffer = Buffer.from(await workbook.xlsx.writeBuffer());
 
     // 파일명 생성 (타임스탬프 포함)
     const timestamp = dayjs().format('YYYYMMDD_HHmmss');
@@ -827,7 +817,7 @@ export class OrderService {
 
     // S3 업로드
     const { fileKey } = await this.s3Service.uploadBuffer({
-      buffer: Buffer.from(buffer),
+      buffer,
       fileName,
       path: 'exports/orders',
       contentType:
