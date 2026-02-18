@@ -27,24 +27,15 @@ export async function generateExcelWorkbook(
   const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet('수수료 설정');
 
-  // 컬럼 정의
+  // 컬럼 정의 (헤더 + 너비)
   worksheet.columns = [
     { header: '상품명', key: 'productName', width: 30 },
     { header: '옵션명', key: 'optionName', width: 25 },
     { header: '날짜', key: 'date', width: 12 },
     { header: '판매가', key: 'price', width: 12 },
-    { header: '기본수수료', key: 'defaultCommission', width: 12 },
-    { header: '수수료', key: 'currentCommission', width: 12 },
+    { header: '기본수수료', key: 'baseCommission', width: 12 },
+    { header: '수수료', key: 'commission', width: 12 },
   ];
-
-  // 헤더 스타일
-  const headerRow = worksheet.getRow(1);
-  headerRow.font = { bold: true };
-  headerRow.fill = {
-    type: 'pattern',
-    pattern: 'solid',
-    fgColor: { argb: 'FFE0E0E0' },
-  };
 
   // 데이터 행 추가
   product.hotelOptions.forEach((option) => {
@@ -54,14 +45,14 @@ export async function generateExcelWorkbook(
     const dates = Object.keys(option.priceByDate);
 
     dates.forEach((date) => {
-      worksheet.addRow({
-        productName: product.name,
-        optionName: option.name,
+      worksheet.addRow([
+        product.name,
+        option.name,
         date,
-        price: option.priceByDate[date],
-        defaultCommission: option.anotherPriceByDate[date]?.commission ?? 0,
-        currentCommission: customOption?.commissionByDate[date] ?? '',
-      });
+        option.priceByDate[date],
+        option.anotherPriceByDate[date]?.commission ?? 0,
+        customOption?.commissionByDate[date] ?? '',
+      ]);
     });
   });
 
@@ -78,18 +69,17 @@ export async function generateExcelWorkbook(
 export async function parseExcelFile(data: ArrayBuffer): Promise<ExcelRow[]> {
   const workbook = new ExcelJS.Workbook();
   await workbook.xlsx.load(data);
+  const worksheet = workbook.getWorksheet(1);
 
-  const worksheet = workbook.worksheets[0];
   if (!worksheet || worksheet.rowCount <= 1) {
     throw new Error('엑셀 파일에 데이터가 없습니다');
   }
 
-  // 헤더 행에서 컬럼명 추출
+  // 헤더 행에서 컬럼명 추출 (row.values는 1-indexed)
   const headerRow = worksheet.getRow(1);
-  const headers: string[] = [];
-  headerRow.eachCell((cell, colNumber) => {
-    headers[colNumber] = String(cell.value ?? '');
-  });
+  const headers = (headerRow.values as unknown[])
+    .slice(1)
+    .map((h) => String(h ?? ''));
 
   const REQUIRED_COLUMNS = ['상품명', '옵션명', '날짜', '수수료'];
   const missingColumns = REQUIRED_COLUMNS.filter(
@@ -102,13 +92,14 @@ export async function parseExcelFile(data: ArrayBuffer): Promise<ExcelRow[]> {
   // 데이터 행을 ExcelRow로 변환
   const jsonData: ExcelRow[] = [];
   worksheet.eachRow((row, rowNumber) => {
-    if (rowNumber === 1) return; // 헤더 행 스킵
+    if (rowNumber === 1) return; // 헤더 행 건너뛰기
 
+    const values = (row.values as unknown[]).slice(1);
     const rowData: Record<string, unknown> = {};
-    row.eachCell((cell, colNumber) => {
-      const header = headers[colNumber];
+
+    headers.forEach((header, colIndex) => {
       if (header) {
-        rowData[header] = cell.value;
+        rowData[header] = values[colIndex];
       }
     });
 

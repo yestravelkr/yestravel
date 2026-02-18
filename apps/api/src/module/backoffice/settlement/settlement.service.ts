@@ -684,58 +684,49 @@ export class SettlementService {
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('정산내역');
 
-    // 컬럼 정의
+    // 컬럼 정의 (헤더 + 너비)
     worksheet.columns = [
-      { header: '캠페인', key: 'campaignName', width: 25 },
-      { header: '상품', key: 'productName', width: 30 },
-      { header: '옵션', key: 'optionName', width: 20 },
+      { header: '캠페인', key: 'campaign', width: 25 },
+      { header: '상품', key: 'product', width: 30 },
+      { header: '옵션', key: 'option', width: 20 },
       { header: '수량', key: 'quantity', width: 10 },
       { header: '매출', key: 'sales', width: 15 },
-      { header: '정산금액', key: 'settlementAmount', width: 15 },
+      { header: '정산금액', key: 'amount', width: 15 },
     ];
-
-    // 헤더 스타일
-    const headerRow = worksheet.getRow(1);
-    headerRow.font = { bold: true };
-    headerRow.fill = {
-      type: 'pattern',
-      pattern: 'solid',
-      fgColor: { argb: 'FFE0E0E0' },
-    };
 
     // 데이터 추가
     for (const group of settlementData.campaignGroups) {
       for (const product of group.products) {
-        worksheet.addRow({
-          campaignName: group.campaignName,
-          productName: product.productName,
-          optionName: product.optionName ?? '-',
-          quantity: product.quantity,
-          sales: product.sales,
-          settlementAmount: product.settlementAmount,
-        });
+        worksheet.addRow([
+          group.campaignName,
+          product.productName,
+          product.optionName ?? '-',
+          product.quantity,
+          product.sales,
+          product.settlementAmount,
+        ]);
       }
 
       // 캠페인별 소계
-      worksheet.addRow({
-        campaignName: `${group.campaignName} 소계`,
-        productName: '',
-        optionName: '',
-        quantity: group.subtotalQuantity,
-        sales: group.subtotalSales,
-        settlementAmount: group.subtotalAmount,
-      });
+      worksheet.addRow([
+        `${group.campaignName} 소계`,
+        '',
+        '',
+        group.subtotalQuantity,
+        group.subtotalSales,
+        group.subtotalAmount,
+      ]);
     }
 
     // 총계
-    worksheet.addRow({
-      campaignName: '총계',
-      productName: '',
-      optionName: '',
-      quantity: settlementData.totalQuantity,
-      sales: settlementData.totalSales,
-      settlementAmount: settlementData.totalAmount,
-    });
+    worksheet.addRow([
+      '총계',
+      '',
+      '',
+      settlementData.totalQuantity,
+      settlementData.totalSales,
+      settlementData.totalAmount,
+    ]);
 
     // 버퍼로 변환
     const buffer = await workbook.xlsx.writeBuffer();
@@ -749,7 +740,7 @@ export class SettlementService {
 
     // S3 업로드
     const { fileKey } = await this.s3Service.uploadBuffer({
-      buffer: Buffer.from(buffer),
+      buffer,
       fileName,
       path: 'exports/settlements',
       contentType:

@@ -36,7 +36,6 @@
     "@trpc/server": "11.4.3",
     "@yestravelkr/min-design-system": "*",
     "axios": "^1.11.0",
-    "exceljs": "^4.4.0",
     "lucide-react": "^0.554.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
@@ -45,7 +44,7 @@
     "sonner": "^1.5.0",
     "tailwind-styled-components": "^2.2.0",
     "tailwindcss": "^4.0.6",
-    "xlsx": "^0.18.5",
+    "exceljs": "^4.4.0",
     "zod": "^3.24.2",
     "zustand": "^5.0.3"
   },
