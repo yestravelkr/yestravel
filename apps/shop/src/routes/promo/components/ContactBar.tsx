@@ -42,13 +42,17 @@ export function ContactBar() {
               type="text"
               placeholder="브랜드/업체명"
               value={brandName}
-              onChange={e => setBrandName(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setBrandName(e.target.value)
+              }
             />
             <ContactInput
               type="text"
               placeholder="연락처"
               value={contact}
-              onChange={e => setContact(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setContact(e.target.value)
+              }
             />
             <ContactSubmitButton>무료 상담 신청</ContactSubmitButton>
           </ContactBarForm>
@@ -83,7 +87,7 @@ function ContactModal({
 
   return (
     <ModalOverlay onClick={onClose}>
-      <ModalCard onClick={e => e.stopPropagation()}>
+      <ModalCard onClick={(e: React.MouseEvent) => e.stopPropagation()}>
         <ModalTitle>제휴 문의</ModalTitle>
         <ModalDesc>문의 남겨주시면 인플루언서 리스트를 보내드립니다.</ModalDesc>
         <ModalFormGroup>
@@ -91,13 +95,17 @@ function ContactModal({
             type="text"
             placeholder="브랜드/업체명"
             value={brandName}
-            onChange={e => onBrandNameChange(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              onBrandNameChange(e.target.value)
+            }
           />
           <ModalInput
             type="text"
             placeholder="연락처"
             value={contact}
-            onChange={e => onContactChange(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              onContactChange(e.target.value)
+            }
           />
           <ModalSubmitButton>무료 상담 신청</ModalSubmitButton>
         </ModalFormGroup>
