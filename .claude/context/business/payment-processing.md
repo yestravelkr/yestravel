@@ -55,3 +55,4 @@ estimated_tokens: ~500
 ## 관련 Codebase Context
 
 - [shop-payment](../codebase/shop-payment.md)
+- [shop-new-order](../codebase/shop-new-order.md)
