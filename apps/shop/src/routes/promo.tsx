@@ -171,7 +171,7 @@ const FAQ_ITEMS: FaqItem[] = [
  * PromoPage - 예스트래블 마케팅 솔루션 프로모션 랜딩 페이지
  *
  * 반응형 breakpoints:
- * - 모바일: 360px~
+ * - 모바일: 360px~ (기본 스타일)
  * - 태블릿: 600px~ (tablet:)
  * - 데스크톱: 1024px+ (lg:)
  */
@@ -191,7 +191,7 @@ function PromoPage() {
       />
       <PortfolioSection
         title="방문형 피드와 릴스"
-        description="브랜드의 무드와 감성을 전달하는 고감도 영상"
+        description="매출 전환과 클릭률(CTR)에 최적화된 소구점 중심 콘텐츠"
         cards={VISIT_FEED_CARDS}
       />
       <FeaturesSection />
@@ -218,7 +218,10 @@ function HeaderSection() {
           ))}
           <DownloadButton>
             <Download className="size-[18px]" color="white" />
-            <DownloadButtonLabel>제안서 다운로드</DownloadButtonLabel>
+            <DownloadButtonLabel>
+              <span className="lg:hidden">제안서</span>
+              <span className="hidden lg:inline">제안서 다운로드</span>
+            </DownloadButtonLabel>
           </DownloadButton>
         </NavGroup>
       </HeaderInner>
@@ -304,13 +307,13 @@ function PortfolioSection({
         </SectionTitleGroup>
         <CardGrid>
           {cards.map((card, i) => (
-            <PortfolioCard key={i}>
+            <PortfolioCardItem key={i}>
               <CardImagePlaceholder />
               <CardOverlay>
                 <CardBadge>{card.label}</CardBadge>
                 <CardTitle>{card.title}</CardTitle>
               </CardOverlay>
-            </PortfolioCard>
+            </PortfolioCardItem>
           ))}
         </CardGrid>
       </PortfolioInner>
@@ -375,6 +378,27 @@ function MusesSection({ selectedIndex, onSelect }: MusesSectionProps) {
               </PlatformChipGroup>
             </InfluencerInfo>
           </InfluencerDetailCard>
+
+          {/* Mobile/Tablet: horizontal scroll */}
+          <InfluencerScrollSection>
+            <InfluencerScrollFadeLeft />
+            <InfluencerScrollTrack>
+              {INFLUENCERS.map((inf, i) => (
+                <InfluencerScrollItem
+                  key={inf.name}
+                  onClick={() => onSelect(i)}
+                >
+                  <InfluencerScrollAvatar $selected={i === selectedIndex}>
+                    <AvatarPlaceholder />
+                  </InfluencerScrollAvatar>
+                  <InfluencerScrollName>{inf.name}</InfluencerScrollName>
+                </InfluencerScrollItem>
+              ))}
+            </InfluencerScrollTrack>
+            <InfluencerScrollFadeRight />
+          </InfluencerScrollSection>
+
+          {/* Desktop: 3x5 grid */}
           <InfluencerGridSection>
             {[
               INFLUENCERS.slice(0, 5),
@@ -456,14 +480,6 @@ function FooterSection() {
   );
 }
 
-// --- Styled Components ---
-
-const PageWrapper = tw.div`
-  w-full min-h-screen bg-white
-  flex flex-col items-start
-  overflow-clip rounded-[32px]
-`;
-
 // --- Icons ---
 
 function InstagramIcon() {
@@ -519,21 +535,30 @@ function YoutubeIcon() {
 
 // --- Styled Components ---
 
+const PageWrapper = tw.div`
+  w-full min-h-screen bg-white
+  flex flex-col items-start
+  overflow-clip rounded-[32px]
+`;
+
 // Header
 const HeaderWrapper = tw.div`
-  w-full px-[110px]
+  w-full
+  px-4 tablet:px-5 lg:px-[110px]
 `;
 
 const HeaderInner = tw.header`
-  w-full h-[76px]
+  w-full
+  h-[56px] tablet:h-[68px] lg:h-[76px]
   flex items-center gap-3
   bg-white overflow-clip
-  px-5 py-2
+  py-2
 `;
 
 const LogoText = tw.p`
-  flex-1 font-bold text-[27px] leading-[36px]
-  text-[#18181b]
+  flex-1 font-bold
+  text-[18px] tablet:text-[21px] lg:text-[27px]
+  leading-[36px] text-[#18181b]
 `;
 
 const NavGroup = tw.nav`
@@ -541,8 +566,9 @@ const NavGroup = tw.nav`
 `;
 
 const NavButton = tw.button`
+  hidden lg:flex
   h-[44px] min-w-[44px]
-  flex items-center justify-center
+  items-center justify-center
   px-3 rounded-[22px]
   bg-transparent
 `;
@@ -553,7 +579,8 @@ const NavButtonLabel = tw.span`
 `;
 
 const DownloadButton = tw.button`
-  h-[44px] min-w-[44px]
+  h-[32px] tablet:h-[36px] lg:h-[44px]
+  min-w-[44px]
   flex items-center justify-center gap-1
   px-3 rounded-[22px]
   bg-[#18181b]
@@ -566,14 +593,17 @@ const DownloadButtonLabel = tw.span`
 
 // Hero
 const HeroWrapper = tw.section`
-  w-full px-[110px]
-  flex flex-col items-center gap-[48px]
+  w-full
+  px-4 tablet:px-5 lg:px-[110px]
+  flex flex-col items-center
+  gap-6 tablet:gap-8 lg:gap-8
   bg-white overflow-clip
-  pb-[96px]
+  pb-12 tablet:pb-16 lg:pb-[96px]
 `;
 
 const HeroImagePlaceholder = tw.div`
-  w-full h-[400px]
+  w-full
+  h-[200px] tablet:h-[240px] lg:h-[400px]
   bg-gray-200 rounded-[20px]
 `;
 
@@ -588,7 +618,10 @@ const HeroTextGroup = tw.div`
 `;
 
 const HeroTitle = tw.h1`
-  w-full font-bold text-[36px] leading-[48px]
+  w-full font-bold
+  text-[24px] leading-[32px]
+  tablet:text-[27px] tablet:leading-[36px]
+  lg:text-[36px] lg:leading-[48px]
 `;
 
 const HeroDescription = tw.p`
@@ -596,18 +629,22 @@ const HeroDescription = tw.p`
 `;
 
 const HeroButtonGroup = tw.div`
-  flex items-start gap-2
+  w-full lg:w-auto
+  flex flex-col lg:flex-row
+  items-start gap-2
 `;
 
 const HeroPrimaryButton = tw.button`
-  w-[200px] h-[52px]
+  w-full lg:w-[200px]
+  h-[52px]
   flex items-center justify-center gap-1
   px-4 rounded-[27px]
   bg-[#18181b]
 `;
 
 const HeroSecondaryButton = tw.button`
-  w-[200px] h-[52px]
+  w-full lg:w-[200px]
+  h-[52px]
   flex items-center justify-center
   px-4 rounded-[27px]
   bg-[#449afc]
@@ -622,7 +659,8 @@ const HeroButtonLabel = tw.span`
 const PartnersWrapper = tw.section`
   w-full
   flex flex-col items-center justify-center gap-8
-  bg-[#18181b] py-16
+  bg-[#18181b]
+  py-12 tablet:py-16 lg:py-16
 `;
 
 const PartnersTitleGroup = tw.div`
@@ -631,7 +669,9 @@ const PartnersTitleGroup = tw.div`
 `;
 
 const PartnersTitle = tw.h2`
-  w-full font-bold text-[27px] leading-[36px]
+  w-full font-bold
+  text-[21px] tablet:text-[27px] lg:text-[27px]
+  leading-[36px]
 `;
 
 const PartnersSubtitle = tw.p`
@@ -655,16 +695,17 @@ const MarqueeImage = tw.img`
 
 // Portfolio (Feed sections)
 const PortfolioWrapper = tw.section`
-  w-full px-[110px]
+  w-full
+  px-4 tablet:px-5 lg:px-[110px]
   flex flex-col items-center justify-center
-  gap-16 py-16
+  gap-16
+  py-12 tablet:py-16 lg:py-16
   bg-white overflow-clip
 `;
 
 const PortfolioInner = tw.div`
   w-full max-w-[1220px]
   flex flex-col items-start gap-8
-  px-5
 `;
 
 const SectionTitleGroup = tw.div`
@@ -681,12 +722,13 @@ const SectionDescription = tw.p`
 `;
 
 const CardGrid = tw.div`
-  w-full flex gap-5 items-start
-  overflow-clip
+  w-full
+  grid grid-cols-2 gap-2
+  lg:grid-cols-4 lg:gap-5
 `;
 
-const PortfolioCard = tw.div`
-  flex-1 min-w-0 min-h-0
+const PortfolioCardItem = tw.div`
+  min-w-0 min-h-0
   aspect-[280/420]
   flex flex-col items-start justify-end
   overflow-clip rounded-xl
@@ -718,7 +760,9 @@ const CardTitle = tw.p`
 
 // Features
 const FeaturesWrapper = tw.section`
-  w-full px-[110px] py-16
+  w-full
+  px-4 tablet:px-5 lg:px-[110px]
+  py-16
   bg-white overflow-clip
   flex flex-col items-center justify-center
 `;
@@ -732,7 +776,9 @@ const FeaturesInner = tw.div`
 
 const FeatureCardGrid = tw.div`
   w-full
-  flex items-center justify-center gap-5
+  flex flex-col lg:flex-row
+  items-center justify-center
+  gap-12 tablet:gap-16 lg:gap-5
   text-center overflow-clip
 `;
 
@@ -759,7 +805,9 @@ const FeatureMutedText = tw.p`
 
 // Muses / Influencers
 const MusesWrapper = tw.section`
-  w-full px-[110px] py-16
+  w-full
+  px-4 tablet:px-5 lg:px-[110px]
+  py-12 tablet:py-16 lg:py-16
   bg-white overflow-clip
   flex flex-col items-center justify-center
 `;
@@ -767,15 +815,17 @@ const MusesWrapper = tw.section`
 const MusesInner = tw.div`
   w-full
   flex flex-col items-start gap-8
-  px-5
 `;
 
 const MusesContentRow = tw.div`
-  w-full flex items-center gap-12
+  w-full
+  flex flex-col lg:flex-row
+  items-center gap-8 lg:gap-12
 `;
 
 const InfluencerDetailCard = tw.div`
-  w-[400px] shrink-0
+  w-full tablet:max-w-[360px] tablet:mx-auto lg:max-w-none lg:mx-0
+  lg:w-[400px] shrink-0
   flex flex-col items-start
   bg-[#f4f4f5] rounded-[20px]
   overflow-clip
@@ -789,7 +839,8 @@ const InfluencerImagePlaceholder = tw.div`
 const InfluencerInfo = tw.div`
   w-full flex flex-col gap-5
   items-start justify-center
-  px-8 py-8 h-[208px]
+  p-5 lg:px-8 lg:py-8
+  lg:h-[208px]
 `;
 
 const InfluencerTextGroup = tw.div`
@@ -798,7 +849,9 @@ const InfluencerTextGroup = tw.div`
 `;
 
 const InfluencerName = tw.p`
-  w-full font-bold text-[27px] leading-[36px]
+  w-full font-bold
+  text-[21px] lg:text-[27px]
+  leading-[36px]
 `;
 
 const InfluencerDescription = tw.p`
@@ -821,9 +874,55 @@ const PlatformChipLabel = tw.span`
   text-[#18181b] px-1
 `;
 
+// Mobile/Tablet: horizontal scroll avatars
+const InfluencerScrollSection = tw.div`
+  w-full relative
+  lg:hidden
+`;
+
+const InfluencerScrollFadeLeft = tw.div`
+  absolute left-0 top-0 bottom-0 w-6 z-10
+  bg-gradient-to-r from-white to-transparent
+  pointer-events-none
+`;
+
+const InfluencerScrollFadeRight = tw.div`
+  absolute right-0 top-0 bottom-0 w-6 z-10
+  bg-gradient-to-l from-white to-transparent
+  pointer-events-none
+`;
+
+const InfluencerScrollTrack = tw.div`
+  w-full flex items-start gap-3
+  overflow-x-auto
+  scrollbar-hide
+`;
+
+const InfluencerScrollItem = tw.button`
+  flex-shrink-0
+  w-[60px]
+  flex flex-col items-center gap-1
+`;
+
+const InfluencerScrollAvatar = tw.div<{ $selected: boolean }>`
+  w-[60px] h-[60px]
+  flex flex-col items-start
+  overflow-clip rounded-full
+  ${({ $selected }) =>
+    $selected ? 'border-[3px] border-solid border-[#18181b]' : 'border-0'}
+`;
+
+const InfluencerScrollName = tw.p`
+  w-full text-center
+  font-normal text-xs leading-4
+  text-[#18181b] truncate
+`;
+
+// Desktop: 3x5 grid avatars
 const InfluencerGridSection = tw.div`
+  hidden lg:flex
   flex-1 min-w-0
-  flex flex-col items-center gap-8
+  flex-col items-center gap-8
 `;
 
 const InfluencerAvatarRow = tw.div`
@@ -857,7 +956,9 @@ const InfluencerAvatarName = tw.p`
 
 // FAQ
 const FaqWrapper = tw.section`
-  w-full px-[120px] py-16
+  w-full
+  px-4 tablet:px-5 lg:px-[120px]
+  py-12 tablet:py-16 lg:py-16
   bg-white overflow-clip
   flex flex-col items-center justify-center gap-8
 `;
@@ -869,7 +970,7 @@ const FaqTitle = tw.h2`
 `;
 
 const FaqList = tw.div`
-  w-[820px]
+  w-full lg:w-[820px]
   flex flex-col items-start gap-8
 `;
 
@@ -899,7 +1000,9 @@ const FaqAnswer = tw.p`
 
 // Footer
 const FooterWrapper = tw.footer`
-  w-full px-[120px] py-16
+  w-full
+  px-4 tablet:px-5 lg:px-[120px]
+  py-12 tablet:py-16 lg:py-16
   bg-[#18181b]
   flex flex-col items-center justify-center
   overflow-clip
