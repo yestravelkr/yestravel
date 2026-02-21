@@ -12,6 +12,10 @@ const config: Config = {
     ),
   ],
   theme: {
+    screens: {
+      tablet: '600px',
+      lg: '1024px',
+    },
     extend: {
       fontFamily: {
         sans: ['MinSans', 'Min Sans VF', 'sans-serif'],
