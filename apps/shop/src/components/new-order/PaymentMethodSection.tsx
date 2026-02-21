@@ -8,7 +8,7 @@ import { Circle, CircleDot } from 'lucide-react';
 import { useFormContext } from 'react-hook-form';
 import tw from 'tailwind-styled-components';
 
-import type { NewOrderFormData } from '@/routes/new-order.$orderNumber';
+import type { NewOrderFormData } from '@/routes/_auth/new-order.$orderNumber';
 
 export type PaymentType = 'simple' | 'general';
 export type PaymentMethod =
