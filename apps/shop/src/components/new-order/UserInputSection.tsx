@@ -9,7 +9,7 @@ import { useFormContext } from 'react-hook-form';
 import { toast } from 'sonner';
 import tw from 'tailwind-styled-components';
 
-import type { NewOrderFormData } from '@/routes/new-order.$orderNumber';
+import type { NewOrderFormData } from '@/routes/_auth/new-order.$orderNumber';
 
 export function UserInputSection() {
   const { watch, setValue, register } = useFormContext<NewOrderFormData>();
