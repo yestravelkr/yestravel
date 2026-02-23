@@ -1,0 +1,21 @@
+#!/bin/bash
+# .githooks/post-checkout
+# Worktree 생성 시 자동으로 환경 파일 복사
+
+# $3=1 일 때만 실행 (branch checkout, file checkout 제외)
+if [ "$3" != "1" ]; then
+  exit 0
+fi
+
+MAIN_WORKTREE=$(git worktree list --porcelain | head -1 | sed 's/worktree //')
+CURRENT_DIR=$(git rev-parse --show-toplevel)
+
+# 메인 worktree에서는 실행하지 않음
+if [ "$MAIN_WORKTREE" = "$CURRENT_DIR" ]; then
+  exit 0
+fi
+
+SETUP_SCRIPT="$CURRENT_DIR/scripts/setup-worktree-env.sh"
+if [ -f "$SETUP_SCRIPT" ]; then
+  bash "$SETUP_SCRIPT"
+fi
