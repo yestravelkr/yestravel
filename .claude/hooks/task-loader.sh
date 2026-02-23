@@ -14,8 +14,8 @@ if [ $? -ne 0 ]; then
   exit 0
 fi
 
-# 태스크 개수 확인
-TOTAL=$(echo "$TASKS" | jq '.totalCount // 0')
+# 태스크 개수 확인 (Done 제외)
+TOTAL=$(echo "$TASKS" | jq '[.items[] | select(.status != "Done")] | length')
 
 if [ "$TOTAL" -eq 0 ]; then
   exit 0
@@ -31,7 +31,7 @@ fi
 
   # 태스크 출력 (Priority 순: P0 → P1 → P2 → 없음)
   echo "$TASKS" | jq -r '
-    .items
+    [.items[] | select(.status != "Done")]
     | sort_by(
         if .priority == "P0" then 0
         elif .priority == "P1" then 1
@@ -49,7 +49,7 @@ fi
   done
 
   echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-  echo "💡 /tasks 로 상세 목록 확인 | 전체: ${TOTAL}개"
+  echo "💡 /tasks 로 상세 목록 확인 | 미완료: ${TOTAL}개"
   echo ""
 } > /dev/tty
 
