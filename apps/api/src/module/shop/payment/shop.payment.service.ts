@@ -144,6 +144,32 @@ export class ShopPaymentService {
   }
 
   /**
+   * 호텔 SKU 재고 복구 (SELECT FOR UPDATE)
+   * 주문 취소 시 차감된 재고를 복원한다.
+   */
+  async restoreHotelSkuQuantity(
+    productId: number,
+    dates: string[]
+  ): Promise<void> {
+    const skus = await this.repositoryProvider.HotelSkuRepository.find({
+      where: { productId, date: In(dates) },
+      lock: { mode: 'pessimistic_write' },
+      order: { date: 'ASC' },
+    });
+
+    if (skus.length !== dates.length) {
+      console.warn(
+        `[restoreHotelSkuQuantity] SKU mismatch: expected ${dates.length}, found ${skus.length}`
+      );
+    }
+
+    for (const sku of skus) {
+      sku.quantity += 1;
+    }
+    await this.repositoryProvider.HotelSkuRepository.save(skus);
+  }
+
+  /**
    * TmpOrder → Order 변환 (타입별로 적절한 엔티티 사용)
    */
   private createOrderFromTmpOrder(
