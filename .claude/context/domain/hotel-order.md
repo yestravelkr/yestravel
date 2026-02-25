@@ -103,6 +103,15 @@ for (const date of requiredDates) {
 }
 ```
 
+### 4. 재고 복구 (주문 취소 시)
+
+```typescript
+// 취소 시 order.orderOptionSnapshot.priceByDate에서 날짜 추출
+const dates = Object.keys(order.orderOptionSnapshot.priceByDate);
+// 해당 날짜의 SKU quantity를 1씩 복구
+await restoreHotelSkuQuantity(order.productId, dates);
+```
+
 ## 호텔 vs 일반 상품
 
 | 구분 | 일반 상품 | 호텔 상품 |
@@ -110,4 +119,5 @@ for (const date of requiredDates) {
 | 재고 관리 | Sku (attributes) | HotelSku (날짜) |
 | 옵션 가격 | 고정 가격 | 날짜별 가격 |
 | 재고 차감 | 선택 SKU만 | 기간 내 모든 날짜 |
+| 재고 복구 | - | 취소 시 기간 내 모든 날짜 복구 |
 | 가격 계산 | 옵션 1회 | 날짜별 합산 |
