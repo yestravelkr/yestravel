@@ -158,8 +158,9 @@ export class ShopPaymentService {
     });
 
     if (skus.length !== dates.length) {
-      console.warn(
-        `[restoreHotelSkuQuantity] SKU mismatch: expected ${dates.length}, found ${skus.length}`
+      this.logger.error(
+        `[restoreHotelSkuQuantity] SKU mismatch: expected ${dates.length}, found ${skus.length}. ` +
+          `productId=${productId}, dates=${dates.join(',')}`
       );
     }
 
