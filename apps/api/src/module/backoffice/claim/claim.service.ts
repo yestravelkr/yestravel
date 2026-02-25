@@ -67,6 +67,8 @@ export class ClaimService {
     order.status = 'CANCELLED';
     await this.repositoryProvider.OrderRepository.save(order);
 
+    await this.shopPaymentService.restoreHotelSkuQuantityFromOrder(order);
+
     // 4. 포트원 결제 취소 API 호출 (실패 시 @Transactional이 DB 롤백)
     const payment = await this.repositoryProvider.PaymentRepository.findOne({
       where: { orderId },

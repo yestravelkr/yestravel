@@ -731,6 +731,265 @@ describe('ShopPaymentService - 재고 동시성 (Integration)', () => {
     });
   });
 
+  describe('restoreHotelSkuQuantity', () => {
+    describe('GIVEN: SKU 재고 0 (결제로 차감된 상태)일 때', () => {
+      describe('WHEN: restoreHotelSkuQuantity를 호출하면', () => {
+        it('THEN: HotelSku quantity를 1 복구한다', async () => {
+          // Given - 결제 완료로 재고 0 상태
+          const { product, option, sku, member, influencer, campaign } =
+            await setupHotelTestData(1);
+
+          const tmpOrder = await makeTmpOrder(dataSource.manager, {
+            productId: product.id,
+            memberId: member.id,
+            raw: buildHotelTmpOrderRaw({
+              productId: product.id,
+              influencerId: influencer.id,
+              campaignId: campaign.id,
+              hotelOptionId: option.id,
+              hotelOptionName: option.name,
+            }),
+          });
+
+          const paymentId = orderNumberParser.encode(
+            [tmpOrder.id],
+            tmpOrder.createdAt
+          );
+
+          // 결제 → 재고 차감 (qty 1→0)
+          await executeInIsolatedTransaction(svc =>
+            svc.handlePaymentComplete({
+              paymentId,
+              paymentToken: 'test-token',
+              transactionType: 'PAYMENT',
+              txId: 'test-tx-id',
+              memberId: member.id,
+            })
+          );
+
+          const skuAfterDeduct = await dataSource.manager.findOneBy(
+            HotelSkuEntity,
+            { id: sku.id }
+          );
+          expect(skuAfterDeduct!.quantity).toBe(0);
+
+          // When - 재고 복구
+          await executeInIsolatedTransaction(svc =>
+            svc.restoreHotelSkuQuantity(product.id, ['2026-03-01'])
+          );
+
+          // Then
+          const skuAfterRestore = await dataSource.manager.findOneBy(
+            HotelSkuEntity,
+            { id: sku.id }
+          );
+          expect(skuAfterRestore!.quantity).toBe(1);
+        });
+      });
+    });
+
+    describe('GIVEN: 3일 멀티 날짜 결제 후 재고 차감 상태일 때', () => {
+      describe('WHEN: restoreHotelSkuQuantity를 3일치 호출하면', () => {
+        it('THEN: 3개 SKU 모두 quantity를 1씩 복구한다', async () => {
+          // Given - 3개 날짜 SKU 생성 + 결제로 차감
+          const em = dataSource.manager;
+          const brand = await makeBrand(em);
+          const product = await makeHotelProduct(em, { brandId: brand.id });
+          const option = await makeHotelOption(em, {
+            productId: product.id,
+            name: 'Standard Room',
+            priceByDate: {
+              '2026-03-01': 100000,
+              '2026-03-02': 100000,
+              '2026-03-03': 100000,
+            },
+          });
+          const sku1 = await makeHotelSku(em, {
+            productId: product.id,
+            date: '2026-03-01',
+            quantity: 5,
+          });
+          const sku2 = await makeHotelSku(em, {
+            productId: product.id,
+            date: '2026-03-02',
+            quantity: 5,
+          });
+          const sku3 = await makeHotelSku(em, {
+            productId: product.id,
+            date: '2026-03-03',
+            quantity: 5,
+          });
+          const member = await makeMember(em);
+          const influencer = await makeInfluencer(em);
+          const campaign = await makeCampaign(em);
+
+          const tmpOrder = await makeTmpOrder(em, {
+            productId: product.id,
+            memberId: member.id,
+            raw: buildHotelTmpOrderRaw({
+              productId: product.id,
+              influencerId: influencer.id,
+              campaignId: campaign.id,
+              hotelOptionId: option.id,
+              hotelOptionName: option.name,
+              checkInDate: '2026-03-01',
+              checkOutDate: '2026-03-04',
+              priceByDate: {
+                '2026-03-01': 100000,
+                '2026-03-02': 100000,
+                '2026-03-03': 100000,
+              },
+              totalAmount: 300000,
+            }),
+          });
+
+          const paymentId = orderNumberParser.encode(
+            [tmpOrder.id],
+            tmpOrder.createdAt
+          );
+
+          // 결제 → 3일 재고 차감 (각 5→4)
+          await executeInIsolatedTransaction(svc =>
+            svc.handlePaymentComplete({
+              paymentId,
+              paymentToken: 'test-token',
+              transactionType: 'PAYMENT',
+              txId: 'test-tx-id',
+              memberId: member.id,
+            })
+          );
+
+          // When - 3일 재고 복구
+          await executeInIsolatedTransaction(svc =>
+            svc.restoreHotelSkuQuantity(product.id, [
+              '2026-03-01',
+              '2026-03-02',
+              '2026-03-03',
+            ])
+          );
+
+          // Then - 3일 모두 원래 수량 복구
+          const updatedSku1 = await em.findOneBy(HotelSkuEntity, {
+            id: sku1.id,
+          });
+          const updatedSku2 = await em.findOneBy(HotelSkuEntity, {
+            id: sku2.id,
+          });
+          const updatedSku3 = await em.findOneBy(HotelSkuEntity, {
+            id: sku3.id,
+          });
+          expect(updatedSku1!.quantity).toBe(5);
+          expect(updatedSku2!.quantity).toBe(5);
+          expect(updatedSku3!.quantity).toBe(5);
+        });
+      });
+    });
+
+    describe('GIVEN: SKU 재고 0, 취소 1건 + 새 결제 1건 동시 발생 시', () => {
+      describe('WHEN: restoreHotelSkuQuantity와 handlePaymentComplete를 동시 실행하면', () => {
+        it('THEN: 둘 다 성공하고 최종 quantity가 정확하다', async () => {
+          // Given - 결제 완료로 재고 1→0 상태
+          const em = dataSource.manager;
+          const brand = await makeBrand(em);
+          const product = await makeHotelProduct(em, { brandId: brand.id });
+          const option = await makeHotelOption(em, {
+            productId: product.id,
+            name: 'Standard Room',
+            priceByDate: { '2026-03-01': 100000 },
+          });
+          const sku = await makeHotelSku(em, {
+            productId: product.id,
+            date: '2026-03-01',
+            quantity: 1,
+          });
+          const member1 = await makeMember(em, { phone: '01011111111' });
+          const member2 = await makeMember(em, { phone: '01022222222' });
+          const influencer = await makeInfluencer(em);
+          const campaign = await makeCampaign(em);
+
+          const raw = buildHotelTmpOrderRaw({
+            productId: product.id,
+            influencerId: influencer.id,
+            campaignId: campaign.id,
+            hotelOptionId: option.id,
+            hotelOptionName: option.name,
+          });
+
+          // member1 결제 → 재고 1→0
+          const tmpOrder1 = await makeTmpOrder(em, {
+            productId: product.id,
+            memberId: member1.id,
+            raw,
+          });
+          const paymentId1 = orderNumberParser.encode(
+            [tmpOrder1.id],
+            tmpOrder1.createdAt
+          );
+
+          await executeInIsolatedTransaction(svc =>
+            svc.handlePaymentComplete({
+              paymentId: paymentId1,
+              paymentToken: 'test-token-1',
+              transactionType: 'PAYMENT',
+              txId: 'test-tx-1',
+              memberId: member1.id,
+            })
+          );
+
+          const skuAfterDeduct = await em.findOneBy(HotelSkuEntity, {
+            id: sku.id,
+          });
+          expect(skuAfterDeduct!.quantity).toBe(0);
+
+          // member2 새 결제 준비
+          const tmpOrder2 = await makeTmpOrder(em, {
+            productId: product.id,
+            memberId: member2.id,
+            raw,
+          });
+          const paymentId2 = orderNumberParser.encode(
+            [tmpOrder2.id],
+            tmpOrder2.createdAt
+          );
+
+          // When - 취소(복구)와 새 결제 동시 실행
+          const [restoreResult, paymentResult] = await Promise.allSettled([
+            executeInIsolatedTransaction(svc =>
+              svc.restoreHotelSkuQuantity(product.id, ['2026-03-01'])
+            ),
+            executeInIsolatedTransaction(svc =>
+              svc.handlePaymentComplete({
+                paymentId: paymentId2,
+                paymentToken: 'test-token-2',
+                transactionType: 'PAYMENT',
+                txId: 'test-tx-2',
+                memberId: member2.id,
+              })
+            ),
+          ]);
+
+          // Then - 복구는 항상 성공
+          expect(restoreResult.status).toBe('fulfilled');
+
+          // Then - 순서에 따라:
+          //   복구 먼저 → qty 0→1 → 결제 성공 → qty 1→0 (최종 0)
+          //   결제 먼저 → qty 0이라 실패 → 복구 → qty 0→1 (최종 1)
+          const finalSku = await em.findOneBy(HotelSkuEntity, {
+            id: sku.id,
+          });
+
+          if (paymentResult.status === 'fulfilled') {
+            // 복구 먼저 실행된 경우: qty 0→1→0
+            expect(finalSku!.quantity).toBe(0);
+          } else {
+            // 결제 먼저 실행된 경우: qty 0(결제실패)→1
+            expect(finalSku!.quantity).toBe(1);
+          }
+        });
+      });
+    });
+  });
+
   describe('재고 공유 조건', () => {
     describe('GIVEN: 같은 날짜, 같은 숙소, 같은 옵션 (재고 1)', () => {
       describe('WHEN: 2명이 동시 결제하면', () => {

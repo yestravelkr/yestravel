@@ -121,6 +121,8 @@ export class ShopClaimService {
       order.status = 'CANCELLED';
       await this.repositoryProvider.OrderRepository.save(order);
 
+      await this.shopPaymentService.restoreHotelSkuQuantityFromOrder(order);
+
       // Payment nowAmount 차감
       const payment = await this.repositoryProvider.PaymentRepository.findOne({
         where: { orderId },

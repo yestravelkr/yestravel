@@ -481,8 +481,7 @@ export class OrderService {
     };
 
     // Delivery는 아직 미지원
-    const revertMap =
-      order.type === 'HOTEL' ? HOTEL_REVERT_MAP : {};
+    const revertMap = order.type === 'HOTEL' ? HOTEL_REVERT_MAP : {};
 
     const previousStatus = order.status;
     const revertedStatus = revertMap[previousStatus];
@@ -543,6 +542,8 @@ export class OrderService {
     // 4. 주문 상태 변경
     order.status = 'CANCELLED';
     await this.repositoryProvider.OrderRepository.save(order);
+
+    await this.shopPaymentService.restoreHotelSkuQuantityFromOrder(order);
 
     // 5. Payment nowAmount 차감
     payment.nowAmount = payment.paidAmount - refundAmount;

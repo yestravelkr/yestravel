@@ -144,6 +144,43 @@ export class ShopPaymentService {
   }
 
   /**
+   * 호텔 SKU 재고 복구 (SELECT FOR UPDATE)
+   * 주문 취소 시 차감된 재고를 복원한다.
+   */
+  async restoreHotelSkuQuantity(
+    productId: number,
+    dates: string[]
+  ): Promise<void> {
+    const skus = await this.repositoryProvider.HotelSkuRepository.find({
+      where: { productId, date: In(dates) },
+      lock: { mode: 'pessimistic_write' },
+      order: { date: 'ASC' },
+    });
+
+    if (skus.length !== dates.length) {
+      this.logger.error(
+        `[restoreHotelSkuQuantity] SKU mismatch: expected ${dates.length}, found ${skus.length}. ` +
+          `productId=${productId}, dates=${dates.join(',')}`
+      );
+    }
+
+    for (const sku of skus) {
+      sku.quantity += 1;
+    }
+    await this.repositoryProvider.HotelSkuRepository.save(skus);
+  }
+
+  /**
+   * 호텔 주문의 SKU 재고 복구
+   * order.type이 HOTEL인 경우에만 재고를 복구한다.
+   */
+  async restoreHotelSkuQuantityFromOrder(order: OrderEntity): Promise<void> {
+    if (order.type !== 'HOTEL') return;
+    const dates = Object.keys(order.orderOptionSnapshot.priceByDate);
+    await this.restoreHotelSkuQuantity(order.productId, dates);
+  }
+
+  /**
    * TmpOrder → Order 변환 (타입별로 적절한 엔티티 사용)
    */
   private createOrderFromTmpOrder(
