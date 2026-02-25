@@ -171,6 +171,16 @@ export class ShopPaymentService {
   }
 
   /**
+   * 호텔 주문의 SKU 재고 복구
+   * order.type이 HOTEL인 경우에만 재고를 복구한다.
+   */
+  async restoreHotelSkuQuantityFromOrder(order: OrderEntity): Promise<void> {
+    if (order.type !== 'HOTEL') return;
+    const dates = Object.keys(order.orderOptionSnapshot.priceByDate);
+    await this.restoreHotelSkuQuantity(order.productId, dates);
+  }
+
+  /**
    * TmpOrder → Order 변환 (타입별로 적절한 엔티티 사용)
    */
   private createOrderFromTmpOrder(

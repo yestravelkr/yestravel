@@ -121,17 +121,7 @@ export class ShopClaimService {
       order.status = 'CANCELLED';
       await this.repositoryProvider.OrderRepository.save(order);
 
-      // 호텔 재고 복구
-      if (order.type === 'HOTEL') {
-        const dates = Object.keys(
-          (order.orderOptionSnapshot as { priceByDate: Record<string, number> })
-            .priceByDate
-        );
-        await this.shopPaymentService.restoreHotelSkuQuantity(
-          order.productId,
-          dates
-        );
-      }
+      await this.shopPaymentService.restoreHotelSkuQuantityFromOrder(order);
 
       // Payment nowAmount 차감
       const payment = await this.repositoryProvider.PaymentRepository.findOne({
