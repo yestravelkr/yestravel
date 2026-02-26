@@ -20,7 +20,9 @@ import {
   openCancelApproveModal,
   openCancelOrderModal,
   openConfirmModal,
+  openOrderHistoryModal,
 } from '@/shared/components';
+import type { OrderHistoryItemData } from '@/shared/components/OrderHistoryModal';
 import { trpc } from '@/shared/trpc';
 
 export const Route = createFileRoute('/_auth/order/hotel/$orderId')({
@@ -176,8 +178,33 @@ function HotelOrderDetailPage() {
     });
   };
 
-  const handleHistory = () => {
-    toast.info('주문 히스토리를 확인합니다.');
+  const handleHistory = async () => {
+    try {
+      const histories = await utils.backofficeOrder.getHistory.fetch({
+        orderId: Number(orderId),
+      });
+
+      // 주문 아이템에서 옵션 정보 추출
+      const options = orderDetail.items.map((item) => ({
+        id: item.id,
+        name: item.optionName,
+      }));
+
+      const historyItems: OrderHistoryItemData[] = histories.map((h) => ({
+        id: h.id,
+        description: h.description ?? null,
+        optionId: h.optionId ?? null,
+        optionName: h.optionName ?? null,
+        createdAt: h.createdAt,
+      }));
+
+      await openOrderHistoryModal({
+        histories: historyItems,
+        options,
+      });
+    } catch {
+      toast.error('주문 히스토리를 불러오는데 실패했습니다.');
+    }
   };
 
   const handleCancelApprove = async () => {
