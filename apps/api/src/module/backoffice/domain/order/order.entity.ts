@@ -24,6 +24,7 @@ import dayjs from 'dayjs';
 import { ConfigProvider } from '@src/config';
 import { PaymentEntity } from '@src/module/backoffice/domain/order/payment.entity';
 import { ClaimEntity } from '@src/module/backoffice/domain/order/claim.entity';
+import { OrderHistoryEntity } from '@src/module/backoffice/domain/order/order-history.entity';
 import type { HotelOrderOptionData } from '@src/module/backoffice/domain/order/hotel-order.entity';
 import type { TmpOrderRawData } from './tmp-order.entity';
 import {
@@ -233,6 +234,9 @@ export class OrderEntity {
 
   @OneToMany(() => ClaimEntity, claim => claim.order)
   claims: ClaimEntity[];
+
+  @OneToMany(() => OrderHistoryEntity, history => history.order)
+  histories: OrderHistoryEntity[];
 
   // ===== 회원 정보 (Shop 회원과 연결) =====
 

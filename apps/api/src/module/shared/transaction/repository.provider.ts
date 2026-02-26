@@ -28,6 +28,7 @@ import { getOrderRepository } from '@src/module/backoffice/domain/order/order.en
 import { getHotelOrderRepository } from '@src/module/backoffice/domain/order/hotel-order.entity';
 import { getPaymentRepository } from '@src/module/backoffice/domain/order/payment.entity';
 import { getClaimRepository } from '@src/module/backoffice/domain/order/claim.entity';
+import { getOrderHistoryRepository } from '@src/module/backoffice/domain/order/order-history.entity';
 import { getMemberRepository } from '@src/module/backoffice/domain/shop/member.entity';
 import { getMemberAddressRepository } from '@src/module/backoffice/domain/shop/member-address.entity';
 import { getPhoneVerificationRepository } from '@src/module/backoffice/domain/shop/phone-verification.entity';
@@ -183,5 +184,9 @@ export class RepositoryProvider {
 
   get ClaimRepository() {
     return getClaimRepository(this.transaction);
+  }
+
+  get OrderHistoryRepository() {
+    return getOrderHistoryRepository(this.transaction);
   }
 }
