@@ -3,6 +3,7 @@ import { MessagePattern } from '@nestjs/microservices';
 import { Transactional } from '@src/module/shared/transaction/transaction.decorator';
 import { TransactionService } from '@src/module/shared/transaction/transaction.service';
 import { OrderService } from './order.service';
+import { OrderHistoryService } from './order-history.service';
 import type {
   FindAllOrdersInput,
   GetStatusCountsInput,
@@ -19,6 +20,8 @@ import type {
   ExportToExcelResponse,
   CancelOrderInput,
   CancelOrderResponse,
+  GetHistoryInput,
+  GetHistoryResponse,
 } from './order.dto';
 
 /**
@@ -28,6 +31,7 @@ import type {
 export class OrderController {
   constructor(
     private readonly orderService: OrderService,
+    private readonly orderHistoryService: OrderHistoryService,
     private readonly transactionService: TransactionService
   ) {}
 
@@ -74,5 +78,10 @@ export class OrderController {
     input: ExportToExcelInput
   ): Promise<ExportToExcelResponse> {
     return await this.orderService.exportToExcel(input);
+  }
+
+  @MessagePattern('backofficeOrder.getHistory')
+  async getHistory(input: GetHistoryInput): Promise<GetHistoryResponse> {
+    return await this.orderHistoryService.findByOrderId(input.orderId);
   }
 }
