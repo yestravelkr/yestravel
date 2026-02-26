@@ -1,6 +1,7 @@
 import { DataSource, EntityManager } from 'typeorm';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { ShopPaymentService } from './shop.payment.service';
+import { OrderHistoryService } from '@src/module/backoffice/order/order-history.service';
 import {
   getTestDataSource,
   destroyTestDataSource,
@@ -62,7 +63,8 @@ describe('ShopPaymentService (Integration)', () => {
    */
   function createService(em: EntityManager): ShopPaymentService {
     const rp = createTestRepositoryProvider(em);
-    return new ShopPaymentService(rp);
+    const orderHistoryService = new OrderHistoryService(rp);
+    return new ShopPaymentService(rp, orderHistoryService);
   }
 
   /**
@@ -140,10 +142,7 @@ describe('ShopPaymentService (Integration)', () => {
           }),
         });
 
-        paymentId = orderNumberParser.encode(
-          [tmpOrder.id],
-          tmpOrder.createdAt
-        );
+        paymentId = orderNumberParser.encode([tmpOrder.id], tmpOrder.createdAt);
       });
 
       describe('WHEN: handlePaymentComplete를 호출하면', () => {

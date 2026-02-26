@@ -1,5 +1,6 @@
 import { DataSource, EntityManager } from 'typeorm';
 import { ShopPaymentService } from './shop.payment.service';
+import { OrderHistoryService } from '@src/module/backoffice/order/order-history.service';
 import {
   getTestDataSource,
   destroyTestDataSource,
@@ -63,7 +64,8 @@ describe('ShopPaymentService - 재고 동시성 (Integration)', () => {
    */
   function createService(em: EntityManager): ShopPaymentService {
     const rp = createTestRepositoryProvider(em);
-    return new ShopPaymentService(rp);
+    const orderHistoryService = new OrderHistoryService(rp);
+    return new ShopPaymentService(rp, orderHistoryService);
   }
 
   /**

@@ -21,6 +21,7 @@ import type {
 } from './shop.payment.type';
 import { PaymentEntity } from '@src/module/backoffice/domain/order/payment.entity';
 import { TmpOrderEntity } from '@src/module/backoffice/domain/order/tmp-order.entity';
+import { OrderHistoryService } from '@src/module/backoffice/order/order-history.service';
 import dayjs from 'dayjs';
 
 @Injectable()
@@ -38,7 +39,10 @@ export class ShopPaymentService {
     expiredAt: dayjs().add(-1, 'h'), // 처음에 바로 accessToken 발급하도록 처리
   };
 
-  constructor(private readonly repositoryProvider: RepositoryProvider) {}
+  constructor(
+    private readonly repositoryProvider: RepositoryProvider,
+    private readonly orderHistoryService: OrderHistoryService
+  ) {}
 
   async handlePaymentComplete(
     data: ShopPaymentCompleteInput & { memberId: number }
@@ -102,7 +106,27 @@ export class ShopPaymentService {
       `Order created with tmpOrder.id: id=${savedOrder.id}, orderNumber=${savedOrder.orderNumber}`
     );
 
-    // 6. PortOne 결제 승인
+    // 6-1. 주문 이력: ORDER_CREATED
+    await this.orderHistoryService.record({
+      orderId: savedOrder.id,
+      previousStatus: null,
+      newStatus: 'PENDING',
+      actorType: 'SYSTEM',
+      action: 'ORDER_CREATED',
+      description: '주문이 생성되었습니다.',
+    });
+
+    // 6-2. 주문 이력: PAYMENT_COMPLETED
+    await this.orderHistoryService.record({
+      orderId: savedOrder.id,
+      previousStatus: 'PENDING',
+      newStatus: 'PAID',
+      actorType: 'SYSTEM',
+      action: 'PAYMENT_COMPLETED',
+      description: '결제가 완료되었습니다.',
+    });
+
+    // 7. PortOne 결제 승인
     await this.confirmPayment(data, savedOrder);
 
     return {
@@ -391,6 +415,15 @@ export class ShopPaymentService {
         `Payment cancellation failed: paymentId=${paymentId}, type=${errorType}, message=${errorMessage}`,
         error.stack
       );
+
+      // 포트원 결제 상태 조회 → 이미 취소된 상태면 성공으로 처리
+      const detail = await this.getPaymentDetail(paymentId);
+      if (detail?.status === 'CANCELLED') {
+        this.logger.log(
+          `Payment already cancelled on PortOne: paymentId=${paymentId}, proceeding.`
+        );
+        return { success: true, cancellation: detail };
+      }
 
       throw new BadRequestException(
         errorMessage || '결제 취소에 실패했습니다.'
