@@ -15,6 +15,8 @@ import {
 } from 'typeorm';
 import { BaseEntity } from '@src/module/backoffice/domain/base.entity';
 import { OrderEntity } from '@src/module/backoffice/domain/order/order.entity';
+import { AdminEntity } from '@src/module/backoffice/domain/admin.entity';
+import { ClaimEntity } from '@src/module/backoffice/domain/order/claim.entity';
 import { TransactionService } from '@src/module/shared/transaction/transaction.service';
 import { getEntityManager } from '@src/database/datasources';
 import type { OrderStatusEnumType } from './order-status';
@@ -57,9 +59,14 @@ export class OrderHistoryEntity extends BaseEntity {
   @Column({ name: 'actor_type', type: 'varchar', length: 10 })
   actorType: 'SYSTEM' | 'USER' | 'ADMIN';
 
-  /** 액터 ID (SYSTEM일 때 null) */
+  /** 액터 ID - Admin FK (SYSTEM/USER일 때 null) */
   @Column({ name: 'actor_id', type: 'int', nullable: true })
   actorId: number | null;
+
+  /** 관리자 관계 */
+  @ManyToOne(() => AdminEntity, { nullable: true })
+  @JoinColumn({ name: 'actor_id' })
+  actor: AdminEntity | null;
 
   /** 액터 이름 */
   @Column({ name: 'actor_name', type: 'varchar', length: 50, nullable: true })
@@ -80,6 +87,11 @@ export class OrderHistoryEntity extends BaseEntity {
   /** 클레임 ID (클레임 관련 액션일 때) */
   @Column({ name: 'claim_id', type: 'int', nullable: true })
   claimId: number | null;
+
+  /** 클레임 관계 */
+  @ManyToOne(() => ClaimEntity, { nullable: true })
+  @JoinColumn({ name: 'claim_id' })
+  claim: ClaimEntity | null;
 
   /** 옵션 ID (특정 옵션 관련 액션일 때) */
   @Column({ name: 'option_id', type: 'int', nullable: true })
