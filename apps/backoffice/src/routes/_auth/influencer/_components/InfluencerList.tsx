@@ -68,7 +68,10 @@ export function InfluencerList() {
       id: 'actions',
       header: '',
       cell: (info) => (
-        <Link to={`/influencer/${info.row.original.id}`}>
+        <Link
+          to="/influencer/$influencerId"
+          params={{ influencerId: String(info.row.original.id) }}
+        >
           <Button
             kind="neutral"
             variant="outline"
@@ -86,7 +89,10 @@ export function InfluencerList() {
   ];
 
   const handleRowClick = (influencer: InfluencerListItem) => {
-    navigate({ to: `/influencer/${influencer.id}` });
+    navigate({
+      to: '/influencer/$influencerId',
+      params: { influencerId: String(influencer.id) },
+    });
   };
 
   if (!influencerData || influencerData.length === 0) {
