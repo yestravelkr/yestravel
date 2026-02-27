@@ -1,111 +1,159 @@
+/**
+ * InfluencerList - 인플루언서 목록 컴포넌트
+ *
+ * 인플루언서 목록을 테이블 형태로 표시합니다.
+ * 검색 기능과 수정 버튼을 제공합니다.
+ */
+
 import { useNavigate, Link } from '@tanstack/react-router';
 import { createColumnHelper } from '@tanstack/react-table';
+import { Button } from '@yestravelkr/min-design-system';
 import dayjs from 'dayjs';
+import { Search } from 'lucide-react';
+import { useState, useMemo } from 'react';
 import tw from 'tailwind-styled-components';
 
 import { InboxIcon } from '@/components/icons';
-import { Table, EmptyState } from '@/shared/components';
+import { Input, EmptyState, Table, ListPageLayout } from '@/shared/components';
 import { trpc, type RouterOutputs } from '@/shared/trpc';
 
-// tRPC에서 타입 추출
 type InfluencerListItem =
   RouterOutputs['backofficeInfluencer']['findAll']['data'][number];
 
+const columnHelper = createColumnHelper<InfluencerListItem>();
+
 export function InfluencerList() {
   const navigate = useNavigate();
-
   const [influencers] = trpc.backofficeInfluencer.findAll.useSuspenseQuery({
     page: 1,
     limit: 50,
   });
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const columnHelper = createColumnHelper<InfluencerListItem>();
+  const influencerData = influencers?.data || [];
+
+  // 검색 필터링
+  const filteredInfluencers = useMemo(() => {
+    if (!searchQuery.trim()) return influencerData;
+    const query = searchQuery.toLowerCase();
+    return influencerData.filter(
+      (influencer) =>
+        influencer.name.toLowerCase().includes(query) ||
+        influencer.email?.toLowerCase().includes(query) ||
+        influencer.phoneNumber?.toLowerCase().includes(query),
+    );
+  }, [influencerData, searchQuery]);
 
   const columns = [
     columnHelper.accessor('name', {
-      header: '이름',
-      cell: (info) => (
-        <div>
-          <InfluencerName>{info.getValue()}</InfluencerName>
-          {info.row.original.email && (
-            <InfluencerEmail>{info.row.original.email}</InfluencerEmail>
-          )}
-        </div>
-      ),
-      size: 300,
+      header: '인플루언서명',
+      size: 160,
+    }),
+    columnHelper.accessor('email', {
+      header: '이메일',
+      cell: (info) => info.getValue() || '-',
+      size: 200,
     }),
     columnHelper.accessor('phoneNumber', {
       header: '연락처',
-      cell: (info) => <PhoneNumber>{info.getValue() || '-'}</PhoneNumber>,
-      size: 200,
+      cell: (info) => info.getValue() || '-',
+      size: 160,
     }),
     columnHelper.accessor('createdAt', {
       header: '등록일',
+      cell: (info) => dayjs(info.getValue()).format('YY.MM.DD'),
+      size: 120,
+    }),
+    columnHelper.display({
+      id: 'actions',
+      header: '',
       cell: (info) => (
-        <CreatedAt>{dayjs(info.getValue()).format('YYYY-MM-DD')}</CreatedAt>
+        <Link
+          to="/influencer/$influencerId"
+          params={{ influencerId: String(info.row.original.id) }}
+        >
+          <Button
+            kind="neutral"
+            variant="outline"
+            size="small"
+            onClick={(e) => {
+              e.stopPropagation();
+            }}
+          >
+            수정
+          </Button>
+        </Link>
       ),
-      size: 150,
+      size: 100,
     }),
   ];
 
   const handleRowClick = (influencer: InfluencerListItem) => {
-    navigate({ to: `/influencer/${influencer.id}` });
+    navigate({
+      to: '/influencer/$influencerId',
+      params: { influencerId: String(influencer.id) },
+    });
   };
 
-  const influencerData = influencers?.data || [];
-
-  if (influencerData.length > 0) {
+  if (!influencerData || influencerData.length === 0) {
     return (
-      <Table
-        columns={columns}
-        data={influencerData}
-        onRowClick={handleRowClick}
+      <EmptyState
+        icon={<InboxIcon />}
+        title="등록된 인플루언서가 없습니다"
+        description="새로운 인플루언서를 등록하여 관리를 시작하세요."
+        action={
+          <Link to="/influencer/create">
+            <Button kind="neutral" variant="solid" size="medium">
+              첫 인플루언서 등록하기
+            </Button>
+          </Link>
+        }
       />
     );
   }
 
   return (
-    <EmptyState
-      icon={<InboxIcon />}
-      title="등록된 인플루언서가 없습니다"
-      description="새로운 인플루언서를 등록하여 관리를 시작하세요."
-      action={
-        <CreateButton to="/influencer/create">
-          첫 인플루언서 등록하기
-        </CreateButton>
+    <ListPageLayout
+      filters={
+        <SearchWrapper>
+          <Input
+            prefix={<SearchIcon size={20} />}
+            placeholder="인플루언서 검색"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </SearchWrapper>
+      }
+      table={
+        filteredInfluencers.length > 0 ? (
+          <Table
+            columns={columns}
+            data={filteredInfluencers}
+            onRowClick={handleRowClick}
+          />
+        ) : (
+          <NoResultsMessage>검색 결과가 없습니다.</NoResultsMessage>
+        )
       }
     />
   );
 }
 
-const InfluencerName = tw.div`
-  font-medium
-  text-gray-900
+const SearchWrapper = tw.div`
+  w-[280px]
 `;
 
-const InfluencerEmail = tw.div`
-  text-sm
-  text-gray-500
+const SearchIcon = tw(Search)`
+  text-[var(--fg-neutral)]
 `;
 
-const PhoneNumber = tw.div`
-  text-sm
-  text-gray-900
+const NoResultsMessage = tw.div`
+  text-center py-10
+  text-[var(--fg-muted,#71717a)]
 `;
 
-const CreatedAt = tw.div`
-  text-sm
-  text-gray-500
-`;
-
-const CreateButton = tw(Link)`
-  px-4
-  py-2
-  bg-blue-600
-  text-white
-  rounded-lg
-  hover:bg-blue-700
-  transition-colors
-  font-medium
-  inline-block
-`;
+/**
+ * Usage:
+ *
+ * <InfluencerList />
+ */
