@@ -1,6 +1,13 @@
+/**
+ * Influencer List Page - 인플루언서 관리 페이지
+ *
+ * 인플루언서 목록을 조회하고 관리하는 페이지입니다.
+ */
+
 import { createFileRoute, Link } from '@tanstack/react-router';
+import { Button } from '@yestravelkr/min-design-system';
+import { Plus } from 'lucide-react';
 import { Suspense } from 'react';
-import tw from 'tailwind-styled-components';
 
 import { InfluencerList } from './_components/InfluencerList';
 
@@ -16,23 +23,21 @@ function InfluencerListPage() {
     <MajorPageLayout
       title="인플루언서 관리"
       headerActions={
-        <CreateButton to="/influencer/create">새 인플루언서 등록</CreateButton>
+        <Link to="/influencer/create">
+          <Button
+            kind="neutral"
+            variant="solid"
+            size="medium"
+            leadingIcon={<Plus size={20} />}
+          >
+            인플루언서 등록
+          </Button>
+        </Link>
       }
     >
-      <Suspense fallback={<TableSkeleton columns={4} rows={5} />}>
+      <Suspense fallback={<TableSkeleton columns={5} rows={5} />}>
         <InfluencerList />
       </Suspense>
     </MajorPageLayout>
   );
 }
-
-const CreateButton = tw(Link)`
-  px-4
-  py-2
-  bg-blue-600
-  text-white
-  rounded-lg
-  hover:bg-blue-700
-  transition-colors
-  font-medium
-`;
