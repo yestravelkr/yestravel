@@ -50,18 +50,16 @@ const StyledContainer = tw.div`
 
 interface ContentProps {
   children: React.ReactNode;
-  /** 컨텐츠 너비 (기본: 860px) */
-  width?: string;
 }
 
-function Content({ children, width = '860px' }: ContentProps) {
-  return <StyledContent $width={width}>{children}</StyledContent>;
+function Content({ children }: ContentProps) {
+  return <StyledContent>{children}</StyledContent>;
 }
 
-const StyledContent = tw.div<{ $width: string }>`
+const StyledContent = tw.div`
   flex flex-col
   gap-8
-  ${({ $width }) => `w-[${$width}]`}
+  w-[860px]
 `;
 
 // ============================================
