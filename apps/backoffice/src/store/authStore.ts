@@ -58,8 +58,10 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
   refreshToken: async () => {
     try {
+      const API_BASEURL =
+        import.meta.env.VITE_API_BASEURL || 'http://localhost:3000';
       const response = await fetch(
-        'http://localhost:3000/trpc/backofficeAuth.refresh',
+        `${API_BASEURL}/trpc/backofficeAuth.refresh`,
         {
           method: 'POST',
           credentials: 'include',
