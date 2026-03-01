@@ -64,7 +64,7 @@ export const createInfluencerInputSchema = z.object({
       /^[a-z0-9_-]+$/,
       '샵 URL은 영문 소문자, 숫자, 하이픈(-), 언더스코어(_)만 사용 가능합니다'
     ),
-  email: z.string().email('유효한 이메일을 입력해주세요').nullish(),
+  email: z.string().min(1, '이메일은 필수입니다').email('유효한 이메일을 입력해주세요'),
   phoneNumber: z.string().nullish(),
   thumbnail: z.string().nullish(),
   businessInfo: businessInfoSchema.nullish(),
