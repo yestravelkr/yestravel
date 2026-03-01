@@ -84,6 +84,10 @@ export function InfluencerForm({
     { value: 'OTHER', label: '기타' },
   ];
 
+  const getPlatformLabel = (value: string) => {
+    return platformOptions.find((opt) => opt.value === value)?.label ?? value;
+  };
+
   const handleFormSubmit = async (formData: CreateInfluencerInput) => {
     if (!onSubmit) return;
 
@@ -245,7 +249,7 @@ export function InfluencerForm({
             <SectionHeader>
               <SectionTitleWithRequired>
                 <SectionTitle>소셜미디어</SectionTitle>
-                <RequiredBadge>*</RequiredBadge>
+                {isEditMode && <RequiredBadge>*</RequiredBadge>}
               </SectionTitleWithRequired>
               {isEditMode && (
                 <AddButton type="button" onClick={handleAddSocialMedia}>
@@ -255,42 +259,61 @@ export function InfluencerForm({
               )}
             </SectionHeader>
 
-            {socialMediaError && isEditMode && (
-              <ErrorMessage>{socialMediaError}</ErrorMessage>
-            )}
+            {isEditMode ? (
+              <>
+                {socialMediaError && (
+                  <ErrorMessage>{socialMediaError}</ErrorMessage>
+                )}
 
-            {fields.length === 0 && !isEditMode && (
-              <EmptyMessage>등록된 소셜미디어가 없습니다.</EmptyMessage>
+                <SocialMediaList>
+                  {fields.map((field, index) => (
+                    <SocialMediaItem key={field.id}>
+                      <SocialMediaFields>
+                        <PlatformSelect>
+                          <Select
+                            {...register(
+                              `socialMedias.${index}.platform` as const,
+                            )}
+                            options={platformOptions}
+                          />
+                        </PlatformSelect>
+                        <UrlInput>
+                          <Input
+                            {...register(`socialMedias.${index}.url` as const, {
+                              required: 'URL을 입력하세요',
+                            })}
+                            placeholder="https://..."
+                          />
+                        </UrlInput>
+                        <RemoveButton
+                          type="button"
+                          onClick={() => remove(index)}
+                        >
+                          <X size={16} />
+                        </RemoveButton>
+                      </SocialMediaFields>
+                    </SocialMediaItem>
+                  ))}
+                </SocialMediaList>
+              </>
+            ) : (
+              <>
+                {!data?.socialMedias || data.socialMedias.length === 0 ? (
+                  <EmptyMessage>등록된 소셜미디어가 없습니다.</EmptyMessage>
+                ) : (
+                  <ReadonlySocialMediaList>
+                    {data.socialMedias.map((media, index) => (
+                      <ReadonlySocialMediaItem key={index}>
+                        <ReadonlyPlatformLabel>
+                          {getPlatformLabel(media.platform)}
+                        </ReadonlyPlatformLabel>
+                        <ReadonlyUrlValue>{media.url}</ReadonlyUrlValue>
+                      </ReadonlySocialMediaItem>
+                    ))}
+                  </ReadonlySocialMediaList>
+                )}
+              </>
             )}
-
-            <SocialMediaList>
-              {fields.map((field, index) => (
-                <SocialMediaItem key={field.id}>
-                  <SocialMediaFields>
-                    <PlatformSelect>
-                      <Select
-                        {...register(`socialMedias.${index}.platform` as const)}
-                        options={platformOptions}
-                        disabled={!isEditMode}
-                      />
-                    </PlatformSelect>
-                    <UrlInput>
-                      <Input
-                        {...register(`socialMedias.${index}.url` as const, {
-                          required: 'URL을 입력하세요',
-                        })}
-                        placeholder="https://..."
-                      />
-                    </UrlInput>
-                    {isEditMode && (
-                      <RemoveButton type="button" onClick={() => remove(index)}>
-                        <X size={16} />
-                      </RemoveButton>
-                    )}
-                  </SocialMediaFields>
-                </SocialMediaItem>
-              ))}
-            </SocialMediaList>
           </Section>
 
           {/* 사업자 정보 */}
@@ -600,6 +623,29 @@ const EmptyMessage = tw.div`
   text-sm
   text-gray-500
   py-4
+`;
+
+const ReadonlySocialMediaList = tw.div`
+  space-y-3
+`;
+
+const ReadonlySocialMediaItem = tw.div`
+  flex
+  items-baseline
+  gap-4
+`;
+
+const ReadonlyPlatformLabel = tw.dt`
+  text-sm
+  font-medium
+  text-gray-500
+  w-24
+  shrink-0
+`;
+
+const ReadonlyUrlValue = tw.dd`
+  text-sm
+  text-gray-900
 `;
 
 const ButtonGroup = tw.div`
