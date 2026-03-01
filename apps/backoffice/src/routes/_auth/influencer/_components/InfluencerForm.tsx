@@ -213,9 +213,12 @@ export function InfluencerForm({
                 value={data?.email}
                 isEditMode={isEditMode}
                 error={errors.email?.message}
+                required
               >
                 <Input
-                  {...register('email')}
+                  {...register('email', {
+                    required: '이메일은 필수입니다',
+                  })}
                   type="email"
                   placeholder="contact@example.com"
                   error={!!errors.email}
