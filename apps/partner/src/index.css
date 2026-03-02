@@ -1,0 +1,4 @@
+@import "tailwindcss";
+@import "@yestravelkr/min-design-system/app.css";
+
+@source "../../../packages/min-design-system/src/**/*.{ts,tsx}";
