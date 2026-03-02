@@ -7,6 +7,7 @@ import { RepositoryProvider } from '@src/module/shared/transaction/repository.pr
 import { orderNumberParser } from '@src/module/backoffice/domain/order/order.entity';
 import { ShopPaymentService } from '@src/module/shop/payment/shop.payment.service';
 import type { ClaimEntity } from '@src/module/backoffice/domain/order/claim.entity';
+import { OrderHistoryService } from '@src/module/backoffice/order/order-history.service';
 import type {
   ApproveClaimInput,
   ApproveClaimResponse,
@@ -19,7 +20,8 @@ import type {
 export class ClaimService {
   constructor(
     private readonly repositoryProvider: RepositoryProvider,
-    private readonly shopPaymentService: ShopPaymentService
+    private readonly shopPaymentService: ShopPaymentService,
+    private readonly orderHistoryService: OrderHistoryService
   ) {}
 
   /**
@@ -53,7 +55,6 @@ export class ClaimService {
       0
     );
     const refundAmount = originalAmount - cancelFee;
-    // TODO: history 테이블에 처리 이력 기록
 
     await this.repositoryProvider.ClaimRepository.save(claim);
 
@@ -64,6 +65,7 @@ export class ClaimService {
       throw new NotFoundException(`주문 ${orderId}을 찾을 수 없습니다.`);
     });
 
+    const previousStatus = order.status;
     order.status = 'CANCELLED';
     await this.repositoryProvider.OrderRepository.save(order);
 
@@ -85,7 +87,32 @@ export class ClaimService {
       // 5. Payment 환불금액 업데이트 (nowAmount 차감)
       payment.nowAmount = payment.paidAmount - refundAmount;
       await this.repositoryProvider.PaymentRepository.save(payment);
+
     }
+
+    // 주문 이력: CANCEL_APPROVED
+    await this.orderHistoryService.record({
+      orderId,
+      previousStatus,
+      newStatus: 'CANCELLED',
+      actorType: 'ADMIN',
+      action: claim.type === 'CANCEL' ? 'CANCEL_APPROVED' : 'RETURN_APPROVED',
+      description: `${claim.type === 'CANCEL' ? '취소' : '반품'} 요청이 승인되었습니다.`,
+      claimId: claim.id,
+      metadata: { cancelFee, refundAmount, claimType: claim.type },
+    });
+
+    // 주문 이력: REFUND_PROCESSED
+    await this.orderHistoryService.record({
+      orderId,
+      previousStatus: 'CANCELLED',
+      newStatus: 'CANCELLED',
+      actorType: 'ADMIN',
+      action: 'REFUND_PROCESSED',
+      description: `환불이 처리되었습니다. 환불금액: ${refundAmount.toLocaleString()}원`,
+      claimId: claim.id,
+      metadata: { refundAmount, cancelFee },
+    });
 
     return {
       success: true,
@@ -118,7 +145,6 @@ export class ClaimService {
 
     // 2. 클레임 상태 업데이트
     claim.status = 'REJECTED';
-    // TODO: history 테이블에 처리 이력 기록
 
     await this.repositoryProvider.ClaimRepository.save(claim);
 
@@ -127,6 +153,18 @@ export class ClaimService {
       where: { id: orderId },
     }).catch(() => {
       throw new NotFoundException(`주문 ${orderId}을 찾을 수 없습니다.`);
+    });
+
+    // 주문 이력: CANCEL_REJECTED
+    await this.orderHistoryService.record({
+      orderId,
+      previousStatus: order.status,
+      newStatus: order.status,
+      actorType: 'ADMIN',
+      action: claim.type === 'CANCEL' ? 'CANCEL_REJECTED' : 'RETURN_REJECTED',
+      description: `${claim.type === 'CANCEL' ? '취소' : '반품'} 요청이 거절되었습니다.`,
+      claimId: claim.id,
+      metadata: { claimType: claim.type },
     });
 
     return {

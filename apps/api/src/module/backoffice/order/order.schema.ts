@@ -286,6 +286,37 @@ export const exportToExcelResponseSchema = z.object({
   totalCount: z.number(),
 });
 
+// ===== 주문 히스토리 조회 Schemas =====
+
+/**
+ * 주문 히스토리 조회 Input Schema
+ */
+export const getHistoryInputSchema = z.object({
+  orderId: z.number().int().positive(),
+});
+
+/**
+ * 주문 히스토리 아이템 Schema
+ */
+export const orderHistoryItemSchema = z.object({
+  id: z.number(),
+  orderId: z.number(),
+  previousStatus: z.string().nullish(),
+  newStatus: z.string(),
+  actorType: z.enum(['SYSTEM', 'USER', 'ADMIN']),
+  actorName: z.string().nullish(),
+  action: z.string(),
+  description: z.string().nullish(),
+  optionId: z.number().nullish(),
+  optionName: z.string().nullish(),
+  createdAt: z.date(),
+});
+
+/**
+ * 주문 히스토리 조회 Response Schema
+ */
+export const getHistoryResponseSchema = z.array(orderHistoryItemSchema);
+
 // ===== 어드민 직접 취소 Schemas =====
 
 /**

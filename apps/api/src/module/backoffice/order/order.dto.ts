@@ -19,6 +19,9 @@ import type {
   exportToExcelResponseSchema,
   cancelOrderInputSchema,
   cancelOrderResponseSchema,
+  getHistoryInputSchema,
+  orderHistoryItemSchema,
+  getHistoryResponseSchema,
 } from './order.schema';
 
 // ===== Input DTOs =====
@@ -62,3 +65,9 @@ export type ExportToExcelResponse = z.infer<typeof exportToExcelResponseSchema>;
 export type CancelOrderInput = z.infer<typeof cancelOrderInputSchema>;
 
 export type CancelOrderResponse = z.infer<typeof cancelOrderResponseSchema>;
+
+export type GetHistoryInput = z.infer<typeof getHistoryInputSchema>;
+
+export type OrderHistoryItem = z.infer<typeof orderHistoryItemSchema>;
+
+export type GetHistoryResponse = z.infer<typeof getHistoryResponseSchema>;

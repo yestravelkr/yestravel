@@ -27,6 +27,8 @@ import {
   exportToExcelResponseSchema,
   cancelOrderInputSchema,
   cancelOrderResponseSchema,
+  getHistoryInputSchema,
+  getHistoryResponseSchema,
 } from './order.schema';
 
 @Router({ alias: 'backofficeOrder' })
@@ -103,10 +105,7 @@ export class OrderRouter extends BaseTrpcRouter {
     @Ctx() ctx: BackofficeAuthorizedContext,
     @Input() input: z.infer<typeof revertStatusInputSchema>
   ) {
-    return this.microserviceClient.send(
-      'backofficeOrder.revertStatus',
-      input
-    );
+    return this.microserviceClient.send('backofficeOrder.revertStatus', input);
   }
 
   @UseMiddlewares(BackofficeAuthMiddleware)
@@ -134,5 +133,17 @@ export class OrderRouter extends BaseTrpcRouter {
       'backofficeOrder.exportToExcel',
       input || {}
     );
+  }
+
+  @UseMiddlewares(BackofficeAuthMiddleware)
+  @Query({
+    input: getHistoryInputSchema,
+    output: getHistoryResponseSchema,
+  })
+  async getHistory(
+    @Ctx() ctx: BackofficeAuthorizedContext,
+    @Input() input: z.infer<typeof getHistoryInputSchema>
+  ) {
+    return this.microserviceClient.send('backofficeOrder.getHistory', input);
   }
 }

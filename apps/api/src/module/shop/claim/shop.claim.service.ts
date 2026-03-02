@@ -8,6 +8,7 @@ import { ClaimEntity } from '@src/module/backoffice/domain/order/claim.entity';
 import { orderNumberParser } from '@src/module/backoffice/domain/order/order.entity';
 import { ShopPaymentService } from '@src/module/shop/payment/shop.payment.service';
 import type { ClaimDetail } from '@src/module/backoffice/domain/order/claim-detail.type';
+import { OrderHistoryService } from '@src/module/backoffice/order/order-history.service';
 import type {
   CreateClaimInput,
   CreateClaimOutput,
@@ -33,7 +34,8 @@ const DELIVERY_RETURNABLE_STATUSES = ['DELIVERED'] as const;
 export class ShopClaimService {
   constructor(
     private readonly repositoryProvider: RepositoryProvider,
-    private readonly shopPaymentService: ShopPaymentService
+    private readonly shopPaymentService: ShopPaymentService,
+    private readonly orderHistoryService: OrderHistoryService
   ) {}
 
   /**
@@ -104,6 +106,25 @@ export class ShopClaimService {
     const savedClaim =
       await this.repositoryProvider.ClaimRepository.save(claim);
 
+    // 6-1. 주문 이력: CANCEL_REQUESTED 또는 RETURN_REQUESTED
+    await this.orderHistoryService.record({
+      orderId,
+      previousStatus: order.status,
+      newStatus: order.status,
+      actorType: 'USER',
+      action: type === 'CANCEL' ? 'CANCEL_REQUESTED' : 'RETURN_REQUESTED',
+      description:
+        type === 'CANCEL'
+          ? `고객이 취소를 요청했습니다. 사유: ${reason}`
+          : `고객이 반품을 요청했습니다. 사유: ${reason}`,
+      claimId: savedClaim.id,
+      metadata: {
+        claimType: type,
+        claimReason: reason,
+        claimOptionItems: claimOptionItems,
+      },
+    });
+
     // 7. PAID 상태이고 취소 요청인 경우 → 자동 승인 + 포트원 환불
     if (order.status === 'PAID' && type === 'CANCEL') {
       savedClaim.status = 'APPROVED';
@@ -131,6 +152,29 @@ export class ShopClaimService {
         payment.nowAmount = payment.paidAmount - refundAmount;
         await this.repositoryProvider.PaymentRepository.save(payment);
       }
+
+      // 주문 이력: CANCEL_AUTO_APPROVED
+      await this.orderHistoryService.record({
+        orderId,
+        previousStatus: 'PAID',
+        newStatus: 'CANCELLED',
+        actorType: 'SYSTEM',
+        action: 'CANCEL_AUTO_APPROVED',
+        description: '결제완료 상태에서의 취소 요청이 자동 승인되었습니다.',
+        claimId: savedClaim.id,
+      });
+
+      // 주문 이력: REFUND_PROCESSED
+      await this.orderHistoryService.record({
+        orderId,
+        previousStatus: 'CANCELLED',
+        newStatus: 'CANCELLED',
+        actorType: 'SYSTEM',
+        action: 'REFUND_PROCESSED',
+        description: `환불이 처리되었습니다. 환불금액: ${refundAmount.toLocaleString()}원`,
+        claimId: savedClaim.id,
+        metadata: { refundAmount, cancelFee },
+      });
 
       return {
         claimId: savedClaim.id,
@@ -205,6 +249,17 @@ export class ShopClaimService {
     // 3. 클레임 상태 업데이트: WITHDRAWN
     claim.status = 'WITHDRAWN';
     await this.repositoryProvider.ClaimRepository.save(claim);
+
+    // 주문 이력: CANCEL_WITHDRAWN
+    await this.orderHistoryService.record({
+      orderId,
+      previousStatus: order.status,
+      newStatus: order.status,
+      actorType: 'USER',
+      action: 'CANCEL_WITHDRAWN',
+      description: '고객이 취소 요청을 철회했습니다.',
+      claimId: claim.id,
+    });
 
     // Order.status는 변경하지 않음 (기존 상태 유지)
     return {

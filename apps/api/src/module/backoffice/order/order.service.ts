@@ -38,6 +38,7 @@ import type {
   CancelOrderInput,
   CancelOrderResponse,
 } from './order.dto';
+import { OrderHistoryService } from './order-history.service';
 import type { Nullish } from '@src/types/utility.type';
 
 @Injectable()
@@ -45,7 +46,8 @@ export class OrderService {
   constructor(
     private readonly repositoryProvider: RepositoryProvider,
     private readonly s3Service: S3Service,
-    private readonly shopPaymentService: ShopPaymentService
+    private readonly shopPaymentService: ShopPaymentService,
+    private readonly orderHistoryService: OrderHistoryService
   ) {}
 
   /**
@@ -452,6 +454,16 @@ export class OrderService {
     order.status = newStatus;
     await this.repositoryProvider.OrderRepository.save(order);
 
+    // 주문 이력: STATUS_CHANGED
+    await this.orderHistoryService.record({
+      orderId: order.id,
+      previousStatus,
+      newStatus,
+      actorType: 'ADMIN',
+      action: 'STATUS_CHANGED',
+      description: `${ORDER_STATUS_LABELS[previousStatus]} 에서 ${ORDER_STATUS_LABELS[newStatus]} 상태로 변경되었습니다.`,
+    });
+
     return {
       success: true,
       orderId: order.id,
@@ -494,6 +506,16 @@ export class OrderService {
 
     order.status = revertedStatus;
     await this.repositoryProvider.OrderRepository.save(order);
+
+    // 주문 이력: STATUS_REVERTED
+    await this.orderHistoryService.record({
+      orderId: order.id,
+      previousStatus,
+      newStatus: revertedStatus,
+      actorType: 'ADMIN',
+      action: 'STATUS_REVERTED',
+      description: `${ORDER_STATUS_LABELS[previousStatus]} 에서 ${ORDER_STATUS_LABELS[revertedStatus]} 상태로 되돌렸습니다.`,
+    });
 
     return {
       success: true,
@@ -540,6 +562,7 @@ export class OrderService {
     );
 
     // 4. 주문 상태 변경
+    const previousStatus = order.status;
     order.status = 'CANCELLED';
     await this.repositoryProvider.OrderRepository.save(order);
 
@@ -548,6 +571,27 @@ export class OrderService {
     // 5. Payment nowAmount 차감
     payment.nowAmount = payment.paidAmount - refundAmount;
     await this.repositoryProvider.PaymentRepository.save(payment);
+
+    // 주문 이력: ADMIN_CANCELLED
+    await this.orderHistoryService.record({
+      orderId,
+      previousStatus,
+      newStatus: 'CANCELLED',
+      actorType: 'ADMIN',
+      action: 'ADMIN_CANCELLED',
+      description: `관리자가 주문을 직접 취소했습니다. 사유: ${reason}`,
+    });
+
+    // 주문 이력: REFUND_PROCESSED
+    await this.orderHistoryService.record({
+      orderId,
+      previousStatus: 'CANCELLED',
+      newStatus: 'CANCELLED',
+      actorType: 'ADMIN',
+      action: 'REFUND_PROCESSED',
+      description: `환불이 처리되었습니다. 환불금액: ${refundAmount.toLocaleString()}원`,
+      metadata: { refundAmount },
+    });
 
     return {
       success: true,

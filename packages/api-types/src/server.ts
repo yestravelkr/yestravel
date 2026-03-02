@@ -1716,7 +1716,22 @@ const appRouter = t.router({
       downloadUrl: z.string(),
       fileName: z.string(),
       totalCount: z.number(),
-    })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
+    })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    getHistory: publicProcedure.input(z.object({
+      orderId: z.number().int().positive(),
+    })).output(z.array(z.object({
+      id: z.number(),
+      orderId: z.number(),
+      previousStatus: z.string().nullish(),
+      newStatus: z.string(),
+      actorType: z.enum(['SYSTEM', 'USER', 'ADMIN']),
+      actorName: z.string().nullish(),
+      action: z.string(),
+      description: z.string().nullish(),
+      optionId: z.number().nullish(),
+      optionName: z.string().nullish(),
+      createdAt: z.date(),
+    }))).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
   }),
   backofficeInfluencer: t.router({
     findAll: publicProcedure.input(z.object({

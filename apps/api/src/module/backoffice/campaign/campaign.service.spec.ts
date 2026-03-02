@@ -106,9 +106,7 @@ function createMockQueryBuilder(overrides: Record<string, unknown> = {}) {
     addSelect: jest.fn().mockReturnThis(),
     delete: jest.fn().mockReturnThis(),
     getMany: jest.fn().mockResolvedValue([]),
-    getRawAndEntities: jest
-      .fn()
-      .mockResolvedValue({ raw: [], entities: [] }),
+    getRawAndEntities: jest.fn().mockResolvedValue({ raw: [], entities: [] }),
     execute: jest.fn().mockResolvedValue(undefined),
   };
   Object.assign(qb, overrides);
@@ -360,9 +358,7 @@ describe('CampaignService', () => {
 
       await service.create(input);
 
-      expect(
-        mockCampaignInfluencerRepository.create
-      ).not.toHaveBeenCalled();
+      expect(mockCampaignInfluencerRepository.create).not.toHaveBeenCalled();
       expect(
         mockCampaignInfluencerProductRepository.create
       ).not.toHaveBeenCalled();
