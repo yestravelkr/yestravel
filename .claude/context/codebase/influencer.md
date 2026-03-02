@@ -36,15 +36,24 @@ keywords: [인플루언서, influencer, 소셜미디어, 파트너, 사업자정
 | apps/backoffice/src/routes/_auth/influencer/index.tsx | 인플루언서 목록 페이지 | InfluencerListPage |
 | apps/backoffice/src/routes/_auth/influencer/create.tsx | 인플루언서 등록 페이지 | InfluencerCreatePage |
 | apps/backoffice/src/routes/_auth/influencer/$influencerId.tsx | 인플루언서 상세/수정 페이지 | InfluencerDetailPage |
-| apps/backoffice/src/routes/_auth/influencer/_components/InfluencerForm.tsx | 등록/수정 공용 폼 컴포넌트 | InfluencerForm |
+| apps/backoffice/src/routes/_auth/influencer/_components/InfluencerForm.tsx | 등록/수정 공용 폼 컴포넌트 (편집/읽기 모드 분리) | InfluencerForm, getPlatformLabel() |
 | apps/backoffice/src/routes/_auth/influencer/_components/InfluencerList.tsx | 목록 테이블 컴포넌트 | InfluencerList |
 
 ## 핵심 흐름
 
 1. **등록**: InfluencerForm → tRPC backofficeInfluencer.create → InfluencerController → InfluencerService → InfluencerEntity + SocialMediaEntity 저장
-2. **수정**: InfluencerForm → tRPC backofficeInfluencer.update → InfluencerController → InfluencerService → 기존 엔티티 업데이트
+2. **수정**: InfluencerForm(편집 모드) → tRPC backofficeInfluencer.update → InfluencerController → InfluencerService → 기존 엔티티 업데이트
 3. **조회**: 목록 페이지 → tRPC backofficeInfluencer.getList → 페이지네이션 + 검색
-4. **상세**: 상세 페이지 → tRPC backofficeInfluencer.getById → 전체 정보 반환
+4. **상세**: 상세 페이지 → tRPC backofficeInfluencer.getById → InfluencerForm(읽기 모드)으로 텍스트 표시
+
+## 폼 모드 분리
+
+InfluencerForm은 `isEditMode` 플래그로 편집/읽기 모드를 분리한다.
+
+| 섹션 | 편집 모드 | 읽기 모드 |
+|------|----------|----------|
+| 소셜미디어 | Select/Input 폼 컨트롤 + 추가/삭제 버튼 | 플랫폼 라벨 + URL 텍스트 표시 |
+| 기타 섹션 | 폼 입력 필드 | 텍스트 표시 |
 
 ## 유효성 검증
 
