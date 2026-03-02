@@ -6,6 +6,9 @@ module.exports = {
     'apps/backoffice/**/*.{ts,tsx,js,jsx}': [
         'cd apps/backoffice && yarn lint -- --fix',
     ],
+    'apps/partner/**/*.{ts,tsx,js,jsx}': [
+        'cd apps/partner && yarn lint -- --fix',
+    ],
     'packages/**/*.{ts,tsx,js,jsx}': (filenames) => {
         // 변경된 파일이 속한 패키지만 lint 실행 (api-types, min-design-system, option-selector 제외)
         const packages = [...new Set(
