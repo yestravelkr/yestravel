@@ -23,10 +23,14 @@ estimated_tokens: ~400
 | apps/partner/src/components/login/LoginFormSchema.ts | 로그인 폼 스키마 | LoginFormSchema, LoginFormData |
 | apps/partner/src/components/header.tsx | 상단 헤더 | Header |
 | apps/partner/src/components/navigation/navigation.tsx | 사이드바 내비게이션 | Navigation (type별 메뉴 분기) |
+| apps/partner/src/components/navigation/nav-item.tsx | 네비게이션 링크 아이템 | NavItem (TanStack Router Link 래핑, active 스타일) |
 | apps/partner/src/components/navigation/data.tsx | 내비게이션 데이터 | BRAND_NAV_GROUPS, INFLUENCER_NAV_GROUPS |
-| apps/partner/src/components/navigation/type.ts | 내비게이션 타입 정의 | NavGroup, NavItem, NavLink, NavCollapsible |
+| apps/partner/src/components/navigation/type.ts | 내비게이션 타입 정의 | NavGroup, NavItem (NavLink \| NavCollapsible union type) |
+| apps/partner/src/shared/trpc/trpc-types.ts | tRPC 라우터 타입 로컬 정의 | PartnerAuthRouter, SampleRouter, AppRouter |
+| apps/partner/src/shared/svg/LoadingSpinner.tsx | 로딩 스피너 SVG | LoadingSpinner |
 | apps/partner/vite.config.ts | Vite 빌드 설정 | TanStackRouterVite, 경로 별칭 (@/) |
 | apps/partner/tailwind.config.ts | Tailwind CSS 설정 | MinSans 폰트, 디자인 시스템 연동 |
+| lint-staged.config.js | Git 커밋 시 자동 lint | apps/partner 대상 `yarn lint --fix` 실행 |
 
 ## 핵심 흐름
 

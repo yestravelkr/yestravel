@@ -1,6 +1,6 @@
 ---
 name: github-actions-ci
-description: GitHub Actions CI 파이프라인 - PR 트리거 통합 테스트 워크플로우
+description: GitHub Actions CI 파이프라인 - PR 트리거 통합 테스트 + Partner 앱 빌드 워크플로우
 keywords: [CI, CD, GitHub Actions, 통합테스트, integration test, workflow, Docker, PostgreSQL]
 estimated_tokens: ~300
 ---
