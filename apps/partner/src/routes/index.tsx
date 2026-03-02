@@ -25,7 +25,11 @@ function RouteComponent() {
         </LogoSection>
 
         <CardGrid>
-          <PartnerCard onClick={() => navigate({ to: '/brand' })}>
+          <PartnerCard
+            onClick={() =>
+              navigate({ to: '/login', search: { type: 'brand' } })
+            }
+          >
             <IconCircle>
               <Building2 size={32} />
             </IconCircle>
@@ -34,7 +38,11 @@ function RouteComponent() {
             <CardButton>시작하기 &rarr;</CardButton>
           </PartnerCard>
 
-          <PartnerCard onClick={() => navigate({ to: '/influencer' })}>
+          <PartnerCard
+            onClick={() =>
+              navigate({ to: '/login', search: { type: 'influencer' } })
+            }
+          >
             <IconCircle>
               <User size={32} />
             </IconCircle>

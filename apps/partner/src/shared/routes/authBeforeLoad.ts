@@ -18,7 +18,7 @@ export const authBeforeLoad = async () => {
     // Refresh 실패 시 로그인 페이지로 리다이렉트
     throw redirect({
       to: '/login',
-      search: {},
+      search: { type: undefined },
     });
   }
 
