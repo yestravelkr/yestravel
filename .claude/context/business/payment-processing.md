@@ -63,3 +63,7 @@ estimated_tokens: ~500
 ## 관련 Codebase Context
 
 - [shop-payment](../codebase/shop-payment.md)
+
+## 관련 도메인
+
+- [주문 이력 추적](./order-tracking.md) - 결제 완료/취소 시 주문 이력이 자동 기록됨
