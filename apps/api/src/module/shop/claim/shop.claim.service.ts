@@ -153,8 +153,6 @@ export class ShopClaimService {
         await this.repositoryProvider.PaymentRepository.save(payment);
       }
 
-      // TODO: 자동 승인 취소 시 재고 복구 로직 필요 (호텔 날짜별 재고 +1 등)
-
       // 주문 이력: CANCEL_AUTO_APPROVED
       await this.orderHistoryService.record({
         orderId,

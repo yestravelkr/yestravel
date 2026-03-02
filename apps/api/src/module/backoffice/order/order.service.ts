@@ -572,8 +572,6 @@ export class OrderService {
     payment.nowAmount = payment.paidAmount - refundAmount;
     await this.repositoryProvider.PaymentRepository.save(payment);
 
-    // TODO: 주문 취소 시 재고 복구 로직 필요 (호텔 날짜별 재고 +1 등)
-
     // 주문 이력: ADMIN_CANCELLED
     await this.orderHistoryService.record({
       orderId,

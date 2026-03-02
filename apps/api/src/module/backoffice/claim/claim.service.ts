@@ -88,7 +88,6 @@ export class ClaimService {
       payment.nowAmount = payment.paidAmount - refundAmount;
       await this.repositoryProvider.PaymentRepository.save(payment);
 
-      // TODO: 취소/반품 승인 시 재고 복구 로직 필요 (호텔 날짜별 재고 +1 등)
     }
 
     // 주문 이력: CANCEL_APPROVED
