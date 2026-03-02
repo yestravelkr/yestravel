@@ -18,12 +18,18 @@ import {
   updateBrandInputSchema,
   deleteBrandInputSchema,
   brandSchema,
+  createBrandManagerInputSchema,
+  createBrandManagerOutputSchema,
+  findBrandManagersInputSchema,
+  brandManagerListSchema,
 } from './brand.schema';
 import type {
   RegisterBrandInput,
   FindBrandByIdInput,
   UpdateBrandInput,
   DeleteBrandInput,
+  CreateBrandManagerInput,
+  FindBrandManagersInput,
 } from './brand.type';
 
 @Router({ alias: 'backofficeBrand' })
@@ -102,5 +108,37 @@ export class BrandRouter extends BaseTrpcRouter {
       input
     );
     return output;
+  }
+
+  @UseMiddlewares(BackofficeAuthMiddleware)
+  @Mutation({
+    input: createBrandManagerInputSchema,
+    output: createBrandManagerOutputSchema,
+  })
+  async createManager(
+    @Ctx() ctx: BackofficeAuthorizedContext,
+    @Input() input: CreateBrandManagerInput
+  ) {
+    const output = await this.microserviceClient.send(
+      'backoffice.brand.createManager',
+      input
+    );
+    return createBrandManagerOutputSchema.parse(output);
+  }
+
+  @UseMiddlewares(BackofficeAuthMiddleware)
+  @Query({
+    input: findBrandManagersInputSchema,
+    output: brandManagerListSchema,
+  })
+  async findManagers(
+    @Ctx() ctx: BackofficeAuthorizedContext,
+    @Input() input: FindBrandManagersInput
+  ) {
+    const output = await this.microserviceClient.send(
+      'backoffice.brand.findManagers',
+      input
+    );
+    return brandManagerListSchema.parse(output);
   }
 }

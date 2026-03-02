@@ -6,6 +6,9 @@ import {
   influencerListItemSchema,
   influencerListSchema,
   socialMediaSchema,
+  createInfluencerManagerInputSchema,
+  createInfluencerManagerOutputSchema,
+  findInfluencerManagersInputSchema,
 } from './influencer.schema';
 import { InfluencerEntity } from '@src/module/backoffice/domain/influencer.entity';
 
@@ -16,6 +19,15 @@ export type UpdateInfluencerInput = z.infer<typeof updateInfluencerInputSchema>;
 export type InfluencerListItem = z.infer<typeof influencerListItemSchema>;
 export type InfluencerList = z.infer<typeof influencerListSchema>;
 export type SocialMedia = z.infer<typeof socialMediaSchema>;
+export type CreateInfluencerManagerInput = z.infer<
+  typeof createInfluencerManagerInputSchema
+>;
+export type CreateInfluencerManagerOutput = z.infer<
+  typeof createInfluencerManagerOutputSchema
+>;
+export type FindInfluencerManagersInput = z.infer<
+  typeof findInfluencerManagersInputSchema
+>;
 
 // List response type (Entity 배열)
 export interface InfluencerListResponse {

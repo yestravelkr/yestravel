@@ -4,12 +4,19 @@ import { BrandService } from '@src/module/backoffice/brand/brand.service';
 import { TransactionService } from '@src/module/shared/transaction/transaction.service';
 import { Transactional } from '@src/module/shared/transaction/transaction.decorator';
 import { BrandEntity } from '@src/module/backoffice/domain/brand.entity';
+import {
+  createBrandManagerOutputSchema,
+  brandManagerListSchema,
+} from './brand.schema';
 import type {
   Brand,
   RegisterBrandInput,
   FindBrandByIdInput,
   UpdateBrandInput,
   DeleteBrandInput,
+  CreateBrandManagerInput,
+  CreateBrandManagerOutput,
+  FindBrandManagersInput,
 } from './brand.type';
 
 @Controller()
@@ -84,5 +91,20 @@ export class BrandController {
   async delete(data: DeleteBrandInput): Promise<{ success: boolean }> {
     await this.brandService.delete(data);
     return { success: true };
+  }
+
+  @MessagePattern('backoffice.brand.createManager')
+  @Transactional
+  async createManager(
+    data: CreateBrandManagerInput
+  ): Promise<CreateBrandManagerOutput> {
+    const manager = await this.brandService.createManager(data);
+    return createBrandManagerOutputSchema.parse(manager);
+  }
+
+  @MessagePattern('backoffice.brand.findManagers')
+  async findManagers(data: FindBrandManagersInput) {
+    const managers = await this.brandService.findManagers(data.brandId);
+    return brandManagerListSchema.parse(managers);
   }
 }

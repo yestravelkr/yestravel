@@ -15,11 +15,17 @@ import { z } from 'zod';
 import {
   influencerSchema,
   socialMediaPlatformEnumSchema,
+  createInfluencerManagerInputSchema,
+  createInfluencerManagerOutputSchema,
+  findInfluencerManagersInputSchema,
+  influencerManagerListSchema,
 } from './influencer.schema';
 import { BUSINESS_TYPE_ENUM_VALUE } from '@src/module/backoffice/brand/brand.schema';
 import type {
   CreateInfluencerInput,
   UpdateInfluencerInput,
+  CreateInfluencerManagerInput,
+  FindInfluencerManagersInput,
 } from './influencer.dto';
 
 // Inline schemas for Router (Router 규칙: 외부 스키마 import 금지, 인라인 정의 필수)
@@ -167,5 +173,37 @@ export class InfluencerRouter extends BaseTrpcRouter {
       input
     );
     return influencerSchema.parse(output);
+  }
+
+  @UseMiddlewares(BackofficeAuthMiddleware)
+  @Mutation({
+    input: createInfluencerManagerInputSchema,
+    output: createInfluencerManagerOutputSchema,
+  })
+  async createManager(
+    @Ctx() ctx: BackofficeAuthorizedContext,
+    @Input() input: CreateInfluencerManagerInput
+  ) {
+    const output = await this.microserviceClient.send(
+      'influencer.createManager',
+      input
+    );
+    return createInfluencerManagerOutputSchema.parse(output);
+  }
+
+  @UseMiddlewares(BackofficeAuthMiddleware)
+  @Query({
+    input: findInfluencerManagersInputSchema,
+    output: influencerManagerListSchema,
+  })
+  async findManagers(
+    @Ctx() ctx: BackofficeAuthorizedContext,
+    @Input() input: FindInfluencerManagersInput
+  ) {
+    const output = await this.microserviceClient.send(
+      'influencer.findManagers',
+      input
+    );
+    return influencerManagerListSchema.parse(output);
   }
 }

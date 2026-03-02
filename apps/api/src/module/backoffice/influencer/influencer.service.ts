@@ -5,10 +5,13 @@ import {
 } from '@nestjs/common';
 import { RepositoryProvider } from '@src/module/shared/transaction/repository.provider';
 import { InfluencerEntity } from '@src/module/backoffice/domain/influencer.entity';
+import { InfluencerManagerEntity } from '@src/module/backoffice/domain/influencer-manager.entity';
+import { RoleEnum } from '@src/module/backoffice/admin/admin.schema';
 import type {
   CreateInfluencerInput,
   UpdateInfluencerInput,
   InfluencerListResponse,
+  CreateInfluencerManagerInput,
 } from './influencer.dto';
 
 @Injectable()
@@ -159,5 +162,45 @@ export class InfluencerService {
     return this.repositoryProvider.InfluencerRepository.save(
       existingInfluencer
     );
+  }
+
+  async createManager(
+    dto: CreateInfluencerManagerInput
+  ): Promise<InfluencerManagerEntity> {
+    const { email, password, name, phoneNumber, influencerId } = dto;
+
+    // 이메일 중복 체크
+    const existing =
+      await this.repositoryProvider.InfluencerManagerRepository.findOneBy({
+        email,
+      });
+    if (existing) {
+      throw new ConflictException('이미 사용 중인 이메일입니다');
+    }
+
+    const influencer =
+      await this.repositoryProvider.InfluencerRepository.findOneByOrFail({
+        id: influencerId,
+      }).catch(() => {
+        throw new NotFoundException('인플루언서를 찾을 수 없습니다');
+      });
+
+    const manager = await InfluencerManagerEntity.create({
+      email,
+      password,
+      name,
+      phoneNumber,
+      role: RoleEnum.PARTNER_SUPER,
+      influencer,
+    });
+
+    return this.repositoryProvider.InfluencerManagerRepository.save(manager);
+  }
+
+  async findManagers(influencerId: number): Promise<InfluencerManagerEntity[]> {
+    return this.repositoryProvider.InfluencerManagerRepository.find({
+      where: { influencer: { id: influencerId } },
+      order: { createdAt: 'DESC' },
+    });
   }
 }

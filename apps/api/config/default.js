@@ -50,6 +50,16 @@ module.exports = {
           secret: process.env.JWT_INFLUENCER_REFRESH_SECRET,
           expiresIn: '7d',
         }
+      },
+      partner: {
+        access: {
+          secret: process.env.JWT_PARTNER_ACCESS_SECRET,
+          expiresIn: '1h',
+        },
+        refresh: {
+          secret: process.env.JWT_PARTNER_REFRESH_SECRET,
+          expiresIn: '30d',
+        }
       }
     }
   },

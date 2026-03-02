@@ -74,3 +74,23 @@ export const updateBrandInputSchema = registerBrandInputSchema.extend({
 export const deleteBrandInputSchema = z.object({
   id: z.number(),
 });
+
+// Brand manager CRUD schemas
+export const createBrandManagerInputSchema = z.object({
+  email: z.string().email('이메일 형식이 아닙니다.'),
+  password: z.string().min(8, '비밀번호는 최소 8자 이상이어야 합니다.'),
+  name: z.string().min(1, '이름은 필수입니다.'),
+  phoneNumber: z.string().min(1, '전화번호는 필수입니다.'),
+  brandId: z.number(),
+});
+
+export const createBrandManagerOutputSchema = z.object({
+  id: z.number(),
+  email: z.string(),
+});
+
+export const findBrandManagersInputSchema = z.object({
+  brandId: z.number(),
+});
+
+export const brandManagerListSchema = z.array(brandManagerSchema);

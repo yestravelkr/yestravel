@@ -40,6 +40,14 @@ module.exports = {
         refresh: {
           secret: 'JWT_INFLUENCER_REFRESH_SECRET_DEV',
         }
+      },
+      partner: {
+        access: {
+          secret: 'JWT_PARTNER_ACCESS_SECRET_DEV',
+        },
+        refresh: {
+          secret: 'JWT_PARTNER_REFRESH_SECRET_DEV',
+        }
       }
     }
   },
