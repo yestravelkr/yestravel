@@ -162,6 +162,20 @@ const user = await this.userRepository.findOneBy({ id });
 
 ---
 
+<rules>
+
+## 자동 생성 파일
+
+> **자동 생성되는 파일은 직접 수정하지 않는다.**
+
+| 파일 | 생성 방식 | 규칙 |
+|------|----------|------|
+| `packages/api-types/src/server.ts` | tRPC 라우터 기반 자동 생성 | 직접 수정 금지, generate 후 결과만 커밋 |
+
+</rules>
+
+---
+
 <checklist>
 
 ## 체크리스트
@@ -172,6 +186,7 @@ const user = await this.userRepository.findOneBy({ id });
 - [ ] Controller에서 Response DTO/Schema로 변환하는가?
 - [ ] TypeORM find 메서드를 우선 사용하는가?
 - [ ] QueryBuilder는 groupBy, getRawMany 등 필요한 경우에만 사용하는가?
+- [ ] `packages/api-types/src/server.ts`를 직접 수정하지 않았는가? (자동 생성 파일)
 
 </checklist>
 
