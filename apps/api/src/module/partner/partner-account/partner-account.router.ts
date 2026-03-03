@@ -12,7 +12,7 @@ import { BaseTrpcRouter } from '@src/module/trpc/baseTrpcRouter';
 import {
   PartnerAuthMiddleware,
   PartnerAuthorizedContext,
-} from '@src/module/backoffice/partner-auth/partner-auth.middleware';
+} from '@src/module/partner/partner-auth/partner-auth.middleware';
 import {
   createStaffInputSchema,
   staffItemSchema,

@@ -10,8 +10,6 @@ import { InfluencerModule } from '@src/module/backoffice/influencer/influencer.m
 import { OrderModule } from '@src/module/backoffice/order/order.module';
 import { SettlementModule } from '@src/module/backoffice/settlement/settlement.module';
 import { ClaimModule } from '@src/module/backoffice/claim/claim.module';
-import { PartnerAuthModule } from '@src/module/backoffice/partner-auth/partner-auth.module';
-import { PartnerAccountModule } from '@src/module/backoffice/partner-account/partner-account.module';
 
 @Module({
   imports: [
@@ -26,8 +24,6 @@ import { PartnerAccountModule } from '@src/module/backoffice/partner-account/par
     OrderModule,
     SettlementModule,
     ClaimModule,
-    PartnerAuthModule,
-    PartnerAccountModule,
   ],
   exports: [
     BackofficeAuthModule,
@@ -41,8 +37,6 @@ import { PartnerAccountModule } from '@src/module/backoffice/partner-account/par
     OrderModule,
     SettlementModule,
     ClaimModule,
-    PartnerAuthModule,
-    PartnerAccountModule,
   ],
 })
 export class BackofficeModule {}
