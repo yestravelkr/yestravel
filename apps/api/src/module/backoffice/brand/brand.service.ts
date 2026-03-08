@@ -2,6 +2,7 @@ import {
   Injectable,
   ConflictException,
   NotFoundException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { RepositoryProvider } from '@src/module/shared/transaction/repository.provider';
 import { BrandEntity } from '@src/module/backoffice/domain/brand.entity';
@@ -128,7 +129,7 @@ export class BrandService {
       password,
       name,
       phoneNumber,
-      role: RoleEnum.PARTNER_SUPER,
+      role: dto.role ?? RoleEnum.PARTNER_SUPER,
       brand,
     });
 
@@ -140,5 +141,45 @@ export class BrandService {
       where: { brand: { id: brandId } },
       order: { createdAt: 'DESC' },
     });
+  }
+
+  async deleteManager(
+    id: number,
+    brandId: number
+  ): Promise<{ success: boolean }> {
+    const manager =
+      await this.repositoryProvider.BrandManagerRepository.findOne({
+        where: { id },
+        relations: ['brand'],
+      });
+
+    if (!manager) {
+      throw new NotFoundException('매니저를 찾을 수 없습니다');
+    }
+
+    if (manager.role === RoleEnum.PARTNER_SUPER) {
+      throw new ForbiddenException('SUPER 계정은 삭제할 수 없습니다');
+    }
+
+    if (manager.brand.id !== brandId) {
+      throw new ForbiddenException('다른 브랜드의 매니저를 삭제할 수 없습니다');
+    }
+
+    await this.repositoryProvider.BrandManagerRepository.softDelete(id);
+    return { success: true };
+  }
+
+  async findManagerById(id: number): Promise<BrandManagerEntity> {
+    const manager =
+      await this.repositoryProvider.BrandManagerRepository.findOne({
+        where: { id },
+        relations: ['brand'],
+      });
+
+    if (!manager) {
+      throw new NotFoundException('매니저를 찾을 수 없습니다');
+    }
+
+    return manager;
   }
 }

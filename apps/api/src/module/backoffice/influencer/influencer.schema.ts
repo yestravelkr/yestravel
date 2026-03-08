@@ -115,6 +115,7 @@ export const createInfluencerManagerInputSchema = z.object({
   name: z.string().min(1, '이름은 필수입니다.'),
   phoneNumber: z.string().min(1, '전화번호는 필수입니다.'),
   influencerId: z.number(),
+  role: roleEnumSchema.optional(),
 });
 
 export const createInfluencerManagerOutputSchema = z.object({
@@ -127,3 +128,22 @@ export const findInfluencerManagersInputSchema = z.object({
 });
 
 export const influencerManagerListSchema = z.array(influencerManagerSchema);
+
+export const deleteInfluencerManagerInputSchema = z.object({
+  id: z.number(),
+  influencerId: z.number(),
+});
+
+export const findInfluencerManagerByIdInputSchema = z.object({
+  id: z.number(),
+});
+
+export const influencerManagerProfileSchema = z.object({
+  id: z.number(),
+  email: z.string(),
+  name: z.string(),
+  phoneNumber: z.string(),
+  role: z.string(),
+  partnerType: z.literal('INFLUENCER'),
+  partnerId: z.number(),
+});

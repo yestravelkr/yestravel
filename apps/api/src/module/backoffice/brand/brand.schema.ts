@@ -82,6 +82,26 @@ export const createBrandManagerInputSchema = z.object({
   name: z.string().min(1, '이름은 필수입니다.'),
   phoneNumber: z.string().min(1, '전화번호는 필수입니다.'),
   brandId: z.number(),
+  role: roleEnumSchema.optional(),
+});
+
+export const deleteBrandManagerInputSchema = z.object({
+  id: z.number(),
+  brandId: z.number(),
+});
+
+export const findBrandManagerByIdInputSchema = z.object({
+  id: z.number(),
+});
+
+export const brandManagerProfileSchema = z.object({
+  id: z.number(),
+  email: z.string(),
+  name: z.string(),
+  phoneNumber: z.string(),
+  role: z.string(),
+  partnerType: z.literal('BRAND'),
+  partnerId: z.number(),
 });
 
 export const createBrandManagerOutputSchema = z.object({

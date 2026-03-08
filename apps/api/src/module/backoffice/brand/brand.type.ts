@@ -10,6 +10,9 @@ import {
   createBrandManagerInputSchema,
   createBrandManagerOutputSchema,
   findBrandManagersInputSchema,
+  deleteBrandManagerInputSchema,
+  findBrandManagerByIdInputSchema,
+  brandManagerProfileSchema,
 } from './brand.schema';
 
 // Inferred types from Zod schemas
@@ -29,3 +32,10 @@ export type CreateBrandManagerOutput = z.infer<
 export type FindBrandManagersInput = z.infer<
   typeof findBrandManagersInputSchema
 >;
+export type DeleteBrandManagerInput = z.infer<
+  typeof deleteBrandManagerInputSchema
+>;
+export type FindBrandManagerByIdInput = z.infer<
+  typeof findBrandManagerByIdInputSchema
+>;
+export type BrandManagerProfile = z.infer<typeof brandManagerProfileSchema>;

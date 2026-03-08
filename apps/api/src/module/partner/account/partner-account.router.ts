@@ -23,6 +23,10 @@ import {
 @Router({ alias: 'partnerAccount' })
 @UseMiddlewares(PartnerAuthMiddleware)
 export class PartnerAccountRouter extends BaseTrpcRouter {
+  private isBrand(ctx: PartnerAuthorizedContext): boolean {
+    return ctx.partner.partnerType === 'BRAND';
+  }
+
   @Mutation({
     input: createStaffInputSchema,
     output: z.object({ id: z.number(), email: z.string() }),
@@ -43,10 +47,19 @@ export class PartnerAccountRouter extends BaseTrpcRouter {
         message: 'SUPER 권한이 필요합니다',
       });
     }
-    return this.microserviceClient.send('partner.account.createStaff', {
+
+    if (this.isBrand(ctx)) {
+      return this.microserviceClient.send('backoffice.brand.createManager', {
+        ...data,
+        brandId: ctx.partner.partnerId,
+        role: RoleEnum.PARTNER_STAFF,
+      });
+    }
+
+    return this.microserviceClient.send('influencer.createManager', {
       ...data,
-      partnerType: ctx.partner.partnerType,
-      partnerId: ctx.partner.partnerId,
+      influencerId: ctx.partner.partnerId,
+      role: RoleEnum.PARTNER_STAFF,
     });
   }
 
@@ -54,9 +67,14 @@ export class PartnerAccountRouter extends BaseTrpcRouter {
     output: z.array(staffItemSchema),
   })
   async findAllStaff(@Ctx() ctx: PartnerAuthorizedContext) {
-    return this.microserviceClient.send('partner.account.findAllStaff', {
-      partnerType: ctx.partner.partnerType,
-      partnerId: ctx.partner.partnerId,
+    if (this.isBrand(ctx)) {
+      return this.microserviceClient.send('backoffice.brand.findManagers', {
+        brandId: ctx.partner.partnerId,
+      });
+    }
+
+    return this.microserviceClient.send('influencer.findManagers', {
+      influencerId: ctx.partner.partnerId,
     });
   }
 
@@ -74,10 +92,17 @@ export class PartnerAccountRouter extends BaseTrpcRouter {
         message: 'SUPER 권한이 필요합니다',
       });
     }
-    return this.microserviceClient.send('partner.account.deleteStaff', {
-      ...data,
-      partnerType: ctx.partner.partnerType,
-      partnerId: ctx.partner.partnerId,
+
+    if (this.isBrand(ctx)) {
+      return this.microserviceClient.send('backoffice.brand.deleteManager', {
+        id: data.id,
+        brandId: ctx.partner.partnerId,
+      });
+    }
+
+    return this.microserviceClient.send('influencer.deleteManager', {
+      id: data.id,
+      influencerId: ctx.partner.partnerId,
     });
   }
 
@@ -85,9 +110,10 @@ export class PartnerAccountRouter extends BaseTrpcRouter {
     output: profileOutputSchema,
   })
   async getProfile(@Ctx() ctx: PartnerAuthorizedContext) {
-    return this.microserviceClient.send('partner.account.getProfile', {
-      id: ctx.partner.id,
-      partnerType: ctx.partner.partnerType,
-    });
+    const pattern = this.isBrand(ctx)
+      ? 'backoffice.brand.findManagerById'
+      : 'influencer.findManagerById';
+
+    return this.microserviceClient.send(pattern, { id: ctx.partner.id });
   }
 }

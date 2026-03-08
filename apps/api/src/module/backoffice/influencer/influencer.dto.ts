@@ -9,6 +9,9 @@ import {
   createInfluencerManagerInputSchema,
   createInfluencerManagerOutputSchema,
   findInfluencerManagersInputSchema,
+  deleteInfluencerManagerInputSchema,
+  findInfluencerManagerByIdInputSchema,
+  influencerManagerProfileSchema,
 } from './influencer.schema';
 import { InfluencerEntity } from '@src/module/backoffice/domain/influencer.entity';
 
@@ -27,6 +30,15 @@ export type CreateInfluencerManagerOutput = z.infer<
 >;
 export type FindInfluencerManagersInput = z.infer<
   typeof findInfluencerManagersInputSchema
+>;
+export type DeleteInfluencerManagerInput = z.infer<
+  typeof deleteInfluencerManagerInputSchema
+>;
+export type FindInfluencerManagerByIdInput = z.infer<
+  typeof findInfluencerManagerByIdInputSchema
+>;
+export type InfluencerManagerProfile = z.infer<
+  typeof influencerManagerProfileSchema
 >;
 
 // List response type (Entity 배열)

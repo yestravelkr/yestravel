@@ -7,6 +7,7 @@ import { BrandEntity } from '@src/module/backoffice/domain/brand.entity';
 import {
   createBrandManagerOutputSchema,
   brandManagerListSchema,
+  brandManagerProfileSchema,
 } from './brand.schema';
 import type {
   Brand,
@@ -17,6 +18,9 @@ import type {
   CreateBrandManagerInput,
   CreateBrandManagerOutput,
   FindBrandManagersInput,
+  DeleteBrandManagerInput,
+  FindBrandManagerByIdInput,
+  BrandManagerProfile,
 } from './brand.type';
 
 @Controller()
@@ -106,5 +110,29 @@ export class BrandController {
   async findManagers(data: FindBrandManagersInput) {
     const managers = await this.brandService.findManagers(data.brandId);
     return brandManagerListSchema.parse(managers);
+  }
+
+  @MessagePattern('backoffice.brand.deleteManager')
+  @Transactional
+  async deleteManager(
+    data: DeleteBrandManagerInput
+  ): Promise<{ success: boolean }> {
+    return this.brandService.deleteManager(data.id, data.brandId);
+  }
+
+  @MessagePattern('backoffice.brand.findManagerById')
+  async findManagerById(
+    data: FindBrandManagerByIdInput
+  ): Promise<BrandManagerProfile> {
+    const manager = await this.brandService.findManagerById(data.id);
+    return brandManagerProfileSchema.parse({
+      id: manager.id,
+      email: manager.email,
+      name: manager.name,
+      phoneNumber: manager.phoneNumber,
+      role: manager.role,
+      partnerType: 'BRAND' as const,
+      partnerId: manager.brand.id,
+    });
   }
 }

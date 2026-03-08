@@ -2,6 +2,7 @@ import {
   Injectable,
   ConflictException,
   NotFoundException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { RepositoryProvider } from '@src/module/shared/transaction/repository.provider';
 import { InfluencerEntity } from '@src/module/backoffice/domain/influencer.entity';
@@ -190,7 +191,7 @@ export class InfluencerService {
       password,
       name,
       phoneNumber,
-      role: RoleEnum.PARTNER_SUPER,
+      role: dto.role ?? RoleEnum.PARTNER_SUPER,
       influencer,
     });
 
@@ -202,5 +203,47 @@ export class InfluencerService {
       where: { influencer: { id: influencerId } },
       order: { createdAt: 'DESC' },
     });
+  }
+
+  async deleteManager(
+    id: number,
+    influencerId: number
+  ): Promise<{ success: boolean }> {
+    const manager =
+      await this.repositoryProvider.InfluencerManagerRepository.findOne({
+        where: { id },
+        relations: ['influencer'],
+      });
+
+    if (!manager) {
+      throw new NotFoundException('매니저를 찾을 수 없습니다');
+    }
+
+    if (manager.role === RoleEnum.PARTNER_SUPER) {
+      throw new ForbiddenException('SUPER 계정은 삭제할 수 없습니다');
+    }
+
+    if (manager.influencer.id !== influencerId) {
+      throw new ForbiddenException(
+        '다른 인플루언서의 매니저를 삭제할 수 없습니다'
+      );
+    }
+
+    await this.repositoryProvider.InfluencerManagerRepository.softDelete(id);
+    return { success: true };
+  }
+
+  async findManagerById(id: number): Promise<InfluencerManagerEntity> {
+    const manager =
+      await this.repositoryProvider.InfluencerManagerRepository.findOne({
+        where: { id },
+        relations: ['influencer'],
+      });
+
+    if (!manager) {
+      throw new NotFoundException('매니저를 찾을 수 없습니다');
+    }
+
+    return manager;
   }
 }
