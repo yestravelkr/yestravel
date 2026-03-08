@@ -13,7 +13,7 @@ import { RoleEnum } from '@src/module/backoffice/admin/admin.schema';
 import {
   PartnerAuthMiddleware,
   PartnerAuthorizedContext,
-} from '@src/module/partner/partner-auth/partner-auth.middleware';
+} from '@src/module/partner/auth/partner-auth.middleware';
 import {
   createStaffInputSchema,
   staffItemSchema,
