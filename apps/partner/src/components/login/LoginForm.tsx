@@ -5,8 +5,8 @@ import tw from 'tailwind-styled-components';
 
 import { LoginFormData, LoginFormSchema } from './LoginFormSchema';
 
-import { LoadingSpinner, trpc, trpcClient } from '@/shared';
-import { PartnerType, useAuthStore } from '@/store';
+import { fetchAndSetProfile, LoadingSpinner, trpc } from '@/shared';
+import { useAuthStore } from '@/store';
 
 interface LoginFormProps {
   /** 파트너 유형 (BRAND | INFLUENCER) */
@@ -30,28 +30,19 @@ export function LoginForm({ partnerType, onSuccess }: LoginFormProps) {
   });
   const [isLoading, setIsLoading] = useState(false);
 
-  const { login, setUser } = useAuthStore();
+  const { login, logout } = useAuthStore();
 
   const loginMutation = trpc.partnerAuth.login.useMutation({
     onSuccess: (data: { accessToken: string }) => {
       login(data.accessToken);
       setIsLoading(true);
 
-      trpcClient.partnerAccount.getProfile
-        .query()
+      fetchAndSetProfile()
         .then((profile) => {
-          setUser(
-            {
-              id: profile.id,
-              email: profile.email,
-              role: profile.role,
-              partnerId: profile.partnerId,
-            },
-            profile.partnerType as PartnerType,
-          );
           onSuccess?.(profile.partnerType as 'BRAND' | 'INFLUENCER');
         })
         .catch(() => {
+          logout();
           toast.error('프로필 정보를 가져오는데 실패했습니다');
         })
         .finally(() => {

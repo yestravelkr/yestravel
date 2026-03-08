@@ -13,7 +13,7 @@ export enum PartnerType {
 type User = {
   id: number;
   email: string;
-  role: string;
+  role: Role;
   partnerId: number;
 };
 
@@ -93,7 +93,7 @@ export const useAuthStore = create<AuthStore>((set, _get) => ({
         const newAccessToken = data.result?.data?.accessToken;
 
         if (newAccessToken) {
-          set({ accessToken: newAccessToken });
+          set({ accessToken: newAccessToken, isLogin: true });
           return true;
         }
 
