@@ -544,7 +544,7 @@ const appRouter = t.router({
     refresh: publicProcedure.output(z.object({ accessToken: z.string() })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
     logout: publicProcedure.output(z.object({ success: z.boolean() })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
   }),
-  partnerAccount: t.router({ ,
+  partnerAccount: t.router({
     createStaff: publicProcedure.input(z.object({
       email: z.string().email('이메일 형식이 아닙니다.'),
       password: z.string().min(8, '비밀번호는 최소 8자 이상이어야 합니다.'),

@@ -119,9 +119,10 @@ export class BrandRouter extends BaseTrpcRouter {
     @Ctx() ctx: BackofficeAuthorizedContext,
     @Input() input: CreateBrandManagerInput
   ) {
+    const { brandId, ...rest } = input;
     const output = await this.microserviceClient.send(
-      'backoffice.brand.createManager',
-      input
+      'partner.admin.createManager',
+      { partnerType: 'BRAND', partnerId: brandId, ...rest }
     );
     return createBrandManagerOutputSchema.parse(output);
   }
@@ -136,8 +137,8 @@ export class BrandRouter extends BaseTrpcRouter {
     @Input() input: FindBrandManagersInput
   ) {
     const output = await this.microserviceClient.send(
-      'backoffice.brand.findManagers',
-      input
+      'partner.admin.findManagers',
+      { partnerType: 'BRAND', partnerId: input.brandId }
     );
     return brandManagerListSchema.parse(output);
   }

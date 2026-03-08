@@ -184,9 +184,10 @@ export class InfluencerRouter extends BaseTrpcRouter {
     @Ctx() ctx: BackofficeAuthorizedContext,
     @Input() input: CreateInfluencerManagerInput
   ) {
+    const { influencerId, ...rest } = input;
     const output = await this.microserviceClient.send(
-      'influencer.createManager',
-      input
+      'partner.admin.createManager',
+      { partnerType: 'INFLUENCER', partnerId: influencerId, ...rest }
     );
     return createInfluencerManagerOutputSchema.parse(output);
   }
@@ -201,8 +202,8 @@ export class InfluencerRouter extends BaseTrpcRouter {
     @Input() input: FindInfluencerManagersInput
   ) {
     const output = await this.microserviceClient.send(
-      'influencer.findManagers',
-      input
+      'partner.admin.findManagers',
+      { partnerType: 'INFLUENCER', partnerId: input.influencerId }
     );
     return influencerManagerListSchema.parse(output);
   }

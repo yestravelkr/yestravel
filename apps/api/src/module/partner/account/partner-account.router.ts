@@ -23,10 +23,6 @@ import {
 @Router({ alias: 'partnerAccount' })
 @UseMiddlewares(PartnerAuthMiddleware)
 export class PartnerAccountRouter extends BaseTrpcRouter {
-  private isBrand(ctx: PartnerAuthorizedContext): boolean {
-    return ctx.partner.partnerType === 'BRAND';
-  }
-
   @Mutation({
     input: createStaffInputSchema,
     output: z.object({ id: z.number(), email: z.string() }),
@@ -48,17 +44,10 @@ export class PartnerAccountRouter extends BaseTrpcRouter {
       });
     }
 
-    if (this.isBrand(ctx)) {
-      return this.microserviceClient.send('backoffice.brand.createManager', {
-        ...data,
-        brandId: ctx.partner.partnerId,
-        role: RoleEnum.PARTNER_STAFF,
-      });
-    }
-
-    return this.microserviceClient.send('influencer.createManager', {
+    return this.microserviceClient.send('partner.admin.createManager', {
       ...data,
-      influencerId: ctx.partner.partnerId,
+      partnerType: ctx.partner.partnerType,
+      partnerId: ctx.partner.partnerId,
       role: RoleEnum.PARTNER_STAFF,
     });
   }
@@ -67,14 +56,9 @@ export class PartnerAccountRouter extends BaseTrpcRouter {
     output: z.array(staffItemSchema),
   })
   async findAllStaff(@Ctx() ctx: PartnerAuthorizedContext) {
-    if (this.isBrand(ctx)) {
-      return this.microserviceClient.send('backoffice.brand.findManagers', {
-        brandId: ctx.partner.partnerId,
-      });
-    }
-
-    return this.microserviceClient.send('influencer.findManagers', {
-      influencerId: ctx.partner.partnerId,
+    return this.microserviceClient.send('partner.admin.findManagers', {
+      partnerType: ctx.partner.partnerType,
+      partnerId: ctx.partner.partnerId,
     });
   }
 
@@ -93,16 +77,10 @@ export class PartnerAccountRouter extends BaseTrpcRouter {
       });
     }
 
-    if (this.isBrand(ctx)) {
-      return this.microserviceClient.send('backoffice.brand.deleteManager', {
-        id: data.id,
-        brandId: ctx.partner.partnerId,
-      });
-    }
-
-    return this.microserviceClient.send('influencer.deleteManager', {
+    return this.microserviceClient.send('partner.admin.deleteManager', {
       id: data.id,
-      influencerId: ctx.partner.partnerId,
+      partnerType: ctx.partner.partnerType,
+      partnerId: ctx.partner.partnerId,
     });
   }
 
@@ -110,10 +88,8 @@ export class PartnerAccountRouter extends BaseTrpcRouter {
     output: profileOutputSchema,
   })
   async getProfile(@Ctx() ctx: PartnerAuthorizedContext) {
-    const pattern = this.isBrand(ctx)
-      ? 'backoffice.brand.findManagerById'
-      : 'influencer.findManagerById';
-
-    return this.microserviceClient.send(pattern, { id: ctx.partner.id });
+    return this.microserviceClient.send('partner.admin.findManagerById', {
+      id: ctx.partner.id,
+    });
   }
 }

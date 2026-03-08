@@ -8,21 +8,12 @@ import {
   createInfluencerInputSchema,
   updateInfluencerInputSchema,
   influencerListSchema,
-  createInfluencerManagerOutputSchema,
-  influencerManagerListSchema,
-  influencerManagerProfileSchema,
 } from './influencer.schema';
 import type {
   CreateInfluencerInput,
   UpdateInfluencerInput,
   Influencer,
   InfluencerList,
-  CreateInfluencerManagerInput,
-  CreateInfluencerManagerOutput,
-  FindInfluencerManagersInput,
-  DeleteInfluencerManagerInput,
-  FindInfluencerManagerByIdInput,
-  InfluencerManagerProfile,
 } from './influencer.dto';
 
 @Controller()
@@ -63,46 +54,5 @@ export class InfluencerController {
     const validatedInput = updateInfluencerInputSchema.parse(data);
     const influencer = await this.influencerService.update(validatedInput);
     return influencerSchema.parse(influencer);
-  }
-
-  @MessagePattern('influencer.createManager')
-  @Transactional
-  async createManager(
-    data: CreateInfluencerManagerInput
-  ): Promise<CreateInfluencerManagerOutput> {
-    const manager = await this.influencerService.createManager(data);
-    return createInfluencerManagerOutputSchema.parse(manager);
-  }
-
-  @MessagePattern('influencer.findManagers')
-  async findManagers(data: FindInfluencerManagersInput) {
-    const managers = await this.influencerService.findManagers(
-      data.influencerId
-    );
-    return influencerManagerListSchema.parse(managers);
-  }
-
-  @MessagePattern('influencer.deleteManager')
-  @Transactional
-  async deleteManager(
-    data: DeleteInfluencerManagerInput
-  ): Promise<{ success: boolean }> {
-    return this.influencerService.deleteManager(data.id, data.influencerId);
-  }
-
-  @MessagePattern('influencer.findManagerById')
-  async findManagerById(
-    data: FindInfluencerManagerByIdInput
-  ): Promise<InfluencerManagerProfile> {
-    const manager = await this.influencerService.findManagerById(data.id);
-    return influencerManagerProfileSchema.parse({
-      id: manager.id,
-      email: manager.email,
-      name: manager.name,
-      phoneNumber: manager.phoneNumber,
-      role: manager.role,
-      partnerType: 'INFLUENCER' as const,
-      partnerId: manager.influencer.id,
-    });
   }
 }
