@@ -62,6 +62,16 @@ user-invocable: true
 
 </instructions>
 
+## PR 리뷰 우선순위 (Priority)
+
+| 우선순위 | 심각도 | 의미 | 조치 |
+|---------|--------|------|------|
+| P1 | Critical | 필수 수정 - 머지 차단 | 반드시 수정 후 재리뷰 |
+| P2 | Critical | 필수 수정 - 머지 차단 | 반드시 수정 후 재리뷰 |
+| P3 | Warning | 권장 수정 | 이번 PR 또는 후속 PR에서 수정 |
+| P4 | Warning | 권장 수정 | 이번 PR 또는 후속 PR에서 수정 |
+| P5 | Info | 참고 사항 | 선택적 반영 |
+
 ## PR 타입별 Focus
 
 | Type | Focus Areas |
