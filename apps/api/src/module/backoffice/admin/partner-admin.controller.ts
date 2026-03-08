@@ -46,11 +46,8 @@ export class PartnerAdminController {
 
   @MessagePattern('partner.admin.findManagerById')
   async findManagerById(data: FindPartnerManagerByIdInput) {
-    const manager = await this.partnerAdminService.findManagerById(
-      data.partnerType,
-      data.id
-    );
-    const relation = data.partnerType === 'BRAND' ? 'brand' : 'influencer';
+    const { manager, partnerId } =
+      await this.partnerAdminService.findManagerById(data.partnerType, data.id);
     return partnerManagerProfileSchema.parse({
       id: manager.id,
       email: manager.email,
@@ -58,7 +55,7 @@ export class PartnerAdminController {
       phoneNumber: manager.phoneNumber,
       role: manager.role,
       partnerType: data.partnerType,
-      partnerId: (manager as any)[relation].id,
+      partnerId,
     });
   }
 }
