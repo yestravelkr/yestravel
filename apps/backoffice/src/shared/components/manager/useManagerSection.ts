@@ -22,6 +22,22 @@ interface UseManagerSectionOptions {
   partnerId: number;
 }
 
+function createMutationOptions(
+  invalidateFn: () => void,
+  successMsg: string,
+  errorMsg: string,
+) {
+  return {
+    onSuccess: () => {
+      invalidateFn();
+      toast.success(successMsg);
+    },
+    onError: (error: { message?: string }) => {
+      toast.error(error.message || errorMsg);
+    },
+  };
+}
+
 /**
  * Usage:
  * ```tsx
@@ -34,6 +50,13 @@ export function useManagerSection({
   partnerId,
 }: UseManagerSectionOptions): ManagerSectionProps {
   const utils = trpc.useUtils();
+
+  const invalidateBrand = () =>
+    utils.backofficeBrand.findManagers.invalidate({ brandId: partnerId });
+  const invalidateInfluencer = () =>
+    utils.backofficeInfluencer.findManagers.invalidate({
+      influencerId: partnerId,
+    });
 
   // 두 쿼리 모두 선언, enabled로 분기 (조건부 hooks 금지)
   const brandManagersQuery = trpc.backofficeBrand.findManagers.useQuery(
@@ -50,78 +73,66 @@ export function useManagerSection({
     partnerType === 'brand' ? brandManagersQuery : influencerManagersQuery;
 
   // Mutations - 두 타입 모두 선언
-  const brandCreateMutation = trpc.backofficeBrand.createManager.useMutation({
-    onSuccess: () => {
-      utils.backofficeBrand.findManagers.invalidate({ brandId: partnerId });
-      toast.success('관리자가 추가되었습니다.');
-    },
-    onError: (error) => {
-      toast.error(error.message || '관리자 추가에 실패했습니다.');
-    },
-  });
+  const brandCreateMutation = trpc.backofficeBrand.createManager.useMutation(
+    createMutationOptions(
+      invalidateBrand,
+      '관리자가 추가되었습니다.',
+      '관리자 추가에 실패했습니다.',
+    ),
+  );
 
   const influencerCreateMutation =
-    trpc.backofficeInfluencer.createManager.useMutation({
-      onSuccess: () => {
-        utils.backofficeInfluencer.findManagers.invalidate({
-          influencerId: partnerId,
-        });
-        toast.success('관리자가 추가되었습니다.');
-      },
-      onError: (error) => {
-        toast.error(error.message || '관리자 추가에 실패했습니다.');
-      },
-    });
+    trpc.backofficeInfluencer.createManager.useMutation(
+      createMutationOptions(
+        invalidateInfluencer,
+        '관리자가 추가되었습니다.',
+        '관리자 추가에 실패했습니다.',
+      ),
+    );
 
-  const brandDeleteMutation = trpc.backofficeBrand.deleteManager.useMutation({
-    onSuccess: () => {
-      utils.backofficeBrand.findManagers.invalidate({ brandId: partnerId });
-      toast.success('관리자가 제거되었습니다.');
-    },
-    onError: (error) => {
-      toast.error(error.message || '관리자 제거에 실패했습니다.');
-    },
-  });
+  const brandDeleteMutation = trpc.backofficeBrand.deleteManager.useMutation(
+    createMutationOptions(
+      invalidateBrand,
+      '관리자가 제거되었습니다.',
+      '관리자 제거에 실패했습니다.',
+    ),
+  );
 
   const influencerDeleteMutation =
-    trpc.backofficeInfluencer.deleteManager.useMutation({
-      onSuccess: () => {
-        utils.backofficeInfluencer.findManagers.invalidate({
-          influencerId: partnerId,
-        });
-        toast.success('관리자가 제거되었습니다.');
-      },
-      onError: (error) => {
-        toast.error(error.message || '관리자 제거에 실패했습니다.');
-      },
-    });
+    trpc.backofficeInfluencer.deleteManager.useMutation(
+      createMutationOptions(
+        invalidateInfluencer,
+        '관리자가 제거되었습니다.',
+        '관리자 제거에 실패했습니다.',
+      ),
+    );
 
   const brandUpdateRoleMutation =
-    trpc.backofficeBrand.updateManagerRole.useMutation({
-      onSuccess: () => {
-        utils.backofficeBrand.findManagers.invalidate({ brandId: partnerId });
-        toast.success('권한이 변경되었습니다.');
-      },
-      onError: (error) => {
-        toast.error(error.message || '권한 변경에 실패했습니다.');
-      },
-    });
+    trpc.backofficeBrand.updateManagerRole.useMutation(
+      createMutationOptions(
+        invalidateBrand,
+        '권한이 변경되었습니다.',
+        '권한 변경에 실패했습니다.',
+      ),
+    );
 
   const influencerUpdateRoleMutation =
-    trpc.backofficeInfluencer.updateManagerRole.useMutation({
-      onSuccess: () => {
-        utils.backofficeInfluencer.findManagers.invalidate({
-          influencerId: partnerId,
-        });
-        toast.success('권한이 변경되었습니다.');
-      },
-      onError: (error) => {
-        toast.error(error.message || '권한 변경에 실패했습니다.');
-      },
-    });
+    trpc.backofficeInfluencer.updateManagerRole.useMutation(
+      createMutationOptions(
+        invalidateInfluencer,
+        '권한이 변경되었습니다.',
+        '권한 변경에 실패했습니다.',
+      ),
+    );
 
-  const managers: PartnerManager[] = (managersQuery.data ??
-    []) as PartnerManager[];
+  const managers: PartnerManager[] = (managersQuery.data ?? []).map((m) => ({
+    id: m.id,
+    email: m.email,
+    name: m.name,
+    phoneNumber: m.phoneNumber,
+    role: m.role,
+    createdAt: m.createdAt,
+  }));
 
   const onAddManager = async () => {
     const result = await openAddManagerModal();

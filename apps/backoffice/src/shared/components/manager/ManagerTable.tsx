@@ -41,7 +41,7 @@ export interface ManagerTableProps {
   onRemoveManager: (managerId: number, managerName: string) => void;
 }
 
-const roleOptions = [
+export const roleOptions = [
   { value: ROLE_VALUES.PARTNER_SUPER, label: '대표 관리자' },
   { value: ROLE_VALUES.PARTNER_STAFF, label: '관리자' },
 ];

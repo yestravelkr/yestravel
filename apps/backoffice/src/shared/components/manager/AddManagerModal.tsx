@@ -9,6 +9,8 @@ import { type ChangeEvent, useState } from 'react';
 import SnappyModal, { useCurrentModal } from 'react-snappy-modal';
 import tw from 'tailwind-styled-components';
 
+import { roleOptions } from './ManagerTable';
+
 import { ROLE_VALUES, type RoleType } from '@/constants/role';
 import { SelectDropdown } from '@/shared/components/SelectDropdown';
 
@@ -24,11 +26,6 @@ export interface AddManagerInput {
   /** 역할 */
   role: RoleType;
 }
-
-const roleOptions = [
-  { value: ROLE_VALUES.PARTNER_SUPER, label: '대표 관리자' },
-  { value: ROLE_VALUES.PARTNER_STAFF, label: '관리자' },
-];
 
 /**
  * Usage:
@@ -59,6 +56,8 @@ export function AddManagerModal() {
 
     if (!form.email.trim()) {
       newErrors.email = '이메일을 입력해주세요.';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+      newErrors.email = '올바른 이메일 형식이 아닙니다.';
     }
     if (!form.password || form.password.length < 8) {
       newErrors.password = '비밀번호는 8자 이상이어야 합니다.';
