@@ -9,7 +9,7 @@ import { Request } from 'express';
 import { TRPCError } from '@trpc/server';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigProvider } from '@src/config';
-import { PartnerAuthPayload } from './partner-auth.type';
+import { PartnerAuthPayload } from './partner-auth.schema';
 import type { CreateExpressContextOptions } from '@trpc/server/adapters/express';
 
 const jwtService = new JwtService();

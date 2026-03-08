@@ -50,4 +50,24 @@ export class BackofficeAuthController {
     const { refreshToken } = data;
     return this.backofficeAuthService.refreshToken(refreshToken);
   }
+
+  @MessagePattern('partner.auth.login')
+  async partnerLogin(data: {
+    email: string;
+    password: string;
+    partnerType: 'BRAND' | 'INFLUENCER';
+  }): Promise<{ accessToken: string; refreshToken: string }> {
+    return this.backofficeAuthService.partnerLogin(
+      data.email,
+      data.password,
+      data.partnerType
+    );
+  }
+
+  @MessagePattern('partner.auth.refresh')
+  async partnerRefresh(data: {
+    refreshToken: string;
+  }): Promise<{ accessToken: string }> {
+    return this.backofficeAuthService.partnerRefreshToken(data.refreshToken);
+  }
 }
