@@ -114,3 +114,19 @@ export const findBrandManagersInputSchema = z.object({
 });
 
 export const brandManagerListSchema = z.array(brandManagerSchema);
+
+export const deleteBrandManagerOutputSchema = z.object({
+  success: z.boolean(),
+});
+
+export const updateBrandManagerRoleInputSchema = z.object({
+  id: z.number(),
+  brandId: z.number(),
+  role: roleEnumSchema,
+});
+
+export const updateBrandManagerRoleOutputSchema = z.object({
+  id: z.number(),
+  email: z.string(),
+  role: roleEnumSchema,
+});

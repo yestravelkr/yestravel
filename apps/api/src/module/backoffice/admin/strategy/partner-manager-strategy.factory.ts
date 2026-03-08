@@ -16,8 +16,11 @@ export class PartnerManagerStrategyFactory {
     private influencerStrategy: InfluencerManagerStrategy
   ) {
     this.strategies = new Map();
-    const allStrategies: PartnerManagerStrategy[] = [this.brandStrategy, this.influencerStrategy];
-    allStrategies.forEach((s) => this.strategies.set(s.getSupportedType(), s));
+    const allStrategies: PartnerManagerStrategy[] = [
+      this.brandStrategy,
+      this.influencerStrategy,
+    ];
+    allStrategies.forEach(s => this.strategies.set(s.getSupportedType(), s));
   }
 
   /**

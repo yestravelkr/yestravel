@@ -12,6 +12,7 @@ import {
   deleteInfluencerManagerInputSchema,
   findInfluencerManagerByIdInputSchema,
   influencerManagerProfileSchema,
+  updateInfluencerManagerRoleInputSchema,
 } from './influencer.schema';
 import { InfluencerEntity } from '@src/module/backoffice/domain/influencer.entity';
 
@@ -39,6 +40,9 @@ export type FindInfluencerManagerByIdInput = z.infer<
 >;
 export type InfluencerManagerProfile = z.infer<
   typeof influencerManagerProfileSchema
+>;
+export type UpdateInfluencerManagerRoleInput = z.infer<
+  typeof updateInfluencerManagerRoleInputSchema
 >;
 
 // List response type (Entity 배열)

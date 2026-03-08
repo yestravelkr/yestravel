@@ -23,6 +23,15 @@ export interface CreateManagerParams {
 }
 
 /**
+ * UpdateManagerRoleParams - 매니저 권한 수정 파라미터
+ */
+export interface UpdateManagerRoleParams {
+  id: number;
+  partnerId: number;
+  role: RoleEnumType;
+}
+
+/**
  * PartnerManagerStrategy - 파트너 매니저 CRUD Strategy 인터페이스
  *
  * Brand/Influencer별 매니저 관리 로직을 캡슐화합니다.
@@ -33,4 +42,5 @@ export interface PartnerManagerStrategy {
   findManagers(partnerId: number): Promise<LoginEntity[]>;
   deleteManager(id: number, partnerId: number): Promise<void>;
   findManagerById(id: number): Promise<PartnerManagerResult>;
+  updateManagerRole(params: UpdateManagerRoleParams): Promise<LoginEntity>;
 }

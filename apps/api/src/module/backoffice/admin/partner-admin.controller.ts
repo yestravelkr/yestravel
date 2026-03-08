@@ -5,12 +5,14 @@ import {
   createPartnerManagerOutputSchema,
   partnerManagerListSchema,
   partnerManagerProfileSchema,
+  updatePartnerManagerRoleOutputSchema,
 } from './partner-admin.schema';
 import type {
   CreatePartnerManagerInput,
   FindPartnerManagersInput,
   DeletePartnerManagerInput,
   FindPartnerManagerByIdInput,
+  UpdatePartnerManagerRoleInput,
 } from './partner-admin.schema';
 
 /**
@@ -57,5 +59,11 @@ export class PartnerAdminController {
       partnerType: data.partnerType,
       partnerId,
     });
+  }
+
+  @MessagePattern('partner.admin.updateManagerRole')
+  async updateManagerRole(data: UpdatePartnerManagerRoleInput) {
+    const manager = await this.partnerAdminService.updateManagerRole(data);
+    return updatePartnerManagerRoleOutputSchema.parse(manager);
   }
 }

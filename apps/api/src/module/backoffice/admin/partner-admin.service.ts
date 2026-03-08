@@ -2,7 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { RoleEnum } from './admin.schema';
 import { PartnerManagerStrategyFactory } from './strategy/partner-manager-strategy.factory';
 import type { PartnerType } from '../../partner/auth/partner-auth.schema';
-import type { CreatePartnerManagerInput } from './partner-admin.schema';
+import type {
+  CreatePartnerManagerInput,
+  UpdatePartnerManagerRoleInput,
+} from './partner-admin.schema';
 import type { PartnerManagerResult } from './strategy/partner-manager.strategy';
 
 /**
@@ -56,5 +59,17 @@ export class PartnerAdminService {
   ): Promise<PartnerManagerResult> {
     const strategy = this.strategyFactory.getStrategy(partnerType);
     return strategy.findManagerById(id);
+  }
+
+  /**
+   * 파트너 매니저 권한(role) 수정
+   */
+  async updateManagerRole(dto: UpdatePartnerManagerRoleInput) {
+    const strategy = this.strategyFactory.getStrategy(dto.partnerType);
+    return strategy.updateManagerRole({
+      id: dto.id,
+      partnerId: dto.partnerId,
+      role: dto.role,
+    });
   }
 }

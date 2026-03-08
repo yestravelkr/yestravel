@@ -73,3 +73,20 @@ export const partnerManagerProfileSchema = z.object({
   partnerType: partnerTypeSchema,
   partnerId: z.number(),
 });
+
+// updateManagerRole
+export const updatePartnerManagerRoleInputSchema = z.object({
+  partnerType: partnerTypeSchema,
+  id: z.number(),
+  partnerId: z.number(),
+  role: z.enum(ROLE_ENUM_VALUE),
+});
+export type UpdatePartnerManagerRoleInput = z.infer<
+  typeof updatePartnerManagerRoleInputSchema
+>;
+
+export const updatePartnerManagerRoleOutputSchema = z.object({
+  id: z.number(),
+  email: z.string(),
+  role: roleEnumSchema,
+});

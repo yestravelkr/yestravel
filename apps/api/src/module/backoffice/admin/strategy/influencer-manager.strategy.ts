@@ -6,6 +6,7 @@ import type { PartnerType } from '@src/module/partner/auth/partner-auth.schema';
 import type {
   PartnerManagerStrategy,
   CreateManagerParams,
+  UpdateManagerRoleParams,
   PartnerManagerResult,
 } from './partner-manager.strategy';
 
@@ -56,5 +57,16 @@ export class InfluencerManagerStrategy implements PartnerManagerStrategy {
         relations: ['influencer'],
       });
     return { manager, partnerId: manager.influencer.id };
+  }
+
+  async updateManagerRole(
+    params: UpdateManagerRoleParams
+  ): Promise<LoginEntity> {
+    const manager =
+      await this.repositoryProvider.InfluencerManagerRepository.findOneOrFail({
+        where: { id: params.id, influencer: { id: params.partnerId } },
+      });
+    manager.role = params.role;
+    return this.repositoryProvider.InfluencerManagerRepository.save(manager);
   }
 }

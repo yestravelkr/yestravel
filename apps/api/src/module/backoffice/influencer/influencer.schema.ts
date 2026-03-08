@@ -147,3 +147,19 @@ export const influencerManagerProfileSchema = z.object({
   partnerType: z.literal('INFLUENCER'),
   partnerId: z.number(),
 });
+
+export const deleteInfluencerManagerOutputSchema = z.object({
+  success: z.boolean(),
+});
+
+export const updateInfluencerManagerRoleInputSchema = z.object({
+  id: z.number(),
+  influencerId: z.number(),
+  role: roleEnumSchema,
+});
+
+export const updateInfluencerManagerRoleOutputSchema = z.object({
+  id: z.number(),
+  email: z.string(),
+  role: roleEnumSchema,
+});
