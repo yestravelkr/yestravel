@@ -15,11 +15,23 @@ import { z } from 'zod';
 import {
   influencerSchema,
   socialMediaPlatformEnumSchema,
+  createInfluencerManagerInputSchema,
+  createInfluencerManagerOutputSchema,
+  findInfluencerManagersInputSchema,
+  influencerManagerListSchema,
+  deleteInfluencerManagerInputSchema,
+  deleteInfluencerManagerOutputSchema,
+  updateInfluencerManagerRoleInputSchema,
+  updateInfluencerManagerRoleOutputSchema,
 } from './influencer.schema';
 import { BUSINESS_TYPE_ENUM_VALUE } from '@src/module/backoffice/brand/brand.schema';
 import type {
   CreateInfluencerInput,
   UpdateInfluencerInput,
+  CreateInfluencerManagerInput,
+  FindInfluencerManagersInput,
+  DeleteInfluencerManagerInput,
+  UpdateInfluencerManagerRoleInput,
 } from './influencer.dto';
 
 // Inline schemas for Router (Router 규칙: 외부 스키마 import 금지, 인라인 정의 필수)
@@ -167,5 +179,76 @@ export class InfluencerRouter extends BaseTrpcRouter {
       input
     );
     return influencerSchema.parse(output);
+  }
+
+  @UseMiddlewares(BackofficeAuthMiddleware)
+  @Mutation({
+    input: createInfluencerManagerInputSchema,
+    output: createInfluencerManagerOutputSchema,
+  })
+  async createManager(
+    @Ctx() ctx: BackofficeAuthorizedContext,
+    @Input() input: CreateInfluencerManagerInput
+  ) {
+    const { influencerId, ...rest } = input;
+    const output = await this.microserviceClient.send(
+      'partner.admin.createManager',
+      { partnerType: 'INFLUENCER', partnerId: influencerId, ...rest }
+    );
+    return createInfluencerManagerOutputSchema.parse(output);
+  }
+
+  @UseMiddlewares(BackofficeAuthMiddleware)
+  @Query({
+    input: findInfluencerManagersInputSchema,
+    output: influencerManagerListSchema,
+  })
+  async findManagers(
+    @Ctx() ctx: BackofficeAuthorizedContext,
+    @Input() input: FindInfluencerManagersInput
+  ) {
+    const output = await this.microserviceClient.send(
+      'partner.admin.findManagers',
+      { partnerType: 'INFLUENCER', partnerId: input.influencerId }
+    );
+    return influencerManagerListSchema.parse(output);
+  }
+
+  @UseMiddlewares(BackofficeAuthMiddleware)
+  @Mutation({
+    input: deleteInfluencerManagerInputSchema,
+    output: deleteInfluencerManagerOutputSchema,
+  })
+  async deleteManager(
+    @Ctx() ctx: BackofficeAuthorizedContext,
+    @Input() input: DeleteInfluencerManagerInput
+  ) {
+    await this.microserviceClient.send('partner.admin.deleteManager', {
+      partnerType: 'INFLUENCER',
+      id: input.id,
+      partnerId: input.influencerId,
+    });
+    return { success: true };
+  }
+
+  @UseMiddlewares(BackofficeAuthMiddleware)
+  @Mutation({
+    input: updateInfluencerManagerRoleInputSchema,
+    output: updateInfluencerManagerRoleOutputSchema,
+  })
+  async updateManagerRole(
+    @Ctx() ctx: BackofficeAuthorizedContext,
+    @Input() input: UpdateInfluencerManagerRoleInput
+  ) {
+    const output = await this.microserviceClient.send(
+      'partner.admin.updateManagerRole',
+      {
+        partnerType: 'INFLUENCER',
+        id: input.id,
+        partnerId: input.influencerId,
+        role: input.role,
+      }
+    );
+    return updateInfluencerManagerRoleOutputSchema.parse(output);
   }
 }

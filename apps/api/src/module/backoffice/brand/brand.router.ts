@@ -18,12 +18,24 @@ import {
   updateBrandInputSchema,
   deleteBrandInputSchema,
   brandSchema,
+  createBrandManagerInputSchema,
+  createBrandManagerOutputSchema,
+  findBrandManagersInputSchema,
+  brandManagerListSchema,
+  deleteBrandManagerInputSchema,
+  deleteBrandManagerOutputSchema,
+  updateBrandManagerRoleInputSchema,
+  updateBrandManagerRoleOutputSchema,
 } from './brand.schema';
 import type {
   RegisterBrandInput,
   FindBrandByIdInput,
   UpdateBrandInput,
   DeleteBrandInput,
+  CreateBrandManagerInput,
+  FindBrandManagersInput,
+  DeleteBrandManagerInput,
+  UpdateBrandManagerRoleInput,
 } from './brand.type';
 
 @Router({ alias: 'backofficeBrand' })
@@ -102,5 +114,76 @@ export class BrandRouter extends BaseTrpcRouter {
       input
     );
     return output;
+  }
+
+  @UseMiddlewares(BackofficeAuthMiddleware)
+  @Mutation({
+    input: createBrandManagerInputSchema,
+    output: createBrandManagerOutputSchema,
+  })
+  async createManager(
+    @Ctx() ctx: BackofficeAuthorizedContext,
+    @Input() input: CreateBrandManagerInput
+  ) {
+    const { brandId, ...rest } = input;
+    const output = await this.microserviceClient.send(
+      'partner.admin.createManager',
+      { partnerType: 'BRAND', partnerId: brandId, ...rest }
+    );
+    return createBrandManagerOutputSchema.parse(output);
+  }
+
+  @UseMiddlewares(BackofficeAuthMiddleware)
+  @Query({
+    input: findBrandManagersInputSchema,
+    output: brandManagerListSchema,
+  })
+  async findManagers(
+    @Ctx() ctx: BackofficeAuthorizedContext,
+    @Input() input: FindBrandManagersInput
+  ) {
+    const output = await this.microserviceClient.send(
+      'partner.admin.findManagers',
+      { partnerType: 'BRAND', partnerId: input.brandId }
+    );
+    return brandManagerListSchema.parse(output);
+  }
+
+  @UseMiddlewares(BackofficeAuthMiddleware)
+  @Mutation({
+    input: deleteBrandManagerInputSchema,
+    output: deleteBrandManagerOutputSchema,
+  })
+  async deleteManager(
+    @Ctx() ctx: BackofficeAuthorizedContext,
+    @Input() input: DeleteBrandManagerInput
+  ) {
+    await this.microserviceClient.send('partner.admin.deleteManager', {
+      partnerType: 'BRAND',
+      id: input.id,
+      partnerId: input.brandId,
+    });
+    return { success: true };
+  }
+
+  @UseMiddlewares(BackofficeAuthMiddleware)
+  @Mutation({
+    input: updateBrandManagerRoleInputSchema,
+    output: updateBrandManagerRoleOutputSchema,
+  })
+  async updateManagerRole(
+    @Ctx() ctx: BackofficeAuthorizedContext,
+    @Input() input: UpdateBrandManagerRoleInput
+  ) {
+    const output = await this.microserviceClient.send(
+      'partner.admin.updateManagerRole',
+      {
+        partnerType: 'BRAND',
+        id: input.id,
+        partnerId: input.brandId,
+        role: input.role,
+      }
+    );
+    return updateBrandManagerRoleOutputSchema.parse(output);
   }
 }

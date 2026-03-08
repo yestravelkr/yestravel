@@ -4,6 +4,7 @@ import {
   businessInfoSchema,
   bankInfoSchema,
 } from '@src/module/backoffice/brand/brand.schema';
+import { roleEnumSchema } from '@src/module/backoffice/admin/admin.schema';
 
 // Social media platform enum
 export const SOCIAL_MEDIA_PLATFORM_ENUM_VALUE = [
@@ -64,7 +65,10 @@ export const createInfluencerInputSchema = z.object({
       /^[a-z0-9_-]+$/,
       '샵 URL은 영문 소문자, 숫자, 하이픈(-), 언더스코어(_)만 사용 가능합니다'
     ),
-  email: z.string().min(1, '이메일은 필수입니다').email('유효한 이메일을 입력해주세요'),
+  email: z
+    .string()
+    .min(1, '이메일은 필수입니다')
+    .email('유효한 이메일을 입력해주세요'),
   phoneNumber: z.string().nullish(),
   thumbnail: z.string().nullish(),
   businessInfo: businessInfoSchema.nullish(),
@@ -93,4 +97,69 @@ export const influencerListItemSchema = z.object({
 export const influencerListSchema = z.object({
   data: z.array(influencerListItemSchema),
   total: z.number(),
+});
+
+// Influencer manager schemas
+export const influencerManagerSchema = z.object({
+  id: z.number(),
+  email: z.string(),
+  name: z.string(),
+  phoneNumber: z.string(),
+  role: roleEnumSchema,
+  createdAt: z.date(),
+});
+
+export const createInfluencerManagerInputSchema = z.object({
+  email: z.string().email('이메일 형식이 아닙니다.'),
+  password: z.string().min(8, '비밀번호는 최소 8자 이상이어야 합니다.'),
+  name: z.string().min(1, '이름은 필수입니다.'),
+  phoneNumber: z.string().min(1, '전화번호는 필수입니다.'),
+  influencerId: z.number(),
+  role: roleEnumSchema.optional(),
+});
+
+export const createInfluencerManagerOutputSchema = z.object({
+  id: z.number(),
+  email: z.string(),
+});
+
+export const findInfluencerManagersInputSchema = z.object({
+  influencerId: z.number(),
+});
+
+export const influencerManagerListSchema = z.array(influencerManagerSchema);
+
+export const deleteInfluencerManagerInputSchema = z.object({
+  id: z.number(),
+  influencerId: z.number(),
+});
+
+export const findInfluencerManagerByIdInputSchema = z.object({
+  id: z.number(),
+});
+
+export const influencerManagerProfileSchema = z.object({
+  id: z.number(),
+  email: z.string(),
+  name: z.string(),
+  phoneNumber: z.string(),
+  role: z.string(),
+  partnerType: z.literal('INFLUENCER'),
+  partnerId: z.number(),
+});
+
+export const deleteInfluencerManagerOutputSchema = z.object({
+  success: z.boolean(),
+});
+
+export const updateInfluencerManagerRoleInputSchema = z.object({
+  id: z.number(),
+  influencerId: z.number(),
+  role: roleEnumSchema,
+});
+
+export const updateInfluencerManagerRoleOutputSchema = z.object({
+  id: z.number(),
+  email: z.string(),
+  role: roleEnumSchema,
 });

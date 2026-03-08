@@ -32,7 +32,9 @@ export class CreateOrderHistoryTable1771911204021 implements MigrationInterface 
 
   public async down(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`DROP INDEX IF EXISTS "IDX_order_history_action"`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_order_history_order_id"`);
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "IDX_order_history_order_id"`
+    );
     await queryRunner.query(`DROP TABLE IF EXISTS "order_history"`);
   }
 }

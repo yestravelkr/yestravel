@@ -87,7 +87,6 @@ export class ClaimService {
       // 5. Payment 환불금액 업데이트 (nowAmount 차감)
       payment.nowAmount = payment.paidAmount - refundAmount;
       await this.repositoryProvider.PaymentRepository.save(payment);
-
     }
 
     // 주문 이력: CANCEL_APPROVED
