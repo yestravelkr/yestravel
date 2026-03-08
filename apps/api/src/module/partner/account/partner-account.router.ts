@@ -136,6 +136,7 @@ export class PartnerAccountRouter extends BaseTrpcRouter {
   async getProfile(@Ctx() ctx: PartnerAuthorizedContext) {
     return this.microserviceClient.send('partner.admin.findManagerById', {
       id: ctx.partner.id,
+      partnerType: ctx.partner.partnerType,
     });
   }
 }
