@@ -209,6 +209,14 @@ export interface ComponentProps {
  */
 ```
 
+## 작업 디렉토리 규칙
+
+`.claude/settings.json`의 hook은 프로젝트 루트 기준으로 동작합니다.
+
+- **`cd`로 하위 디렉토리로 이동하지 마세요** — hook이 정상 동작하지 않을 수 있음
+- `cd`로 이동한 경우 **반드시 프로젝트 루트로 복귀**:
+- 하위 디렉토리에서 명령어 실행이 필요하면 `cd apps/api && yarn lint` 처럼 **한 줄 체이닝** 사용
+
 ## 작업 완료 후 체크리스트
 
 - [ ] `cd apps/api && yarn lint` 실행

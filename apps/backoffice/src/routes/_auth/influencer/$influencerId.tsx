@@ -5,14 +5,14 @@ import tw from 'tailwind-styled-components';
 
 import { InfluencerForm } from './_components/InfluencerForm';
 
-import { trpc, type RouterInputs, type RouterOutputs } from '@/shared/trpc';
+import { ManagerSection, useManagerSection } from '@/shared/components/manager';
+import { trpc, type RouterInputs } from '@/shared/trpc';
 
 export const Route = createFileRoute('/_auth/influencer/$influencerId')({
   component: InfluencerDetailPage,
 });
 
 type UpdateInfluencerInput = RouterInputs['backofficeInfluencer']['update'];
-type InfluencerDetail = RouterOutputs['backofficeInfluencer']['findById'];
 
 function InfluencerDetailPage() {
   return (
@@ -74,6 +74,11 @@ function InfluencerDetailContent() {
     }
   };
 
+  const managerProps = useManagerSection({
+    partnerType: 'influencer',
+    partnerId: parseInt(influencerId),
+  });
+
   return (
     <>
       <BackButton to="/influencer">← 목록으로</BackButton>
@@ -88,6 +93,8 @@ function InfluencerDetailContent() {
         onCancel={handleCancelEdit}
         onEdit={handleEditClick}
       />
+
+      <ManagerSection {...managerProps} />
     </>
   );
 }
