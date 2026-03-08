@@ -9,7 +9,11 @@ import {
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import { BaseTrpcRouter } from '@src/module/trpc/baseTrpcRouter';
-import { RoleEnum } from '@src/module/backoffice/admin/admin.schema';
+import {
+  RoleEnum,
+  ROLE_ENUM_VALUE,
+  roleEnumSchema,
+} from '@src/module/backoffice/admin/admin.schema';
 import {
   PartnerAuthMiddleware,
   PartnerAuthorizedContext,
@@ -37,10 +41,15 @@ export class PartnerAccountRouter extends BaseTrpcRouter {
     },
     @Ctx() ctx: PartnerAuthorizedContext
   ): Promise<{ id: number; email: string }> {
-    if (ctx.partner.role !== RoleEnum.PARTNER_SUPER) {
+    const allowedRoles = [
+      RoleEnum.PARTNER_SUPER,
+      RoleEnum.ADMIN_SUPER,
+      RoleEnum.ADMIN_STAFF,
+    ];
+    if (!allowedRoles.includes(ctx.partner.role)) {
       throw new TRPCError({
         code: 'FORBIDDEN',
-        message: 'SUPER 권한이 필요합니다',
+        message: 'SUPER 또는 ADMIN 권한이 필요합니다',
       });
     }
 
@@ -70,10 +79,15 @@ export class PartnerAccountRouter extends BaseTrpcRouter {
     @Input() data: { id: number },
     @Ctx() ctx: PartnerAuthorizedContext
   ): Promise<{ success: boolean }> {
-    if (ctx.partner.role !== RoleEnum.PARTNER_SUPER) {
+    const allowedRoles = [
+      RoleEnum.PARTNER_SUPER,
+      RoleEnum.ADMIN_SUPER,
+      RoleEnum.ADMIN_STAFF,
+    ];
+    if (!allowedRoles.includes(ctx.partner.role)) {
       throw new TRPCError({
         code: 'FORBIDDEN',
-        message: 'SUPER 권한이 필요합니다',
+        message: 'SUPER 또는 ADMIN 권한이 필요합니다',
       });
     }
 
@@ -81,6 +95,38 @@ export class PartnerAccountRouter extends BaseTrpcRouter {
       id: data.id,
       partnerType: ctx.partner.partnerType,
       partnerId: ctx.partner.partnerId,
+    });
+  }
+
+  @Mutation({
+    input: z.object({ id: z.number(), role: z.enum(ROLE_ENUM_VALUE) }),
+    output: z.object({
+      id: z.number(),
+      email: z.string(),
+      role: roleEnumSchema,
+    }),
+  })
+  async updateStaffRole(
+    @Input() data: { id: number; role: string },
+    @Ctx() ctx: PartnerAuthorizedContext
+  ) {
+    const allowedRoles = [
+      RoleEnum.PARTNER_SUPER,
+      RoleEnum.ADMIN_SUPER,
+      RoleEnum.ADMIN_STAFF,
+    ];
+    if (!allowedRoles.includes(ctx.partner.role)) {
+      throw new TRPCError({
+        code: 'FORBIDDEN',
+        message: 'SUPER 또는 ADMIN 권한이 필요합니다',
+      });
+    }
+
+    return this.microserviceClient.send('partner.admin.updateManagerRole', {
+      id: data.id,
+      partnerType: ctx.partner.partnerType,
+      partnerId: ctx.partner.partnerId,
+      role: data.role,
     });
   }
 
