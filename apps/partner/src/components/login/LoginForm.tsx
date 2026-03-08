@@ -1,47 +1,69 @@
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import tw from 'tailwind-styled-components';
 
 import { LoginFormData, LoginFormSchema } from './LoginFormSchema';
 
-import { LoadingSpinner, trpc } from '@/shared';
-import { Role, useAuthStore } from '@/store';
+import { LoadingSpinner, trpc, trpcClient } from '@/shared';
+import { PartnerType, useAuthStore } from '@/store';
 
 interface LoginFormProps {
-  onSuccess?: () => void;
+  /** 파트너 유형 (BRAND | INFLUENCER) */
+  partnerType: 'BRAND' | 'INFLUENCER';
+  /** 로그인 성공 후 콜백 */
+  onSuccess?: (partnerType: 'BRAND' | 'INFLUENCER') => void;
 }
 
 /**
  * LoginForm - 파트너 로그인 폼
  *
  * 이메일/비밀번호 입력을 통해 파트너 로그인을 처리한다.
- * partnerAuth.login API를 호출한다.
+ * partnerAuth.login API를 호출하고, 성공 시 프로필을 조회하여 authStore에 반영한다.
  *
  * Usage:
- * <LoginForm onSuccess={() => navigate({ to: '/' })} />
+ * <LoginForm partnerType="BRAND" onSuccess={(type) => navigate({ to: `/${type.toLowerCase()}` })} />
  */
-export function LoginForm({ onSuccess }: LoginFormProps) {
-  const { register, handleSubmit, formState } = useForm<LoginFormData>();
+export function LoginForm({ partnerType, onSuccess }: LoginFormProps) {
+  const { register, handleSubmit, formState } = useForm<LoginFormData>({
+    defaultValues: { partnerType },
+  });
+  const [isLoading, setIsLoading] = useState(false);
 
-  const { login } = useAuthStore();
+  const { login, setUser } = useAuthStore();
 
-  const loginMutation = trpc.backofficeAuth.login.useMutation({
+  const loginMutation = trpc.partnerAuth.login.useMutation({
     onSuccess: (data: { accessToken: string }) => {
-      login(
-        {
-          id: 'temp-id',
-          email: '',
-          role: Role.ADMIN,
-        },
-        data.accessToken,
-      );
+      login(data.accessToken);
+      setIsLoading(true);
 
-      onSuccess?.();
+      trpcClient.partnerAccount.getProfile
+        .query()
+        .then((profile) => {
+          setUser(
+            {
+              id: profile.id,
+              email: profile.email,
+              role: profile.role,
+              partnerId: profile.partnerId,
+            },
+            profile.partnerType as PartnerType,
+          );
+          onSuccess?.(profile.partnerType as 'BRAND' | 'INFLUENCER');
+        })
+        .catch(() => {
+          toast.error('프로필 정보를 가져오는데 실패했습니다');
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
     },
     onError: (error) => {
       toast.error(error.message || '로그인에 실패했습니다');
     },
   });
+
+  const isPending = loginMutation.isPending || isLoading;
 
   const onSubmit = (formData: LoginFormData) => {
     loginMutation.mutate(formData);
@@ -96,8 +118,8 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
           )}
         </InputGroup>
 
-        <LoginButton type="submit" disabled={loginMutation.isPending}>
-          {loginMutation.isPending ? (
+        <LoginButton type="submit" disabled={isPending}>
+          {isPending ? (
             <LoadingContainer>
               <LoadingSpinner className="-ml-1 mr-3 h-5 w-5 text-white" />
               로그인 중...
