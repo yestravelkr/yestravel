@@ -2,30 +2,39 @@
  * AddManagerModal - 관리자 추가 모달
  *
  * 파트너(브랜드/인플루언서)에 새로운 관리자를 추가하는 모달입니다.
- * react-snappy-modal 패턴을 사용합니다.
+ * react-snappy-modal + react-hook-form + zod 패턴을 사용합니다.
  */
 
-import { type ChangeEvent, useState } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Controller, useForm } from 'react-hook-form';
 import SnappyModal, { useCurrentModal } from 'react-snappy-modal';
 import tw from 'tailwind-styled-components';
+import { z } from 'zod';
 
 import { roleOptions } from './ManagerTable';
 
-import { ROLE_VALUES, type RoleType } from '@/constants/role';
+import { ROLE_VALUES } from '@/constants/role';
 import { SelectDropdown } from '@/shared/components/SelectDropdown';
 
-export interface AddManagerInput {
-  /** 이메일 */
-  email: string;
-  /** 비밀번호 */
-  password: string;
-  /** 이름 */
-  name: string;
-  /** 연락처 */
-  phoneNumber: string;
-  /** 역할 */
-  role: RoleType;
-}
+const ROLE_ENUM_VALUES = [
+  ROLE_VALUES.ADMIN_SUPER,
+  ROLE_VALUES.ADMIN_STAFF,
+  ROLE_VALUES.PARTNER_SUPER,
+  ROLE_VALUES.PARTNER_STAFF,
+] as const;
+
+const addManagerSchema = z.object({
+  email: z
+    .string()
+    .min(1, '이메일을 입력해주세요.')
+    .email('올바른 이메일 형식이 아닙니다.'),
+  password: z.string().min(8, '비밀번호는 8자 이상이어야 합니다.'),
+  name: z.string().min(1, '이름을 입력해주세요.'),
+  phoneNumber: z.string().min(1, '연락처를 입력해주세요.'),
+  role: z.enum(ROLE_ENUM_VALUES),
+});
+
+export type AddManagerInput = z.infer<typeof addManagerSchema>;
 
 /**
  * Usage:
@@ -39,63 +48,28 @@ export interface AddManagerInput {
 export function AddManagerModal() {
   const { resolveModal } = useCurrentModal();
 
-  const [form, setForm] = useState<AddManagerInput>({
-    email: '',
-    password: '',
-    name: '',
-    phoneNumber: '',
-    role: ROLE_VALUES.PARTNER_STAFF,
+  const {
+    register,
+    handleSubmit,
+    control,
+    formState: { errors },
+  } = useForm<AddManagerInput>({
+    resolver: zodResolver(addManagerSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+      name: '',
+      phoneNumber: '',
+      role: ROLE_VALUES.PARTNER_STAFF,
+    },
   });
 
-  const [errors, setErrors] = useState<
-    Partial<Record<keyof AddManagerInput, string>>
-  >({});
-
-  const validate = (): boolean => {
-    const newErrors: Partial<Record<keyof AddManagerInput, string>> = {};
-
-    if (!form.email.trim()) {
-      newErrors.email = '이메일을 입력해주세요.';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
-      newErrors.email = '올바른 이메일 형식이 아닙니다.';
-    }
-    if (!form.password || form.password.length < 8) {
-      newErrors.password = '비밀번호는 8자 이상이어야 합니다.';
-    }
-    if (!form.name.trim()) {
-      newErrors.name = '이름을 입력해주세요.';
-    }
-    if (!form.phoneNumber.trim()) {
-      newErrors.phoneNumber = '연락처를 입력해주세요.';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = () => {
-    if (validate()) {
-      resolveModal(form);
-    }
+  const onSubmit = (data: AddManagerInput) => {
+    resolveModal(data);
   };
 
   const handleCancel = () => {
     resolveModal(null);
-  };
-
-  const updateField = (
-    field: Exclude<keyof AddManagerInput, 'role'>,
-    e: ChangeEvent<HTMLInputElement>,
-  ) => {
-    const value = e.target.value;
-    setForm((prev) => ({ ...prev, [field]: value }));
-    if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: undefined }));
-    }
-  };
-
-  const updateRole = (value: string) => {
-    setForm((prev) => ({ ...prev, role: value as RoleType }));
   };
 
   return (
@@ -107,71 +81,67 @@ export function AddManagerModal() {
           <FieldLabel>이메일</FieldLabel>
           <StyledInput
             type="email"
-            value={form.email}
-            onChange={(e: ChangeEvent<HTMLInputElement>) =>
-              updateField('email', e)
-            }
+            {...register('email')}
             placeholder="이메일을 입력하세요"
             $error={!!errors.email}
           />
-          {errors.email && <ErrorText>{errors.email}</ErrorText>}
+          {errors.email && <ErrorText>{errors.email.message}</ErrorText>}
         </FieldWrapper>
 
         <FieldWrapper>
           <FieldLabel>비밀번호</FieldLabel>
           <StyledInput
             type="password"
-            value={form.password}
-            onChange={(e: ChangeEvent<HTMLInputElement>) =>
-              updateField('password', e)
-            }
+            {...register('password')}
             placeholder="8자 이상 입력하세요"
             $error={!!errors.password}
           />
-          {errors.password && <ErrorText>{errors.password}</ErrorText>}
+          {errors.password && <ErrorText>{errors.password.message}</ErrorText>}
         </FieldWrapper>
 
         <FieldWrapper>
           <FieldLabel>이름</FieldLabel>
           <StyledInput
             type="text"
-            value={form.name}
-            onChange={(e: ChangeEvent<HTMLInputElement>) =>
-              updateField('name', e)
-            }
+            {...register('name')}
             placeholder="이름을 입력하세요"
             $error={!!errors.name}
           />
-          {errors.name && <ErrorText>{errors.name}</ErrorText>}
+          {errors.name && <ErrorText>{errors.name.message}</ErrorText>}
         </FieldWrapper>
 
         <FieldWrapper>
           <FieldLabel>연락처</FieldLabel>
           <StyledInput
             type="text"
-            value={form.phoneNumber}
-            onChange={(e: ChangeEvent<HTMLInputElement>) =>
-              updateField('phoneNumber', e)
-            }
+            {...register('phoneNumber')}
             placeholder="010-0000-0000"
             $error={!!errors.phoneNumber}
           />
-          {errors.phoneNumber && <ErrorText>{errors.phoneNumber}</ErrorText>}
+          {errors.phoneNumber && (
+            <ErrorText>{errors.phoneNumber.message}</ErrorText>
+          )}
         </FieldWrapper>
 
         <FieldWrapper>
           <FieldLabel>권한</FieldLabel>
-          <SelectDropdown
-            variant="form"
-            options={roleOptions}
-            value={form.role}
-            onChange={updateRole}
+          <Controller
+            name="role"
+            control={control}
+            render={({ field }) => (
+              <SelectDropdown
+                variant="form"
+                options={roleOptions}
+                value={field.value}
+                onChange={(value) => field.onChange(value)}
+              />
+            )}
           />
         </FieldWrapper>
       </FieldGroup>
 
       <ButtonGroup>
-        <SubmitButton type="button" onClick={handleSubmit}>
+        <SubmitButton type="button" onClick={handleSubmit(onSubmit)}>
           추가
         </SubmitButton>
         <CancelButton type="button" onClick={handleCancel}>
