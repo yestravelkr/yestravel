@@ -33,8 +33,8 @@ estimated_tokens: ~400
 ### 인증 플로우
 
 1. `/` (파트너 유형 선택) → 브랜드/인플루언서 카드 클릭 → `/login?type=brand|influencer`
-2. 로그인 폼 제출 → `trpc.backofficeAuth.login` 호출 → accessToken 저장 (authStore)
-3. 보호된 라우트 접근 시 `authBeforeLoad()` → 토큰 유효성 확인 → 실패 시 refreshToken → 최종 실패 시 `/login` 리다이렉트
+2. 로그인 폼 제출 → `trpc.partnerAuth.login` 호출 → accessToken 저장 (authStore), refreshToken은 httpOnly 쿠키
+3. 보호된 라우트 접근 시 `authBeforeLoad()` → 토큰 유효성 확인 → 실패 시 `trpc.partnerAuth.refresh` → 최종 실패 시 `/login` 리다이렉트
 4. tRPC 클라이언트에서 401 응답 시 자동 토큰 갱신 후 요청 재시도
 
 ### 라우팅 구조
@@ -49,8 +49,13 @@ estimated_tokens: ~400
 ### 상태 관리
 
 - `PartnerType`: BRAND | INFLUENCER (authStore에서 관리)
-- `Role`: ADMIN | MANAGER | GUEST
-- Zustand persist 없이 메모리 기반 관리, refreshToken으로 세션 복원
+- `Role`: PARTNER_SUPER | PARTNER_STAFF (JWT PartnerAuthPayload에 포함)
+- Zustand persist 없이 메모리 기반 관리, httpOnly 쿠키 refreshToken으로 세션 복원
+
+## 관련 Codebase Context
+
+- [Partner Auth](./partner-auth.md) - 백엔드 인증 모듈
+- [Partner Admin](./partner-admin.md) - 매니저 CRUD 모듈
 
 ## 관련 Business Context
 

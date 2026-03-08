@@ -14,9 +14,9 @@ keywords: [인플루언서, influencer, 소셜미디어, 파트너, 사업자정
 
 | 파일 | 역할 | 핵심 함수/클래스 |
 |------|------|-----------------|
-| apps/api/src/module/backoffice/influencer/influencer.schema.ts | Zod 유효성 검증 스키마 | createInfluencerInputSchema, updateInfluencerInputSchema, influencerListSchema |
-| apps/api/src/module/backoffice/influencer/influencer.dto.ts | TypeScript 타입 (스키마 기반 추론) | CreateInfluencerInput, UpdateInfluencerInput |
-| apps/api/src/module/backoffice/influencer/influencer.router.ts | tRPC 라우터 정의 | backofficeInfluencer.create, .update, .getById, .getList |
+| apps/api/src/module/backoffice/influencer/influencer.schema.ts | Zod 유효성 검증 스키마 | createInfluencerInputSchema, updateInfluencerInputSchema, influencerListSchema, influencerManagerSchema, createInfluencerManagerInputSchema |
+| apps/api/src/module/backoffice/influencer/influencer.dto.ts | TypeScript 타입 (스키마 기반 추론) | CreateInfluencerInput, UpdateInfluencerInput, CreateInfluencerManagerInput, DeleteInfluencerManagerInput, UpdateInfluencerManagerRoleInput |
+| apps/api/src/module/backoffice/influencer/influencer.router.ts | tRPC 라우터 정의 | backofficeInfluencer.create, .update, .getById, .getList, .createManager, .findManagers, .deleteManager, .updateManagerRole |
 | apps/api/src/module/backoffice/influencer/influencer.controller.ts | NestJS 메시지 패턴 핸들러 | InfluencerController |
 | apps/api/src/module/backoffice/influencer/influencer.service.ts | 비즈니스 로직 (CRUD) | InfluencerService |
 | apps/api/src/module/backoffice/influencer/influencer.module.ts | 모듈 설정 | InfluencerModule |
@@ -61,6 +61,10 @@ keywords: [인플루언서, influencer, 소셜미디어, 파트너, 사업자정
 - **InfluencerSettlementEntity**: 인플루언서 정산
 - **CampaignInfluencerHotelOptionEntity**: 캠페인 호텔 옵션
 - **CampaignInfluencerProductEntity**: 캠페인 상품
+
+## 관련 Codebase Context
+
+- [Partner Admin](./partner-admin.md) - 매니저 CRUD 통합 모듈 (Strategy Pattern)
 
 ## 관련 Business Context
 
