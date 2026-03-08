@@ -159,19 +159,18 @@ export function useManagerSection({
     }
   };
 
-  const onRoleChange = (managerId: number, newRole: string) => {
-    const role = newRole as RoleType;
+  const onRoleChange = (managerId: number, newRole: RoleType) => {
     if (partnerType === 'brand') {
       brandUpdateRoleMutation.mutate({
         id: managerId,
         brandId: partnerId,
-        role,
+        role: newRole,
       });
     } else {
       influencerUpdateRoleMutation.mutate({
         id: managerId,
         influencerId: partnerId,
-        role,
+        role: newRole,
       });
     }
   };

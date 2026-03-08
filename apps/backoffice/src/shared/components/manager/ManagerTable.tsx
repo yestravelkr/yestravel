@@ -10,6 +10,7 @@ import dayjs from 'dayjs';
 import { RefreshCw, Trash2 } from 'lucide-react';
 import { useMemo } from 'react';
 
+import type { RoleType } from '@/constants/role';
 import { ROLE_VALUES } from '@/constants/role';
 import { ActionMenu } from '@/shared/components/ActionMenu';
 import { SelectDropdown } from '@/shared/components/SelectDropdown';
@@ -34,7 +35,7 @@ export interface ManagerTableProps {
   /** 관리자 목록 */
   managers: PartnerManager[];
   /** 역할 변경 핸들러 */
-  onRoleChange: (managerId: number, newRole: string) => void;
+  onRoleChange: (managerId: number, newRole: RoleType) => void;
   /** 비밀번호 재설정 핸들러 */
   onResetPassword: (managerId: number, managerName: string) => void;
   /** 관리자 제거 핸들러 */
@@ -89,7 +90,9 @@ export function ManagerTable({
             <SelectDropdown
               options={roleOptions}
               value={role}
-              onChange={(newRole) => onRoleChange(manager.id, newRole)}
+              onChange={(newRole) =>
+                onRoleChange(manager.id, newRole as RoleType)
+              }
               width={130}
             />
           );

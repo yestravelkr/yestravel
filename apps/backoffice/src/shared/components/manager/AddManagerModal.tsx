@@ -17,8 +17,6 @@ import { ROLE_VALUES } from '@/constants/role';
 import { SelectDropdown } from '@/shared/components/SelectDropdown';
 
 const ROLE_ENUM_VALUES = [
-  ROLE_VALUES.ADMIN_SUPER,
-  ROLE_VALUES.ADMIN_STAFF,
   ROLE_VALUES.PARTNER_SUPER,
   ROLE_VALUES.PARTNER_STAFF,
 ] as const;
