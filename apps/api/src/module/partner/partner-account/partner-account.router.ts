@@ -9,6 +9,7 @@ import {
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import { BaseTrpcRouter } from '@src/module/trpc/baseTrpcRouter';
+import { RoleEnum } from '@src/module/backoffice/admin/admin.schema';
 import {
   PartnerAuthMiddleware,
   PartnerAuthorizedContext,
@@ -36,7 +37,7 @@ export class PartnerAccountRouter extends BaseTrpcRouter {
     },
     @Ctx() ctx: PartnerAuthorizedContext
   ): Promise<{ id: number; email: string }> {
-    if (ctx.partner.role !== 'PARTNER_SUPER') {
+    if (ctx.partner.role !== RoleEnum.PARTNER_SUPER) {
       throw new TRPCError({
         code: 'FORBIDDEN',
         message: 'SUPER 권한이 필요합니다',
@@ -67,7 +68,7 @@ export class PartnerAccountRouter extends BaseTrpcRouter {
     @Input() data: { id: number },
     @Ctx() ctx: PartnerAuthorizedContext
   ): Promise<{ success: boolean }> {
-    if (ctx.partner.role !== 'PARTNER_SUPER') {
+    if (ctx.partner.role !== RoleEnum.PARTNER_SUPER) {
       throw new TRPCError({
         code: 'FORBIDDEN',
         message: 'SUPER 권한이 필요합니다',

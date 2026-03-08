@@ -1,5 +1,7 @@
 import { Ctx, Input, Mutation, Router } from 'nestjs-trpc-v2';
 import { z } from 'zod';
+import { TRPCError } from '@trpc/server';
+import type { CreateExpressContextOptions } from '@trpc/server/adapters/express';
 import { BaseTrpcRouter } from '@src/module/trpc/baseTrpcRouter';
 
 // Router에서는 인라인으로 정의 (외부 import 금지)
@@ -23,7 +25,7 @@ export class PartnerAuthRouter extends BaseTrpcRouter {
       password: string;
       partnerType: 'BRAND' | 'INFLUENCER';
     },
-    @Ctx() ctx: any
+    @Ctx() ctx: CreateExpressContextOptions
   ): Promise<{ accessToken: string }> {
     const { accessToken, refreshToken } = await this.microserviceClient.send(
       'partner.auth.login',
@@ -33,6 +35,7 @@ export class PartnerAuthRouter extends BaseTrpcRouter {
     ctx.res.cookie('partnerRefreshToken', refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
       maxAge: 1000 * 60 * 60 * 24 * 30, // 30일
     });
     return { accessToken };
@@ -41,11 +44,16 @@ export class PartnerAuthRouter extends BaseTrpcRouter {
   @Mutation({
     output: z.object({ accessToken: z.string() }),
   })
-  async refresh(@Ctx() ctx: any): Promise<{ accessToken: string }> {
+  async refresh(
+    @Ctx() ctx: CreateExpressContextOptions
+  ): Promise<{ accessToken: string }> {
     const refreshToken = ctx.req.cookies?.partnerRefreshToken;
 
     if (!refreshToken) {
-      throw new Error('Refresh token not found');
+      throw new TRPCError({
+        code: 'UNAUTHORIZED',
+        message: 'Refresh token not found',
+      });
     }
 
     return this.microserviceClient.send('partner.auth.refresh', {
@@ -56,8 +64,14 @@ export class PartnerAuthRouter extends BaseTrpcRouter {
   @Mutation({
     output: z.object({ success: z.boolean() }),
   })
-  async logout(@Ctx() ctx: any): Promise<{ success: boolean }> {
-    ctx.res.clearCookie('partnerRefreshToken');
+  async logout(
+    @Ctx() ctx: CreateExpressContextOptions
+  ): Promise<{ success: boolean }> {
+    ctx.res.clearCookie('partnerRefreshToken', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+    });
     return { success: true };
   }
 }

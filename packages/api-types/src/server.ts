@@ -535,6 +535,41 @@ const appRouter = t.router({
       }),
     })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
   }),
+  partnerAuth: t.router({
+    login: publicProcedure.input(z.object({
+      email: z.string().email('이메일 형식이 아닙니다.'),
+      password: z.string(),
+      partnerType: z.enum(['BRAND', 'INFLUENCER'] as const),
+    })).output(z.object({ accessToken: z.string() })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    refresh: publicProcedure.output(z.object({ accessToken: z.string() })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    logout: publicProcedure.output(z.object({ success: z.boolean() })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
+  }),
+  partnerAccount: t.router({
+    createStaff: publicProcedure.input(z.object({
+      email: z.string().email('이메일 형식이 아닙니다.'),
+      password: z.string().min(8, '비밀번호는 최소 8자 이상이어야 합니다.'),
+      name: z.string().min(1, '이름은 필수입니다.'),
+      phoneNumber: z.string().min(1, '전화번호는 필수입니다.'),
+    })).output(z.object({ id: z.number(), email: z.string() })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    findAllStaff: publicProcedure.output(z.array(z.object({
+      id: z.number(),
+      email: z.string(),
+      name: z.string(),
+      phoneNumber: z.string(),
+      role: z.string(),
+      createdAt: z.date(),
+    }))).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    deleteStaff: publicProcedure.input(z.object({ id: z.number() })).output(z.object({ success: z.boolean() })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    getProfile: publicProcedure.output(z.object({
+      id: z.number(),
+      email: z.string(),
+      name: z.string(),
+      phoneNumber: z.string(),
+      role: z.string(),
+      partnerType: z.string(),
+      partnerId: z.number(),
+    })).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
+  }),
   backofficeUpload: t.router({
     generatePresignedUrl: publicProcedure.input(z.object({
       fileName: z.string().min(1, '파일명은 필수입니다'),
@@ -1399,41 +1434,6 @@ const appRouter = t.router({
       id: z.number(),
       message: z.string(),
     })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
-  }),
-  partnerAuth: t.router({
-    login: publicProcedure.input(z.object({
-      email: z.string().email('이메일 형식이 아닙니다.'),
-      password: z.string(),
-      partnerType: z.enum(['BRAND', 'INFLUENCER'] as const),
-    })).output(z.object({ accessToken: z.string() })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
-    refresh: publicProcedure.output(z.object({ accessToken: z.string() })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
-    logout: publicProcedure.output(z.object({ success: z.boolean() })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
-  }),
-  partnerAccount: t.router({
-    createStaff: publicProcedure.input(z.object({
-      email: z.string().email('이메일 형식이 아닙니다.'),
-      password: z.string().min(8, '비밀번호는 최소 8자 이상이어야 합니다.'),
-      name: z.string().min(1, '이름은 필수입니다.'),
-      phoneNumber: z.string().min(1, '전화번호는 필수입니다.'),
-    })).output(z.object({ id: z.number(), email: z.string() })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
-    findAllStaff: publicProcedure.output(z.array(z.object({
-      id: z.number(),
-      email: z.string(),
-      name: z.string(),
-      phoneNumber: z.string(),
-      role: z.string(),
-      createdAt: z.date(),
-    }))).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
-    deleteStaff: publicProcedure.input(z.object({ id: z.number() })).output(z.object({ success: z.boolean() })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
-    getProfile: publicProcedure.output(z.object({
-      id: z.number(),
-      email: z.string(),
-      name: z.string(),
-      phoneNumber: z.string(),
-      role: z.string(),
-      partnerType: z.string(),
-      partnerId: z.number(),
-    })).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
   }),
   backofficeOrder: t.router({
     findAll: publicProcedure.input(z.object({

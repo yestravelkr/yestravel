@@ -7,6 +7,7 @@ import {
 import { RepositoryProvider } from '@src/module/shared/transaction/repository.provider';
 import { BrandManagerEntity } from '@src/module/backoffice/domain/brand-manager.entity';
 import { InfluencerManagerEntity } from '@src/module/backoffice/domain/influencer-manager.entity';
+import { RoleEnum } from '@src/module/backoffice/admin/admin.schema';
 import type {
   CreateStaffData,
   DeleteStaffData,
@@ -18,16 +19,24 @@ import type {
 export class PartnerAccountService {
   constructor(private readonly repositoryProvider: RepositoryProvider) {}
 
+  private getManagerRepository(partnerType: string) {
+    return partnerType === 'BRAND'
+      ? this.repositoryProvider.BrandManagerRepository
+      : this.repositoryProvider.InfluencerManagerRepository;
+  }
+
+  private getRelationName(partnerType: string) {
+    return partnerType === 'BRAND' ? 'brand' : 'influencer';
+  }
+
   async createStaff(data: CreateStaffData) {
     const { email, password, name, phoneNumber, partnerType, partnerId } = data;
 
-    if (partnerType === 'BRAND') {
-      const existing =
-        await this.repositoryProvider.BrandManagerRepository.findOneBy({
-          email,
-        });
-      if (existing) throw new ConflictException('이미 사용 중인 이메일입니다');
+    const managerRepo = this.getManagerRepository(partnerType);
+    const existing = await managerRepo.findOneBy({ email });
+    if (existing) throw new ConflictException('이미 사용 중인 이메일입니다');
 
+    if (partnerType === 'BRAND') {
       const brand =
         await this.repositoryProvider.BrandRepository.findOneByOrFail({
           id: partnerId,
@@ -40,17 +49,11 @@ export class PartnerAccountService {
         password,
         name,
         phoneNumber,
-        role: 'PARTNER_STAFF',
+        role: RoleEnum.PARTNER_STAFF,
         brand,
       });
       return this.repositoryProvider.BrandManagerRepository.save(manager);
     }
-
-    const existing =
-      await this.repositoryProvider.InfluencerManagerRepository.findOneBy({
-        email,
-      });
-    if (existing) throw new ConflictException('이미 사용 중인 이메일입니다');
 
     const influencer =
       await this.repositoryProvider.InfluencerRepository.findOneByOrFail({
@@ -64,7 +67,7 @@ export class PartnerAccountService {
       password,
       name,
       phoneNumber,
-      role: 'PARTNER_STAFF',
+      role: RoleEnum.PARTNER_STAFF,
       influencer,
     });
     return this.repositoryProvider.InfluencerManagerRepository.save(manager);
@@ -72,91 +75,54 @@ export class PartnerAccountService {
 
   async findAllStaff(data: FindAllStaffData) {
     const { partnerType, partnerId } = data;
+    const relation = this.getRelationName(partnerType);
 
-    if (partnerType === 'BRAND') {
-      return this.repositoryProvider.BrandManagerRepository.find({
-        where: { brand: { id: partnerId } },
-        order: { createdAt: 'DESC' },
-      });
-    }
-
-    return this.repositoryProvider.InfluencerManagerRepository.find({
-      where: { influencer: { id: partnerId } },
+    return this.getManagerRepository(partnerType).find({
+      where: { [relation]: { id: partnerId } },
       order: { createdAt: 'DESC' },
     });
   }
 
   async deleteStaff(data: DeleteStaffData) {
     const { id, partnerType, partnerId } = data;
+    const relation = this.getRelationName(partnerType);
+    const managerRepo = this.getManagerRepository(partnerType);
 
-    if (partnerType === 'BRAND') {
-      const manager =
-        await this.repositoryProvider.BrandManagerRepository.findOne({
-          where: { id },
-          relations: ['brand'],
-        });
-      if (!manager) throw new NotFoundException('매니저를 찾을 수 없습니다');
-      if (manager.role === 'PARTNER_SUPER')
-        throw new ForbiddenException('SUPER 계정은 삭제할 수 없습니다');
-      if (manager.brand.id !== partnerId)
-        throw new ForbiddenException(
-          '다른 브랜드의 매니저를 삭제할 수 없습니다'
-        );
-      await this.repositoryProvider.BrandManagerRepository.softDelete(id);
-    } else {
-      const manager =
-        await this.repositoryProvider.InfluencerManagerRepository.findOne({
-          where: { id },
-          relations: ['influencer'],
-        });
-      if (!manager) throw new NotFoundException('매니저를 찾을 수 없습니다');
-      if (manager.role === 'PARTNER_SUPER')
-        throw new ForbiddenException('SUPER 계정은 삭제할 수 없습니다');
-      if (manager.influencer.id !== partnerId)
-        throw new ForbiddenException(
-          '다른 인플루언서의 매니저를 삭제할 수 없습니다'
-        );
-      await this.repositoryProvider.InfluencerManagerRepository.softDelete(id);
-    }
+    const manager = await managerRepo.findOne({
+      where: { id },
+      relations: [relation],
+    });
+    if (!manager) throw new NotFoundException('매니저를 찾을 수 없습니다');
+    if (manager.role === RoleEnum.PARTNER_SUPER)
+      throw new ForbiddenException('SUPER 계정은 삭제할 수 없습니다');
+    if ((manager as any)[relation].id !== partnerId)
+      throw new ForbiddenException(
+        `다른 ${partnerType === 'BRAND' ? '브랜드' : '인플루언서'}의 매니저를 삭제할 수 없습니다`
+      );
+    await managerRepo.softDelete(id);
 
     return { success: true };
   }
 
   async getProfile(data: GetProfileData) {
     const { id, partnerType } = data;
+    const relation = this.getRelationName(partnerType);
+    const managerRepo = this.getManagerRepository(partnerType);
 
-    if (partnerType === 'BRAND') {
-      const manager =
-        await this.repositoryProvider.BrandManagerRepository.findOne({
-          where: { id },
-          relations: ['brand'],
-        });
-      if (!manager) throw new NotFoundException('매니저를 찾을 수 없습니다');
-      return {
-        id: manager.id,
-        email: manager.email,
-        name: manager.name,
-        phoneNumber: manager.phoneNumber,
-        role: manager.role,
-        partnerType: 'BRAND' as const,
-        partnerId: manager.brand.id,
-      };
-    }
-
-    const manager =
-      await this.repositoryProvider.InfluencerManagerRepository.findOne({
-        where: { id },
-        relations: ['influencer'],
-      });
+    const manager = await managerRepo.findOne({
+      where: { id },
+      relations: [relation],
+    });
     if (!manager) throw new NotFoundException('매니저를 찾을 수 없습니다');
+
     return {
       id: manager.id,
       email: manager.email,
       name: manager.name,
       phoneNumber: manager.phoneNumber,
       role: manager.role,
-      partnerType: 'INFLUENCER' as const,
-      partnerId: manager.influencer.id,
+      partnerType: partnerType as 'BRAND' | 'INFLUENCER',
+      partnerId: (manager as any)[relation].id,
     };
   }
 }
