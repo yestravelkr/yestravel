@@ -1972,7 +1972,22 @@ const appRouter = t.router({
       phoneNumber: z.string(),
       role: roleEnumSchema,
       createdAt: z.date(),
-    }))).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
+    }))).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    deleteManager: publicProcedure.input(z.object({
+      id: z.number(),
+      influencerId: z.number(),
+    })).output(z.object({
+      success: z.boolean(),
+    })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    updateManagerRole: publicProcedure.input(z.object({
+      id: z.number(),
+      influencerId: z.number(),
+      role: roleEnumSchema,
+    })).output(z.object({
+      id: z.number(),
+      email: z.string(),
+      role: roleEnumSchema,
+    })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
   }),
   backofficeClaim: t.router({
     approve: publicProcedure.input(z.object({
@@ -2556,7 +2571,22 @@ const appRouter = t.router({
       phoneNumber: z.string(),
       role: roleEnumSchema,
       createdAt: z.date(),
-    }))).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
+    }))).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    deleteManager: publicProcedure.input(z.object({
+      id: z.number(),
+      brandId: z.number(),
+    })).output(z.object({
+      success: z.boolean(),
+    })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    updateManagerRole: publicProcedure.input(z.object({
+      id: z.number(),
+      brandId: z.number(),
+      role: roleEnumSchema,
+    })).output(z.object({
+      id: z.number(),
+      email: z.string(),
+      role: roleEnumSchema,
+    })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
   }),
   backofficeAuth: t.router({
     register: publicProcedure.input(z.object({
