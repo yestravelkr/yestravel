@@ -1,4 +1,4 @@
-import { Link, createFileRoute } from '@tanstack/react-router';
+import { Link, createFileRoute, redirect } from '@tanstack/react-router';
 import { Building2, User } from 'lucide-react';
 import tw from 'tailwind-styled-components';
 
@@ -9,41 +9,42 @@ export const Route = createFileRoute('/login')({
   validateSearch: (search: Record<string, unknown>) => ({
     type: search.type as 'brand' | 'influencer' | undefined,
   }),
+  beforeLoad: ({ search }) => {
+    if (!search.type || !['brand', 'influencer'].includes(search.type)) {
+      throw redirect({ to: '/' });
+    }
+  },
 });
 
 function RouteComponent() {
   const navigate = Route.useNavigate();
   const { type } = Route.useSearch();
 
-  const handleLoginSuccess = () => {
-    navigate({ to: '/', replace: true });
+  const partnerType = type === 'brand' ? 'BRAND' : 'INFLUENCER';
+
+  const handleLoginSuccess = (resolvedType: 'BRAND' | 'INFLUENCER') => {
+    const path = resolvedType === 'BRAND' ? '/brand' : '/influencer';
+    navigate({ to: path, replace: true });
   };
 
   const titleText =
-    type === 'brand'
-      ? '브랜드 파트너 로그인'
-      : type === 'influencer'
-        ? '인플루언서 파트너 로그인'
-        : '파트너 로그인';
+    type === 'brand' ? '브랜드 파트너 로그인' : '인플루언서 파트너 로그인';
 
-  const TypeIcon =
-    type === 'brand' ? Building2 : type === 'influencer' ? User : null;
+  const TypeIcon = type === 'brand' ? Building2 : User;
 
   return (
     <Container>
       <ContentWrapper>
         <LogoSection>
           <Logo src="/logo.png" alt="YesTravel Logo" />
-          {TypeIcon && (
-            <TypeIconWrapper>
-              <TypeIcon size={24} />
-            </TypeIconWrapper>
-          )}
+          <TypeIconWrapper>
+            <TypeIcon size={24} />
+          </TypeIconWrapper>
           <Title>{titleText}</Title>
           <Subtitle>파트너 계정으로 로그인하세요</Subtitle>
         </LogoSection>
 
-        <LoginForm onSuccess={handleLoginSuccess} />
+        <LoginForm partnerType={partnerType} onSuccess={handleLoginSuccess} />
 
         <BackLinkWrapper>
           <BackLink to="/">&larr; 파트너 유형 선택으로 돌아가기</BackLink>
