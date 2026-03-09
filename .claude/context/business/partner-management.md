@@ -39,4 +39,5 @@ estimated_tokens: ~300
 ## 관련 Codebase Context
 
 - [Partner App](../codebase/partner-app.md)
+- [Backoffice Manager](../codebase/backoffice-manager.md)
 - [인플루언서 모듈](../codebase/influencer.md)
