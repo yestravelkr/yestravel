@@ -1,5 +1,6 @@
 import { redirect } from '@tanstack/react-router';
 
+import { fetchAndSetProfile } from '@/shared/utils/fetchProfile';
 import { useAuthStore } from '@/store';
 
 export const authBeforeLoad = async () => {
@@ -11,16 +12,20 @@ export const authBeforeLoad = async () => {
   }
 
   // 로그인되지 않은 경우 refresh token으로 재시도
-  console.log('사용자가 로그인되지 않음, refresh token 시도 중...');
   const refreshSuccess = await refreshToken();
 
   if (!refreshSuccess) {
-    // Refresh 실패 시 로그인 페이지로 리다이렉트
     throw redirect({
       to: '/login',
       search: { type: undefined },
     });
   }
 
-  console.log('Refresh token 성공, 페이지 접근 허용');
+  // refresh 성공 후 프로필 조회하여 user 정보 복원
+  return fetchAndSetProfile().catch(() => {
+    throw redirect({
+      to: '/login',
+      search: { type: undefined },
+    });
+  });
 };

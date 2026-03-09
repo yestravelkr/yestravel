@@ -1,9 +1,8 @@
 import { create } from 'zustand';
 
 export enum Role {
-  ADMIN = 'ADMIN',
-  MANAGER = 'MANAGER',
-  GUEST = 'GUEST',
+  PARTNER_SUPER = 'PARTNER_SUPER',
+  PARTNER_STAFF = 'PARTNER_STAFF',
 }
 
 export enum PartnerType {
@@ -12,21 +11,22 @@ export enum PartnerType {
 }
 
 type User = {
-  id: string;
+  id: number;
   email: string;
   role: Role;
+  partnerId: number;
 };
 
 type AuthState = {
   user: User | null;
-  role: Role;
   isLogin: boolean;
   accessToken: string | null;
   partnerType: PartnerType | null;
 };
 
 type AuthActions = {
-  login: (user: User, accessToken: string) => void;
+  login: (accessToken: string) => void;
+  setUser: (user: User, partnerType: PartnerType) => void;
   logout: () => void;
   setAccessToken: (token: string) => void;
   setPartnerType: (partnerType: PartnerType) => void;
@@ -37,17 +37,21 @@ type AuthStore = AuthState & AuthActions;
 
 export const useAuthStore = create<AuthStore>((set, _get) => ({
   isLogin: false,
-  role: Role.GUEST,
   user: null,
   accessToken: null,
   partnerType: null,
 
-  login: (user, accessToken) => {
+  login: (accessToken) => {
+    set({
+      isLogin: true,
+      accessToken,
+    });
+  },
+
+  setUser: (user, partnerType) => {
     set({
       user,
-      isLogin: true,
-      role: user.role,
-      accessToken,
+      partnerType,
     });
   },
 
@@ -55,7 +59,6 @@ export const useAuthStore = create<AuthStore>((set, _get) => ({
     set({
       user: null,
       isLogin: false,
-      role: Role.GUEST,
       accessToken: null,
       partnerType: null,
     }),
@@ -90,7 +93,7 @@ export const useAuthStore = create<AuthStore>((set, _get) => ({
         const newAccessToken = data.result?.data?.accessToken;
 
         if (newAccessToken) {
-          set({ accessToken: newAccessToken });
+          set({ accessToken: newAccessToken, isLogin: true });
           return true;
         }
 
@@ -101,7 +104,6 @@ export const useAuthStore = create<AuthStore>((set, _get) => ({
         set({
           user: null,
           isLogin: false,
-          role: Role.GUEST,
           accessToken: null,
           partnerType: null,
         });
