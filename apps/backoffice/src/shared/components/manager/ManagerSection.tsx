@@ -9,6 +9,7 @@ import tw from 'tailwind-styled-components';
 
 import { ManagerTable, type PartnerManager } from './ManagerTable';
 
+import type { RoleType } from '@/constants/role';
 import { Card } from '@/shared/components/card/Card';
 
 export interface ManagerSectionProps {
@@ -19,7 +20,7 @@ export interface ManagerSectionProps {
   /** 관리자 추가 핸들러 */
   onAddManager: () => void;
   /** 역할 변경 핸들러 */
-  onRoleChange: (managerId: number, newRole: string) => void;
+  onRoleChange: (managerId: number, newRole: RoleType) => void;
   /** 비밀번호 재설정 핸들러 */
   onResetPassword: (managerId: number, managerName: string) => void;
   /** 관리자 제거 핸들러 */

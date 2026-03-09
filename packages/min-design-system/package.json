@@ -10,7 +10,11 @@
       "import": "./src/index.ts",
       "require": "./src/index.ts",
       "types": "./src/index.ts"
-    }
+    },
+    "./index.css": "./src/index.css",
+    "./fonts.css": "./src/fonts.css",
+    "./app.css": "./src/app.css",
+    "./theme/light-theme.css": "./src/theme/light-theme.css"
   },
   "scripts": {
     "build": "tsc --build",
