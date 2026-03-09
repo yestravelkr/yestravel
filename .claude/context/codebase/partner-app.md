@@ -21,6 +21,9 @@ estimated_tokens: ~400
 | apps/partner/src/shared/routes/authBeforeLoad.ts | 라우트 가드 (인증 체크) | authBeforeLoad() |
 | apps/partner/src/components/login/LoginForm.tsx | 로그인 폼 | LoginForm, react-hook-form + Zod 검증 |
 | apps/partner/src/components/login/LoginFormSchema.ts | 로그인 폼 스키마 | LoginFormSchema, LoginFormData |
+| apps/partner/src/shared/utils/fetchProfile.ts | 프로필 조회 및 authStore 반영 | fetchAndSetProfile() |
+| apps/partner/src/shared/utils/index.ts | 유틸리티 barrel export | - |
+| apps/partner/src/shared/index.ts | shared barrel export | - |
 | apps/partner/src/components/header.tsx | 상단 헤더 | Header |
 | apps/partner/src/components/navigation/navigation.tsx | 사이드바 내비게이션 | Navigation (type별 메뉴 분기) |
 | apps/partner/src/components/navigation/data.tsx | 내비게이션 데이터 | BRAND_NAV_GROUPS, INFLUENCER_NAV_GROUPS |
@@ -33,8 +36,8 @@ estimated_tokens: ~400
 ### 인증 플로우
 
 1. `/` (파트너 유형 선택) → 브랜드/인플루언서 카드 클릭 → `/login?type=brand|influencer`
-2. 로그인 폼 제출 → `trpc.backofficeAuth.login` 호출 → accessToken 저장 (authStore)
-3. 보호된 라우트 접근 시 `authBeforeLoad()` → 토큰 유효성 확인 → 실패 시 refreshToken → 최종 실패 시 `/login` 리다이렉트
+2. 로그인 폼 제출 → `trpc.partnerAuth.login` 호출 → accessToken 저장 (authStore) → `fetchAndSetProfile()` → 프로필(user, partnerType) 저장
+3. 보호된 라우트 접근 시 `authBeforeLoad()` → 토큰 유효성 확인 → 실패 시 refreshToken → `fetchAndSetProfile()` → 최종 실패 시 `/login` 리다이렉트
 4. tRPC 클라이언트에서 401 응답 시 자동 토큰 갱신 후 요청 재시도
 
 ### 라우팅 구조
@@ -49,7 +52,7 @@ estimated_tokens: ~400
 ### 상태 관리
 
 - `PartnerType`: BRAND | INFLUENCER (authStore에서 관리)
-- `Role`: ADMIN | MANAGER | GUEST
+- `Role`: ADMIN_SUPER | ADMIN_STAFF | PARTNER_SUPER | PARTNER_STAFF
 - Zustand persist 없이 메모리 기반 관리, refreshToken으로 세션 복원
 
 ## 관련 Business Context
