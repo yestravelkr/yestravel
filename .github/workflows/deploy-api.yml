@@ -6,6 +6,10 @@ on:
       - main
     tags:
       - 'v*'
+    paths-ignore:
+      - 'apps/backoffice/**'
+      - 'apps/partner/**'
+      - 'apps/shop/**'
 
 env:
   ECR_REPOSITORY: yestravel/yestravel-api
