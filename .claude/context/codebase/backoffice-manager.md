@@ -6,7 +6,6 @@ estimated_tokens: ~300
 ---
 
 # Backoffice Manager
-
 백오피스에서 파트너(브랜드/인플루언서)의 관리자를 추가, 조회, 역할 변경, 비밀번호 재설정, 제거하는 컴포넌트 모듈이다. `apps/backoffice/src/shared/components/manager/`에 위치한다.
 
 ## 파일 구조
@@ -31,6 +30,7 @@ estimated_tokens: ~300
 
 - `RoleType`: `'ADMIN_SUPER' | 'ADMIN_STAFF' | 'PARTNER_SUPER' | 'PARTNER_STAFF'`
 - 파트너 관리자 역할은 `PARTNER_SUPER`(대표 관리자), `PARTNER_STAFF`(관리자)만 사용
+
 
 ## 관련 Business Context
 
