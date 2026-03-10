@@ -76,6 +76,14 @@ const hotelProductInputSchema = baseProductInputSchema.extend({
     .transform(normalizeTime),
   bedTypes: z.array(z.string()).default([]),
   tags: z.array(z.string()).default([]),
+  cancellationFees: z
+    .array(
+      z.object({
+        daysBeforeCheckIn: z.number().int().min(0),
+        feePercentage: z.number().min(0).max(100),
+      })
+    )
+    .default([]),
   hotelOptions: z.array(hotelOptionInputSchema).default([]),
   hotelSkus: z.array(hotelSkuInputSchema).default([]),
 });
@@ -170,6 +178,12 @@ const hotelProductSchema = z.object({
   checkOutTime: z.string(),
   bedTypes: z.array(z.string()),
   tags: z.array(z.string()),
+  cancellationFees: z.array(
+    z.object({
+      daysBeforeCheckIn: z.number(),
+      feePercentage: z.number(),
+    })
+  ),
   hotelOptions: z.array(hotelOptionResponseSchema),
   hotelSkus: z.array(
     z.object({

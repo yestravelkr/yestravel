@@ -4,6 +4,7 @@ import { ProductTypeEnum } from '@src/module/backoffice/admin/admin.schema';
 import { TransactionService } from '@src/module/shared/transaction/transaction.service';
 import { getEntityManager } from '@src/database/datasources';
 import type { Nullish } from '@src/types/utility.type';
+import type { HotelCancelPolicyItem } from '@src/module/backoffice/domain/order/claim-detail.type';
 
 export interface CreateHotelProductInput {
   name: string;
@@ -23,6 +24,7 @@ export interface CreateHotelProductInput {
   checkOutTime: string;
   bedTypes?: string[];
   tags?: string[];
+  cancellationFees?: HotelCancelPolicyItem[];
 }
 
 export interface UpdateHotelProductInput extends CreateHotelProductInput {
@@ -67,6 +69,10 @@ export class HotelProductEntity extends ProductEntity {
   @Column('jsonb', { default: [], nullable: true })
   tags: Nullish<string[]>;
 
+  // 취소 수수료 정책 (리스트)
+  @Column('jsonb', { default: [], nullable: true })
+  cancellationFees: Nullish<HotelCancelPolicyItem[]>;
+
   // 헬퍼 메서드: Entity 생성
   static createFromInput(input: CreateHotelProductInput): HotelProductEntity {
     const product = new HotelProductEntity();
@@ -87,6 +93,7 @@ export class HotelProductEntity extends ProductEntity {
     product.checkOutTime = input.checkOutTime;
     product.bedTypes = input.bedTypes || [];
     product.tags = input.tags || [];
+    product.cancellationFees = input.cancellationFees || [];
     return product;
   }
 
@@ -109,6 +116,7 @@ export class HotelProductEntity extends ProductEntity {
     this.checkOutTime = input.checkOutTime;
     this.bedTypes = input.bedTypes || [];
     this.tags = input.tags || [];
+    this.cancellationFees = input.cancellationFees || [];
   }
 }
 
