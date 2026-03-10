@@ -20,6 +20,7 @@ import {
   RightColumn,
 } from '../../../product-template/_components/create/styled';
 
+import { CancellationFeeCard } from './CancellationFeeCard';
 import { ProductOptionsPricingCard } from './ProductOptionsPricingCard';
 
 interface ProductFormData {
@@ -47,6 +48,10 @@ interface ProductFormData {
   hotelSkus: Array<{
     checkInDate: string;
     quantity: number;
+  }>;
+  cancellationFees: Array<{
+    daysBeforeCheckIn: number;
+    feePercentage: number;
   }>;
 }
 
@@ -108,6 +113,7 @@ export function ProductForm({
                 watch={watch}
               />
               <ProductOptionsPricingCard />
+              <CancellationFeeCard />
             </LeftColumn>
 
             <RightColumn>
