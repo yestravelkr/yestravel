@@ -10,8 +10,16 @@ type User = {
   id: string;
   email: string;
   role: Role;
-  // 유저의 정보 저장
 };
+
+export function parseUserFromToken(token: string): User {
+  const payload = JSON.parse(atob(token.split('.')[1]));
+  return {
+    id: String(payload.id),
+    email: payload.email,
+    role: Role.ADMIN,
+  };
+}
 
 type AuthState = {
   user: User | null;
@@ -80,7 +88,13 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       const newAccessToken = data.result?.data?.accessToken;
 
       if (newAccessToken) {
-        set({ accessToken: newAccessToken });
+        const user = parseUserFromToken(newAccessToken);
+        set({
+          accessToken: newAccessToken,
+          user,
+          isLogin: true,
+          role: user.role,
+        });
         return true;
       }
 
