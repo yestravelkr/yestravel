@@ -46,6 +46,10 @@ interface ProductFormData {
     checkInDate: string;
     quantity: number;
   }>;
+  cancellationFees: Array<{
+    daysBeforeCheckIn: number;
+    feePercentage: number;
+  }>;
 }
 
 function EditProductPage() {
@@ -85,6 +89,7 @@ function EditProductPage() {
       thumbnailUrls: [],
       hotelOptions: [],
       hotelSkus: [],
+      cancellationFees: [],
     },
   });
 
@@ -107,6 +112,7 @@ function EditProductPage() {
         thumbnailUrls: product.thumbnailUrls,
         hotelOptions: product.hotelOptions || [],
         hotelSkus: product.hotelSkus || [],
+        cancellationFees: (product as any).cancellationFees || [],
       });
       setThumbnails(product.thumbnailUrls);
     }
