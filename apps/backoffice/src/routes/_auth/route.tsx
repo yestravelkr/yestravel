@@ -2,7 +2,7 @@ import { createFileRoute, Outlet } from '@tanstack/react-router';
 import { Toaster } from 'sonner';
 import tw from 'tailwind-styled-components';
 
-import { Header, Navigation } from '@/components';
+import { Navigation } from '@/components';
 import { authBeforeLoad } from '@/shared';
 
 export const Route = createFileRoute('/_auth')({
@@ -13,33 +13,23 @@ export const Route = createFileRoute('/_auth')({
 function RouteComponent() {
   return (
     <Container>
-      <Header />
-      <ContentWrapper>
-        <Navigation />
-        <MainContent>
-          <Outlet />
-        </MainContent>
-      </ContentWrapper>
+      <Navigation />
+      <MainContent>
+        <Outlet />
+      </MainContent>
       <Toaster position="top-right" />
     </Container>
   );
 }
 
 const Container = tw.div`
-  flex 
-  flex-col 
-  h-screen 
-  bg-gray-50
-`;
-
-const ContentWrapper = tw.div`
-  flex 
-  flex-1 
+  flex
+  h-screen
   overflow-hidden
 `;
 
 const MainContent = tw.main`
-  flex-1 
-  overflow-auto 
-  bg-white
+  flex-1
+  bg-zinc-100
+  overflow-auto
 `;
