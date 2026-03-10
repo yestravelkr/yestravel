@@ -14,6 +14,17 @@ import { openDeleteConfirmModal } from '@/shared/components/DeleteConfirmModal';
 import { trpc } from '@/shared/trpc';
 import { useAuthStore } from '@/store';
 
+/** JWT 페이로드에서 role 추출 */
+function getRoleFromToken(token: string | null): string | null {
+  if (!token) return null;
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return payload.role ?? null;
+  } catch {
+    return null;
+  }
+}
+
 /** Admin 타입 정의 */
 interface Admin {
   id: number;
@@ -41,13 +52,9 @@ export function AdminList({ searchQuery = '' }: AdminListProps) {
   const navigate = useNavigate();
   const utils = trpc.useUtils();
   const [admins] = trpc.backofficeAdmin.findAll.useSuspenseQuery();
-  const { user } = useAuthStore();
-
-  const currentAdmin = useMemo(
-    () => admins.find((admin: Admin) => admin.email === user?.email),
-    [admins, user?.email],
-  );
-  const isSuperAdmin = currentAdmin?.role === ROLE_VALUES.ADMIN_SUPER;
+  const { accessToken } = useAuthStore();
+  const isSuperAdmin =
+    getRoleFromToken(accessToken) === ROLE_VALUES.ADMIN_SUPER;
 
   const updatePasswordMutation =
     trpc.backofficeAdmin.updatePassword.useMutation({
@@ -168,6 +175,16 @@ export function AdminList({ searchQuery = '' }: AdminListProps) {
         columns={columns}
         data={filteredAdmins}
         onRowClick={handleRowClick}
+      />
+    );
+  }
+
+  if (searchQuery.trim()) {
+    return (
+      <EmptyState
+        icon={<InboxIcon />}
+        title="검색 결과가 없습니다"
+        description="다른 검색어로 다시 시도해주세요."
       />
     );
   }
