@@ -4,7 +4,8 @@ import tw from 'tailwind-styled-components';
 import { LoginFormData, LoginFormSchema } from './LoginFormSchema';
 
 import { LoadingSpinner, trpc } from '@/shared';
-import { Role, useAuthStore } from '@/store';
+import { useAuthStore } from '@/store';
+import { parseUserFromToken } from '@/store/authStore';
 
 interface LoginFormProps {
   onSuccess?: () => void;
@@ -17,17 +18,8 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
 
   const loginMutation = trpc.backofficeAuth.login.useMutation({
     onSuccess: (data) => {
-      console.log('로그인 성공:', data);
-
-      // AuthStore에 로그인 정보 저장 (localStorage 사용하지 않음)
-      login(
-        {
-          id: 'temp-id', // 실제로는 서버에서 받아와야 함
-          email: '',
-          role: Role.ADMIN, // 백오피스는 기본적으로 ADMIN
-        },
-        data.accessToken,
-      );
+      const user = parseUserFromToken(data.accessToken);
+      login(user, data.accessToken);
 
       onSuccess?.();
     },
