@@ -121,12 +121,6 @@ function AdminCreatePage() {
                   <option value={ROLE_VALUES.ADMIN_STAFF}>
                     {ROLE_LABELS[ROLE_VALUES.ADMIN_STAFF]}
                   </option>
-                  <option value={ROLE_VALUES.PARTNER_SUPER}>
-                    {ROLE_LABELS[ROLE_VALUES.PARTNER_SUPER]}
-                  </option>
-                  <option value={ROLE_VALUES.PARTNER_STAFF}>
-                    {ROLE_LABELS[ROLE_VALUES.PARTNER_STAFF]}
-                  </option>
                 </Select>
               </FormGroup>
 

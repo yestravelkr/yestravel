@@ -8,6 +8,8 @@ import {
   updateAdminPasswordInputSchema,
   updateAdminPasswordResponseSchema,
   createAdminInputSchema,
+  deleteAdminInputSchema,
+  deleteAdminResponseSchema,
 } from './admin.schema';
 
 export type AdminListItem = z.infer<typeof adminListItemSchema>;
@@ -22,3 +24,5 @@ export type UpdateAdminPasswordResponse = z.infer<
   typeof updateAdminPasswordResponseSchema
 >;
 export type CreateAdminInput = z.infer<typeof createAdminInputSchema>;
+export type DeleteAdminInput = z.infer<typeof deleteAdminInputSchema>;
+export type DeleteAdminResponse = z.infer<typeof deleteAdminResponseSchema>;

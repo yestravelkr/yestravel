@@ -2651,6 +2651,7 @@ const appRouter = t.router({
       id: z.number(),
       email: z.string().email(),
       name: z.string(),
+      phoneNumber: z.string(),
       role: z.enum([
         'ADMIN_SUPER',
         'ADMIN_STAFF',
@@ -2699,6 +2700,12 @@ const appRouter = t.router({
     updatePassword: publicProcedure.input(z.object({
       id: z.number(),
       newPassword: z.string().min(6, '비밀번호는 최소 6자 이상이어야 합니다'),
+    })).output(z.object({
+      success: z.boolean(),
+      message: z.string(),
+    })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    delete: publicProcedure.input(z.object({
+      id: z.number(),
     })).output(z.object({
       success: z.boolean(),
       message: z.string(),

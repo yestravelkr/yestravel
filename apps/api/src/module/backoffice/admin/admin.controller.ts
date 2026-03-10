@@ -7,6 +7,7 @@ import {
   adminListSchema,
   adminDetailSchema,
   updateAdminPasswordResponseSchema,
+  deleteAdminResponseSchema,
 } from './admin.schema';
 import type {
   AdminList,
@@ -16,6 +17,8 @@ import type {
   UpdateAdminPasswordInput,
   UpdateAdminPasswordResponse,
   CreateAdminInput,
+  DeleteAdminInput,
+  DeleteAdminResponse,
 } from './admin.type';
 
 @Controller()
@@ -62,5 +65,16 @@ export class AdminController {
       message: '비밀번호가 성공적으로 변경되었습니다',
     };
     return updateAdminPasswordResponseSchema.parse(response);
+  }
+
+  @MessagePattern('backoffice.admin.delete')
+  @Transactional
+  async delete(data: DeleteAdminInput): Promise<DeleteAdminResponse> {
+    await this.adminService.delete(data);
+    const response = {
+      success: true,
+      message: '관리자가 성공적으로 삭제되었습니다',
+    };
+    return deleteAdminResponseSchema.parse(response);
   }
 }

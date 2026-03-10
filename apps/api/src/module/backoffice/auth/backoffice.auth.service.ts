@@ -16,6 +16,7 @@ const jwtService = new JwtService();
 export type AdminAuthPayload = {
   id: number;
   email: string;
+  role: string;
 };
 
 @Injectable()
@@ -50,7 +51,11 @@ export class BackofficeAuthService {
     if (!(await admin.checkPassword(password))) {
       throw new UnauthorizedException('비밀번호가 틀렸습니다');
     }
-    const payload: AdminAuthPayload = { email: admin.email, id: admin.id };
+    const payload: AdminAuthPayload = {
+      email: admin.email,
+      id: admin.id,
+      role: admin.role,
+    };
     const accessToken = jwtService.sign(
       payload,
       ConfigProvider.auth.jwt.backoffice.access as JwtSignOptions
@@ -85,7 +90,11 @@ export class BackofficeAuthService {
     });
 
     // 새로운 access token 발급
-    const newPayload: AdminAuthPayload = { email: admin.email, id: admin.id };
+    const newPayload: AdminAuthPayload = {
+      email: admin.email,
+      id: admin.id,
+      role: admin.role,
+    };
     const accessToken = jwtService.sign(
       newPayload,
       ConfigProvider.auth.jwt.backoffice.access as JwtSignOptions

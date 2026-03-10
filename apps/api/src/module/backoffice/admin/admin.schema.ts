@@ -84,6 +84,7 @@ export const adminListItemSchema = z.object({
   id: z.number(),
   email: z.string().email(),
   name: z.string(),
+  phoneNumber: z.string(),
   role: roleEnumSchema,
 });
 
@@ -120,6 +121,17 @@ export const updateAdminPasswordInputSchema = z.object({
 
 // Admin update password response schema
 export const updateAdminPasswordResponseSchema = z.object({
+  success: z.boolean(),
+  message: z.string(),
+});
+
+// Admin delete input schema
+export const deleteAdminInputSchema = z.object({
+  id: z.number(),
+});
+
+// Admin delete response schema
+export const deleteAdminResponseSchema = z.object({
   success: z.boolean(),
   message: z.string(),
 });
