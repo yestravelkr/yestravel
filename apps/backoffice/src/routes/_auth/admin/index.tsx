@@ -1,39 +1,55 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
-import { Suspense } from 'react';
-import tw from 'tailwind-styled-components';
+import { Button } from '@yestravelkr/min-design-system';
+import { Plus, Search } from 'lucide-react';
+import { Suspense, useState } from 'react';
 
 import { AdminList } from './_components/AdminList';
 
 import { MajorPageLayout } from '@/components/layout';
-import { TableSkeleton } from '@/shared/components';
+import { Input, ListPageLayout, TableSkeleton } from '@/shared/components';
 
 export const Route = createFileRoute('/_auth/admin/')({
   component: AdminListPage,
 });
 
 function AdminListPage() {
+  const [searchQuery, setSearchQuery] = useState('');
+
   return (
     <MajorPageLayout
       title="관리자 계정 관리"
       headerActions={
-        <CreateButton to="/admin/create">새 관리자 추가</CreateButton>
+        <Link to="/admin/create">
+          <Button
+            kind="neutral"
+            variant="solid"
+            size="medium"
+            leadingIcon={<Plus size={20} />}
+          >
+            관리자 추가
+          </Button>
+        </Link>
       }
     >
-      <Suspense fallback={<TableSkeleton columns={4} rows={5} />}>
-        <AdminList />
-      </Suspense>
+      <ListPageLayout
+        filters={
+          <div className="flex justify-start">
+            <div className="w-[280px]">
+              <Input
+                prefix={<Search size={14} className="text-[var(--fg-muted)]" />}
+                placeholder="이름, 연락처, 이메일 검색"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+          </div>
+        }
+        table={
+          <Suspense fallback={<TableSkeleton columns={5} rows={5} />}>
+            <AdminList searchQuery={searchQuery} />
+          </Suspense>
+        }
+      />
     </MajorPageLayout>
   );
 }
-
-// 새 관리자 추가 버튼 - 파란색 배경의 액션 버튼
-const CreateButton = tw(Link)`
-  px-4
-  py-2
-  bg-blue-600
-  text-white
-  rounded-lg
-  hover:bg-blue-700
-  transition-colors
-  font-medium
-`;
