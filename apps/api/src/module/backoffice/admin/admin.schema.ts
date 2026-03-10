@@ -84,6 +84,7 @@ export const adminListItemSchema = z.object({
   id: z.number(),
   email: z.string().email(),
   name: z.string(),
+  phoneNumber: z.string(),
   role: roleEnumSchema,
 });
 

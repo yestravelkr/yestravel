@@ -2651,6 +2651,7 @@ const appRouter = t.router({
       id: z.number(),
       email: z.string().email(),
       name: z.string(),
+      phoneNumber: z.string(),
       role: z.enum([
         'ADMIN_SUPER',
         'ADMIN_STAFF',
