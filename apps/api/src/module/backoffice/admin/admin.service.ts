@@ -9,6 +9,7 @@ import type {
   UpdateAdminInput,
   UpdateAdminPasswordInput,
   CreateAdminInput,
+  DeleteAdminInput,
 } from './admin.type';
 
 @Injectable()
@@ -76,5 +77,18 @@ export class AdminService {
 
     // Entity 저장
     await this.repositoryProvider.AdminRepository.save(existingAdmin);
+  }
+
+  async delete(dto: DeleteAdminInput): Promise<void> {
+    const { id } = dto;
+
+    // 존재 확인
+    const existingAdmin =
+      await this.repositoryProvider.AdminRepository.findOneBy({ id });
+    if (!existingAdmin) {
+      throw new NotFoundException('관리자를 찾을 수 없습니다');
+    }
+
+    await this.repositoryProvider.AdminRepository.remove(existingAdmin);
   }
 }

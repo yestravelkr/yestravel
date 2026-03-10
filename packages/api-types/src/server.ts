@@ -2702,6 +2702,12 @@ const appRouter = t.router({
     })).output(z.object({
       success: z.boolean(),
       message: z.string(),
+    })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    delete: publicProcedure.input(z.object({
+      id: z.number(),
+    })).output(z.object({
+      success: z.boolean(),
+      message: z.string(),
     })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
   })
 });

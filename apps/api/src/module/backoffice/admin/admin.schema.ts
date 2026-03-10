@@ -124,6 +124,17 @@ export const updateAdminPasswordResponseSchema = z.object({
   message: z.string(),
 });
 
+// Admin delete input schema
+export const deleteAdminInputSchema = z.object({
+  id: z.number(),
+});
+
+// Admin delete response schema
+export const deleteAdminResponseSchema = z.object({
+  success: z.boolean(),
+  message: z.string(),
+});
+
 // Admin create input schema
 export const createAdminInputSchema = z.object({
   email: z.string().email('올바른 이메일 형식이 아닙니다'),
