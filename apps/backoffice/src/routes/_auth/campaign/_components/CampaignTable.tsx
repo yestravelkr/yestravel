@@ -6,6 +6,7 @@
 
 import { createColumnHelper } from '@tanstack/react-table';
 import dayjs from 'dayjs';
+import type React from 'react';
 import tw from 'tailwind-styled-components';
 
 import { Table } from '@/shared/components';
@@ -17,12 +18,12 @@ export type CampaignViewMode = 'campaign' | 'product';
 export interface CampaignTableData {
   id: number;
   title: string;
-  startAt: Date;
-  endAt: Date;
+  startAt: string;
+  endAt: string;
   description: string | null;
   thumbnail: string | null;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string;
+  updatedAt: string;
 }
 
 /** 상품별보기 테이블 데이터 타입 (추후 API 구현 예정) */
@@ -162,7 +163,7 @@ function CampaignViewTable({
         return (
           <ActionCell>
             <ActionButton
-              onClick={(e) => {
+              onClick={(e: React.MouseEvent) => {
                 e.stopPropagation();
                 onSalesLinkClick?.(campaign);
               }}
@@ -170,7 +171,7 @@ function CampaignViewTable({
               매출 상세
             </ActionButton>
             <ActionButton
-              onClick={(e) => {
+              onClick={(e: React.MouseEvent) => {
                 e.stopPropagation();
                 onEditClick?.(campaign);
               }}
@@ -178,7 +179,7 @@ function CampaignViewTable({
               수정
             </ActionButton>
             <DeleteButton
-              onClick={(e) => {
+              onClick={(e: React.MouseEvent) => {
                 e.stopPropagation();
                 onDeleteClick?.(campaign);
               }}
