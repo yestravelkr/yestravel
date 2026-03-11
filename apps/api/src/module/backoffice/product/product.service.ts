@@ -109,6 +109,7 @@ export class ProductService {
           checkOutTime: hotel.checkOutTime ?? '11:00:00',
           bedTypes: hotel.bedTypes ?? [],
           tags: hotel.tags ?? [],
+          cancellationFees: hotel.cancellationFees ?? [],
           hotelOptions: hotelOptions.map(opt => ({
             id: opt.id,
             name: opt.name,
