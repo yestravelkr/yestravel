@@ -19,3 +19,4 @@ export * from './DeleteConfirmModal';
 export * from './SelectDropdown';
 export * from './ActionMenu';
 export * from './manager';
+export * from './segment-control';

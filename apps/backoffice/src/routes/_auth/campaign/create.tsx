@@ -40,7 +40,21 @@ function CampaignCreatePage() {
   const createMutation = trpc.backofficeCampaign.create.useMutation({
     onSuccess: () => {
       toast.success('캠페인이 등록되었습니다.');
-      navigate({ to: '/campaign' });
+      navigate({
+        to: '/campaign',
+        search: {
+          page: 1,
+          limit: 50,
+          periodType: '',
+          periodPreset: '',
+          startDate: '',
+          endDate: '',
+          campaignId: '',
+          influencerId: '',
+          brandId: '',
+          viewMode: 'campaign',
+        },
+      });
     },
     onError: (error) => {
       toast.error(error.message || '캠페인 등록에 실패했습니다.');
@@ -48,7 +62,21 @@ function CampaignCreatePage() {
   });
 
   const handleCancel = () => {
-    navigate({ to: '/campaign' });
+    navigate({
+      to: '/campaign',
+      search: {
+        page: 1,
+        limit: 50,
+        periodType: '',
+        periodPreset: '',
+        startDate: '',
+        endDate: '',
+        campaignId: '',
+        influencerId: '',
+        brandId: '',
+        viewMode: 'campaign',
+      },
+    });
   };
 
   const onSubmit = (data: CampaignFormData) => {
@@ -90,7 +118,27 @@ function CampaignCreatePage() {
       <MajorPageLayout
         title="캠페인 등록"
         description="새로운 캠페인을 등록합니다"
-        headerActions={<CancelLink to="/campaign">취소</CancelLink>}
+        headerActions={
+          <CancelLink
+            to="/campaign"
+            search={
+              {
+                page: 1,
+                limit: 50,
+                periodType: '',
+                periodPreset: '',
+                startDate: '',
+                endDate: '',
+                campaignId: '',
+                influencerId: '',
+                brandId: '',
+                viewMode: 'campaign',
+              } as never
+            }
+          >
+            취소
+          </CancelLink>
+        }
       >
         <FormContainer>
           <Form onSubmit={handleSubmit(onSubmit)}>

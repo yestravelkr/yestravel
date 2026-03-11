@@ -144,7 +144,21 @@ function CampaignDetailContent() {
   };
 
   const handleBackToList = () => {
-    navigate({ to: '/campaign' });
+    navigate({
+      to: '/campaign',
+      search: {
+        page: 1,
+        limit: 50,
+        periodType: '',
+        periodPreset: '',
+        startDate: '',
+        endDate: '',
+        campaignId: '',
+        influencerId: '',
+        brandId: '',
+        viewMode: 'campaign',
+      },
+    });
   };
 
   const onSubmit = (data: CampaignFormData) => {
@@ -187,7 +201,27 @@ function CampaignDetailContent() {
       <MajorPageLayout
         title={isEditMode ? '캠페인 수정' : '캠페인 상세'}
         description={isEditMode ? '캠페인 정보를 수정합니다' : campaign.title}
-        headerActions={<BackLink to="/campaign">목록으로</BackLink>}
+        headerActions={
+          <BackLink
+            to="/campaign"
+            search={
+              {
+                page: 1,
+                limit: 50,
+                periodType: '',
+                periodPreset: '',
+                startDate: '',
+                endDate: '',
+                campaignId: '',
+                influencerId: '',
+                brandId: '',
+                viewMode: 'campaign',
+              } as never
+            }
+          >
+            목록으로
+          </BackLink>
+        }
       >
         <FormContainer>
           <Form onSubmit={handleSubmit(onSubmit)}>
