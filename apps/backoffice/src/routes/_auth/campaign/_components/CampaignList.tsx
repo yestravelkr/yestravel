@@ -9,10 +9,11 @@ import { openSalesLinkModal } from './SalesLinkModal';
 import { EmptyState } from '@/shared/components';
 import { trpc, type RouterOutputs } from '@/shared/trpc';
 
-type Campaign = RouterOutputs['backofficeCampaign']['findAll'][number];
+type Campaign = RouterOutputs['backofficeCampaign']['findAll']['data'][number];
 
 export function CampaignList() {
-  const [campaigns] = trpc.backofficeCampaign.findAll.useSuspenseQuery();
+  const [result] = trpc.backofficeCampaign.findAll.useSuspenseQuery();
+  const campaigns = result.data;
 
   if (!campaigns || campaigns.length === 0) {
     return (
@@ -31,7 +32,6 @@ export function CampaignList() {
             <TableHeader>캠페인명</TableHeader>
             <TableHeader>시작일</TableHeader>
             <TableHeader>종료일</TableHeader>
-            <TableHeader>설명</TableHeader>
             <TableHeader>등록일</TableHeader>
             <TableHeader>부가기능</TableHeader>
           </TableRow>
@@ -76,7 +76,6 @@ function CampaignRow({ campaign }: { campaign: Campaign }) {
       </TableCell>
       <TableCell>{dayjs(campaign.startAt).format('YYYY-MM-DD')}</TableCell>
       <TableCell>{dayjs(campaign.endAt).format('YYYY-MM-DD')}</TableCell>
-      <TableCell>{campaign.description || '-'}</TableCell>
       <TableCell>{dayjs(campaign.createdAt).format('YYYY-MM-DD')}</TableCell>
       <TableCell>
         <Button

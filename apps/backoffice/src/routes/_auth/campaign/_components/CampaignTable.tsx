@@ -10,40 +10,26 @@ import type React from 'react';
 import tw from 'tailwind-styled-components';
 
 import { Table } from '@/shared/components';
+import type { RouterOutputs } from '@/shared/trpc';
 
 /** 캠페인 뷰 모드 */
 export type CampaignViewMode = 'campaign' | 'product';
 
-/** 캠페인 테이블 데이터 타입 */
-export interface CampaignTableData {
-  id: number;
-  title: string;
-  startAt: string;
-  endAt: string;
-  description: string | null;
-  thumbnail: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
+/** 캠페인 테이블 데이터 타입 (API 응답에서 추론) */
+export type CampaignTableData =
+  RouterOutputs['backofficeCampaign']['findAll']['data'][number];
 
-/** 상품별보기 테이블 데이터 타입 (추후 API 구현 예정) */
-export interface ProductViewTableData {
-  id: number;
-  productName: string;
-  campaignName: string;
-  startAt: Date;
-  endAt: Date;
-  brand: string;
-  category: string;
-  orderCount: number;
-  revenue: number;
-}
+/** 상품별보기 테이블 데이터 타입 (API 응답에서 추론) */
+export type ProductViewTableData =
+  RouterOutputs['backofficeCampaign']['findAllByProduct']['data'][number];
 
 interface CampaignTableProps {
   /** 뷰 모드 */
   viewMode: CampaignViewMode;
   /** 캠페인 데이터 */
   campaigns: CampaignTableData[];
+  /** 상품별 데이터 */
+  products?: ProductViewTableData[];
   /** 행 클릭 핸들러 */
   onRowClick?: (campaign: CampaignTableData) => void;
   /** 판매링크(매출상세) 클릭 핸들러 */
@@ -65,6 +51,7 @@ const formatPrice = (amount: number) =>
  * <CampaignTable
  *   viewMode="campaign"
  *   campaigns={campaigns}
+ *   products={products}
  *   onRowClick={handleRowClick}
  *   onSalesLinkClick={handleSalesLink}
  *   onEditClick={handleEdit}
@@ -74,13 +61,14 @@ const formatPrice = (amount: number) =>
 export function CampaignTable({
   viewMode,
   campaigns,
+  products = [],
   onRowClick,
   onSalesLinkClick,
   onEditClick,
   onDeleteClick,
 }: CampaignTableProps) {
   if (viewMode === 'product') {
-    return <ProductViewTable />;
+    return <ProductViewTable products={products} />;
   }
 
   return (
@@ -101,7 +89,7 @@ function CampaignViewTable({
   onSalesLinkClick,
   onEditClick,
   onDeleteClick,
-}: Omit<CampaignTableProps, 'viewMode'>) {
+}: Omit<CampaignTableProps, 'viewMode' | 'products'>) {
   const columns = [
     campaignColumnHelper.accessor('title', {
       header: '캠페인',
@@ -119,25 +107,43 @@ function CampaignViewTable({
     campaignColumnHelper.display({
       id: 'influencer',
       header: '인플루언서',
-      cell: () => '-',
+      cell: (info) => {
+        const { influencers } = info.row.original;
+        if (influencers.length === 0) return '-';
+        const names = influencers.map((inf) => inf.name);
+        return names.length <= 2
+          ? names.join(', ')
+          : `${names[0]} 외 ${names.length - 1}명`;
+      },
       size: 120,
     }),
     campaignColumnHelper.display({
       id: 'brand',
       header: '브랜드',
-      cell: () => '-',
+      cell: (info) => {
+        const { brands } = info.row.original;
+        if (brands.length === 0) return '-';
+        const names = brands.map((b) => b.name);
+        return names.length <= 2
+          ? names.join(', ')
+          : `${names[0]} 외 ${names.length - 1}개`;
+      },
       size: 120,
     }),
-    campaignColumnHelper.display({
-      id: 'orderCount',
+    campaignColumnHelper.accessor('orderCount', {
       header: '주문수',
-      cell: () => '-',
+      cell: (info) => {
+        const value = info.getValue();
+        return value > 0 ? value.toLocaleString() : '-';
+      },
       size: 80,
     }),
-    campaignColumnHelper.display({
-      id: 'revenue',
+    campaignColumnHelper.accessor('revenue', {
       header: '매출',
-      cell: () => '-',
+      cell: (info) => {
+        const value = info.getValue();
+        return value > 0 ? formatPrice(value) : '-';
+      },
       size: 100,
     }),
     campaignColumnHelper.display({
@@ -196,14 +202,26 @@ function CampaignViewTable({
   return <Table columns={columns} data={campaigns} onRowClick={onRowClick} />;
 }
 
-/** 상품별보기 테이블 (데이터 없음 - 빈 상태) */
-function ProductViewTable() {
+/** 상품별보기 테이블 */
+function ProductViewTable({ products }: { products: ProductViewTableData[] }) {
   const columns = [
-    productColumnHelper.accessor('productName', {
+    productColumnHelper.display({
+      id: 'product',
       header: '상품',
-      size: 200,
+      cell: (info) => {
+        const { productName, productThumbnail } = info.row.original;
+        return (
+          <ProductCell>
+            {productThumbnail ? (
+              <ProductThumbnail src={productThumbnail} alt={productName} />
+            ) : null}
+            <span>{productName}</span>
+          </ProductCell>
+        );
+      },
+      size: 250,
     }),
-    productColumnHelper.accessor('campaignName', {
+    productColumnHelper.accessor('campaignTitle', {
       header: '캠페인',
       size: 150,
     }),
@@ -216,42 +234,35 @@ function ProductViewTable() {
       },
       size: 200,
     }),
-    productColumnHelper.accessor('brand', {
+    productColumnHelper.accessor('brandName', {
       header: '브랜드',
       size: 120,
     }),
-    productColumnHelper.accessor('category', {
+    productColumnHelper.display({
+      id: 'category',
       header: '카테고리',
+      cell: (info) => info.row.original.categoryName ?? '-',
       size: 120,
     }),
     productColumnHelper.accessor('orderCount', {
       header: '주문수',
+      cell: (info) => {
+        const value = info.getValue();
+        return value > 0 ? value.toLocaleString() : '-';
+      },
       size: 80,
     }),
     productColumnHelper.accessor('revenue', {
       header: '매출',
-      cell: (info) => formatPrice(info.getValue()),
-      size: 100,
-    }),
-    productColumnHelper.display({
-      id: 'actions',
-      header: '',
-      cell: () => {
-        return (
-          <ActionCell>
-            <ActionButton>매출 상세</ActionButton>
-            <ActionButton>수정</ActionButton>
-            <DeleteButton>삭제</DeleteButton>
-          </ActionCell>
-        );
+      cell: (info) => {
+        const value = info.getValue();
+        return value > 0 ? formatPrice(value) : '-';
       },
-      size: 280,
+      size: 100,
     }),
   ];
 
-  const emptyData: ProductViewTableData[] = [];
-
-  return <Table columns={columns} data={emptyData} />;
+  return <Table columns={columns} data={products} />;
 }
 
 /** Styled Components */
@@ -309,4 +320,18 @@ const DeleteButton = tw.button`
   cursor-pointer
   transition-colors
   hover:bg-red-50
+`;
+
+const ProductCell = tw.div`
+  flex
+  items-center
+  gap-2
+`;
+
+const ProductThumbnail = tw.img`
+  w-8
+  h-8
+  rounded
+  object-cover
+  flex-shrink-0
 `;

@@ -9,6 +9,10 @@ import type {
   campaignInfluencerInputSchema,
   campaignInfluencerProductInputSchema,
   campaignInfluencerHotelOptionInputSchema,
+  campaignListItemSchema,
+  findAllCampaignsOutputSchema,
+  productListItemSchema,
+  findAllCampaignProductsOutputSchema,
 } from './campaign.schema';
 import type { CampaignProductResponse } from '@src/module/backoffice/domain/campaign-product.entity';
 import type { CampaignInfluencerResponse } from '@src/module/backoffice/domain/campaign-influencer.entity';
@@ -38,6 +42,18 @@ export type CampaignInfluencerProductInput = z.infer<
 >;
 export type CampaignInfluencerHotelOptionInput = z.infer<
   typeof campaignInfluencerHotelOptionInputSchema
+>;
+
+// FindAll (캠페인 리스트) 관련 타입
+export type CampaignListItem = z.infer<typeof campaignListItemSchema>;
+export type FindAllCampaignsOutput = z.infer<
+  typeof findAllCampaignsOutputSchema
+>;
+
+// FindAllByProduct (상품별 리스트) 관련 타입
+export type ProductListItem = z.infer<typeof productListItemSchema>;
+export type FindAllCampaignProductsOutput = z.infer<
+  typeof findAllCampaignProductsOutputSchema
 >;
 
 // 캠페인 생성 응답 (상품/인플루언서 포함)

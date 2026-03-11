@@ -108,6 +108,98 @@ export const deleteCampaignInputSchema = z.object({
   id: z.number(),
 });
 
+// ===== FindAll (캠페인 리스트) Schemas =====
+
+/** 기간 필터 타입 (어떤 날짜 기준으로 필터할지) */
+export const campaignPeriodFilterTypeSchema = z.enum([
+  'startAt',
+  'endAt',
+  'createdAt',
+]);
+
+/** 캠페인 리스트 필터+페이지네이션 Input */
+export const findAllCampaignsInputSchema = z.object({
+  periodType: campaignPeriodFilterTypeSchema.nullish(),
+  startDate: z.string().nullish(),
+  endDate: z.string().nullish(),
+  campaignId: z.number().int().positive().nullish(),
+  influencerId: z.number().int().positive().nullish(),
+  brandId: z.number().int().positive().nullish(),
+  page: z.number().int().min(1).default(1),
+  limit: z.number().int().positive().default(20),
+});
+
+/** 캠페인 리스트 아이템 */
+export const campaignListItemSchema = z.object({
+  id: z.number(),
+  title: z.string(),
+  startAt: z.date(),
+  endAt: z.date(),
+  influencers: z.array(
+    z.object({
+      id: z.number(),
+      name: z.string(),
+    })
+  ),
+  brands: z.array(
+    z.object({
+      id: z.number(),
+      name: z.string(),
+    })
+  ),
+  orderCount: z.number(),
+  revenue: z.number(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+});
+
+/** 캠페인 리스트 응답 (페이지네이션 포함) */
+export const findAllCampaignsOutputSchema = z.object({
+  data: z.array(campaignListItemSchema),
+  total: z.number(),
+  page: z.number(),
+  limit: z.number(),
+  totalPages: z.number(),
+});
+
+// ===== FindAllByProduct (상품별 리스트) Schemas =====
+
+/** 상품별 리스트 필터+페이지네이션 Input */
+export const findAllCampaignProductsInputSchema = z.object({
+  periodType: campaignPeriodFilterTypeSchema.nullish(),
+  startDate: z.string().nullish(),
+  endDate: z.string().nullish(),
+  campaignId: z.number().int().positive().nullish(),
+  influencerId: z.number().int().positive().nullish(),
+  brandId: z.number().int().positive().nullish(),
+  page: z.number().int().min(1).default(1),
+  limit: z.number().int().positive().default(20),
+});
+
+/** 상품별 리스트 아이템 */
+export const productListItemSchema = z.object({
+  campaignId: z.number(),
+  campaignTitle: z.string(),
+  productId: z.number(),
+  productName: z.string(),
+  productThumbnail: z.string().nullish(),
+  startAt: z.date(),
+  endAt: z.date(),
+  brandName: z.string(),
+  categoryName: z.string().nullish(),
+  orderCount: z.number(),
+  revenue: z.number(),
+});
+
+/** 상품별 리스트 응답 (페이지네이션 포함) */
+export const findAllCampaignProductsOutputSchema = z.object({
+  data: z.array(productListItemSchema),
+  total: z.number(),
+  page: z.number(),
+  limit: z.number(),
+  totalPages: z.number(),
+});
+
 // Response schemas
 export const campaignProductResponseSchema = z.object({
   // Product 정보 (flat)
