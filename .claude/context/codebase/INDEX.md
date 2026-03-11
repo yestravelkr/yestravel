@@ -17,4 +17,5 @@ description: 코드베이스 모듈 참조 목록
 | Influencer | 백오피스 인플루언서 관리 - CRUD, 소셜미디어/사업자/정산 정보 | [influencer.md](./influencer.md) |
 | Partner App | 파트너 전용 프론트엔드 - 브랜드/인플루언서 로그인, 대시보드, TanStack Router + tRPC + Zustand | [partner-app.md](./partner-app.md) |
 | Backoffice Manager | 백오피스 파트너 관리자 UI - 관리자 목록/추가/역할 변경/제거 공유 컴포넌트 | [backoffice-manager.md](./backoffice-manager.md) |
+| Campaign | 백오피스 캠페인 관리 - 리스트 조회(캠페인/상품별), CRUD, 인플루언서 배정, 수수료 관리 | [campaign.md](./campaign.md) |
 
