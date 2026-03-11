@@ -3,16 +3,24 @@ import { MessagePattern } from '@nestjs/microservices';
 import { CampaignService } from '@src/module/backoffice/campaign/campaign.service';
 import { TransactionService } from '@src/module/shared/transaction/transaction.service';
 import { Transactional } from '@src/module/shared/transaction/transaction.decorator';
-import { CampaignEntity } from '@src/module/backoffice/domain/campaign.entity';
-import { campaignSchema, campaignWithRelationsSchema } from './campaign.schema';
+import {
+  campaignWithRelationsSchema,
+  findAllCampaignsOutputSchema,
+  findAllCampaignProductsOutputSchema,
+} from './campaign.schema';
 import type {
-  Campaign,
   CreateCampaignInput,
   UpdateCampaignInput,
   FindCampaignByIdInput,
   DeleteCampaignInput,
+  FindAllCampaignsInput,
+  FindAllCampaignProductsInput,
 } from './campaign.type';
-import type { CampaignWithRelations } from './campaign.dto';
+import type {
+  CampaignWithRelations,
+  FindAllCampaignsOutput,
+  FindAllCampaignProductsOutput,
+} from './campaign.dto';
 
 @Controller()
 export class CampaignController {
@@ -21,23 +29,18 @@ export class CampaignController {
     private readonly transactionService: TransactionService
   ) {}
 
-  private formatCampaignResponse(campaign: CampaignEntity): Campaign {
-    return campaignSchema.parse({
-      id: campaign.id,
-      title: campaign.title,
-      startAt: campaign.startAt,
-      endAt: campaign.endAt,
-      description: campaign.description,
-      thumbnail: campaign.thumbnail,
-      createdAt: campaign.createdAt,
-      updatedAt: campaign.updatedAt,
-    });
+  @MessagePattern('backoffice.campaign.findAll')
+  async findAll(data: FindAllCampaignsInput): Promise<FindAllCampaignsOutput> {
+    const result = await this.campaignService.findAll(data);
+    return findAllCampaignsOutputSchema.parse(result);
   }
 
-  @MessagePattern('backoffice.campaign.findAll')
-  async findAll(): Promise<Campaign[]> {
-    const campaigns = await this.campaignService.findAll();
-    return campaigns.map(campaign => this.formatCampaignResponse(campaign));
+  @MessagePattern('backoffice.campaign.findAllByProduct')
+  async findAllByProduct(
+    data: FindAllCampaignProductsInput
+  ): Promise<FindAllCampaignProductsOutput> {
+    const result = await this.campaignService.findAllByProduct(data);
+    return findAllCampaignProductsOutputSchema.parse(result);
   }
 
   @MessagePattern('backoffice.campaign.findById')

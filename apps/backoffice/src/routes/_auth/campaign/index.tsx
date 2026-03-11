@@ -7,7 +7,6 @@
  */
 
 import { createFileRoute, Link } from '@tanstack/react-router';
-import { useMemo } from 'react';
 import { toast } from 'sonner';
 import tw from 'tailwind-styled-components';
 
@@ -55,6 +54,13 @@ const PERIOD_PRESET_OPTIONS = [
   { value: 'custom', label: '직접입력' },
 ];
 
+/** URL periodType -> API periodType 매핑 */
+const PERIOD_TYPE_MAP: Record<string, 'startAt' | 'endAt' | 'createdAt'> = {
+  START_DATE: 'startAt',
+  END_DATE: 'endAt',
+  CREATED_DATE: 'createdAt',
+};
+
 interface CampaignSearchParams {
   page: number;
   limit: number;
@@ -86,6 +92,25 @@ export const Route = createFileRoute('/_auth/campaign/')({
   },
 });
 
+/** searchParams -> API input 변환 */
+function buildApiInput(searchParams: CampaignSearchParams) {
+  const apiPeriodType = PERIOD_TYPE_MAP[searchParams.periodType] ?? undefined;
+  return {
+    page: searchParams.page,
+    limit: searchParams.limit,
+    periodType: apiPeriodType,
+    startDate: searchParams.startDate || undefined,
+    endDate: searchParams.endDate || undefined,
+    campaignId: searchParams.campaignId
+      ? Number(searchParams.campaignId)
+      : undefined,
+    influencerId: searchParams.influencerId
+      ? Number(searchParams.influencerId)
+      : undefined,
+    brandId: searchParams.brandId ? Number(searchParams.brandId) : undefined,
+  };
+}
+
 function CampaignListPage() {
   const searchParams = Route.useSearch();
   const {
@@ -103,13 +128,28 @@ function CampaignListPage() {
 
   const navigate = Route.useNavigate();
 
-  const [campaigns] = trpc.backofficeCampaign.findAll.useSuspenseQuery();
+  const apiInput = buildApiInput(searchParams);
+
+  // 뷰 모드에 따라 다른 API 호출 (비활성 뷰는 최소 데이터만 조회)
+  const campaignInput =
+    viewMode === 'campaign' ? apiInput : { page: 1, limit: 1 };
+  const productInput =
+    viewMode === 'product' ? apiInput : { page: 1, limit: 1 };
+
+  const [campaignResult] =
+    trpc.backofficeCampaign.findAll.useSuspenseQuery(campaignInput);
+
+  const [productResult] =
+    trpc.backofficeCampaign.findAllByProduct.useSuspenseQuery(productInput);
+
+  const activeResult = viewMode === 'campaign' ? campaignResult : productResult;
 
   const trpcUtils = trpc.useUtils();
 
   const deleteMutation = trpc.backofficeCampaign.delete.useMutation({
     onSuccess: () => {
       trpcUtils.backofficeCampaign.findAll.invalidate();
+      trpcUtils.backofficeCampaign.findAllByProduct.invalidate();
       toast.success('캠페인이 삭제되었습니다.');
     },
     onError: (error) => {
@@ -117,57 +157,19 @@ function CampaignListPage() {
     },
   });
 
-  /** 클라이언트 사이드 필터링 */
-  const filteredCampaigns = useMemo(() => {
-    let result = [...campaigns] as CampaignTableData[];
-
-    // 캠페인 필터
-    if (campaignId) {
-      result = result.filter((c) => c.id === Number(campaignId));
-    }
-
-    // 기간 필터 (startDate, endDate가 있을 때)
-    if (startDate && endDate) {
-      const filterStart = new Date(startDate);
-      const filterEnd = new Date(endDate);
-
-      result = result.filter((c) => {
-        if (periodType === 'END_DATE') {
-          return (
-            new Date(c.endAt) >= filterStart && new Date(c.endAt) <= filterEnd
-          );
-        }
-        if (periodType === 'CREATED_DATE') {
-          return (
-            new Date(c.createdAt) >= filterStart &&
-            new Date(c.createdAt) <= filterEnd
-          );
-        }
-        // 기본: 시작일 기준
-        return (
-          new Date(c.startAt) >= filterStart && new Date(c.startAt) <= filterEnd
-        );
-      });
-    }
-
-    return result;
-  }, [campaigns, campaignId, startDate, endDate, periodType]);
-
-  /** 클라이언트 사이드 페이지네이션 */
-  const totalCount = filteredCampaigns.length;
-  const totalPages = Math.max(1, Math.ceil(totalCount / limit));
-  const paginatedCampaigns = filteredCampaigns.slice(
-    (page - 1) * limit,
-    page * limit,
-  );
+  const totalCount = activeResult.total;
+  const totalPages = activeResult.totalPages;
 
   /** 캠페인 옵션 (필터 드롭다운용) */
-  const campaignOptions = campaigns.map((c) => ({
-    value: String(c.id),
-    label: c.title,
-  }));
+  const campaignOptions =
+    viewMode === 'campaign'
+      ? campaignResult.data.map((c) => ({
+          value: String(c.id),
+          label: c.title,
+        }))
+      : [];
 
-  // 인플루언서, 브랜드 옵션 (추후 API 연동 예정)
+  // 인플루언서, 브랜드 옵션 (추후 별도 API 연동 예정)
   const influencerOptions: { value: string; label: string }[] = [];
   const brandOptions: { value: string; label: string }[] = [];
 
@@ -314,7 +316,7 @@ function CampaignListPage() {
         }
         toolbar={
           <TableToolbar
-            label="캠페인"
+            label={viewMode === 'campaign' ? '캠페인' : '상품'}
             totalCount={totalCount}
             pageSize={limit}
             onPageSizeChange={handlePageSizeChange}
@@ -323,7 +325,8 @@ function CampaignListPage() {
         table={
           <CampaignTable
             viewMode={viewMode}
-            campaigns={paginatedCampaigns}
+            campaigns={campaignResult.data}
+            products={productResult.data}
             onRowClick={handleRowClick}
             onSalesLinkClick={handleSalesLinkClick}
             onEditClick={handleEditClick}

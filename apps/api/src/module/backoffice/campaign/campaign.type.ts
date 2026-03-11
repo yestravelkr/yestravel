@@ -9,6 +9,8 @@ import {
   campaignInfluencerInputSchema,
   campaignInfluencerProductInputSchema,
   campaignInfluencerHotelOptionInputSchema,
+  findAllCampaignsInputSchema,
+  findAllCampaignProductsInputSchema,
 } from './campaign.schema';
 
 // Inferred types from Zod schemas
@@ -26,4 +28,8 @@ export type CampaignInfluencerProductInput = z.infer<
 >;
 export type CampaignInfluencerHotelOptionInput = z.infer<
   typeof campaignInfluencerHotelOptionInputSchema
+>;
+export type FindAllCampaignsInput = z.infer<typeof findAllCampaignsInputSchema>;
+export type FindAllCampaignProductsInput = z.infer<
+  typeof findAllCampaignProductsInputSchema
 >;

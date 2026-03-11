@@ -2064,16 +2064,79 @@ const appRouter = t.router({
       )).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
   }),
   backofficeCampaign: t.router({
-    findAll: publicProcedure.output(z.array(z.object({
-      id: z.number(),
-      title: z.string(),
-      startAt: z.date(),
-      endAt: z.date(),
-      description: z.string().nullish(),
-      thumbnail: z.string().nullish(),
-      createdAt: z.date(),
-      updatedAt: z.date(),
-    }))).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    findAll: publicProcedure.input(z.object({
+      periodType: z.enum([
+        'startAt',
+        'endAt',
+        'createdAt',
+      ]).nullish(),
+      startDate: z.string().nullish(),
+      endDate: z.string().nullish(),
+      campaignId: z.number().int().positive().nullish(),
+      influencerId: z.number().int().positive().nullish(),
+      brandId: z.number().int().positive().nullish(),
+      page: z.number().int().min(1).default(1),
+      limit: z.number().int().positive().default(20),
+    }).nullish().default({})).output(z.object({
+      data: z.array(z.object({
+        id: z.number(),
+        title: z.string(),
+        startAt: z.date(),
+        endAt: z.date(),
+        influencers: z.array(
+          z.object({
+            id: z.number(),
+            name: z.string(),
+          })
+        ),
+        brands: z.array(
+          z.object({
+            id: z.number(),
+            name: z.string(),
+          })
+        ),
+        orderCount: z.number(),
+        revenue: z.number(),
+        createdAt: z.date(),
+        updatedAt: z.date(),
+      })),
+      total: z.number(),
+      page: z.number(),
+      limit: z.number(),
+      totalPages: z.number(),
+    })).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    findAllByProduct: publicProcedure.input(z.object({
+      periodType: z.enum([
+        'startAt',
+        'endAt',
+        'createdAt',
+      ]).nullish(),
+      startDate: z.string().nullish(),
+      endDate: z.string().nullish(),
+      campaignId: z.number().int().positive().nullish(),
+      influencerId: z.number().int().positive().nullish(),
+      brandId: z.number().int().positive().nullish(),
+      page: z.number().int().min(1).default(1),
+      limit: z.number().int().positive().default(20),
+    }).nullish().default({})).output(z.object({
+      data: z.array(z.object({
+        campaignId: z.number(),
+        campaignTitle: z.string(),
+        productId: z.number(),
+        productName: z.string(),
+        productThumbnail: z.string().nullish(),
+        startAt: z.date(),
+        endAt: z.date(),
+        brandName: z.string(),
+        categoryName: z.string().nullish(),
+        orderCount: z.number(),
+        revenue: z.number(),
+      })),
+      total: z.number(),
+      page: z.number(),
+      limit: z.number(),
+      totalPages: z.number(),
+    })).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
     findById: publicProcedure.input(z.object({
       id: z.number(),
     })).output(z.object({

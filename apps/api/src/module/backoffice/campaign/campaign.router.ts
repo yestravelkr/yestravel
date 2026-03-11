@@ -9,28 +9,51 @@ import {
   updateCampaignInputSchema,
   findCampaignByIdInputSchema,
   deleteCampaignInputSchema,
-  campaignSchema,
   campaignWithRelationsSchema,
+  findAllCampaignsInputSchema,
+  findAllCampaignsOutputSchema,
+  findAllCampaignProductsInputSchema,
+  findAllCampaignProductsOutputSchema,
 } from './campaign.schema';
 import type {
   CreateCampaignInput,
   UpdateCampaignInput,
   FindCampaignByIdInput,
   DeleteCampaignInput,
+  FindAllCampaignsInput,
+  FindAllCampaignProductsInput,
 } from './campaign.type';
 
 @Router({ alias: 'backofficeCampaign' })
 export class CampaignRouter extends BaseTrpcRouter {
   @UseMiddlewares(BackofficeAuthMiddleware)
   @Query({
-    output: z.array(campaignSchema),
+    input: findAllCampaignsInputSchema.nullish().default({}),
+    output: findAllCampaignsOutputSchema,
   })
-  async findAll(@Ctx() ctx: BackofficeAuthorizedContext) {
-    const output = await this.microserviceClient.send(
+  async findAll(
+    @Ctx() ctx: BackofficeAuthorizedContext,
+    @Input() input?: FindAllCampaignsInput
+  ) {
+    return this.microserviceClient.send(
       'backoffice.campaign.findAll',
-      {}
+      input || {}
     );
-    return z.array(campaignSchema).parse(output);
+  }
+
+  @UseMiddlewares(BackofficeAuthMiddleware)
+  @Query({
+    input: findAllCampaignProductsInputSchema.nullish().default({}),
+    output: findAllCampaignProductsOutputSchema,
+  })
+  async findAllByProduct(
+    @Ctx() ctx: BackofficeAuthorizedContext,
+    @Input() input?: FindAllCampaignProductsInput
+  ) {
+    return this.microserviceClient.send(
+      'backoffice.campaign.findAllByProduct',
+      input || {}
+    );
   }
 
   @UseMiddlewares(BackofficeAuthMiddleware)
