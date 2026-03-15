@@ -2,7 +2,6 @@
 name: git
 description: Git 작업 가이드. Commit 메시지 작성법, PR 작성법, 브랜치 전략, 안전 규칙.
 keywords: [커밋, PR, 브랜치, push, merge, FEAT, FIX, REFACTOR, CHORE, DOCS, GitHub, 풀리퀘스트]
-estimated_tokens: ~600
 ---
 
 # Git 작업 가이드
@@ -131,6 +130,18 @@ grep -r "import.*변경된함수명" --include="*.ts" --include="*.tsx"
 
 > 이 PR이 해결하는 문제와 접근 방식을 1-2문장으로 설명
 
+## 🎯 Why (의도)
+
+> 왜 이 변경이 필요한가? 배경과 동기를 설명
+
+## 🐛 What (문제)
+
+> 어떤 문제가 있었는가? 구체적인 증상이나 요구사항
+
+## 🔧 How (해결 방법)
+
+> 어떻게 해결했는가? 접근 방식과 핵심 변경 내용
+
 ## 🔄 주요 변경사항
 
 ### [변경 제목 1]
@@ -218,6 +229,7 @@ EOF
 - [ ] `build` 성공
 - [ ] 커밋 메시지 규칙 준수
 - [ ] Summary가 변경 내용을 명확히 설명
+- [ ] Why/What/How 3가지 관점이 PR 본문에 포함되어 있는지 확인
 - [ ] 영향 범위 분석 완료
 - [ ] Breaking change 명시 (해당시)
 
