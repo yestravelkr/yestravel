@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - chore/deploy-api-build-cache
     tags:
       - 'v*'
     paths-ignore:
