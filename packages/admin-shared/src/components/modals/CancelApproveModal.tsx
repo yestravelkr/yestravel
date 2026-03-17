@@ -7,7 +7,30 @@
 import { Button } from '@yestravelkr/min-design-system';
 import { useState } from 'react';
 import SnappyModal, { useCurrentModal } from 'react-snappy-modal';
-import tw from 'tailwind-styled-components';
+
+import {
+  ButtonGroup,
+  Container,
+  CriticalButton,
+  DialogButtonGroup,
+  DialogContainer,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+  Divider,
+  Header,
+  InputLabel,
+  InputSection,
+  InputSuffix,
+  InputWrapper,
+  RefundAmount,
+  StyledInput,
+  SummaryBox,
+  SummaryLabel,
+  SummaryRow,
+  SummaryValue,
+  Title,
+} from './shared-styles';
 
 interface CancelApproveModalProps {
   /** 상품 금액 (주문 총액) */
@@ -160,151 +183,6 @@ export function openCancelApproveModal(
     position: 'center',
   });
 }
-
-// ========================================
-// Styled Components - Main Modal
-// ========================================
-
-const Container = tw.div`
-  w-[480px]
-  p-5
-  bg-white
-  rounded-[20px]
-  flex flex-col gap-5
-`;
-
-const Header = tw.div`
-  flex items-center h-9
-`;
-
-const Title = tw.p`
-  flex-1
-  text-[21px] font-bold
-  text-[var(--fg-neutral)]
-  leading-7
-`;
-
-const InputSection = tw.div`
-  flex flex-col gap-2
-`;
-
-const InputLabel = tw.p`
-  text-[15px] font-normal
-  text-[var(--fg-muted)]
-  leading-5
-`;
-
-const InputWrapper = tw.div`
-  flex items-center
-  h-11
-  px-3
-  bg-white
-  border border-[var(--stroke-neutral)]
-  rounded-xl
-`;
-
-const StyledInput = tw.input`
-  flex-1
-  text-[16.5px]
-  text-[var(--fg-neutral)]
-  leading-[22px]
-  outline-none
-  bg-transparent
-  placeholder:text-[var(--fg-placeholder)]
-`;
-
-const InputSuffix = tw.span`
-  text-[16.5px]
-  text-[var(--fg-muted)]
-  leading-[22px]
-  ml-1
-`;
-
-const SummaryBox = tw.div`
-  bg-[var(--bg-neutral)]
-  rounded-xl
-  p-5
-  flex flex-col gap-5
-`;
-
-const SummaryRow = tw.div`
-  flex items-center gap-2
-`;
-
-const SummaryLabel = tw.p`
-  w-[100px]
-  text-[16.5px] font-normal
-  text-[var(--fg-neutral)]
-  leading-[22px]
-`;
-
-const SummaryValue = tw.p`
-  flex-1
-  text-[16.5px] font-normal
-  text-[var(--fg-neutral)]
-  leading-[22px]
-  text-right
-`;
-
-const RefundAmount = tw.p`
-  flex-1
-  text-[21px] font-bold
-  text-[var(--fg-neutral)]
-  leading-7
-  text-right
-`;
-
-const Divider = tw.div`
-  h-px
-  bg-[var(--stroke-neutral)]
-`;
-
-const ButtonGroup = tw.div`
-  flex gap-2
-`;
-
-// ========================================
-// Styled Components - Confirm Dialog
-// ========================================
-
-const DialogContainer = tw.div`
-  w-[320px]
-  p-3
-  bg-white
-  rounded-[20px]
-  flex flex-col gap-5
-`;
-
-const DialogContent = tw.div`
-  flex flex-col gap-2
-  px-2 py-3
-`;
-
-const DialogTitle = tw.p`
-  text-lg font-bold
-  text-[var(--fg-neutral)]
-  leading-6
-`;
-
-const DialogDescription = tw.p`
-  text-[15px] font-normal
-  text-[var(--fg-neutral)]
-  leading-5
-`;
-
-const DialogButtonGroup = tw.div`
-  flex flex-col gap-2
-`;
-
-const CriticalButton = tw.button`
-  w-full h-11
-  flex items-center justify-center
-  bg-[var(--bg-critical-solid,#EB3D3D)]
-  rounded-xl
-  text-[16.5px] font-medium
-  text-white
-  leading-[22px]
-`;
 
 /**
  * Usage:

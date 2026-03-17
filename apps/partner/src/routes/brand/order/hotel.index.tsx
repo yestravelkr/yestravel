@@ -6,10 +6,8 @@
 
 import { createFileRoute } from '@tanstack/react-router';
 
-import {
-  OrderListContent,
-  validateHotelOrderSearch,
-} from '@/components/order/OrderListContent';
+import { OrderListContent } from '@/components/order/OrderListContent';
+import { validateHotelOrderSearch } from '@/components/order/search-params';
 
 export const Route = createFileRoute('/brand/order/hotel/')({
   component: BrandHotelOrderListPage,

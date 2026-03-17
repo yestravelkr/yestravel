@@ -29,41 +29,7 @@ import dayjs from 'dayjs';
 import { Suspense } from 'react';
 import { toast } from 'sonner';
 
-/** 검색 파라미터 타입 */
-export interface HotelOrderSearchParams {
-  page: number;
-  limit: number;
-  periodType: string;
-  periodPreset: string;
-  startDate: string;
-  endDate: string;
-  orderStatus: string;
-  campaignId: string;
-  influencerIds: string;
-  productId: string;
-  optionId: string;
-  searchQuery: string;
-}
-
-/** 검색 파라미터 검증 함수 */
-export function validateHotelOrderSearch(
-  search: Record<string, unknown>,
-): HotelOrderSearchParams {
-  return {
-    page: Number(search.page) || 1,
-    limit: Number(search.limit) || 50,
-    periodType: (search.periodType as string) || '',
-    periodPreset: (search.periodPreset as string) || '',
-    startDate: (search.startDate as string) || '',
-    endDate: (search.endDate as string) || '',
-    orderStatus: (search.orderStatus as string) || '',
-    campaignId: (search.campaignId as string) || '',
-    influencerIds: (search.influencerIds as string) || '',
-    productId: (search.productId as string) || '',
-    optionId: (search.optionId as string) || '',
-    searchQuery: (search.searchQuery as string) || '',
-  };
-}
+import type { HotelOrderSearchParams } from './search-params';
 
 interface OrderListContentProps {
   /** 기본 경로 (예: /brand/order/hotel) */

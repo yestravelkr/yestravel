@@ -35,7 +35,7 @@
     "@yestravelkr/admin-shared": "*",
     "@yestravelkr/min-design-system": "*",
     "axios": "^1.11.0",
-    "dayjs": "*",
+    "dayjs": "^1.11.19",
     "lucide-react": "^0.554.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
