@@ -25,6 +25,10 @@ estimated_tokens: ~400
 | apps/partner/src/components/navigation/navigation.tsx | 사이드바 내비게이션 | Navigation (type별 메뉴 분기) |
 | apps/partner/src/components/navigation/data.tsx | 내비게이션 데이터 | BRAND_NAV_GROUPS, INFLUENCER_NAV_GROUPS |
 | apps/partner/src/components/navigation/type.ts | 내비게이션 타입 정의 | NavGroup, NavItem, NavLink, NavCollapsible |
+| apps/partner/src/components/order/OrderListContent.tsx | 주문 목록 UI (검색, 필터, 테이블) | OrderListContent |
+| apps/partner/src/components/order/search-params.ts | 호텔 주문 검색 파라미터 타입/검증 | HotelOrderSearchParams, validateHotelOrderSearch() |
+| apps/partner/src/routes/brand/order/hotel.index.tsx | 브랜드 호텔 주문 목록 라우트 | Route (TanStack file route) |
+| apps/partner/src/routes/influencer/order/hotel.index.tsx | 인플루언서 호텔 주문 목록 라우트 | Route (TanStack file route) |
 | apps/partner/vite.config.ts | Vite 빌드 설정 | TanStackRouterVite, 경로 별칭 (@/) |
 | apps/partner/tailwind.config.ts | Tailwind CSS 설정 | MinSans 폰트, 디자인 시스템 연동 |
 
@@ -43,14 +47,20 @@ estimated_tokens: ~400
 2. `/login` → 로그인 페이지 (search param: type)
 3. `/brand` → 브랜드 파트너 레이아웃 (Header + Navigation + Outlet, authBeforeLoad 보호)
 4. `/brand/` → 브랜드 대시보드
-5. `/influencer` → 인플루언서 파트너 레이아웃 (authBeforeLoad 보호)
-6. `/influencer/` → 인플루언서 대시보드
+5. `/brand/order/hotel` → 브랜드 호텔 주문 목록
+6. `/influencer` → 인플루언서 파트너 레이아웃 (authBeforeLoad 보호)
+7. `/influencer/` → 인플루언서 대시보드
+8. `/influencer/order/hotel` → 인플루언서 호텔 주문 목록
 
 ### 상태 관리
 
 - `PartnerType`: BRAND | INFLUENCER (authStore에서 관리)
 - `Role`: ADMIN | MANAGER | GUEST
 - Zustand persist 없이 메모리 기반 관리, refreshToken으로 세션 복원
+
+## 관련 Codebase Context
+
+- [Admin Shared](./admin-shared.md) - 주문 취소/승인 모달 등 공유 컴포넌트
 
 ## 관련 Business Context
 
