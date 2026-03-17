@@ -6,14 +6,16 @@
  */
 
 import { createFileRoute } from '@tanstack/react-router';
+import {
+  BACKOFFICE_CAPABILITIES,
+  MemberInfoCard,
+  OrderDetailHeader,
+  OrderStatusCard,
+  PaymentInfoCard,
+} from '@yestravelkr/admin-shared';
 import dayjs from 'dayjs';
 import { toast } from 'sonner';
 import tw from 'tailwind-styled-components';
-
-import { MemberInfoCard } from './_components/MemberInfoCard';
-import { OrderDetailHeader } from './_components/OrderDetailHeader';
-import { OrderStatusCard } from './_components/OrderStatusCard';
-import { PaymentInfoCard } from './_components/PaymentInfoCard';
 
 import {
   DetailPageLayout,
@@ -286,6 +288,7 @@ function HotelOrderDetailPage() {
             onHistory={handleHistory}
             onCancelApprove={handleCancelApprove}
             onCancelReject={handleCancelReject}
+            capabilities={BACKOFFICE_CAPABILITIES}
           />
         }
         side={
