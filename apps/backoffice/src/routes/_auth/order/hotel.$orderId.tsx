@@ -9,7 +9,12 @@ import { createFileRoute } from '@tanstack/react-router';
 import {
   BACKOFFICE_CAPABILITIES,
   MemberInfoCard,
+  openCancelApproveModal,
+  openCancelOrderModal,
+  openConfirmModal,
+  openOrderHistoryModal,
   OrderDetailHeader,
+  type OrderHistoryItemData,
   OrderStatusCard,
   PaymentInfoCard,
 } from '@yestravelkr/admin-shared';
@@ -17,14 +22,7 @@ import dayjs from 'dayjs';
 import { toast } from 'sonner';
 import tw from 'tailwind-styled-components';
 
-import {
-  DetailPageLayout,
-  openCancelApproveModal,
-  openCancelOrderModal,
-  openConfirmModal,
-  openOrderHistoryModal,
-} from '@/shared/components';
-import type { OrderHistoryItemData } from '@/shared/components/OrderHistoryModal';
+import { DetailPageLayout } from '@/shared/components';
 import { trpc } from '@/shared/trpc';
 
 export const Route = createFileRoute('/_auth/order/hotel/$orderId')({

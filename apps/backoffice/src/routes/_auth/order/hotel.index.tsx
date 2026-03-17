@@ -11,13 +11,18 @@ import {
   ALERT_STATUSES,
   BACKOFFICE_CAPABILITIES,
   formatPrice,
+  openConfirmModal,
   ORDER_STATUS_LABELS,
   ORDER_STATUS_OPTIONS,
   OrderFilters,
   type OrderFiltersState,
+  Pagination,
   PERIOD_PRESET_OPTIONS,
   PERIOD_TYPE_OPTIONS,
   STATUS_ACTION_CONFIG,
+  StatusTabs,
+  Table,
+  TableToolbar,
   type OrderBaseStatus,
   type OrderDisplayStatus,
   type OrderStatusTab,
@@ -27,14 +32,7 @@ import dayjs from 'dayjs';
 import { toast } from 'sonner';
 
 import { MajorPageLayout } from '@/components/layout';
-import {
-  ListPageLayout,
-  openConfirmModal,
-  Pagination,
-  StatusTabs,
-  Table,
-  TableToolbar,
-} from '@/shared/components';
+import { ListPageLayout } from '@/shared/components';
 import { trpc } from '@/shared/trpc';
 
 interface HotelOrderSearchParams {
