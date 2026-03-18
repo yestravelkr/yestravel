@@ -7,10 +7,10 @@ import {
 import { Injectable } from '@nestjs/common';
 import { TRPCError } from '@trpc/server';
 import type {
-  AdminAuthPayload,
   AuthType,
   AuthLevel,
 } from '@src/module/backoffice/auth/backoffice.auth.service';
+import type { BackofficeAuthorizedContext } from '@src/module/backoffice/auth/backoffice.auth.middleware';
 
 const LEVEL_HIERARCHY: Record<AuthLevel, number> = {
   STAFF: 0,
@@ -33,9 +33,15 @@ export function AllowRoles(
     use(
       opts: MiddlewareOptions
     ): MiddlewareResponse | Promise<MiddlewareResponse> {
-      const admin = (opts.ctx as any).admin as AdminAuthPayload | undefined;
+      const admin = (opts.ctx as BackofficeAuthorizedContext).admin;
 
-      if (!admin?.authType) {
+      if (!admin) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: '@AllowRoles must be used after BackofficeAuthMiddleware',
+        });
+      }
+      if (!admin.authType) {
         throw new TRPCError({ code: 'UNAUTHORIZED' });
       }
 

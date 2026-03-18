@@ -13,8 +13,12 @@ import {
 
 const jwtService = new JwtService();
 
-export type AuthType = 'ADMIN' | 'BRAND' | 'INFLUENCER';
+export type AuthType = 'ADMIN' | PartnerType;
 export type AuthLevel = 'SUPER' | 'STAFF';
+
+export function resolveAuthLevel(role?: string): AuthLevel {
+  return role?.endsWith('_SUPER') ? 'SUPER' : 'STAFF';
+}
 
 export type AdminAuthPayload = {
   id: number;
@@ -62,7 +66,7 @@ export class BackofficeAuthService {
       id: admin.id,
       role: admin.role,
       authType: 'ADMIN',
-      authLevel: admin.role?.endsWith('_SUPER') ? 'SUPER' : 'STAFF',
+      authLevel: resolveAuthLevel(admin.role),
     };
     const accessToken = jwtService.sign(
       payload,
@@ -103,7 +107,7 @@ export class BackofficeAuthService {
       id: admin.id,
       role: admin.role,
       authType: 'ADMIN',
-      authLevel: admin.role?.endsWith('_SUPER') ? 'SUPER' : 'STAFF',
+      authLevel: resolveAuthLevel(admin.role),
     };
     const accessToken = jwtService.sign(
       newPayload,

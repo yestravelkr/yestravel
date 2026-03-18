@@ -11,9 +11,14 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigProvider } from '@src/config';
 import {
   AdminAuthPayload,
-  AuthType,
   AuthLevel,
+  AuthType,
+  resolveAuthLevel,
 } from '@src/module/backoffice/auth/backoffice.auth.service';
+import {
+  PartnerAuthPayload,
+  PARTNER_TYPE_VALUE,
+} from '@src/module/partner/auth/partner-auth.schema';
 import type { CreateExpressContextOptions } from '@trpc/server/adapters/express';
 
 const jwtService = new JwtService();
@@ -34,7 +39,7 @@ export class BackofficeAuthMiddleware implements TRPCMiddleware {
       throw new TRPCError({ code: 'UNAUTHORIZED' });
     }
 
-    let payload: any;
+    let payload: AdminAuthPayload | PartnerAuthPayload;
     let authType: AuthType;
     let authLevel: AuthLevel;
     let partnerId: number | undefined;
@@ -51,9 +56,17 @@ export class BackofficeAuthMiddleware implements TRPCMiddleware {
           token,
           ConfigProvider.auth.jwt.partner.access
         );
-        authType = payload.partnerType;
-        partnerId = payload.partnerId;
+        const partnerPayload = payload as PartnerAuthPayload;
+        if (!PARTNER_TYPE_VALUE.includes(partnerPayload.partnerType)) {
+          throw new TRPCError({
+            code: 'UNAUTHORIZED',
+            message: 'Invalid partner type',
+          });
+        }
+        authType = partnerPayload.partnerType;
+        partnerId = partnerPayload.partnerId;
       } catch (e) {
+        if (e instanceof TRPCError) throw e;
         throw new TRPCError({
           code: 'UNAUTHORIZED',
           message: 'Invalid token',
@@ -62,7 +75,7 @@ export class BackofficeAuthMiddleware implements TRPCMiddleware {
       }
     }
 
-    authLevel = payload.role?.endsWith('_SUPER') ? 'SUPER' : 'STAFF';
+    authLevel = resolveAuthLevel(payload.role);
 
     const adminPayload: AdminAuthPayload = {
       id: payload.id,
