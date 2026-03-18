@@ -11,6 +11,7 @@ import {
 } from 'nestjs-trpc-v2';
 import { BackofficeAuthMiddleware } from '@src/module/backoffice/auth/backoffice.auth.middleware';
 import type { BackofficeAuthorizedContext } from '@src/module/backoffice/auth/backoffice.auth.middleware';
+import { AllowRoles } from '@src/shared/auth/allow-roles.decorator';
 import {
   findAllOrdersInputSchema,
   getStatusCountsInputSchema,
@@ -85,6 +86,7 @@ export class OrderRouter extends BaseTrpcRouter {
   }
 
   @UseMiddlewares(BackofficeAuthMiddleware)
+  @AllowRoles(['ADMIN'], 'STAFF')
   @Mutation({
     input: updateStatusInputSchema,
     output: updateStatusResponseSchema,
@@ -97,6 +99,7 @@ export class OrderRouter extends BaseTrpcRouter {
   }
 
   @UseMiddlewares(BackofficeAuthMiddleware)
+  @AllowRoles(['ADMIN'], 'STAFF')
   @Mutation({
     input: revertStatusInputSchema,
     output: revertStatusResponseSchema,
@@ -109,6 +112,7 @@ export class OrderRouter extends BaseTrpcRouter {
   }
 
   @UseMiddlewares(BackofficeAuthMiddleware)
+  @AllowRoles(['ADMIN'], 'STAFF')
   @Mutation({
     input: cancelOrderInputSchema,
     output: cancelOrderResponseSchema,
