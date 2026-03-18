@@ -39,7 +39,6 @@ export class OrderRouter extends BaseTrpcRouter {
   }
 
   @UseMiddlewares(BackofficeAuthMiddleware)
-  @AllowRoles(['ADMIN', 'BRAND', 'INFLUENCER'], 'STAFF')
   @Query({
     input: findAllOrdersInputSchema.nullish().default({}),
     output: orderListResponseSchema,
@@ -52,7 +51,6 @@ export class OrderRouter extends BaseTrpcRouter {
   }
 
   @UseMiddlewares(BackofficeAuthMiddleware)
-  @AllowRoles(['ADMIN', 'BRAND', 'INFLUENCER'], 'STAFF')
   @Query({
     input: getStatusCountsInputSchema.nullish().default({}),
     output: statusCountsSchema,
@@ -68,7 +66,6 @@ export class OrderRouter extends BaseTrpcRouter {
   }
 
   @UseMiddlewares(BackofficeAuthMiddleware)
-  @AllowRoles(['ADMIN', 'BRAND', 'INFLUENCER'], 'STAFF')
   @Query({
     output: filterOptionsResponseSchema,
   })
@@ -77,7 +74,6 @@ export class OrderRouter extends BaseTrpcRouter {
   }
 
   @UseMiddlewares(BackofficeAuthMiddleware)
-  @AllowRoles(['ADMIN', 'BRAND', 'INFLUENCER'], 'STAFF')
   @Query({
     input: findByIdInputSchema,
     output: orderDetailResponseSchema,
@@ -129,7 +125,6 @@ export class OrderRouter extends BaseTrpcRouter {
   }
 
   @UseMiddlewares(BackofficeAuthMiddleware)
-  @AllowRoles(['ADMIN', 'BRAND', 'INFLUENCER'], 'STAFF')
   @Mutation({
     input: exportToExcelInputSchema.nullish().default({}),
     output: exportToExcelResponseSchema,
@@ -145,7 +140,6 @@ export class OrderRouter extends BaseTrpcRouter {
   }
 
   @UseMiddlewares(BackofficeAuthMiddleware)
-  @AllowRoles(['ADMIN', 'BRAND', 'INFLUENCER'], 'STAFF')
   @Query({
     input: getHistoryInputSchema,
     output: getHistoryResponseSchema,

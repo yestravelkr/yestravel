@@ -60,7 +60,6 @@ export class ClaimRouter extends BaseTrpcRouter {
   }
 
   @UseMiddlewares(BackofficeAuthMiddleware)
-  @AllowRoles(['ADMIN', 'BRAND', 'INFLUENCER'], 'STAFF')
   @Query({
     input: findByOrderIdInputSchema,
     output: findByOrderIdOutputSchema,
