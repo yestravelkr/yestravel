@@ -82,4 +82,7 @@ export const ConfigProvider = {
     ? config.get<KakaoConfigType>('kakao')
     : { clientId: '', clientSecret: '' },
   smtnt: config.has('smtnt') ? config.get<SmtntConfigType>('smtnt') : undefined,
+  shopUrl: config.has('shopUrl')
+    ? config.get<string>('shopUrl')
+    : 'https://www.yestravel.co.kr',
 } as const;

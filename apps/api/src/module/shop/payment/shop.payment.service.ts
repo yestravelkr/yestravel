@@ -22,6 +22,7 @@ import type {
 import { PaymentEntity } from '@src/module/backoffice/domain/order/payment.entity';
 import { TmpOrderEntity } from '@src/module/backoffice/domain/order/tmp-order.entity';
 import { OrderHistoryService } from '@src/module/backoffice/order/order-history.service';
+import { SmtntService } from '@src/module/shared/notification/smtnt/smtnt.service';
 import dayjs from 'dayjs';
 
 @Injectable()
@@ -39,9 +40,14 @@ export class ShopPaymentService {
     expiredAt: dayjs().add(-1, 'h'), // 처음에 바로 accessToken 발급하도록 처리
   };
 
+  /** Shop 고객센터 URL */
+  private readonly CS_LINK = 'https://travelcs.channel.io/home';
+  private readonly SHOP_URL = ConfigProvider.shopUrl;
+
   constructor(
     private readonly repositoryProvider: RepositoryProvider,
-    private readonly orderHistoryService: OrderHistoryService
+    private readonly orderHistoryService: OrderHistoryService,
+    private readonly smtntService: SmtntService
   ) {}
 
   async handlePaymentComplete(
@@ -129,11 +135,79 @@ export class ShopPaymentService {
     // 7. PortOne 결제 승인
     await this.confirmPayment(data, savedOrder);
 
+    // 8. 호텔 주문 결제 완료 알림톡 발송
+    if (savedOrder.type === ProductTypeEnum.HOTEL) {
+      await this.sendHotelOrderPaidAlimtalk(savedOrder);
+    }
+
     return {
       success: true,
       message: 'Payment completed and order created',
       orderNumber: savedOrder.orderNumber,
     };
+  }
+
+  /**
+   * 호텔 주문 결제 완료 알림톡 발송
+   * 발송 실패 시 에러 로깅만 하고 결제 프로세스에 영향을 주지 않음
+   */
+  private async sendHotelOrderPaidAlimtalk(order: OrderEntity): Promise<void> {
+    try {
+      const snapshot = order.orderOptionSnapshot;
+
+      // 상품명 조회
+      const product = await this.repositoryProvider.ProductRepository.findOne({
+        where: { id: order.productId },
+        select: ['id', 'name'],
+      });
+      const productName = product?.name ?? '상품명 없음';
+
+      const quantity = `${Object.keys(snapshot.priceByDate).length}박`;
+      const useDate = `${snapshot.checkInDate} ~ ${snapshot.checkOutDate}`;
+      const totalAmount = `${order.totalAmount.toLocaleString()}원`;
+      const confirmLink = `${this.SHOP_URL}/orders/${order.orderNumber}`;
+
+      const message =
+        `[예스트래블 예약 안내]\n\n` +
+        `안녕하세요, ${order.customerName}고객님.\n` +
+        `예약해 주셔서 감사합니다.\n\n` +
+        `${order.customerName}고객님의 예약 대기 신청이 정상적으로 접수되었습니다.\n\n` +
+        `★예약 확정 안내\n` +
+        `예약 확정은 1~3 영업일 내에 이루어질 예정입니다. 확정 시 안내 문자를 보내드리니 조금만 기다려 주세요.\n\n` +
+        `★예약 신청 정보\n` +
+        `주문 번호: ${order.orderNumber}\n` +
+        `상품명: ${productName}\n` +
+        `선택옵션: ${snapshot.hotelOptionName}\n` +
+        `구매수량: ${quantity}\n` +
+        `이용 날짜: ${useDate}\n` +
+        `결제금액: ${totalAmount}\n\n` +
+        `예약 확인: ${confirmLink}\n\n` +
+        `★고객센터\n` +
+        `궁금한 사항은 고객센터로 문의해 주세요.\n` +
+        `고객센터: ${this.CS_LINK}\n\n` +
+        `★변경 및 취소\n` +
+        `휴일/주말 제외 영업일 17시까지 접수 가능합니다.\n` +
+        `변경은 위약금 부과 기간 전 1회 가능하며, 기존/변경 예약일 중 빠른 날짜 기준 위약금이 부과됩니다.\n` +
+        `상세페이지 기준을 꼭 확인 부탁드립니다.\n\n` +
+        `감사합니다.`;
+
+      await this.smtntService.sendAlimtalk({
+        phone: order.customerPhone,
+        message,
+        templateCode: 'SHOP_HOTEL_ORDER_PAID',
+        failedType: 'LMS',
+        failedMessage: message,
+      });
+
+      this.logger.log(
+        `호텔 주문 결제 완료 알림톡 발송 성공: orderId=${order.id}`
+      );
+    } catch (error) {
+      this.logger.error(
+        `호텔 주문 결제 완료 알림톡 발송 실패: orderId=${order.id}`,
+        error
+      );
+    }
   }
 
   /**
