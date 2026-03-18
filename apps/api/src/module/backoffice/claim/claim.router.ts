@@ -16,6 +16,7 @@ import {
 import { Injectable } from '@nestjs/common';
 import { BackofficeAuthMiddleware } from '@src/module/backoffice/auth/backoffice.auth.middleware';
 import type { BackofficeAuthorizedContext } from '@src/module/backoffice/auth/backoffice.auth.middleware';
+import { AllowRoles } from '@src/shared/auth/allow-roles.decorator';
 import {
   approveClaimInputSchema,
   approveClaimResponseSchema,
@@ -33,6 +34,7 @@ export class ClaimRouter extends BaseTrpcRouter {
   }
 
   @UseMiddlewares(BackofficeAuthMiddleware)
+  @AllowRoles(['ADMIN'], 'STAFF')
   @Mutation({
     input: approveClaimInputSchema,
     output: approveClaimResponseSchema,
@@ -45,6 +47,7 @@ export class ClaimRouter extends BaseTrpcRouter {
   }
 
   @UseMiddlewares(BackofficeAuthMiddleware)
+  @AllowRoles(['ADMIN'], 'STAFF')
   @Mutation({
     input: rejectClaimInputSchema,
     output: rejectClaimResponseSchema,
@@ -57,6 +60,7 @@ export class ClaimRouter extends BaseTrpcRouter {
   }
 
   @UseMiddlewares(BackofficeAuthMiddleware)
+  @AllowRoles(['ADMIN', 'BRAND', 'INFLUENCER'], 'STAFF')
   @Query({
     input: findByOrderIdInputSchema,
     output: findByOrderIdOutputSchema,

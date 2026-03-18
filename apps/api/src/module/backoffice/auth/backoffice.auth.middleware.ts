@@ -9,7 +9,11 @@ import { Request } from 'express';
 import { TRPCError } from '@trpc/server';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigProvider } from '@src/config';
-import { AdminAuthPayload } from '@src/module/backoffice/auth/backoffice.auth.service';
+import {
+  AdminAuthPayload,
+  AuthType,
+  AuthLevel,
+} from '@src/module/backoffice/auth/backoffice.auth.service';
 import type { CreateExpressContextOptions } from '@trpc/server/adapters/express';
 
 const jwtService = new JwtService();
@@ -19,30 +23,55 @@ export class BackofficeAuthMiddleware implements TRPCMiddleware {
   use(
     opts: MiddlewareOptions
   ): MiddlewareResponse | Promise<MiddlewareResponse> {
-    const { next, path, ctx } = opts;
+    const { next, ctx } = opts;
     const req: Request = (opts.ctx as ContextOptions).req;
 
     if (!req.headers.authorization) {
       throw new TRPCError({ code: 'UNAUTHORIZED' });
     }
-    const [authType, token] = req.headers.authorization.split(' ');
-    if (authType !== 'Bearer' || !token) {
+    const [bearerType, token] = req.headers.authorization.split(' ');
+    if (bearerType !== 'Bearer' || !token) {
       throw new TRPCError({ code: 'UNAUTHORIZED' });
     }
 
-    let adminPayload;
+    let payload: any;
+    let authType: AuthType;
+    let authLevel: AuthLevel;
+    let partnerId: number | undefined;
+
     try {
-      adminPayload = jwtService.verify(
+      payload = jwtService.verify(
         token,
         ConfigProvider.auth.jwt.backoffice.access
       );
-    } catch (e) {
-      throw new TRPCError({
-        code: 'UNAUTHORIZED',
-        message: 'Invalid token',
-        cause: e,
-      });
+      authType = 'ADMIN';
+    } catch {
+      try {
+        payload = jwtService.verify(
+          token,
+          ConfigProvider.auth.jwt.partner.access
+        );
+        authType = payload.partnerType;
+        partnerId = payload.partnerId;
+      } catch (e) {
+        throw new TRPCError({
+          code: 'UNAUTHORIZED',
+          message: 'Invalid token',
+          cause: e,
+        });
+      }
     }
+
+    authLevel = payload.role?.endsWith('_SUPER') ? 'SUPER' : 'STAFF';
+
+    const adminPayload: AdminAuthPayload = {
+      id: payload.id,
+      email: payload.email,
+      role: payload.role,
+      authType,
+      authLevel,
+      partnerId,
+    };
 
     return next({
       ctx: {
