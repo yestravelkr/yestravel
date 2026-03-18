@@ -51,9 +51,9 @@ export function OrderDetailHeader({
         <OrderNumber>{orderNumber}</OrderNumber>
         <SubInfo>
           <span>{campaignName}</span>
-          <Dot>∙</Dot>
+          <Dot>&#8729;</Dot>
           <span>{influencerName}</span>
-          <Dot>∙</Dot>
+          <Dot>&#8729;</Dot>
           <MutedText>{orderedAt}</MutedText>
         </SubInfo>
       </InfoSection>

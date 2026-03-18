@@ -11,13 +11,14 @@ module.exports = {
     ],
     'packages/**/*.{ts,tsx,js,jsx}': (filenames) => {
         // 변경된 파일이 속한 패키지만 lint 실행 (api-types, min-design-system, option-selector 제외)
+        const EXCLUDED_PKGS = ['api-types', 'min-design-system', 'option-selector', 'admin-shared'];
         const packages = [...new Set(
             filenames.map(filename => {
                 const match = filename.match(/packages\/([^\/]+)/);
                 return match ? match[1] : null;
-            }).filter(Boolean).filter(pkg => pkg !== 'api-types' && pkg !== 'min-design-system' && pkg !== 'option-selector')
+            }).filter(Boolean).filter(pkg => !EXCLUDED_PKGS.includes(pkg))
         )];
 
-        return packages.map(pkg => `yarn workspace ${pkg} run lint:fix`);
+        return packages.map(pkg => `yarn workspace @yestravelkr/${pkg} run lint:fix`);
     }
 };

@@ -4,6 +4,8 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { Between, FindOptionsWhere, ILike, In } from 'typeorm';
+import type { SelectQueryBuilder } from 'typeorm';
+import type { PartnerScope } from '@src/shared/auth/partner-scope';
 import * as ExcelJS from 'exceljs';
 import dayjs from 'dayjs';
 import { RepositoryProvider } from '@src/module/shared/transaction/repository.provider';
@@ -68,6 +70,7 @@ export class OrderService {
       influencerIds,
       productId,
       searchQuery,
+      partnerScope,
     } = input;
 
     // Where 조건 생성 (OrderEntity는 soft delete 없음)
@@ -129,6 +132,9 @@ export class OrderService {
         .leftJoinAndSelect('ord.influencer', 'influencer')
         .leftJoinAndSelect('ord.claims', 'allClaims');
 
+      // Partner scope 적용 (product는 이미 'product' alias로 JOIN됨)
+      this.applyPartnerScope(qb, partnerScope, 'ord', 'product');
+
       // 기본 필터 적용
       if (type) qb.andWhere('ord.type = :type', { type });
       if (campaignId)
@@ -160,8 +166,58 @@ export class OrderService {
         .take(limit);
 
       [orders, total] = await qb.getManyAndCount();
+    } else if (partnerScope && partnerScope.authType === 'BRAND') {
+      // BRAND 스코핑: Product JOIN 필요 → QueryBuilder 사용
+      const qb = this.repositoryProvider.OrderRepository.createQueryBuilder(
+        'ord'
+      )
+        .leftJoinAndSelect('ord.product', 'product')
+        .leftJoinAndSelect('ord.campaign', 'campaign')
+        .leftJoinAndSelect('ord.influencer', 'influencer')
+        .leftJoinAndSelect('ord.claims', 'claims');
+
+      // Partner scope 적용 (product는 이미 'product' alias로 JOIN됨)
+      this.applyPartnerScope(qb, partnerScope, 'ord', 'product');
+
+      // 기본 필터 적용
+      if (type) qb.andWhere('ord.type = :type', { type });
+      if (status) qb.andWhere('ord.status = :status', { status });
+      if (campaignId)
+        qb.andWhere('ord.campaignId = :campaignId', { campaignId });
+      if (productId) qb.andWhere('ord.productId = :productId', { productId });
+      if (influencerIds && influencerIds.length > 0) {
+        qb.andWhere('ord.influencerId IN (:...influencerIds)', {
+          influencerIds,
+        });
+      }
+      if (startDate && endDate) {
+        const dateColumn = this.getDateColumn(periodFilterType);
+        qb.andWhere(`ord.${dateColumn} BETWEEN :startDate AND :endDate`, {
+          startDate,
+          endDate,
+        });
+      }
+      if (searchQuery) {
+        qb.andWhere(
+          '(ord.customerName ILIKE :searchQuery OR ord.customerPhone ILIKE :searchQuery)',
+          { searchQuery: `%${searchQuery}%` }
+        );
+      }
+
+      qb.orderBy(`ord.${this.getSortColumn(orderBy)}`, order)
+        .skip((page - 1) * limit)
+        .take(limit);
+
+      [orders, total] = await qb.getManyAndCount();
     } else {
-      // 일반 필터: 기존 로직 + claims relation 추가
+      // 일반 필터 (ADMIN / INFLUENCER): 기존 로직 + claims relation 추가
+      // INFLUENCER 스코핑: influencerId를 where 조건에 추가
+      if (partnerScope && partnerScope.authType === 'INFLUENCER') {
+        for (const condition of whereConditions) {
+          condition.influencerId = partnerScope.influencerId;
+        }
+      }
+
       [orders, total] =
         await this.repositoryProvider.OrderRepository.findAndCount({
           where: whereConditions,
@@ -231,12 +287,16 @@ export class OrderService {
       influencerIds,
       productId,
       searchQuery,
+      partnerScope,
     } = input;
 
     // QueryBuilder 사용 (GROUP BY 필요)
     const qb = this.repositoryProvider.OrderRepository.createQueryBuilder('ord')
       .select('ord.status', 'status')
       .addSelect('COUNT(*)', 'count');
+
+    // Partner scope 적용
+    this.applyPartnerScope(qb, partnerScope);
 
     // 필터 적용
     if (type) qb.andWhere('ord.type = :type', { type });
@@ -306,6 +366,12 @@ export class OrderService {
       .addSelect('COUNT(*)', 'count')
       .where('claim.status = :claimStatus', { claimStatus: 'REQUESTED' });
 
+    // Partner scope 적용 (claimQb는 ord alias로 order를 JOIN)
+    this.applyPartnerScope(
+      claimQb as unknown as SelectQueryBuilder<OrderEntity>,
+      partnerScope
+    );
+
     // 동일 필터 적용
     if (type) claimQb.andWhere('ord.type = :type', { type });
     if (startDate && endDate) {
@@ -353,22 +419,112 @@ export class OrderService {
    * 필터 옵션 조회 (캠페인, 인플루언서, 상품 - 최근 100개씩)
    *
    * soft delete는 TypeORM이 자동 처리 (@DeleteDateColumn)
+   * Partner 스코핑: BRAND는 자사 상품 기반, INFLUENCER는 자신 기반
    */
-  async getFilterOptions(): Promise<FilterOptionsResponse> {
+  async getFilterOptions(input?: {
+    partnerScope?: PartnerScope;
+  }): Promise<FilterOptionsResponse> {
+    const partnerScope = input?.partnerScope;
+
+    if (partnerScope?.authType === 'BRAND') {
+      // BRAND: 자사 상품 → 해당 상품의 캠페인/인플루언서
+      const products = await this.repositoryProvider.ProductRepository.find({
+        select: ['id', 'name'],
+        where: { brandId: partnerScope.brandId },
+        order: { createdAt: 'DESC' },
+        take: 100,
+      });
+
+      const productIds = products.map(p => p.id);
+
+      if (productIds.length === 0) {
+        return { campaigns: [], influencers: [], products: [] };
+      }
+
+      // 해당 상품의 주문에서 캠페인/인플루언서 추출
+      const orders = await this.repositoryProvider.OrderRepository.find({
+        select: ['campaignId', 'influencerId'],
+        where: { productId: In(productIds) },
+      });
+
+      const campaignIds = [...new Set(orders.map(o => o.campaignId))];
+      const influencerIds = [...new Set(orders.map(o => o.influencerId))];
+
+      const [campaigns, influencers] = await Promise.all([
+        campaignIds.length > 0
+          ? this.repositoryProvider.CampaignRepository.find({
+              select: ['id', 'title'],
+              where: { id: In(campaignIds) },
+            })
+          : [],
+        influencerIds.length > 0
+          ? this.repositoryProvider.InfluencerRepository.find({
+              select: ['id', 'name'],
+              where: { id: In(influencerIds) },
+            })
+          : [],
+      ]);
+
+      return {
+        campaigns: campaigns.map(c => ({ id: c.id, name: c.title })),
+        influencers: influencers.map(i => ({ id: i.id, name: i.name })),
+        products: products.map(p => ({ id: p.id, name: p.name })),
+      };
+    }
+
+    if (partnerScope?.authType === 'INFLUENCER') {
+      // INFLUENCER: 자신의 주문에서 캠페인/상품 추출
+      const orders = await this.repositoryProvider.OrderRepository.find({
+        select: ['campaignId', 'productId'],
+        where: { influencerId: partnerScope.influencerId },
+      });
+
+      const campaignIds = [...new Set(orders.map(o => o.campaignId))];
+      const productIds = [...new Set(orders.map(o => o.productId))];
+
+      const [campaigns, products] = await Promise.all([
+        campaignIds.length > 0
+          ? this.repositoryProvider.CampaignRepository.find({
+              select: ['id', 'title'],
+              where: { id: In(campaignIds) },
+            })
+          : [],
+        productIds.length > 0
+          ? this.repositoryProvider.ProductRepository.find({
+              select: ['id', 'name'],
+              where: { id: In(productIds) },
+            })
+          : [],
+      ]);
+
+      // 인플루언서 자신만 반환
+      const influencer =
+        await this.repositoryProvider.InfluencerRepository.findOne({
+          select: ['id', 'name'],
+          where: { id: partnerScope.influencerId },
+        });
+
+      return {
+        campaigns: campaigns.map(c => ({ id: c.id, name: c.title })),
+        influencers: influencer
+          ? [{ id: influencer.id, name: influencer.name }]
+          : [],
+        products: products.map(p => ({ id: p.id, name: p.name })),
+      };
+    }
+
+    // ADMIN: 전체 조회 (기존 로직)
     const [campaigns, influencers, products] = await Promise.all([
-      // 캠페인 최근 100개
       this.repositoryProvider.CampaignRepository.find({
         select: ['id', 'title'],
         order: { createdAt: 'DESC' },
         take: 100,
       }),
-      // 인플루언서 최근 100개 (soft delete 자동 적용)
       this.repositoryProvider.InfluencerRepository.find({
         select: ['id', 'name'],
         order: { createdAt: 'DESC' },
         take: 100,
       }),
-      // 상품 최근 100개 (soft delete 자동 적용)
       this.repositoryProvider.ProductRepository.find({
         select: ['id', 'name'],
         order: { createdAt: 'DESC' },
@@ -604,7 +760,7 @@ export class OrderService {
    * 주문 상세 조회
    */
   async findById(input: FindByIdInput): Promise<OrderDetailResponse> {
-    const { id } = input;
+    const { id, partnerScope } = input;
 
     const order = await this.repositoryProvider.OrderRepository.findOneOrFail({
       where: { id },
@@ -612,6 +768,8 @@ export class OrderService {
     }).catch(() => {
       throw new NotFoundException(`주문을 찾을 수 없습니다. (id: ${id})`);
     });
+
+    this.verifyPartnerOwnership(order, partnerScope);
 
     const orderOptionSnapshot =
       order.orderOptionSnapshot as HotelOrderOptionData;
@@ -717,6 +875,7 @@ export class OrderService {
       influencerIds,
       productId,
       searchQuery,
+      partnerScope,
     } = input;
 
     // Where 조건 생성
@@ -757,12 +916,69 @@ export class OrderService {
       whereConditions = [baseWhere];
     }
 
+    // INFLUENCER 스코핑: where 조건에 추가
+    if (partnerScope && partnerScope.authType === 'INFLUENCER') {
+      for (const condition of whereConditions) {
+        condition.influencerId = partnerScope.influencerId;
+      }
+    }
+
     // 전체 데이터 조회 (pagination 없이, payments 포함)
-    const orders = await this.repositoryProvider.OrderRepository.find({
-      where: whereConditions,
-      relations: ['product', 'campaign', 'influencer', 'payments'],
-      order: { createdAt: 'DESC' },
-    });
+    let orders: OrderEntity[];
+
+    if (partnerScope && partnerScope.authType === 'BRAND') {
+      // BRAND 스코핑: Product JOIN 필요 → QueryBuilder 사용
+      const qb = this.repositoryProvider.OrderRepository.createQueryBuilder(
+        'ord'
+      )
+        .leftJoinAndSelect('ord.product', 'product')
+        .leftJoinAndSelect('ord.campaign', 'campaign')
+        .leftJoinAndSelect('ord.influencer', 'influencer')
+        .leftJoinAndSelect('ord.payments', 'payments');
+
+      // Partner scope 적용 (product는 이미 'product' alias로 JOIN됨)
+      this.applyPartnerScope(qb, partnerScope, 'ord', 'product');
+
+      if (type) qb.andWhere('ord.type = :type', { type });
+      if (
+        status &&
+        status !== 'CANCEL_REQUESTED' &&
+        status !== 'RETURN_REQUESTED'
+      ) {
+        qb.andWhere('ord.status = :status', { status });
+      }
+      if (campaignId)
+        qb.andWhere('ord.campaignId = :campaignId', { campaignId });
+      if (productId) qb.andWhere('ord.productId = :productId', { productId });
+      if (influencerIds && influencerIds.length > 0) {
+        qb.andWhere('ord.influencerId IN (:...influencerIds)', {
+          influencerIds,
+        });
+      }
+      if (startDate && endDate) {
+        const dateColumn = this.getDateColumn(periodFilterType);
+        qb.andWhere(`ord.${dateColumn} BETWEEN :startDate AND :endDate`, {
+          startDate,
+          endDate,
+        });
+      }
+      if (searchQuery) {
+        qb.andWhere(
+          '(ord.customerName ILIKE :searchQuery OR ord.customerPhone ILIKE :searchQuery)',
+          { searchQuery: `%${searchQuery}%` }
+        );
+      }
+
+      qb.orderBy('ord.createdAt', 'DESC');
+
+      orders = await qb.getMany();
+    } else {
+      orders = await this.repositoryProvider.OrderRepository.find({
+        where: whereConditions,
+        relations: ['product', 'campaign', 'influencer', 'payments'],
+        order: { createdAt: 'DESC' },
+      });
+    }
 
     // 엑셀 워크북 생성
     const workbook = new ExcelJS.Workbook();
@@ -877,5 +1093,59 @@ export class OrderService {
       fileName,
       totalCount: orders.length,
     };
+  }
+
+  /**
+   * applyPartnerScope - QueryBuilder에 partner scope 조건 추가
+   * @param productAlias 이미 JOIN된 product alias가 있으면 전달 (이중 JOIN 방지)
+   */
+  private applyPartnerScope(
+    qb: SelectQueryBuilder<OrderEntity>,
+    partnerScope?: PartnerScope,
+    alias = 'ord',
+    productAlias?: string
+  ): void {
+    if (!partnerScope || partnerScope.authType === 'ADMIN') return;
+
+    if (partnerScope.authType === 'INFLUENCER') {
+      qb.andWhere(`${alias}.influencerId = :scopeInfluencerId`, {
+        scopeInfluencerId: partnerScope.influencerId,
+      });
+    } else if (partnerScope.authType === 'BRAND') {
+      if (productAlias) {
+        // 이미 JOIN된 경우 WHERE만 추가
+        qb.andWhere(`${productAlias}.brandId = :scopeBrandId`, {
+          scopeBrandId: partnerScope.brandId,
+        });
+      } else {
+        // JOIN이 없는 경우 새로 JOIN
+        qb.innerJoin(
+          `${alias}.product`,
+          'scopeProduct',
+          'scopeProduct.brandId = :scopeBrandId',
+          { scopeBrandId: partnerScope.brandId }
+        );
+      }
+    }
+  }
+
+  /**
+   * verifyPartnerOwnership - 단건 조회 결과의 partner 소유권 검증
+   */
+  private verifyPartnerOwnership(
+    order: OrderEntity,
+    partnerScope?: PartnerScope
+  ): void {
+    if (!partnerScope || partnerScope.authType === 'ADMIN') return;
+
+    if (partnerScope.authType === 'INFLUENCER') {
+      if (order.influencerId !== partnerScope.influencerId) {
+        throw new NotFoundException('주문을 찾을 수 없습니다');
+      }
+    } else if (partnerScope.authType === 'BRAND') {
+      if (order.product?.brandId !== partnerScope.brandId) {
+        throw new NotFoundException('주문을 찾을 수 없습니다');
+      }
+    }
   }
 }

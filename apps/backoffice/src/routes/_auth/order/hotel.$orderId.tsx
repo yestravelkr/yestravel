@@ -6,23 +6,23 @@
  */
 
 import { createFileRoute } from '@tanstack/react-router';
-import dayjs from 'dayjs';
-import { toast } from 'sonner';
-import tw from 'tailwind-styled-components';
-
-import { MemberInfoCard } from './_components/MemberInfoCard';
-import { OrderDetailHeader } from './_components/OrderDetailHeader';
-import { OrderStatusCard } from './_components/OrderStatusCard';
-import { PaymentInfoCard } from './_components/PaymentInfoCard';
-
 import {
-  DetailPageLayout,
+  BACKOFFICE_CAPABILITIES,
+  MemberInfoCard,
   openCancelApproveModal,
   openCancelOrderModal,
   openConfirmModal,
   openOrderHistoryModal,
-} from '@/shared/components';
-import type { OrderHistoryItemData } from '@/shared/components/OrderHistoryModal';
+  OrderDetailHeader,
+  type OrderHistoryItemData,
+  OrderStatusCard,
+  PaymentInfoCard,
+} from '@yestravelkr/admin-shared';
+import dayjs from 'dayjs';
+import { toast } from 'sonner';
+import tw from 'tailwind-styled-components';
+
+import { DetailPageLayout } from '@/shared/components';
 import { trpc } from '@/shared/trpc';
 
 export const Route = createFileRoute('/_auth/order/hotel/$orderId')({
@@ -286,6 +286,7 @@ function HotelOrderDetailPage() {
             onHistory={handleHistory}
             onCancelApprove={handleCancelApprove}
             onCancelReject={handleCancelReject}
+            capabilities={BACKOFFICE_CAPABILITIES}
           />
         }
         side={

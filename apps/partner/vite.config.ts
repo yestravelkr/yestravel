@@ -18,6 +18,10 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': '/src',
+      '@yestravelkr/admin-shared': path.resolve(
+        __dirname,
+        '../../packages/admin-shared/src',
+      ),
       '@yestravelkr/min-design-system': path.resolve(
         __dirname,
         '../../packages/min-design-system/src',

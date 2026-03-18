@@ -2,6 +2,8 @@
  * OrderFilters - 주문 필터 영역 컴포넌트
  *
  * 숙박/배송 주문 목록의 필터 영역을 구성하는 컴포넌트입니다.
+ * capabilities prop으로 엑셀 다운로드 버튼 표시를 제어할 수 있습니다.
+ *
  * 레이아웃:
  * Row 1: 기간 | 주문상태 | 캠페인 | 인플루언서 | 상품 | 옵션
  * Row 2: (공백) | 검색input | 엑셀 버튼
@@ -11,17 +13,14 @@ import { Button } from '@yestravelkr/min-design-system';
 import { Download, Search } from 'lucide-react';
 import tw from 'tailwind-styled-components';
 
-import {
-  CascadingPeriodFilter,
-  Input,
-  MultiSelectDropdown,
-  type MultiSelectOption,
-  type PeriodFilterValues,
-  type PeriodPresetOption,
-  type PeriodTypeOption,
-  SearchableSelect,
-  type SearchableSelectOption,
-} from '@/shared/components';
+import { CascadingPeriodFilter } from './base/CascadingPeriodFilter';
+import { Input } from './base/Input';
+import { MultiSelectDropdown } from './base/MultiSelectDropdown';
+import { SearchableSelect } from './base/SearchableSelect';
+import type { PeriodFilterValues, PeriodTypeOption, PeriodPresetOption } from './base/CascadingPeriodFilter';
+import type { MultiSelectOption } from './base/MultiSelectDropdown';
+import type { SearchableSelectOption } from './base/SearchableSelect';
+import type { OrderCapabilities } from '../types/order.types';
 
 export interface OrderFiltersState {
   /** 기간 타입 (결제일/주문일/이용일) */
@@ -67,6 +66,8 @@ export interface OrderFiltersProps {
   optionOptions: SearchableSelectOption[];
   /** 엑셀 다운로드 클릭 */
   onExcelDownload?: () => void;
+  /** 기능 제어 (미지정 시 모든 기능 표시) */
+  capabilities?: OrderCapabilities;
 }
 
 /**
@@ -83,6 +84,7 @@ export interface OrderFiltersProps {
  *   productOptions={PRODUCT_OPTIONS}
  *   optionOptions={OPTION_OPTIONS}
  *   onExcelDownload={handleExcelDownload}
+ *   capabilities={{ canExportExcel: true }}
  * />
  */
 export function OrderFilters({
@@ -96,7 +98,10 @@ export function OrderFilters({
   productOptions,
   optionOptions,
   onExcelDownload,
+  capabilities,
 }: OrderFiltersProps) {
+  const canExportExcel = capabilities?.canExportExcel ?? true;
+
   const handlePeriodChange = (values: PeriodFilterValues) => {
     onFiltersChange({
       periodType: values.periodType,
@@ -125,35 +130,35 @@ export function OrderFilters({
           placeholder="주문상태"
           value={filters.orderStatus}
           options={orderStatusOptions}
-          onChange={(value) => onFiltersChange({ orderStatus: value })}
+          onChange={(value: string | null) => onFiltersChange({ orderStatus: value })}
         />
         <SearchableSelect
           label="캠페인"
           placeholder="캠페인"
           value={filters.campaignId}
           options={campaignOptions}
-          onChange={(value) => onFiltersChange({ campaignId: value })}
+          onChange={(value: string | null) => onFiltersChange({ campaignId: value })}
         />
         <MultiSelectDropdown
           label="인플루언서"
           placeholder="인플루언서"
           values={filters.influencerIds}
           options={influencerOptions}
-          onChange={(values) => onFiltersChange({ influencerIds: values })}
+          onChange={(values: string[]) => onFiltersChange({ influencerIds: values })}
         />
         <SearchableSelect
           label="상품"
           placeholder="상품"
           value={filters.productId}
           options={productOptions}
-          onChange={(value) => onFiltersChange({ productId: value })}
+          onChange={(value: string | null) => onFiltersChange({ productId: value })}
         />
         <SearchableSelect
           label="옵션"
           placeholder="옵션"
           value={filters.optionId}
           options={optionOptions}
-          onChange={(value) => onFiltersChange({ optionId: value })}
+          onChange={(value: string | null) => onFiltersChange({ optionId: value })}
         />
         <Spacer />
         <SearchInputWrapper>
@@ -164,7 +169,7 @@ export function OrderFilters({
             onChange={(e) => onFiltersChange({ searchQuery: e.target.value })}
           />
         </SearchInputWrapper>
-        {onExcelDownload && (
+        {canExportExcel && onExcelDownload && (
           <Button
             kind="neutral"
             variant="outline"

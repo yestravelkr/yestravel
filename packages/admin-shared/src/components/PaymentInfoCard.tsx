@@ -6,7 +6,9 @@
 
 import tw from 'tailwind-styled-components';
 
-import { Card, DescriptionList } from '@/shared/components';
+import { Card } from './base/Card';
+import { DescriptionList } from './base/DescriptionList';
+import { formatPrice } from '../utils/format';
 
 /** 결제 정보 타입 */
 export interface PaymentInfo {
@@ -20,9 +22,6 @@ interface PaymentInfoCardProps {
   /** 결제 정보 */
   payment: PaymentInfo;
 }
-
-const formatPrice = (amount: number) =>
-  new Intl.NumberFormat('ko-KR').format(amount) + '원';
 
 /**
  * Usage:

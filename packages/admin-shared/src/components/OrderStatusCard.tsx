@@ -2,6 +2,7 @@
  * OrderStatusCard - 주문 상태 카드 컴포넌트
  *
  * 상태 정보, 주문 아이템 테이블, 액션 버튼 포함
+ * capabilities prop으로 액션 버튼 표시를 제어할 수 있습니다.
  */
 
 import {
@@ -19,6 +20,9 @@ import { Button } from '@yestravelkr/min-design-system';
 import { ChevronDown, Undo2, X } from 'lucide-react';
 import { useState } from 'react';
 import tw from 'tailwind-styled-components';
+
+import { formatPriceRaw } from '../utils/format';
+import type { OrderCapabilities } from '../types/order.types';
 
 /** 주문 아이템 타입 */
 export interface OrderItem {
@@ -53,10 +57,9 @@ interface OrderStatusCardProps {
   onCancelApprove?: () => void;
   /** 취소거절 핸들러 */
   onCancelReject?: () => void;
+  /** 기능 제어 (미지정 시 모든 기능 표시) */
+  capabilities?: OrderCapabilities;
 }
-
-const formatPrice = (amount: number) =>
-  new Intl.NumberFormat('ko-KR').format(amount);
 
 /**
  * Usage:
@@ -67,7 +70,7 @@ const formatPrice = (amount: number) =>
  *   statusDate="25.01.01 13:00"
  *   items={orderItems}
  *   onConfirm={() => {}}
- *   onManage={() => {}}
+ *   capabilities={{ canConfirm: true, canViewHistory: true }}
  * />
  * ```
  */
@@ -83,56 +86,73 @@ export function OrderStatusCard({
   onHistory,
   onCancelApprove,
   onCancelReject,
+  capabilities,
 }: OrderStatusCardProps) {
+  const canConfirm = capabilities?.canConfirm ?? true;
+  const canRevertStatus = capabilities?.canRevertStatus ?? true;
+  const canCancelOrder = capabilities?.canCancelOrder ?? true;
+  const canApproveCancel = capabilities?.canApproveCancel ?? true;
+  const canViewHistory = capabilities?.canViewHistory ?? true;
+
+  const showManageDropdown = canRevertStatus || canCancelOrder;
+
   const renderActions = () => {
     switch (status) {
       case 'PAID':
         return (
           <>
-            <Button
-              kind="neutral"
-              variant="solid"
-              size="large"
-              onClick={onConfirm}
-            >
-              주문확인
-            </Button>
-            <ManageDropdown
-              status={status}
-              onRevertStatus={onRevertStatus}
-              onCancelOrder={onCancelOrder}
-            />
+            {canConfirm && (
+              <Button
+                kind="neutral"
+                variant="solid"
+                size="large"
+                onClick={onConfirm}
+              >
+                주문확인
+              </Button>
+            )}
+            {showManageDropdown && (
+              <ManageDropdown
+                status={status}
+                onRevertStatus={canRevertStatus ? onRevertStatus : undefined}
+                onCancelOrder={canCancelOrder ? onCancelOrder : undefined}
+              />
+            )}
           </>
         );
       case 'PENDING_RESERVATION':
         return (
           <>
-            <Button
-              kind="neutral"
-              variant="solid"
-              size="large"
-              onClick={onConfirm}
-            >
-              예약확정
-            </Button>
-            <ManageDropdown
-              status={status}
-              onRevertStatus={onRevertStatus}
-              onCancelOrder={onCancelOrder}
-            />
+            {canConfirm && (
+              <Button
+                kind="neutral"
+                variant="solid"
+                size="large"
+                onClick={onConfirm}
+              >
+                예약확정
+              </Button>
+            )}
+            {showManageDropdown && (
+              <ManageDropdown
+                status={status}
+                onRevertStatus={canRevertStatus ? onRevertStatus : undefined}
+                onCancelOrder={canCancelOrder ? onCancelOrder : undefined}
+              />
+            )}
           </>
         );
       case 'RESERVATION_CONFIRMED':
       case 'COMPLETED':
-        return (
+        return showManageDropdown ? (
           <ManageDropdown
             status={status}
-            onRevertStatus={onRevertStatus}
-            onCancelOrder={onCancelOrder}
+            onRevertStatus={canRevertStatus ? onRevertStatus : undefined}
+            onCancelOrder={canCancelOrder ? onCancelOrder : undefined}
           />
-        );
+        ) : null;
       case 'CANCEL_REQUESTED':
-        return (
+        return canApproveCancel ? (
           <>
             <Button
               kind="neutral"
@@ -144,7 +164,7 @@ export function OrderStatusCard({
             </Button>
             <GrayButton onClick={onCancelReject}>취소거절</GrayButton>
           </>
-        );
+        ) : null;
       default:
         return null;
     }
@@ -160,14 +180,16 @@ export function OrderStatusCard({
             <StatusTitle>{statusLabel}</StatusTitle>
             <StatusDate>{statusDate}</StatusDate>
           </HeaderLeft>
-          <Button
-            kind="neutral"
-            variant="outline"
-            size="small"
-            onClick={onHistory}
-          >
-            주문 히스토리
-          </Button>
+          {canViewHistory && (
+            <Button
+              kind="neutral"
+              variant="outline"
+              size="small"
+              onClick={onHistory}
+            >
+              주문 히스토리
+            </Button>
+          )}
         </Header>
 
         {status === 'CANCEL_REQUESTED' && cancelReason && (
@@ -193,7 +215,7 @@ export function OrderStatusCard({
                   {item.checkInDate} ~ {item.checkOutDate}
                 </DataCell>
                 <DataCell style={{ width: 100 }}>
-                  {formatPrice(item.amount)}
+                  {formatPriceRaw(item.amount)}
                 </DataCell>
               </TableRow>
             ))}
@@ -358,12 +380,12 @@ function ManageDropdown({
             style={floatingStyles}
             {...getFloatingProps()}
           >
-            {revertLabel && (
+            {revertLabel && onRevertStatus && (
               <>
                 <MenuItem
                   type="button"
                   onClick={() => {
-                    onRevertStatus?.();
+                    onRevertStatus();
                     setIsOpen(false);
                   }}
                 >
@@ -373,17 +395,19 @@ function ManageDropdown({
                 <MenuDivider />
               </>
             )}
-            <MenuItem
-              type="button"
-              $danger
-              onClick={() => {
-                onCancelOrder?.();
-                setIsOpen(false);
-              }}
-            >
-              <X size={16} />
-              주문 취소
-            </MenuItem>
+            {onCancelOrder && (
+              <MenuItem
+                type="button"
+                $danger
+                onClick={() => {
+                  onCancelOrder();
+                  setIsOpen(false);
+                }}
+              >
+                <X size={16} />
+                주문 취소
+              </MenuItem>
+            )}
           </DropdownMenu>
         </FloatingPortal>
       )}

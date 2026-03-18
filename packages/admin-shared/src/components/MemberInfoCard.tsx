@@ -4,7 +4,8 @@
  * 회원 이름, 연락처 표시
  */
 
-import { Card, DescriptionList } from '@/shared/components';
+import { Card } from './base/Card';
+import { DescriptionList } from './base/DescriptionList';
 
 /** 회원 정보 타입 */
 export interface MemberInfo {

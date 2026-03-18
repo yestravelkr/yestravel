@@ -26,6 +26,12 @@
     "baseUrl": "src",
     "paths": {
       "@/*": ["*"],
+      "@yestravelkr/admin-shared": [
+        "../../../packages/admin-shared/src"
+      ],
+      "@yestravelkr/admin-shared/*": [
+        "../../../packages/admin-shared/src/*"
+      ],
       "@yestravelkr/min-design-system": [
         "../../../packages/min-design-system/src"
       ],
