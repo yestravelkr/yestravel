@@ -31,11 +31,19 @@ import {
   getHistoryInputSchema,
   getHistoryResponseSchema,
 } from './order.schema';
+import type { PartnerScope } from './order.dto';
 
 @Router({ alias: 'backofficeOrder' })
 export class OrderRouter extends BaseTrpcRouter {
   constructor(protected readonly microserviceClient: MicroserviceClient) {
     super(microserviceClient);
+  }
+
+  private extractPartnerScope(ctx: BackofficeAuthorizedContext): PartnerScope {
+    return {
+      authType: ctx.admin!.authType,
+      partnerId: ctx.admin!.partnerId,
+    };
   }
 
   @UseMiddlewares(BackofficeAuthMiddleware)
@@ -47,7 +55,11 @@ export class OrderRouter extends BaseTrpcRouter {
     @Ctx() ctx: BackofficeAuthorizedContext,
     @Input() input?: z.infer<typeof findAllOrdersInputSchema>
   ) {
-    return this.microserviceClient.send('backofficeOrder.findAll', input || {});
+    const scope = this.extractPartnerScope(ctx);
+    return this.microserviceClient.send('backofficeOrder.findAll', {
+      ...(input || {}),
+      scope,
+    });
   }
 
   @UseMiddlewares(BackofficeAuthMiddleware)
@@ -59,10 +71,11 @@ export class OrderRouter extends BaseTrpcRouter {
     @Ctx() ctx: BackofficeAuthorizedContext,
     @Input() input?: z.infer<typeof getStatusCountsInputSchema>
   ) {
-    return this.microserviceClient.send(
-      'backofficeOrder.getStatusCounts',
-      input || {}
-    );
+    const scope = this.extractPartnerScope(ctx);
+    return this.microserviceClient.send('backofficeOrder.getStatusCounts', {
+      ...(input || {}),
+      scope,
+    });
   }
 
   @UseMiddlewares(BackofficeAuthMiddleware)
@@ -70,7 +83,10 @@ export class OrderRouter extends BaseTrpcRouter {
     output: filterOptionsResponseSchema,
   })
   async getFilterOptions(@Ctx() ctx: BackofficeAuthorizedContext) {
-    return this.microserviceClient.send('backofficeOrder.getFilterOptions', {});
+    const scope = this.extractPartnerScope(ctx);
+    return this.microserviceClient.send('backofficeOrder.getFilterOptions', {
+      scope,
+    });
   }
 
   @UseMiddlewares(BackofficeAuthMiddleware)
@@ -82,7 +98,11 @@ export class OrderRouter extends BaseTrpcRouter {
     @Ctx() ctx: BackofficeAuthorizedContext,
     @Input() input: z.infer<typeof findByIdInputSchema>
   ) {
-    return this.microserviceClient.send('backofficeOrder.findById', input);
+    const scope = this.extractPartnerScope(ctx);
+    return this.microserviceClient.send('backofficeOrder.findById', {
+      ...input,
+      scope,
+    });
   }
 
   @UseMiddlewares(BackofficeAuthMiddleware)
@@ -125,6 +145,7 @@ export class OrderRouter extends BaseTrpcRouter {
   }
 
   @UseMiddlewares(BackofficeAuthMiddleware)
+  @AllowRoles(['ADMIN'], 'STAFF')
   @Mutation({
     input: exportToExcelInputSchema.nullish().default({}),
     output: exportToExcelResponseSchema,
@@ -148,6 +169,10 @@ export class OrderRouter extends BaseTrpcRouter {
     @Ctx() ctx: BackofficeAuthorizedContext,
     @Input() input: z.infer<typeof getHistoryInputSchema>
   ) {
-    return this.microserviceClient.send('backofficeOrder.getHistory', input);
+    const scope = this.extractPartnerScope(ctx);
+    return this.microserviceClient.send('backofficeOrder.getHistory', {
+      ...input,
+      scope,
+    });
   }
 }

@@ -22,6 +22,7 @@ import type {
   CancelOrderResponse,
   GetHistoryInput,
   GetHistoryResponse,
+  PartnerScope,
 } from './order.dto';
 
 /**
@@ -36,22 +37,30 @@ export class OrderController {
   ) {}
 
   @MessagePattern('backofficeOrder.findAll')
-  async findAll(input: FindAllOrdersInput): Promise<OrderListResponse> {
+  async findAll(
+    input: FindAllOrdersInput & { scope: PartnerScope }
+  ): Promise<OrderListResponse> {
     return await this.orderService.findAll(input);
   }
 
   @MessagePattern('backofficeOrder.getStatusCounts')
-  async getStatusCounts(input: GetStatusCountsInput): Promise<StatusCounts> {
+  async getStatusCounts(
+    input: GetStatusCountsInput & { scope: PartnerScope }
+  ): Promise<StatusCounts> {
     return await this.orderService.getStatusCounts(input);
   }
 
   @MessagePattern('backofficeOrder.getFilterOptions')
-  async getFilterOptions(): Promise<FilterOptionsResponse> {
-    return await this.orderService.getFilterOptions();
+  async getFilterOptions(input: {
+    scope: PartnerScope;
+  }): Promise<FilterOptionsResponse> {
+    return await this.orderService.getFilterOptions(input.scope);
   }
 
   @MessagePattern('backofficeOrder.findById')
-  async findById(input: FindByIdInput): Promise<OrderDetailResponse> {
+  async findById(
+    input: FindByIdInput & { scope: PartnerScope }
+  ): Promise<OrderDetailResponse> {
     return await this.orderService.findById(input);
   }
 
@@ -81,7 +90,11 @@ export class OrderController {
   }
 
   @MessagePattern('backofficeOrder.getHistory')
-  async getHistory(input: GetHistoryInput): Promise<GetHistoryResponse> {
+  async getHistory(
+    input: GetHistoryInput & { scope: PartnerScope }
+  ): Promise<GetHistoryResponse> {
+    // 소유권 검증 후 히스토리 조회
+    await this.orderService.validateOrderAccess(input.orderId, input.scope);
     return await this.orderHistoryService.findByOrderId(input.orderId);
   }
 }

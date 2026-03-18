@@ -23,6 +23,7 @@ import type {
   orderHistoryItemSchema,
   getHistoryResponseSchema,
 } from './order.schema';
+import type { AuthType } from '../auth/backoffice.auth.service';
 
 // ===== Input DTOs =====
 
@@ -71,3 +72,10 @@ export type GetHistoryInput = z.infer<typeof getHistoryInputSchema>;
 export type OrderHistoryItem = z.infer<typeof orderHistoryItemSchema>;
 
 export type GetHistoryResponse = z.infer<typeof getHistoryResponseSchema>;
+
+// ===== Partner Scope =====
+
+export type PartnerScope = {
+  authType: AuthType;
+  partnerId?: number;
+};
