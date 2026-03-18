@@ -23,14 +23,23 @@ import type {
   orderHistoryItemSchema,
   getHistoryResponseSchema,
 } from './order.schema';
+import type { PartnerScope } from '@src/shared/auth/partner-scope';
 
 // ===== Input DTOs =====
 
-export type FindAllOrdersInput = z.infer<typeof findAllOrdersInputSchema>;
+export type FindAllOrdersInput = z.infer<typeof findAllOrdersInputSchema> & {
+  partnerScope?: PartnerScope;
+};
 
-export type GetStatusCountsInput = z.infer<typeof getStatusCountsInputSchema>;
+export type GetStatusCountsInput = z.infer<
+  typeof getStatusCountsInputSchema
+> & {
+  partnerScope?: PartnerScope;
+};
 
-export type FindByIdInput = z.infer<typeof findByIdInputSchema>;
+export type FindByIdInput = z.infer<typeof findByIdInputSchema> & {
+  partnerScope?: PartnerScope;
+};
 
 // ===== Output DTOs =====
 
@@ -58,7 +67,9 @@ export type RevertStatusInput = z.infer<typeof revertStatusInputSchema>;
 
 export type RevertStatusResponse = z.infer<typeof revertStatusResponseSchema>;
 
-export type ExportToExcelInput = z.infer<typeof exportToExcelInputSchema>;
+export type ExportToExcelInput = z.infer<typeof exportToExcelInputSchema> & {
+  partnerScope?: PartnerScope;
+};
 
 export type ExportToExcelResponse = z.infer<typeof exportToExcelResponseSchema>;
 
@@ -66,7 +77,9 @@ export type CancelOrderInput = z.infer<typeof cancelOrderInputSchema>;
 
 export type CancelOrderResponse = z.infer<typeof cancelOrderResponseSchema>;
 
-export type GetHistoryInput = z.infer<typeof getHistoryInputSchema>;
+export type GetHistoryInput = z.infer<typeof getHistoryInputSchema> & {
+  partnerScope?: PartnerScope;
+};
 
 export type OrderHistoryItem = z.infer<typeof orderHistoryItemSchema>;
 

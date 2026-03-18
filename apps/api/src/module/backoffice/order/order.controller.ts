@@ -1,9 +1,10 @@
 import { Controller } from '@nestjs/common';
-import { MessagePattern } from '@nestjs/microservices';
+import { MessagePattern, Payload } from '@nestjs/microservices';
 import { Transactional } from '@src/module/shared/transaction/transaction.decorator';
 import { TransactionService } from '@src/module/shared/transaction/transaction.service';
 import { OrderService } from './order.service';
 import { OrderHistoryService } from './order-history.service';
+import type { PartnerScope } from '@src/shared/auth/partner-scope';
 import type {
   FindAllOrdersInput,
   GetStatusCountsInput,
@@ -46,8 +47,10 @@ export class OrderController {
   }
 
   @MessagePattern('backofficeOrder.getFilterOptions')
-  async getFilterOptions(): Promise<FilterOptionsResponse> {
-    return await this.orderService.getFilterOptions();
+  async getFilterOptions(
+    @Payload() input?: { partnerScope?: PartnerScope }
+  ): Promise<FilterOptionsResponse> {
+    return await this.orderService.getFilterOptions(input);
   }
 
   @MessagePattern('backofficeOrder.findById')
@@ -82,6 +85,13 @@ export class OrderController {
 
   @MessagePattern('backofficeOrder.getHistory')
   async getHistory(input: GetHistoryInput): Promise<GetHistoryResponse> {
+    // Partner인 경우 주문 소유권 검증
+    if (input.partnerScope && input.partnerScope.authType !== 'ADMIN') {
+      await this.orderService.findById({
+        id: input.orderId,
+        partnerScope: input.partnerScope,
+      });
+    }
     return await this.orderHistoryService.findByOrderId(input.orderId);
   }
 }
