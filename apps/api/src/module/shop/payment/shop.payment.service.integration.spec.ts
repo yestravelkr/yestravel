@@ -64,7 +64,10 @@ describe('ShopPaymentService (Integration)', () => {
   function createService(em: EntityManager): ShopPaymentService {
     const rp = createTestRepositoryProvider(em);
     const orderHistoryService = new OrderHistoryService(rp);
-    return new ShopPaymentService(rp, orderHistoryService);
+    const smtntService = {
+      sendAlimtalk: jest.fn().mockResolvedValue({ result_code: '0' }),
+    } as any;
+    return new ShopPaymentService(rp, orderHistoryService, smtntService);
   }
 
   /**
