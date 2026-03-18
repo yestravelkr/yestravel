@@ -1,8 +1,8 @@
 ---
 name: partner-app
-description: Partner 앱 - 브랜드/인플루언서 파트너 전용 프론트엔드 (TanStack Router + tRPC + Zustand)
-keywords: [Partner, 파트너, 브랜드, 인플루언서, 프론트엔드, TanStack Router, tRPC, Zustand, React]
-estimated_tokens: ~400
+description: Partner 앱 - 브랜드/인플루언서 파트너 전용 프론트엔드 (TanStack Router + tRPC + Zustand + admin-shared 주문관리)
+keywords: [Partner, 파트너, 브랜드, 인플루언서, 프론트엔드, TanStack Router, tRPC, Zustand, React, 주문관리]
+estimated_tokens: ~500
 ---
 
 # Partner App
@@ -25,6 +25,13 @@ estimated_tokens: ~400
 | apps/partner/src/components/navigation/navigation.tsx | 사이드바 내비게이션 | Navigation (type별 메뉴 분기) |
 | apps/partner/src/components/navigation/data.tsx | 내비게이션 데이터 | BRAND_NAV_GROUPS, INFLUENCER_NAV_GROUPS |
 | apps/partner/src/components/navigation/type.ts | 내비게이션 타입 정의 | NavGroup, NavItem, NavLink, NavCollapsible |
+| apps/partner/src/components/order/OrderListContent.tsx | 공유 주문 목록 컴포넌트 | OrderListContent (PARTNER_CAPABILITIES 사용) |
+| apps/partner/src/components/order/OrderDetailContent.tsx | 공유 주문 상세 컴포넌트 | OrderDetailContent (PARTNER_CAPABILITIES 사용) |
+| apps/partner/src/components/order/search-params.ts | 검색 파라미터 타입/검증 | HotelOrderSearchParams, validateHotelOrderSearch |
+| apps/partner/src/routes/brand/order/hotel.index.tsx | 브랜드 호텔 주문 목록 | BrandHotelOrderListPage |
+| apps/partner/src/routes/brand/order/hotel.$orderId.tsx | 브랜드 호텔 주문 상세 | BrandHotelOrderDetailPage |
+| apps/partner/src/routes/influencer/order/hotel.index.tsx | 인플루언서 호텔 주문 목록 | InfluencerHotelOrderListPage |
+| apps/partner/src/routes/influencer/order/hotel.$orderId.tsx | 인플루언서 호텔 주문 상세 | InfluencerHotelOrderDetailPage |
 | apps/partner/vite.config.ts | Vite 빌드 설정 | TanStackRouterVite, 경로 별칭 (@/) |
 | apps/partner/tailwind.config.ts | Tailwind CSS 설정 | MinSans 폰트, 디자인 시스템 연동 |
 
@@ -43,14 +50,29 @@ estimated_tokens: ~400
 2. `/login` → 로그인 페이지 (search param: type)
 3. `/brand` → 브랜드 파트너 레이아웃 (Header + Navigation + Outlet, authBeforeLoad 보호)
 4. `/brand/` → 브랜드 대시보드
-5. `/influencer` → 인플루언서 파트너 레이아웃 (authBeforeLoad 보호)
-6. `/influencer/` → 인플루언서 대시보드
+5. `/brand/order/hotel` → 브랜드 호텔 주문 목록
+6. `/brand/order/hotel/:orderId` → 브랜드 호텔 주문 상세
+7. `/influencer` → 인플루언서 파트너 레이아웃 (authBeforeLoad 보호)
+8. `/influencer/` → 인플루언서 대시보드
+9. `/influencer/order/hotel` → 인플루언서 호텔 주문 목록
+10. `/influencer/order/hotel/:orderId` → 인플루언서 호텔 주문 상세
+
+### 주문 관리
+
+- admin-shared 패키지의 공유 컴포넌트 사용 (`AdminSharedProvider`로 tRPC 주입)
+- Brand/Influencer 라우트는 구조적으로 동일하며 basePath만 다름
+- `PARTNER_CAPABILITIES` 적용으로 읽기 + 제한된 액션만 허용
 
 ### 상태 관리
 
 - `PartnerType`: BRAND | INFLUENCER (authStore에서 관리)
 - `Role`: ADMIN | MANAGER | GUEST
 - Zustand persist 없이 메모리 기반 관리, refreshToken으로 세션 복원
+
+## 관련 Codebase Context
+
+- [Admin Shared](./admin-shared.md)
+- [Backoffice Auth](./backoffice-auth.md)
 
 ## 관련 Business Context
 
