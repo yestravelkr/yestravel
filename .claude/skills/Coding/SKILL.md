@@ -1,7 +1,7 @@
 ---
 name: Coding
-description: 모든 코드 작성 시 참조. SRP/결합도/응집도 판단 기준, 폴더 구조 설계 원칙, 삼항연산자/try-catch 가독성 규칙 제공.
-keywords: [SRP, 단일책임, 결합도, 응집도, 설계원칙, 폴더구조, 아키텍처, 가독성, 삼항연산자, try-catch]
+description: 모든 코드 작성 시 참조. SRP/결합도/응집도 판단 기준, 폴더 구조 설계 원칙, 삼항연산자/try-catch 가독성 규칙, Plan 필수 항목(DB/FE Flow/API + 의사결정 근거) 제공.
+keywords: [SRP, 단일책임, 결합도, 응집도, 설계원칙, 폴더구조, 아키텍처, 가독성, 삼항연산자, try-catch, Plan, DB설계, FE Flow, API구성, 의사결정]
 user-invocable: false
 ---
 
@@ -209,6 +209,55 @@ if (isAdmin) {
 
 ---
 
+<rules>
+
+## Plan 작성 필수 항목
+
+> **코드 수정 계획(Plan)에는 아래 3가지 설계와 의사결정 근거를 포함한다.**
+
+### 필수 설계 항목
+
+| 항목 | 포함 내용 | 예시 |
+|------|----------|------|
+| **DB 수정 계획** | Entity 변경, 컬럼 추가/삭제, 마이그레이션, 인덱스 | 새 Entity 생성, 기존 테이블 컬럼 추가, FK 관계 설정 |
+| **FE 페이지 Flow** | 화면 흐름, 사용자 동선, 상태 전이, 라우트 구조 | 리스트 → 상세 → 수정 페이지 흐름, 모달/토스트 트리거 |
+| **API 구성** | 엔드포인트 목록, 요청/응답 구조, tRPC 프로시저 | `product.findAll`, `product.create` 등 프로시저 정의 |
+
+### 의사결정 근거
+
+각 설계 항목에 아래를 명시한다:
+
+| 항목 | 설명 |
+|------|------|
+| **선택한 이유** | 왜 이 방식을 선택했는가 (성능, 확장성, 기존 패턴 일관성 등) |
+| **차선책** | 검토했으나 채택하지 않은 대안과 그 이유 |
+
+<examples>
+<example type="good">
+```markdown
+## DB 수정 계획
+- ProductOption Entity 신규 생성 (Product와 1:N 관계)
+- 이유: 옵션 개수가 가변적이므로 별도 테이블 분리
+- 차선책: Product에 JSON 컬럼으로 저장 → 쿼리/필터링 어려워 기각
+
+## FE 페이지 Flow
+- 상품 목록 → 상품 상세 → 옵션 선택 → 장바구니
+- 이유: 기존 호텔 예약 Flow와 동일한 패턴 유지
+- 차선책: 목록에서 바로 옵션 선택 → UX 복잡도 증가로 기각
+
+## API 구성
+- product.findAll: 목록 조회 (pagination)
+- product.findOne: 상세 + 옵션 포함
+- 이유: findOne에서 옵션을 join으로 한 번에 조회 (N+1 방지)
+- 차선책: 옵션을 별도 API로 분리 → 프론트 호출 2번 필요해 기각
+```
+</example>
+</examples>
+
+</rules>
+
+---
+
 <checklist>
 
 ## 코드 작성 시 체크리스트
@@ -220,5 +269,7 @@ if (isAdmin) {
 - [ ] 공개 API(index.ts)를 통해 접근하는가?
 - [ ] Promise 처리에 then-catch 패턴을 사용했는가?
 - [ ] 삼항연산자에서 복잡한 함수 호출을 변수로 분리했는가?
+- [ ] Plan에 DB 수정 계획 / FE 페이지 Flow / API 구성이 포함되었는가?
+- [ ] 각 설계 항목에 선택 이유와 차선책이 명시되었는가?
 
 </checklist>
