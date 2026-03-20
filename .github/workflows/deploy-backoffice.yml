@@ -70,6 +70,7 @@ jobs:
         working-directory: apps/backoffice
         env:
           VITE_API_BASEURL: https://api.dev.yestravel.co.kr
+          VITE_SHOP_URL: https://dev.yestravel.co.kr
         run: yarn build
 
       - name: Deploy to S3 (development/)
@@ -87,6 +88,7 @@ jobs:
         working-directory: apps/backoffice
         env:
           VITE_API_BASEURL: https://api.yestravel.co.kr
+          VITE_SHOP_URL: https://yestravel.co.kr
         run: |
           rm -rf dist
           yarn build
