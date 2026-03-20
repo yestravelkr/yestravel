@@ -172,6 +172,9 @@ export function HotelProductComponent(props: HotelProductComponentProps) {
         )}
       </TabSection>
 
+      {/* FloatingDateButton + BottomFixedSection이 콘텐츠를 가리지 않도록 여백 */}
+      <div className="h-16" />
+
       {/* 하단 고정 버튼 */}
       <BottomFixedSection>
         <PurchaseButton onClick={handleOpenOptionSheet}>
