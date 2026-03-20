@@ -20,4 +20,5 @@ description: 코드베이스 모듈 참조 목록
 | Backoffice Auth | Admin/Partner 듀얼 JWT 인증, AllowRoles RBAC 데코레이터, PartnerScope 데이터 스코핑 | [backoffice-auth.md](./backoffice-auth.md) |
 | Backoffice Order | 백오피스 주문 관리 - 조회/상태변경/엑셀, Partner 데이터 스코핑 | [backoffice-order.md](./backoffice-order.md) |
 | Backoffice Manager | 백오피스 파트너 관리자 UI - 관리자 목록/추가/역할 변경/제거 공유 컴포넌트 | [backoffice-manager.md](./backoffice-manager.md) |
+| Frontend Deploy | 프론트엔드 배포 - GitHub Actions + S3 + CloudFront, 신규 앱 추가 가이드 | [frontend-deploy.md](./frontend-deploy.md) |
 
