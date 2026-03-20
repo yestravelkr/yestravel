@@ -13,7 +13,7 @@ import { Calendar } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import tw from 'tailwind-styled-components';
 
-import { DeliverySection } from './DeliverySection';
+import { CheckInOutSection } from './CheckInOutSection';
 import { openHotelOptionBottomSheet } from './HotelOptionBottomSheet';
 import { ProductDetailContent } from './ProductDetailContent';
 import { ProductDetailTabs, type ProductDetailTab } from './ProductDetailTabs';
@@ -143,13 +143,13 @@ export function HotelProductComponent(props: HotelProductComponentProps) {
           discountedPrice={price}
           badgeText={badgeText}
         />
-
-        {/* 배송/체크인 정보 */}
-        <DeliverySection
-          deliveryFee={0}
-          estimatedDelivery={`체크인 ${dayjs(checkInDate).format('MM.DD(ddd)')} · 체크아웃 ${dayjs(checkOutDate).format('MM.DD(ddd)')}`}
-        />
       </InfoSection>
+
+      {/* 체크인/체크아웃 정보 */}
+      <CheckInOutSection
+        checkInDate={`체크인 ${dayjs(checkInDate).locale('ko').format('MM.DD(ddd)')}`}
+        checkOutDate={`체크아웃 ${dayjs(checkOutDate).locale('ko').format('MM.DD(ddd)')}`}
+      />
 
       {/* 탭 */}
       <TabSection>
@@ -160,10 +160,7 @@ export function HotelProductComponent(props: HotelProductComponentProps) {
 
         {/* 상품정보 탭 내용 */}
         {selectedTab === 'info' && (
-          <ProductDetailContent
-            htmlContent={detailHtml ?? ''}
-            collapsedHeight={400}
-          />
+          <ProductDetailContent htmlContent={detailHtml ?? ''} />
         )}
 
         {/* 판매정보, 추천 탭은 추후 구현 */}
@@ -174,6 +171,9 @@ export function HotelProductComponent(props: HotelProductComponentProps) {
           <PlaceholderContent>추천 (추후 구현)</PlaceholderContent>
         )}
       </TabSection>
+
+      {/* FloatingDateButton(52px) + BottomFixedSection이 콘텐츠를 가리지 않도록 하단 여백 64px */}
+      <div className="h-16" />
 
       {/* 하단 고정 버튼 */}
       <BottomFixedSection>
@@ -224,14 +224,14 @@ const ContentWrapper = tw.div`
 `;
 
 const InfoSection = tw.div`
-  bg-bg-layer-base
+  bg-white
   flex
   flex-col
   gap-2
 `;
 
 const TabSection = tw.div`
-  bg-bg-layer-base
+  bg-white
 `;
 
 const PlaceholderContent = tw.div`

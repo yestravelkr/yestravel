@@ -6,7 +6,7 @@
  */
 
 import { ChevronDown } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import tw from 'tailwind-styled-components';
 
 export interface ProductDetailContentProps {
@@ -18,20 +18,40 @@ export interface ProductDetailContentProps {
 
 export function ProductDetailContent({
   htmlContent,
-  collapsedHeight = 840,
+  collapsedHeight = 500,
 }: ProductDetailContentProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [measured, setMeasured] = useState(false);
+  const [isOverflowing, setIsOverflowing] = useState(false);
+
+  useEffect(() => {
+    const el = contentRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver(() => {
+      setIsOverflowing(el.scrollHeight > collapsedHeight);
+      setMeasured(true);
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [collapsedHeight]);
+
+  const shouldCollapse = !isExpanded && (!measured || isOverflowing);
+  const showButton = !isExpanded && measured && isOverflowing;
 
   return (
     <Container>
       <ContentWrapper
-        $isExpanded={isExpanded}
-        $collapsedHeight={collapsedHeight}
+        $isCollapsed={shouldCollapse}
+        style={{ maxHeight: shouldCollapse ? collapsedHeight : undefined }}
       >
-        <HtmlContent dangerouslySetInnerHTML={{ __html: htmlContent }} />
-        {!isExpanded && <GradientOverlay />}
+        <HtmlContent
+          ref={contentRef}
+          dangerouslySetInnerHTML={{ __html: htmlContent }}
+        />
+        {showButton && <GradientOverlay />}
       </ContentWrapper>
-      {!isExpanded && (
+      {showButton && (
         <ExpandButtonWrapper>
           <ExpandButton onClick={() => setIsExpanded(true)}>
             <span>상품정보 더보기</span>
@@ -49,14 +69,11 @@ const Container = tw.div`
 `;
 
 const ContentWrapper = tw.div<{
-  $isExpanded: boolean;
-  $collapsedHeight: number;
+  $isCollapsed: boolean;
 }>`
   w-full
   relative
   overflow-hidden
-  ${({ $isExpanded, $collapsedHeight }) =>
-    $isExpanded ? '' : `max-h-[${$collapsedHeight}px]`}
 `;
 
 const HtmlContent = tw.div`
@@ -112,6 +129,6 @@ const ExpandButton = tw.button`
  *
  * <ProductDetailContent
  *   htmlContent="<p>상품 설명...</p><img src='...' />"
- *   collapsedHeight={840}
+ *   collapsedHeight={500}
  * />
  */

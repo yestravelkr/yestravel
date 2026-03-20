@@ -22,7 +22,11 @@ export {
   ProductTitleSection,
   type ProductTitleSectionProps,
 } from './ProductTitleSection';
+export { CheckInOutSection } from './CheckInOutSection';
+export type { CheckInOutSectionProps } from './CheckInOutSection';
 export { DeliverySection, type DeliverySectionProps } from './DeliverySection';
+export { InfoRowSection } from './InfoRowSection';
+export type { InfoRowSectionProps } from './InfoRowSection';
 export {
   ProductDetailTabs,
   type ProductDetailTabsProps,
