@@ -43,7 +43,7 @@ export function ProductDetailContent({
     <Container>
       <ContentWrapper
         $isCollapsed={shouldCollapse}
-        $collapsedHeight={collapsedHeight}
+        style={{ maxHeight: shouldCollapse ? collapsedHeight : undefined }}
       >
         <HtmlContent
           ref={contentRef}
@@ -70,13 +70,10 @@ const Container = tw.div`
 
 const ContentWrapper = tw.div<{
   $isCollapsed: boolean;
-  $collapsedHeight: number;
 }>`
   w-full
   relative
   overflow-hidden
-  ${({ $isCollapsed, $collapsedHeight }) =>
-    $isCollapsed ? `max-h-[${$collapsedHeight}px]` : ''}
 `;
 
 const HtmlContent = tw.div`

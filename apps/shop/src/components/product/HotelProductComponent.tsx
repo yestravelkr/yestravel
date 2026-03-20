@@ -172,7 +172,7 @@ export function HotelProductComponent(props: HotelProductComponentProps) {
         )}
       </TabSection>
 
-      {/* FloatingDateButton + BottomFixedSection이 콘텐츠를 가리지 않도록 여백 */}
+      {/* FloatingDateButton(52px) + BottomFixedSection이 콘텐츠를 가리지 않도록 하단 여백 64px */}
       <div className="h-16" />
 
       {/* 하단 고정 버튼 */}
