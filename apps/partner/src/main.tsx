@@ -1,6 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
+// deploy trigger
 import App from './App.tsx';
 
 import { TRPCProvider } from '@/shared';
