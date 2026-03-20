@@ -3,7 +3,7 @@ name: Build Partner
 on:
   push:
     branches-ignore:
-      - 'none'
+      - main
 
 jobs:
   build:

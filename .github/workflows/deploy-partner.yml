@@ -1,0 +1,137 @@
+name: Deploy Partner
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'apps/partner/**'
+      - 'packages/**'
+
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Action to perform'
+        required: true
+        type: choice
+        options:
+          - deploy-prod
+      commit_hash:
+        description: 'Commit hash to deploy to production (from build-prod/)'
+        required: true
+        type: string
+
+env:
+  S3_BUCKET: yestravel-partner
+  NODE_VERSION: 22.16.x
+
+jobs:
+  # ──────────────────────────────────────────────
+  # Job 1: main push → dev 배포 + prod 빌드 저장
+  # ──────────────────────────────────────────────
+  build-and-deploy-dev:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Get yarn cache directory path
+        id: yarn-cache-dir-path
+        run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache yarn dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+
+      - name: Install dependencies
+        run: yarn install
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+
+      # ── Dev 빌드 & 배포 ──
+      - name: Build Partner (dev)
+        working-directory: apps/partner
+        env:
+          VITE_API_BASEURL: https://api.dev.yestravel.co.kr
+        run: yarn build
+
+      - name: Deploy to S3 (development/)
+        run: |
+          aws s3 sync apps/partner/dist s3://$S3_BUCKET/development/ --delete
+
+      - name: Invalidate CloudFront (dev)
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ secrets.PARTNER_CF_DEV_DISTRIBUTION_ID }} \
+            --paths "/*"
+
+      # ── Prod 빌드 & 저장 ──
+      - name: Build Partner (prod)
+        working-directory: apps/partner
+        env:
+          VITE_API_BASEURL: https://api.yestravel.co.kr
+        run: |
+          rm -rf dist
+          yarn build
+
+      - name: Save prod build to S3 (build-prod/{hash}/)
+        run: |
+          COMMIT_HASH=$(git rev-parse --short HEAD)
+          aws s3 sync apps/partner/dist s3://$S3_BUCKET/build-prod/$COMMIT_HASH/ --delete
+          echo "✅ Prod build saved to s3://$S3_BUCKET/build-prod/$COMMIT_HASH/"
+          echo "📋 To deploy to production, run workflow_dispatch with commit_hash: $COMMIT_HASH"
+
+  # ──────────────────────────────────────────────
+  # Job 2: 수동 버튼 → prod 배포
+  # ──────────────────────────────────────────────
+  deploy-prod:
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'deploy-prod'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+
+      - name: Verify build exists
+        run: |
+          HASH="${{ github.event.inputs.commit_hash }}"
+          if ! aws s3 ls s3://$S3_BUCKET/build-prod/$HASH/ > /dev/null 2>&1; then
+            echo "❌ Build not found: s3://$S3_BUCKET/build-prod/$HASH/"
+            echo "Available builds:"
+            aws s3 ls s3://$S3_BUCKET/build-prod/ --recursive | head -20
+            exit 1
+          fi
+          echo "✅ Build found: s3://$S3_BUCKET/build-prod/$HASH/"
+
+      - name: Deploy to production
+        run: |
+          HASH="${{ github.event.inputs.commit_hash }}"
+          aws s3 sync s3://$S3_BUCKET/build-prod/$HASH/ s3://$S3_BUCKET/production/ --delete
+          echo "✅ Deployed build-prod/$HASH → production/"
+
+      - name: Invalidate CloudFront (prod)
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ secrets.PARTNER_CF_PROD_DISTRIBUTION_ID }} \
+            --paths "/*"
+          echo "✅ CloudFront cache invalidated"

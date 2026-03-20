@@ -3,7 +3,7 @@ name: Build Shop
 on:
   push:
     branches-ignore:
-      - 'none'
+      - main
 
 jobs:
   build:
