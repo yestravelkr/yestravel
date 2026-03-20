@@ -160,10 +160,7 @@ export function HotelProductComponent(props: HotelProductComponentProps) {
 
         {/* 상품정보 탭 내용 */}
         {selectedTab === 'info' && (
-          <ProductDetailContent
-            htmlContent={detailHtml ?? ''}
-            collapsedHeight={400}
-          />
+          <ProductDetailContent htmlContent={detailHtml ?? ''} />
         )}
 
         {/* 판매정보, 추천 탭은 추후 구현 */}
