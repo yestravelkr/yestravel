@@ -1,0 +1,21 @@
+[예스트래블] 주문 접수 안내
+
+안녕하세요, #{customerName} 고객님.
+
+주문해 주셔서 감사합니다.
+#{customerName} 고객님의 주문이 정상적으로 접수되었습니다.
+
+★ 주문 정보
+주문번호: #{orderNumber}
+상품명: #{productName}
+선택옵션: #{optionName}
+구매수량: #{quantity}
+이용 날짜: #{useDate}
+결제금액: #{totalAmount}
+주문 확인: #{confirmLink}
+
+★ 고객센터 안내
+궁금한 사항이 있으시면 고객센터로 문의해 주세요.
+고객센터: #{csLink}
+
+감사합니다.

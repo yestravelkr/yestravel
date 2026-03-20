@@ -1,0 +1,30 @@
+[예스트래블] 배송 시작 안내
+
+안녕하세요, #{customerName} 고객님.
+
+주문하신 상품의 배송이 시작되었습니다.
+
+★ 배송 정보
+주문번호: #{orderNumber}
+상품명: #{productName}
+선택옵션: #{optionName}
+구매수량: #{quantity}
+결제금액: #{totalAmount}
+
+★ 수령 정보
+수령인: #{receiverName}
+연락처: #{receiverPhone}
+배송주소: #{address} #{detailAddress}
+
+★ 택배 정보
+택배사: #{deliveryCompany}
+송장번호: #{trackingNumber}
+배송조회: #{trackingLink}
+
+배송은 지역에 따라 1~3일 소요될 수 있으며, 배송 상태는 배송조회 링크에서 확인 가능합니다.
+
+★ 고객센터 안내
+궁금한 사항이 있으시면 고객센터로 문의해 주세요.
+고객센터: #{csLink}
+
+감사합니다.
