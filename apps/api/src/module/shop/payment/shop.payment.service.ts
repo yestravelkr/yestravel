@@ -167,32 +167,33 @@ export class ShopPaymentService {
       const productName = product?.name ?? '상품명 없음';
 
       const quantity = `${Object.keys(snapshot.priceByDate).length}박`;
-      const useDate = `${snapshot.checkInDate} ~ ${snapshot.checkOutDate}`;
+      const checkInDate = snapshot.checkInDate;
       const totalAmount = `${order.totalAmount.toLocaleString()}원`;
       const confirmLink = `${this.SHOP_URL}/orders/${order.orderNumber}`;
 
       const message =
-        `[예스트래블 예약 안내]\n\n` +
-        `안녕하세요, ${order.customerName}고객님.\n` +
-        `예약해 주셔서 감사합니다.\n\n` +
-        `${order.customerName}고객님의 예약 대기 신청이 정상적으로 접수되었습니다.\n\n` +
-        `★예약 확정 안내\n` +
-        `예약 확정은 1~3 영업일 내에 이루어질 예정입니다. 확정 시 안내 문자를 보내드리니 조금만 기다려 주세요.\n\n` +
-        `★예약 신청 정보\n` +
-        `주문 번호: ${order.orderNumber}\n` +
+        `[예스트래블] 예약 접수 안내\n\n` +
+        `안녕하세요, ${order.customerName} 고객님.\n\n` +
+        `예약해 주셔서 감사합니다.\n` +
+        `${order.customerName} 고객님의 예약이 정상적으로 접수되었습니다.\n\n` +
+        `★ 예약 확정 안내\n` +
+        `예약 확정은 영업일 기준 1~3일 내에 이루어질 예정입니다.\n` +
+        `확정 시 안내 메시지를 보내드리오니 잠시만 기다려 주세요.\n\n` +
+        `★ 예약 신청 정보\n` +
+        `주문번호: ${order.orderNumber}\n` +
         `상품명: ${productName}\n` +
         `선택옵션: ${snapshot.hotelOptionName}\n` +
         `구매수량: ${quantity}\n` +
-        `이용 날짜: ${useDate}\n` +
-        `결제금액: ${totalAmount}\n\n` +
-        `예약 확인: ${confirmLink}\n\n` +
-        `★고객센터\n` +
-        `궁금한 사항은 고객센터로 문의해 주세요.\n` +
+        `이용 날짜: ${checkInDate}\n` +
+        `결제금액: ${totalAmount}\n` +
+        `예약 상태 확인: ${confirmLink}\n\n` +
+        `★ 변경 및 취소 안내\n` +
+        `변경 및 취소는 공휴일, 주말 제외 영업일 기준 17시까지 접수 가능합니다.\n` +
+        `변경은 위약금 부과 기간 전 1회에 한해 신청 가능하며, 기존 예약일과 변경 예약일 중 빠른 날짜 기준으로 위약금이 부과됩니다.\n` +
+        `상세페이지의 기준을 반드시 확인해 주시기 바랍니다.\n\n` +
+        `★ 고객센터 안내\n` +
+        `궁금한 사항이 있으시면 고객센터로 문의해 주세요.\n` +
         `고객센터: ${this.CS_LINK}\n\n` +
-        `★변경 및 취소\n` +
-        `휴일/주말 제외 영업일 17시까지 접수 가능합니다.\n` +
-        `변경은 위약금 부과 기간 전 1회 가능하며, 기존/변경 예약일 중 빠른 날짜 기준 위약금이 부과됩니다.\n` +
-        `상세페이지 기준을 꼭 확인 부탁드립니다.\n\n` +
         `감사합니다.`;
 
       await this.smtntService.sendAlimtalk({
