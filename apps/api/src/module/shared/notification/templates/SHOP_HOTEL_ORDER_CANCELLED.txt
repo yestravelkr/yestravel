@@ -1,0 +1,21 @@
+[예스트래블] 예약 취소 안내
+
+안녕하세요, #{customerName} 고객님.
+
+예약번호 #{reservationNumber}의 취소가 정상적으로 완료되었습니다.
+환불은 영업일 기준 3~5일 내 처리됩니다.
+
+★ 예약 취소 정보
+주문번호: #{orderNumber}
+상품명: #{productName}
+선택옵션: #{optionName}
+구매수량: #{quantity}
+이용 날짜: #{checkInDate}
+결제금액: #{totalAmount}
+예약 상태 확인: #{confirmLink}
+
+★ 고객센터 안내
+궁금한 사항이 있으시면 고객센터로 문의해 주세요.
+고객센터: #{csLink}
+
+감사합니다.
