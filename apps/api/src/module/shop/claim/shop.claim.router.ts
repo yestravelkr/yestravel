@@ -13,12 +13,15 @@ import {
   createClaimOutputSchema,
   getClaimByOrderIdInputSchema,
   getClaimByOrderIdOutputSchema,
+  getCancelFeePreviewInputSchema,
+  getCancelFeePreviewOutputSchema,
   withdrawClaimInputSchema,
   withdrawClaimOutputSchema,
 } from './shop.claim.schema';
 import type {
   CreateClaimInput,
   GetClaimByOrderIdInput,
+  GetCancelFeePreviewInput,
   WithdrawClaimInput,
 } from './shop.claim.dto';
 import {
@@ -60,6 +63,24 @@ export class ShopClaimRouter extends BaseTrpcRouter {
     @Ctx() ctx: ShopAuthorizedContext
   ) {
     return this.microserviceClient.send('shopClaim.findByOrderId', {
+      memberId: ctx.member.id,
+      ...input,
+    });
+  }
+
+  /**
+   * 취소 수수료 미리보기
+   */
+  @UseMiddlewares(ShopAuthMiddleware)
+  @Query({
+    input: getCancelFeePreviewInputSchema,
+    output: getCancelFeePreviewOutputSchema,
+  })
+  async getCancelFeePreview(
+    @Input() input: Omit<GetCancelFeePreviewInput, 'memberId'>,
+    @Ctx() ctx: ShopAuthorizedContext
+  ) {
+    return this.microserviceClient.send('shopClaim.getCancelFeePreview', {
       memberId: ctx.member.id,
       ...input,
     });

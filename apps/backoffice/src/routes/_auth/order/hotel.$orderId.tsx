@@ -48,6 +48,13 @@ function HotelOrderDetailPage() {
     { enabled: !!orderDetail },
   );
 
+  // 취소 수수료 미리보기 조회
+  const { data: cancelFeePreview } =
+    trpc.backofficeClaim.getCancelFeePreview.useQuery(
+      { orderId: Number(orderId) },
+      { enabled: !!orderDetail },
+    );
+
   // 가장 최근 REQUESTED 클레임 (승인/거절 대상)
   const activeClaim = claims?.find((c) => c.status === 'REQUESTED') ?? null;
   // 표시용: 활성 클레임 우선, 없으면 가장 최근 클레임
@@ -165,7 +172,7 @@ function HotelOrderDetailPage() {
   const handleCancelOrder = async () => {
     const result = await openCancelOrderModal({
       productAmount: orderDetail.payment.totalAmount,
-      defaultCancelFee: 0,
+      defaultCancelFee: cancelFeePreview?.cancelFee ?? 0,
     });
 
     if (!result?.confirmed) return;
@@ -210,7 +217,7 @@ function HotelOrderDetailPage() {
   const handleCancelApprove = async () => {
     const result = await openCancelApproveModal({
       productAmount: orderDetail.payment.totalAmount,
-      defaultCancelFee: 0,
+      defaultCancelFee: cancelFeePreview?.cancelFee ?? 0,
     });
 
     if (!result?.confirmed) return;

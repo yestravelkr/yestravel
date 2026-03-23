@@ -10,6 +10,7 @@ import { ClaimService } from './claim.service';
 import {
   approveClaimResponseSchema,
   rejectClaimResponseSchema,
+  getCancelFeePreviewOutputSchema,
   claimDetailSchema,
 } from './claim.schema';
 import type {
@@ -17,6 +18,8 @@ import type {
   ApproveClaimResponse,
   RejectClaimInput,
   RejectClaimResponse,
+  GetCancelFeePreviewInput,
+  GetCancelFeePreviewOutput,
   FindByOrderIdInput,
   FindByOrderIdOutput,
 } from './claim.dto';
@@ -40,6 +43,14 @@ export class ClaimController {
   async reject(input: RejectClaimInput): Promise<RejectClaimResponse> {
     const result = await this.claimService.reject(input);
     return rejectClaimResponseSchema.parse(result);
+  }
+
+  @MessagePattern('backofficeClaim.getCancelFeePreview')
+  async getCancelFeePreview(
+    input: GetCancelFeePreviewInput
+  ): Promise<GetCancelFeePreviewOutput> {
+    const result = await this.claimService.getCancelFeePreview(input);
+    return getCancelFeePreviewOutputSchema.parse(result);
   }
 
   @MessagePattern('backofficeClaim.findByOrderId')
