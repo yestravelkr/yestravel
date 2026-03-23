@@ -99,9 +99,13 @@ export class ShopPaymentService {
     // order.id는 이미 from() 메서드에서 설정됨
     order.status = OrderStatusEnum.PAID;
 
-    // 4. Order 저장
+    // 4. Order 저장 (호텔은 HotelOrderRepository로 저장해야 checkInDate/checkOutDate 컬럼이 반영됨)
     const savedOrder =
-      await this.repositoryProvider.OrderRepository.save(order);
+      tmpOrder.type === ProductTypeEnum.HOTEL
+        ? await this.repositoryProvider.HotelOrderRepository.save(
+            order as HotelOrderEntity
+          )
+        : await this.repositoryProvider.OrderRepository.save(order);
 
     // 5. TmpOrder 삭제 (더 이상 필요 없음)
     await this.repositoryProvider.TmpOrderRepository.delete({
