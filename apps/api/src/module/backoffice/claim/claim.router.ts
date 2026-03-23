@@ -22,6 +22,8 @@ import {
   approveClaimResponseSchema,
   rejectClaimInputSchema,
   rejectClaimResponseSchema,
+  getCancelFeePreviewInputSchema,
+  getCancelFeePreviewOutputSchema,
   findByOrderIdInputSchema,
   findByOrderIdOutputSchema,
 } from './claim.schema';
@@ -57,6 +59,22 @@ export class ClaimRouter extends BaseTrpcRouter {
     @Input() input: z.infer<typeof rejectClaimInputSchema>
   ) {
     return this.microserviceClient.send('backofficeClaim.reject', input);
+  }
+
+  @UseMiddlewares(BackofficeAuthMiddleware)
+  @AllowRoles(['ADMIN'], 'STAFF')
+  @Query({
+    input: getCancelFeePreviewInputSchema,
+    output: getCancelFeePreviewOutputSchema,
+  })
+  async getCancelFeePreview(
+    @Ctx() ctx: BackofficeAuthorizedContext,
+    @Input() input: z.infer<typeof getCancelFeePreviewInputSchema>
+  ) {
+    return this.microserviceClient.send(
+      'backofficeClaim.getCancelFeePreview',
+      input
+    );
   }
 
   @UseMiddlewares(BackofficeAuthMiddleware)

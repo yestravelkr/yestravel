@@ -95,6 +95,12 @@ function CancelRequestContent() {
     orderNumber,
   });
 
+  // 취소 수수료 미리보기 조회
+  const [cancelFeePreview] =
+    trpc.shopClaim.getCancelFeePreview.useSuspenseQuery({
+      orderId: orderDetail.orderId,
+    });
+
   const createClaimMutation = trpc.shopClaim.create.useMutation({
     onSuccess: () => {
       toast.success('취소 요청이 접수되었습니다.');
@@ -146,15 +152,19 @@ function CancelRequestContent() {
     });
   };
 
+  const isSameDayCancelBlocked = cancelFeePreview.isSameDayCancelBlocked;
+
   const isSubmitDisabled =
     !selectedReason ||
     (selectedReason === 'OTHER' && !reasonDetail.trim()) ||
-    createClaimMutation.isPending;
+    createClaimMutation.isPending ||
+    isSameDayCancelBlocked;
 
-  // 환불 금액 계산 (현재는 수수료 0원)
-  const productAmount = orderDetail.payment.totalAmount;
-  const cancelFee = 0; // TODO: 실제 취소 수수료 계산
-  const refundAmount = productAmount - cancelFee;
+  // 환불 금액 계산
+  const productAmount = cancelFeePreview.totalAmount;
+  const cancelFee = cancelFeePreview.cancelFee;
+  const refundAmount = cancelFeePreview.refundAmount;
+  const feePercentage = cancelFeePreview.feePercentage;
 
   return (
     <Container>
@@ -217,6 +227,15 @@ function CancelRequestContent() {
           )}
         </Section>
 
+        {/* 당일 취소 차단 안내 */}
+        {isSameDayCancelBlocked && (
+          <Section>
+            <BlockedNotice>
+              체크인 당일에는 취소할 수 없습니다. 고객센터에 문의해주세요.
+            </BlockedNotice>
+          </Section>
+        )}
+
         {/* 환불 예정금액 */}
         <Section>
           <RefundHeader>
@@ -229,7 +248,9 @@ function CancelRequestContent() {
               <RefundValue>{productAmount.toLocaleString()}원</RefundValue>
             </RefundRow>
             <RefundRow>
-              <RefundLabel>취소 수수료</RefundLabel>
+              <RefundLabel>
+                취소 수수료{cancelFee > 0 ? ` (${feePercentage}%)` : ''}
+              </RefundLabel>
               <RefundValue>
                 {cancelFee > 0 ? `-${cancelFee.toLocaleString()}원` : '0원'}
               </RefundValue>
@@ -410,6 +431,11 @@ const RefundValue = tw.span`
 const Footer = tw.footer`
   p-5
   bg-white
+`;
+
+const BlockedNotice = tw.p`
+  text-[15px] leading-5
+  text-[#EB3D3D] font-medium
 `;
 
 const SubmitButton = tw.button`

@@ -6,6 +6,7 @@ import { Transactional } from '@src/module/shared/transaction/transaction.decora
 import {
   createClaimOutputSchema,
   claimDetailSchema,
+  getCancelFeePreviewOutputSchema,
   withdrawClaimOutputSchema,
 } from './shop.claim.schema';
 import type {
@@ -13,6 +14,8 @@ import type {
   CreateClaimOutput,
   GetClaimByOrderIdInput,
   GetClaimByOrderIdOutput,
+  GetCancelFeePreviewInput,
+  GetCancelFeePreviewOutput,
   WithdrawClaimInput,
   WithdrawClaimOutput,
 } from './shop.claim.dto';
@@ -51,6 +54,14 @@ export class ShopClaimController {
       cancelFee: claim.detail.cancelFee,
       createdAt: claim.createdAt,
     });
+  }
+
+  @MessagePattern('shopClaim.getCancelFeePreview')
+  async getCancelFeePreview(
+    input: GetCancelFeePreviewInput
+  ): Promise<GetCancelFeePreviewOutput> {
+    const result = await this.shopClaimService.getCancelFeePreview(input);
+    return getCancelFeePreviewOutputSchema.parse(result);
   }
 
   @MessagePattern('shopClaim.withdraw')

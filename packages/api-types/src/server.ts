@@ -458,6 +458,33 @@ const appRouter = t.router({
       cancelFee: z.number(),
       createdAt: z.date(),
     }).nullish()).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    getCancelFeePreview: publicProcedure.input(z.object({
+      /** 주문 ID */
+      orderId: z.number().int().positive(),
+    })).output(z.object({
+      /** 취소 수수료 금액 */
+      cancelFee: z.number(),
+      /** 적용된 수수료율 (%) */
+      feePercentage: z.number(),
+      /** 체크인까지 남은 일수 */
+      daysBeforeCheckIn: z.number(),
+      /** 주문 총액 */
+      totalAmount: z.number(),
+      /** 환불 예상 금액 */
+      refundAmount: z.number(),
+      /** 당일 취소 차단 여부 */
+      isSameDayCancelBlocked: z.boolean(),
+      /** 적용된 정책 항목 */
+      appliedPolicy: z.object({
+        daysBeforeCheckIn: z.number(),
+        feePercentage: z.number(),
+      }).optional(),
+      /** 전체 정책 스냅샷 */
+      cancelPolicySnapshot: z.array(z.object({
+        daysBeforeCheckIn: z.number(),
+        feePercentage: z.number(),
+      })),
+    })).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
     withdraw: publicProcedure.input(z.object({
       orderId: z.number().int().positive(),
     })).output(z.object({
@@ -2035,6 +2062,32 @@ const appRouter = t.router({
       orderId: z.number(),
       newOrderStatus: z.string(),
     })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    getCancelFeePreview: publicProcedure.input(z.object({
+      orderId: z.number().int().positive(),
+    })).output(z.object({
+      /** 취소 수수료 금액 */
+      cancelFee: z.number(),
+      /** 적용된 수수료율 (%) */
+      feePercentage: z.number(),
+      /** 체크인까지 남은 일수 */
+      daysBeforeCheckIn: z.number(),
+      /** 주문 총액 */
+      totalAmount: z.number(),
+      /** 환불 예상 금액 */
+      refundAmount: z.number(),
+      /** 당일 취소 차단 여부 */
+      isSameDayCancelBlocked: z.boolean(),
+      /** 적용된 정책 항목 */
+      appliedPolicy: z.object({
+        daysBeforeCheckIn: z.number(),
+        feePercentage: z.number(),
+      }).optional(),
+      /** 전체 정책 스냅샷 */
+      cancelPolicySnapshot: z.array(z.object({
+        daysBeforeCheckIn: z.number(),
+        feePercentage: z.number(),
+      })),
+    })).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
     findByOrderId: publicProcedure.input(z.object({
       orderId: z.number().int().positive(),
     })).output(z.array(z.object({

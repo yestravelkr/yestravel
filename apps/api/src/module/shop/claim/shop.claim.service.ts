@@ -9,10 +9,12 @@ import { orderNumberParser } from '@src/module/backoffice/domain/order/order.ent
 import { ShopPaymentService } from '@src/module/shop/payment/shop.payment.service';
 import type { ClaimDetail } from '@src/module/backoffice/domain/order/claim-detail.type';
 import { OrderHistoryService } from '@src/module/backoffice/order/order-history.service';
+import { calculateHotelCancelFee } from '@src/module/shared/cancel-fee/hotel-cancel-fee.util';
 import type {
   CreateClaimInput,
   CreateClaimOutput,
   GetClaimByOrderIdInput,
+  GetCancelFeePreviewInput,
   WithdrawClaimInput,
   WithdrawClaimOutput,
 } from './shop.claim.dto';
@@ -343,35 +345,58 @@ export class ShopClaimService {
    * - 일부 사용 시 부분 환불 로직
    */
   private async calculateCancelFee(
-    order: { type: string; totalAmount: number },
-    claimType: 'CANCEL' | 'RETURN'
+    order: { id: number; type: string; productId: number; totalAmount: number },
+    _claimType: 'CANCEL' | 'RETURN'
   ): Promise<{ cancelFee: number; detail: ClaimDetail }> {
-    // TODO: 실제 취소 정책 적용 필요 (현재는 수수료 0원)
-    const cancelFee = 0;
-
     if (order.type === 'HOTEL') {
-      // TODO: 호텔 상품의 취소 정책 조회 및 적용
-      // const product = await this.repositoryProvider.ProductRepository.findOne({ where: { id: order.productId } });
-      // const cancelPolicy = product.cancelPolicy;
-      // const checkInDate = order.checkInDate;
-      // const { fee, appliedPolicy } = this.calculateHotelCancelFee(cancelPolicy, checkInDate);
+      // 호텔 주문의 체크인 날짜 조회
+      const hotelOrder =
+        await this.repositoryProvider.HotelOrderRepository.findOne({
+          where: { id: order.id },
+        });
+
+      if (!hotelOrder?.checkInDate) {
+        throw new BadRequestException('체크인 날짜 정보가 없습니다.');
+      }
+
+      // 호텔 상품의 취소 정책 조회
+      const hotelProduct =
+        await this.repositoryProvider.HotelProductRepository.findOne({
+          where: { id: order.productId },
+        });
+
+      const cancellationFees = hotelProduct?.cancellationFees ?? [];
+
+      const result = calculateHotelCancelFee({
+        totalAmount: order.totalAmount,
+        checkInDate: hotelOrder.checkInDate,
+        cancellationFees,
+      });
+
+      // Shop: 당일/과거 취소 차단
+      if (result.isSameDayOrPast) {
+        throw new BadRequestException(
+          '숙박 당일 또는 체크인 이후에는 취소할 수 없습니다.'
+        );
+      }
+
       return {
-        cancelFee,
+        cancelFee: result.cancelFee,
         detail: {
-          type: 'HOTEL',
-          cancelFee,
-          appliedPolicy: undefined, // TODO: 적용된 정책 항목
-          cancelPolicySnapshot: undefined, // TODO: 전체 정책 스냅샷
+          type: 'HOTEL' as const,
+          cancelFee: result.cancelFee,
+          appliedPolicy: result.appliedPolicy,
+          cancelPolicySnapshot: result.cancelPolicySnapshot,
         },
       };
     } else if (order.type === 'DELIVERY') {
       // TODO: 반품 배송비 계산 로직
       // const returnShippingFee = claimType === 'RETURN' ? this.getReturnShippingFee(order) : 0;
       return {
-        cancelFee,
+        cancelFee: 0,
         detail: {
           type: 'DELIVERY',
-          cancelFee,
+          cancelFee: 0,
           returnShippingFee: 0, // TODO: 반품 배송비 계산
         },
       };
@@ -379,12 +404,84 @@ export class ShopClaimService {
       // E-TICKET
       // TODO: 이티켓 취소 수수료 계산 (사용 여부 확인 필요)
       return {
-        cancelFee,
+        cancelFee: 0,
         detail: {
           type: 'E-TICKET',
-          cancelFee,
+          cancelFee: 0,
         },
       };
     }
+  }
+
+  /**
+   * 취소 수수료 미리보기 (Shop용)
+   *
+   * - 주문 조회 + 권한 확인
+   * - HOTEL 타입만 수수료 계산 (다른 타입은 cancelFee=0)
+   * - isSameDayOrPast를 에러 대신 플래그로 반환
+   */
+  async getCancelFeePreview(input: GetCancelFeePreviewInput) {
+    const { orderId, memberId } = input;
+
+    // 주문 조회
+    const order = await this.repositoryProvider.OrderRepository.findOneOrFail({
+      where: { id: orderId },
+    }).catch(() => {
+      throw new NotFoundException(`주문을 찾을 수 없습니다. (id: ${orderId})`);
+    });
+
+    // 권한 확인
+    if (order.memberId !== memberId) {
+      throw new BadRequestException('본인의 주문만 조회할 수 있습니다.');
+    }
+
+    // HOTEL 타입이 아니면 수수료 0 반환
+    if (order.type !== 'HOTEL') {
+      return {
+        cancelFee: 0,
+        feePercentage: 0,
+        daysBeforeCheckIn: 0,
+        totalAmount: order.totalAmount,
+        refundAmount: order.totalAmount,
+        isSameDayCancelBlocked: false,
+        appliedPolicy: undefined,
+        cancelPolicySnapshot: [],
+      };
+    }
+
+    // 호텔 주문의 체크인 날짜 조회
+    const hotelOrder =
+      await this.repositoryProvider.HotelOrderRepository.findOne({
+        where: { id: orderId },
+      });
+
+    if (!hotelOrder?.checkInDate) {
+      throw new BadRequestException('체크인 날짜 정보가 없습니다.');
+    }
+
+    // 호텔 상품의 취소 정책 조회
+    const hotelProduct =
+      await this.repositoryProvider.HotelProductRepository.findOne({
+        where: { id: order.productId },
+      });
+
+    const cancellationFees = hotelProduct?.cancellationFees ?? [];
+
+    const result = calculateHotelCancelFee({
+      totalAmount: order.totalAmount,
+      checkInDate: hotelOrder.checkInDate,
+      cancellationFees,
+    });
+
+    return {
+      cancelFee: result.cancelFee,
+      feePercentage: result.feePercentage,
+      daysBeforeCheckIn: result.daysBeforeCheckIn,
+      totalAmount: order.totalAmount,
+      refundAmount: order.totalAmount - result.cancelFee,
+      isSameDayCancelBlocked: result.isSameDayOrPast,
+      appliedPolicy: result.appliedPolicy,
+      cancelPolicySnapshot: result.cancelPolicySnapshot,
+    };
   }
 }

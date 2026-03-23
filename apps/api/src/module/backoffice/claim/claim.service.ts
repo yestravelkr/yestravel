@@ -8,12 +8,14 @@ import { orderNumberParser } from '@src/module/backoffice/domain/order/order.ent
 import { ShopPaymentService } from '@src/module/shop/payment/shop.payment.service';
 import type { ClaimEntity } from '@src/module/backoffice/domain/order/claim.entity';
 import { OrderHistoryService } from '@src/module/backoffice/order/order-history.service';
+import { calculateHotelCancelFee } from '@src/module/shared/cancel-fee/hotel-cancel-fee.util';
 import type {
   ApproveClaimInput,
   ApproveClaimResponse,
   RejectClaimInput,
   RejectClaimResponse,
   FindByOrderIdInput,
+  GetCancelFeePreviewInput,
 } from './claim.dto';
 
 @Injectable()
@@ -183,5 +185,73 @@ export class ClaimService {
       where: { orderId },
       order: { createdAt: 'DESC' },
     });
+  }
+
+  /**
+   * 취소 수수료 미리보기 (Backoffice용)
+   *
+   * - 주문 조회 -> HotelOrder + HotelProduct 로드
+   * - calculateHotelCancelFee 호출
+   * - 당일 차단 없음 (isSameDayOrPast여도 정상 반환)
+   */
+  async getCancelFeePreview(input: GetCancelFeePreviewInput) {
+    const { orderId } = input;
+
+    // 주문 조회
+    const order = await this.repositoryProvider.OrderRepository.findOneOrFail({
+      where: { id: orderId },
+    }).catch(() => {
+      throw new NotFoundException(`주문을 찾을 수 없습니다. (id: ${orderId})`);
+    });
+
+    // HOTEL 타입이 아니면 수수료 0 반환
+    if (order.type !== 'HOTEL') {
+      return {
+        cancelFee: 0,
+        feePercentage: 0,
+        daysBeforeCheckIn: 0,
+        totalAmount: order.totalAmount,
+        refundAmount: order.totalAmount,
+        isSameDayCancelBlocked: false,
+        appliedPolicy: undefined,
+        cancelPolicySnapshot: [],
+      };
+    }
+
+    // 호텔 주문의 체크인 날짜 조회
+    const hotelOrder =
+      await this.repositoryProvider.HotelOrderRepository.findOne({
+        where: { id: orderId },
+      });
+
+    if (!hotelOrder?.checkInDate) {
+      throw new NotFoundException('체크인 날짜 정보가 없습니다.');
+    }
+
+    // 호텔 상품의 취소 정책 조회
+    const hotelProduct =
+      await this.repositoryProvider.HotelProductRepository.findOne({
+        where: { id: order.productId },
+      });
+
+    const cancellationFees = hotelProduct?.cancellationFees ?? [];
+
+    const result = calculateHotelCancelFee({
+      totalAmount: order.totalAmount,
+      checkInDate: hotelOrder.checkInDate,
+      cancellationFees,
+    });
+
+    // Backoffice: 당일/과거여도 정상 반환 (차단 없음)
+    return {
+      cancelFee: result.cancelFee,
+      feePercentage: result.feePercentage,
+      daysBeforeCheckIn: result.daysBeforeCheckIn,
+      totalAmount: order.totalAmount,
+      refundAmount: order.totalAmount - result.cancelFee,
+      isSameDayCancelBlocked: result.isSameDayOrPast,
+      appliedPolicy: result.appliedPolicy,
+      cancelPolicySnapshot: result.cancelPolicySnapshot,
+    };
   }
 }
