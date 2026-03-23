@@ -139,9 +139,11 @@ export class ShopPaymentService {
     // 7. PortOne 결제 승인
     await this.confirmPayment(data, savedOrder);
 
-    // 8. 호텔 주문 결제 완료 알림톡 발송
+    // 8. 결제 완료 알림톡 발송
     if (savedOrder.type === ProductTypeEnum.HOTEL) {
       await this.sendHotelOrderPaidAlimtalk(savedOrder);
+    } else {
+      await this.sendDeliveryOrderPaidAlimtalk(savedOrder);
     }
 
     return {
@@ -210,6 +212,65 @@ export class ShopPaymentService {
     } catch (error) {
       this.logger.error(
         `호텔 주문 결제 완료 알림톡 발송 실패: orderId=${order.id}`,
+        error
+      );
+    }
+  }
+
+  /**
+   * 배송/E-TICKET 주문 결제 완료 알림톡 발송
+   * 발송 실패 시 에러 로깅만 하고 결제 프로세스에 영향을 주지 않음
+   */
+  private async sendDeliveryOrderPaidAlimtalk(
+    order: OrderEntity
+  ): Promise<void> {
+    try {
+      const snapshot = order.orderOptionSnapshot;
+
+      const product = await this.repositoryProvider.ProductRepository.findOne({
+        where: { id: order.productId },
+        select: ['id', 'name'],
+      });
+      const productName = product?.name ?? '상품명 없음';
+
+      const optionName = snapshot.hotelOptionName ?? '-';
+      const quantity = '1개';
+      const useDate = snapshot.checkInDate ?? '-';
+      const totalAmount = `${order.totalAmount.toLocaleString()}원`;
+      const confirmLink = `${this.SHOP_URL}/orders/${order.orderNumber}`;
+
+      const message =
+        `[예스트래블] 주문 접수 안내\n\n` +
+        `안녕하세요, ${order.customerName} 고객님.\n\n` +
+        `주문해 주셔서 감사합니다.\n` +
+        `${order.customerName} 고객님의 주문이 정상적으로 접수되었습니다.\n\n` +
+        `★ 주문 정보\n` +
+        `주문번호: ${order.orderNumber}\n` +
+        `상품명: ${productName}\n` +
+        `선택옵션: ${optionName}\n` +
+        `구매수량: ${quantity}\n` +
+        `이용 날짜: ${useDate}\n` +
+        `결제금액: ${totalAmount}\n` +
+        `주문 확인: ${confirmLink}\n\n` +
+        `★ 고객센터 안내\n` +
+        `궁금한 사항이 있으시면 고객센터로 문의해 주세요.\n` +
+        `고객센터: ${this.CS_LINK}\n\n` +
+        `감사합니다.`;
+
+      await this.smtntService.sendAlimtalk({
+        phone: order.customerPhone,
+        message,
+        templateCode: 'SHOP_DELIVERY_ORDER_PAID',
+        failedType: 'LMS',
+        failedMessage: message,
+      });
+
+      this.logger.log(
+        `배송 주문 결제 완료 알림톡 발송 성공: orderId=${order.id}`
+      );
+    } catch (error) {
+      this.logger.error(
+        `배송 주문 결제 완료 알림톡 발송 실패: orderId=${order.id}`,
         error
       );
     }
