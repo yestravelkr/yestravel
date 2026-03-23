@@ -1,14 +1,20 @@
 import {
   Injectable,
+  Logger,
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
 import { RepositoryProvider } from '@src/module/shared/transaction/repository.provider';
 import { ClaimEntity } from '@src/module/backoffice/domain/order/claim.entity';
-import { orderNumberParser } from '@src/module/backoffice/domain/order/order.entity';
+import {
+  OrderEntity,
+  orderNumberParser,
+} from '@src/module/backoffice/domain/order/order.entity';
 import { ShopPaymentService } from '@src/module/shop/payment/shop.payment.service';
 import type { ClaimDetail } from '@src/module/backoffice/domain/order/claim-detail.type';
 import { OrderHistoryService } from '@src/module/backoffice/order/order-history.service';
+import { SmtntService } from '@src/module/shared/notification/smtnt/smtnt.service';
+import { ConfigProvider } from '@src/config';
 import {
   calculateHotelCancelFee,
   buildCancelFeePreviewResult,
@@ -37,10 +43,15 @@ const DELIVERY_RETURNABLE_STATUSES = ['DELIVERED'] as const;
 
 @Injectable()
 export class ShopClaimService {
+  private readonly logger = new Logger(ShopClaimService.name);
+  private readonly CS_LINK = 'https://travelcs.channel.io/home';
+  private readonly SHOP_URL = ConfigProvider.shopUrl;
+
   constructor(
     private readonly repositoryProvider: RepositoryProvider,
     private readonly shopPaymentService: ShopPaymentService,
-    private readonly orderHistoryService: OrderHistoryService
+    private readonly orderHistoryService: OrderHistoryService,
+    private readonly smtntService: SmtntService
   ) {}
 
   /**
@@ -180,6 +191,10 @@ export class ShopClaimService {
         claimId: savedClaim.id,
         metadata: { refundAmount, cancelFee },
       });
+
+      // 알림톡 발송: 취소 안내 + 환불 완료
+      await this.sendCancelledAlimtalk(order, refundAmount);
+      await this.sendRefundedAlimtalk(order, refundAmount);
 
       return {
         claimId: savedClaim.id,
@@ -485,5 +500,168 @@ export class ShopClaimService {
     });
 
     return buildCancelFeePreviewResult(order.totalAmount, result);
+  }
+
+  // ===== 알림톡 발송 =====
+
+  /**
+   * 주문 취소 알림톡 발송 (호텔/배송 분기)
+   */
+  private async sendCancelledAlimtalk(
+    order: OrderEntity,
+    refundAmount: number
+  ): Promise<void> {
+    if (order.type === 'HOTEL') {
+      await this.sendHotelOrderCancelledAlimtalk(order, refundAmount);
+    } else {
+      await this.sendDeliveryOrderCancelledAlimtalk(order, refundAmount);
+    }
+  }
+
+  /**
+   * 호텔 예약 취소 알림톡 (SHOP_HOTEL_ORDER_CANCELLED)
+   */
+  private async sendHotelOrderCancelledAlimtalk(
+    order: OrderEntity,
+    refundAmount: number
+  ): Promise<void> {
+    try {
+      const snapshot = order.orderOptionSnapshot;
+      const product = await this.repositoryProvider.ProductRepository.findOne({
+        where: { id: order.productId },
+        select: ['id', 'name'],
+      });
+      const productName = product?.name ?? '상품명 없음';
+      const quantity = `${Object.keys(snapshot.priceByDate).length}박`;
+      const confirmLink = `${this.SHOP_URL}/orders/${order.orderNumber}`;
+
+      const message =
+        `[예스트래블] 예약 취소 안내\n\n` +
+        `안녕하세요, ${order.customerName} 고객님.\n\n` +
+        `예약번호 ${order.orderNumber}의 취소가 정상적으로 완료되었습니다.\n` +
+        `환불은 영업일 기준 3~5일 내 처리됩니다.\n\n` +
+        `★ 예약 취소 정보\n` +
+        `주문번호: ${order.orderNumber}\n` +
+        `상품명: ${productName}\n` +
+        `선택옵션: ${snapshot.hotelOptionName}\n` +
+        `구매수량: ${quantity}\n` +
+        `이용 날짜: ${snapshot.checkInDate}\n` +
+        `결제금액: ${order.totalAmount.toLocaleString()}원\n` +
+        `예약 상태 확인: ${confirmLink}\n\n` +
+        `★ 고객센터 안내\n` +
+        `궁금한 사항이 있으시면 고객센터로 문의해 주세요.\n` +
+        `고객센터: ${this.CS_LINK}\n\n` +
+        `감사합니다.`;
+
+      await this.smtntService.sendAlimtalk({
+        phone: order.customerPhone,
+        message,
+        templateCode: 'SHOP_HOTEL_ORDER_CANCELLED',
+        failedType: 'LMS',
+        failedMessage: message,
+      });
+
+      this.logger.log(`호텔 예약 취소 알림톡 발송 성공: orderId=${order.id}`);
+    } catch (error) {
+      this.logger.error(
+        `호텔 예약 취소 알림톡 발송 실패: orderId=${order.id}`,
+        error
+      );
+    }
+  }
+
+  /**
+   * 배송상품 주문 취소 알림톡 (SHOP_DELIVERY_ORDER_CANCELLED)
+   */
+  private async sendDeliveryOrderCancelledAlimtalk(
+    order: OrderEntity,
+    refundAmount: number
+  ): Promise<void> {
+    try {
+      const snapshot = order.orderOptionSnapshot;
+      const product = await this.repositoryProvider.ProductRepository.findOne({
+        where: { id: order.productId },
+        select: ['id', 'name'],
+      });
+      const productName = product?.name ?? '상품명 없음';
+      const confirmLink = `${this.SHOP_URL}/orders/${order.orderNumber}`;
+
+      const message =
+        `[예스트래블] 주문 취소 안내\n\n` +
+        `안녕하세요, ${order.customerName} 고객님.\n\n` +
+        `주문하신 상품의 취소가 정상적으로 완료되었습니다.\n` +
+        `환불은 영업일 기준 3~5일 내 처리됩니다.\n\n` +
+        `★ 주문 취소 정보\n` +
+        `주문번호: ${order.orderNumber}\n` +
+        `상품명: ${productName}\n` +
+        `선택옵션: ${snapshot.hotelOptionName ?? '-'}\n` +
+        `구매수량: 1개\n` +
+        `취소금액: ${refundAmount.toLocaleString()}원\n` +
+        `주문 상태 확인: ${confirmLink}\n\n` +
+        `★ 고객센터 안내\n` +
+        `궁금한 사항이 있으시면 고객센터로 문의해 주세요.\n` +
+        `고객센터: ${this.CS_LINK}\n\n` +
+        `감사합니다.`;
+
+      await this.smtntService.sendAlimtalk({
+        phone: order.customerPhone,
+        message,
+        templateCode: 'SHOP_DELIVERY_ORDER_CANCELLED',
+        failedType: 'LMS',
+        failedMessage: message,
+      });
+
+      this.logger.log(`배송 주문 취소 알림톡 발송 성공: orderId=${order.id}`);
+    } catch (error) {
+      this.logger.error(
+        `배송 주문 취소 알림톡 발송 실패: orderId=${order.id}`,
+        error
+      );
+    }
+  }
+
+  /**
+   * 환불 완료 알림톡 (SHOP_ORDER_REFUNDED) - 호텔/배송 공통
+   */
+  private async sendRefundedAlimtalk(
+    order: OrderEntity,
+    refundAmount: number
+  ): Promise<void> {
+    try {
+      const product = await this.repositoryProvider.ProductRepository.findOne({
+        where: { id: order.productId },
+        select: ['id', 'name'],
+      });
+      const productName = product?.name ?? '상품명 없음';
+
+      const message =
+        `[예스트래블] 환불 완료 안내\n\n` +
+        `안녕하세요, ${order.customerName} 고객님.\n\n` +
+        `환불이 정상적으로 완료되었습니다.\n\n` +
+        `★ 환불 정보\n` +
+        `상품명: ${productName}\n` +
+        `주문번호: ${order.orderNumber}\n` +
+        `환불금액: ${refundAmount.toLocaleString()}원\n\n` +
+        `카드사에 따라 영업일 기준 3~5일 소요될 수 있습니다.\n\n` +
+        `★ 고객센터 안내\n` +
+        `궁금한 사항이 있으시면 고객센터로 문의해 주세요.\n` +
+        `고객센터: ${this.CS_LINK}\n\n` +
+        `감사합니다.`;
+
+      await this.smtntService.sendAlimtalk({
+        phone: order.customerPhone,
+        message,
+        templateCode: 'SHOP_ORDER_REFUNDED',
+        failedType: 'LMS',
+        failedMessage: message,
+      });
+
+      this.logger.log(`환불 완료 알림톡 발송 성공: orderId=${order.id}`);
+    } catch (error) {
+      this.logger.error(
+        `환불 완료 알림톡 발송 실패: orderId=${order.id}`,
+        error
+      );
+    }
   }
 }
