@@ -87,7 +87,8 @@ export function calculateHotelCancelFee(
     policy => actualDays >= policy.daysBeforeCheckIn
   );
 
-  // 매칭되는 정책이 없으면 가장 가까운 정책 (가장 작은 daysBeforeCheckIn) 적용
+  // 매칭 없으면 가장 가까운 정책(가장 작은 daysBeforeCheckIn) 적용
+  // 이는 체크인 임박 시(모든 정책 기준일보다 가까울 때) 가장 엄격한 수수료를 적용하는 것을 의미
   const effectivePolicy =
     appliedPolicy ?? sortedPolicies[sortedPolicies.length - 1];
 
@@ -101,5 +102,27 @@ export function calculateHotelCancelFee(
     appliedPolicy: effectivePolicy,
     cancelPolicySnapshot,
     isSameDayOrPast,
+  };
+}
+
+/**
+ * 취소 수수료 미리보기 결과 매핑
+ *
+ * Shop/Backoffice getCancelFeePreview()에서 공통으로 사용하는 결과 매핑 함수.
+ * DB 조회 결과(totalAmount)와 calculateHotelCancelFee 결과를 미리보기 응답 형태로 변환합니다.
+ */
+export function buildCancelFeePreviewResult(
+  totalAmount: number,
+  result: CalculateHotelCancelFeeOutput
+) {
+  return {
+    cancelFee: result.cancelFee,
+    feePercentage: result.feePercentage,
+    daysBeforeCheckIn: result.daysBeforeCheckIn,
+    totalAmount,
+    refundAmount: totalAmount - result.cancelFee,
+    isSameDayCancelBlocked: result.isSameDayOrPast,
+    appliedPolicy: result.appliedPolicy,
+    cancelPolicySnapshot: result.cancelPolicySnapshot,
   };
 }

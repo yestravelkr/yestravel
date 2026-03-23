@@ -8,7 +8,10 @@ import { orderNumberParser } from '@src/module/backoffice/domain/order/order.ent
 import { ShopPaymentService } from '@src/module/shop/payment/shop.payment.service';
 import type { ClaimEntity } from '@src/module/backoffice/domain/order/claim.entity';
 import { OrderHistoryService } from '@src/module/backoffice/order/order-history.service';
-import { calculateHotelCancelFee } from '@src/module/shared/cancel-fee/hotel-cancel-fee.util';
+import {
+  calculateHotelCancelFee,
+  buildCancelFeePreviewResult,
+} from '@src/module/shared/cancel-fee/hotel-cancel-fee.util';
 import type {
   ApproveClaimInput,
   ApproveClaimResponse,
@@ -234,7 +237,11 @@ export class ClaimService {
         where: { id: order.productId },
       });
 
-    const cancellationFees = hotelProduct?.cancellationFees ?? [];
+    if (!hotelProduct) {
+      throw new NotFoundException('호텔 상품 정보를 찾을 수 없습니다.');
+    }
+
+    const cancellationFees = hotelProduct.cancellationFees ?? [];
 
     const result = calculateHotelCancelFee({
       totalAmount: order.totalAmount,
@@ -243,15 +250,6 @@ export class ClaimService {
     });
 
     // Backoffice: 당일/과거여도 정상 반환 (차단 없음)
-    return {
-      cancelFee: result.cancelFee,
-      feePercentage: result.feePercentage,
-      daysBeforeCheckIn: result.daysBeforeCheckIn,
-      totalAmount: order.totalAmount,
-      refundAmount: order.totalAmount - result.cancelFee,
-      isSameDayCancelBlocked: result.isSameDayOrPast,
-      appliedPolicy: result.appliedPolicy,
-      cancelPolicySnapshot: result.cancelPolicySnapshot,
-    };
+    return buildCancelFeePreviewResult(order.totalAmount, result);
   }
 }
