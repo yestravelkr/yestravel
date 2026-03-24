@@ -98,7 +98,7 @@ export class NotificationScheduleService {
     customerPhone: string;
     orderNumber: string;
     productId: number;
-    checkInDate: string | null;
+    checkInDate: string | null | undefined;
   }): Promise<void> {
     try {
       const product = await this.repositoryProvider.ProductRepository.findOne({
@@ -151,7 +151,7 @@ export class NotificationScheduleService {
     customerPhone: string;
     orderNumber: string;
     productId: number;
-    checkInDate: string | null;
+    checkInDate: string | null | undefined;
   }): Promise<void> {
     try {
       const product = await this.repositoryProvider.ProductRepository.findOne({
