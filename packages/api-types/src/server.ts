@@ -1156,6 +1156,12 @@ const appRouter = t.router({
             quantity: z.number(),
           })
         ),
+        happyCallConfig: z.object({
+          useHappyCall: z.boolean(),
+          useGuide: z.boolean(),
+          happyCallLink: z.string().nullish(),
+          guideLink: z.string().nullish(),
+        }).nullish(),
         createdAt: z.date(),
         updatedAt: z.date(),
       }),
@@ -1292,6 +1298,12 @@ const appRouter = t.router({
             })
           )
           .default([]),
+        happyCallConfig: z.object({
+          useHappyCall: z.boolean().default(false),
+          useGuide: z.boolean().default(false),
+          happyCallLink: z.string().nullish().default(null),
+          guideLink: z.string().nullish().default(null),
+        }).nullish().default(null),
       }),
       // Delivery Product
       z.object({
@@ -1426,6 +1438,12 @@ const appRouter = t.router({
             })
           )
           .default([]),
+        happyCallConfig: z.object({
+          useHappyCall: z.boolean().default(false),
+          useGuide: z.boolean().default(false),
+          happyCallLink: z.string().nullish().default(null),
+          guideLink: z.string().nullish().default(null),
+        }).nullish().default(null),
       }),
       // Delivery Product Update
       z.object({

@@ -62,7 +62,7 @@ export function HappyCallCard() {
             type="url"
             placeholder="http://"
             value={happyCallConfig.happyCallLink || ''}
-            onChange={(e) =>
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
               updateConfig('happyCallLink', e.target.value || null)
             }
           />
@@ -77,7 +77,9 @@ export function HappyCallCard() {
             type="url"
             placeholder="http://"
             value={happyCallConfig.guideLink || ''}
-            onChange={(e) => updateConfig('guideLink', e.target.value || null)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              updateConfig('guideLink', e.target.value || null)
+            }
           />
         </LinkField>
       )}
