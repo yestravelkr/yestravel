@@ -6,7 +6,6 @@
  */
 
 import { useState } from 'react';
-import { toast } from 'sonner';
 import tw from 'tailwind-styled-components';
 
 /** 판매자 정보 */
@@ -79,7 +78,11 @@ export function SalesInfoContent({ salesInfo }: SalesInfoContentProps) {
             문의하기 버튼을 눌러 문의해 주세요.
           </InquiryDescription>
         </InquiryTextGroup>
-        <InquiryButton onClick={() => toast('문의하기 기능 준비 중입니다.')}>
+        <InquiryButton
+          onClick={() =>
+            window.open('https://travelcs.channel.io/home', '_blank')
+          }
+        >
           <InquiryButtonText>문의하기</InquiryButtonText>
         </InquiryButton>
       </InquirySection>
