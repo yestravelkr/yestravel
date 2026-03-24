@@ -155,59 +155,108 @@ export class ShopPaymentService {
 
   /**
    * 호텔 주문 결제 완료 알림톡 발송
+   * happyCallConfig.useHappyCall이 true이면 해피콜 버전 템플릿 사용
    * 발송 실패 시 에러 로깅만 하고 결제 프로세스에 영향을 주지 않음
    */
   private async sendHotelOrderPaidAlimtalk(order: OrderEntity): Promise<void> {
     try {
       const snapshot = order.orderOptionSnapshot;
 
-      // 상품명 조회
-      const product = await this.repositoryProvider.ProductRepository.findOne({
-        where: { id: order.productId },
-        select: ['id', 'name'],
-      });
-      const productName = product?.name ?? '상품명 없음';
+      // 상품(호텔) 조회 - happyCallConfig 포함
+      const hotelProduct =
+        await this.repositoryProvider.HotelProductRepository.findOne({
+          where: { id: order.productId },
+          select: ['id', 'name', 'happyCallConfig'],
+        });
+      const productName = hotelProduct?.name ?? '상품명 없음';
+      const happyCallConfig = hotelProduct?.happyCallConfig;
 
       const quantity = `${Object.keys(snapshot.priceByDate).length}박`;
       const checkInDate = snapshot.checkInDate;
       const totalAmount = `${order.totalAmount.toLocaleString()}원`;
       const confirmLink = `${this.SHOP_URL}/orders/${order.orderNumber}`;
 
-      const message =
-        `[예스트래블] 예약 접수 안내\n\n` +
-        `안녕하세요, ${order.customerName} 고객님.\n\n` +
-        `예약해 주셔서 감사합니다.\n` +
-        `${order.customerName} 고객님의 예약이 정상적으로 접수되었습니다.\n\n` +
-        `★ 예약 확정 안내\n` +
-        `예약 확정은 영업일 기준 1~3일 내에 이루어질 예정입니다.\n` +
-        `확정 시 안내 메시지를 보내드리오니 잠시만 기다려 주세요.\n\n` +
-        `★ 예약 신청 정보\n` +
-        `주문번호: ${order.orderNumber}\n` +
-        `상품명: ${productName}\n` +
-        `선택옵션: ${snapshot.hotelOptionName}\n` +
-        `구매수량: ${quantity}\n` +
-        `이용 날짜: ${checkInDate}\n` +
-        `결제금액: ${totalAmount}\n` +
-        `예약 상태 확인: ${confirmLink}\n\n` +
-        `★ 변경 및 취소 안내\n` +
-        `변경 및 취소는 공휴일, 주말 제외 영업일 기준 17시까지 접수 가능합니다.\n` +
-        `변경은 위약금 부과 기간 전 1회에 한해 신청 가능하며, 기존 예약일과 변경 예약일 중 빠른 날짜 기준으로 위약금이 부과됩니다.\n` +
-        `상세페이지의 기준을 반드시 확인해 주시기 바랍니다.\n\n` +
-        `★ 고객센터 안내\n` +
-        `궁금한 사항이 있으시면 고객센터로 문의해 주세요.\n` +
-        `고객센터: ${this.CS_LINK}\n\n` +
-        `감사합니다.`;
+      const isHappyCall = happyCallConfig?.useHappyCall === true;
+
+      let message: string;
+      let templateCode: string;
+
+      if (isHappyCall) {
+        // 해피콜 버전 메시지
+        const happyCallLink = happyCallConfig.happyCallLink ?? confirmLink;
+        const smtntConfig = ConfigProvider.smtnt;
+        const callNumber = smtntConfig?.callback ?? '';
+
+        message =
+          `[예스트래블] 예약 대기 안내\n\n` +
+          `안녕하세요, ${order.customerName} 고객님.\n\n` +
+          `예약해 주셔서 감사합니다.\n` +
+          `${order.customerName} 고객님의 예약 대기 신청이 정상적으로 접수되었습니다.\n\n` +
+          `★ 서면 해피콜 작성 안내\n` +
+          `예약 확정을 위해 아래 링크에서 서면 해피콜을 작성해 주세요.\n` +
+          `작성이 완료되지 않을 경우 예약이 확정되지 않으며, 취소될 수 있습니다.\n` +
+          `서면 해피콜 입력: ${happyCallLink}\n\n` +
+          `★ 유선 연락 안내\n` +
+          `예약 확정이 불가하거나 중요한 안내 사항이 있는 경우 유선 연락을 드립니다.\n` +
+          `발신번호: ${callNumber}\n` +
+          `3회 이상 부재 시 예약이 취소될 수 있습니다.\n\n` +
+          `★ 예약 신청 정보\n` +
+          `주문번호: ${order.orderNumber}\n` +
+          `상품명: ${productName}\n` +
+          `선택옵션: ${snapshot.hotelOptionName}\n` +
+          `구매수량: ${quantity}\n` +
+          `이용 날짜: ${checkInDate}\n` +
+          `결제금액: ${totalAmount}\n` +
+          `예약 상태 확인: ${confirmLink}\n\n` +
+          `★ 변경 및 취소 안내\n` +
+          `해피콜 이후 취소 및 변경이 불가한 상품입니다.\n` +
+          `상세페이지의 기준을 반드시 확인해 주시기 바랍니다.\n\n` +
+          `★ 고객센터 안내\n` +
+          `궁금한 사항이 있으시면 고객센터로 문의해 주세요.\n` +
+          `고객센터: ${this.CS_LINK}\n\n` +
+          `감사합니다.`;
+
+        templateCode = 'SHOP_HOTEL_ORDER_PAID_HAPPYCALL';
+      } else {
+        // 기존 일반 버전 메시지
+        message =
+          `[예스트래블] 예약 접수 안내\n\n` +
+          `안녕하세요, ${order.customerName} 고객님.\n\n` +
+          `예약해 주셔서 감사합니다.\n` +
+          `${order.customerName} 고객님의 예약이 정상적으로 접수되었습니다.\n\n` +
+          `★ 예약 확정 안내\n` +
+          `예약 확정은 영업일 기준 1~3일 내에 이루어질 예정입니다.\n` +
+          `확정 시 안내 메시지를 보내드리오니 잠시만 기다려 주세요.\n\n` +
+          `★ 예약 신청 정보\n` +
+          `주문번호: ${order.orderNumber}\n` +
+          `상품명: ${productName}\n` +
+          `선택옵션: ${snapshot.hotelOptionName}\n` +
+          `구매수량: ${quantity}\n` +
+          `이용 날짜: ${checkInDate}\n` +
+          `결제금액: ${totalAmount}\n` +
+          `예약 상태 확인: ${confirmLink}\n\n` +
+          `★ 변경 및 취소 안내\n` +
+          `변경 및 취소는 공휴일, 주말 제외 영업일 기준 17시까지 접수 가능합니다.\n` +
+          `변경은 위약금 부과 기간 전 1회에 한해 신청 가능하며, 기존 예약일과 변경 예약일 중 빠른 날짜 기준으로 위약금이 부과됩니다.\n` +
+          `상세페이지의 기준을 반드시 확인해 주시기 바랍니다.\n\n` +
+          `★ 고객센터 안내\n` +
+          `궁금한 사항이 있으시면 고객센터로 문의해 주세요.\n` +
+          `고객센터: ${this.CS_LINK}\n\n` +
+          `감사합니다.`;
+
+        templateCode = 'SHOP_HOTEL_ORDER_PAID';
+      }
 
       await this.smtntService.sendAlimtalk({
         phone: order.customerPhone,
         message,
-        templateCode: 'SHOP_HOTEL_ORDER_PAID',
+        templateCode,
         failedType: 'LMS',
         failedMessage: message,
       });
 
       this.logger.log(
-        `호텔 주문 결제 완료 알림톡 발송 성공: orderId=${order.id}`
+        `호텔 주문 결제 완료 알림톡 발송 성공: orderId=${order.id}, template=${templateCode}`
       );
     } catch (error) {
       this.logger.error(
