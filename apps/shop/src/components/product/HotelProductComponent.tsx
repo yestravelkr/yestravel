@@ -55,7 +55,7 @@ export interface HotelProductComponentProps {
   /** 캠페인 정보 (다른 상품 조회용) */
   campaign: { id: number; endAt: Date | string };
   /** 인플루언서 정보 (다른 상품 조회용) */
-  influencer: { slug: string };
+  influencer: { slug: string | null | undefined };
 }
 
 /**
@@ -181,7 +181,7 @@ export function HotelProductComponent(props: HotelProductComponentProps) {
         {selectedTab === 'sale' && <SalesInfoContent salesInfo={salesInfo} />}
         {selectedTab === 'recommend' && (
           <OtherProductsContent
-            slug={influencer.slug}
+            slug={influencer.slug ?? ''}
             campaignId={campaign.id}
             currentSaleId={saleId}
           />

@@ -11,29 +11,29 @@ import tw from 'tailwind-styled-components';
 /** 판매자 정보 */
 interface SellerInfo {
   /** 업체명 */
-  companyName: string | null;
+  companyName: string | null | undefined;
   /** 대표 */
-  ceoName: string | null;
+  ceoName: string | null | undefined;
   /** 주소 */
-  address: string | null;
+  address: string | null | undefined;
   /** 사업자등록번호 */
-  licenseNumber: string | null;
+  licenseNumber: string | null | undefined;
   /** 통신판매업번호 */
-  mailOrderLicenseNumber: string | null;
+  mailOrderLicenseNumber: string | null | undefined;
 }
 
 /** 숙소 정보 */
 interface AccommodationInfo {
   /** 체크인 시간 */
-  checkInTime: string | null;
+  checkInTime: string | null | undefined;
   /** 체크아웃 시간 */
-  checkOutTime: string | null;
+  checkOutTime: string | null | undefined;
   /** 기준 인원 */
-  baseCapacity: number | null;
+  baseCapacity: number | null | undefined;
   /** 최대 인원 */
-  maxCapacity: number | null;
+  maxCapacity: number | null | undefined;
   /** 침대 타입 목록 */
-  bedTypes: string[] | null;
+  bedTypes: string[] | null | undefined;
 }
 
 /** SalesInfoContent Props */
