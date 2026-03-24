@@ -11,30 +11,30 @@ import tw from 'tailwind-styled-components';
 /** 판매자 정보 */
 interface SellerInfo {
   /** 업체명 */
-  companyName: string | null | undefined;
+  companyName?: string | null;
   /** 대표 */
-  ceoName: string | null | undefined;
+  ceoName?: string | null;
   /** 주소 */
-  address: string | null | undefined;
+  address?: string | null;
   /** 사업자등록번호 */
-  licenseNumber: string | null | undefined;
+  licenseNumber?: string | null;
   /** 통신판매업번호 */
-  mailOrderLicenseNumber: string | null | undefined;
+  mailOrderLicenseNumber?: string | null;
 }
 
 // TODO: 호텔 숙박 정보 섹션 구현 시 사용
 /** 숙소 정보 */
 interface AccommodationInfo {
   /** 체크인 시간 */
-  checkInTime: string | null | undefined;
+  checkInTime?: string | null;
   /** 체크아웃 시간 */
-  checkOutTime: string | null | undefined;
+  checkOutTime?: string | null;
   /** 기준 인원 */
-  baseCapacity: number | null | undefined;
+  baseCapacity?: number | null;
   /** 최대 인원 */
-  maxCapacity: number | null | undefined;
+  maxCapacity?: number | null;
   /** 침대 타입 목록 */
-  bedTypes: string[] | null | undefined;
+  bedTypes?: string[] | null;
 }
 
 /** SalesInfoContent Props */
