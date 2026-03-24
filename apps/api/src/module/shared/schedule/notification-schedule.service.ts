@@ -91,6 +91,7 @@ export class NotificationScheduleService {
 
   /**
    * 개별 주문에 투숙 전 안내 알림톡 발송
+   * happyCallConfig.useGuide가 true이면 설정된 guideLink를, 아니면 주문 확인 링크를 사용
    */
   private async sendPreStayGuide(order: {
     id: number;
@@ -101,12 +102,20 @@ export class NotificationScheduleService {
     checkInDate: string | null | undefined;
   }): Promise<void> {
     try {
-      const product = await this.repositoryProvider.ProductRepository.findOne({
-        where: { id: order.productId },
-        select: ['id', 'name'],
-      });
-      const productName = product?.name ?? '상품명 없음';
-      const guideLink = `${this.SHOP_URL}/orders/${order.orderNumber}`;
+      // 호텔 상품 조회 - happyCallConfig 포함
+      const hotelProduct =
+        await this.repositoryProvider.HotelProductRepository.findOne({
+          where: { id: order.productId },
+          select: ['id', 'name', 'happyCallConfig'],
+        });
+      const productName = hotelProduct?.name ?? '상품명 없음';
+      const happyCallConfig = hotelProduct?.happyCallConfig;
+
+      // useGuide가 true이고 guideLink가 있으면 해당 링크 사용, 아니면 주문 확인 링크
+      const guideLink =
+        happyCallConfig?.useGuide === true && happyCallConfig.guideLink
+          ? happyCallConfig.guideLink
+          : `${this.SHOP_URL}/orders/${order.orderNumber}`;
 
       const message =
         `[예스트래블] 투숙 전 안내\n\n` +

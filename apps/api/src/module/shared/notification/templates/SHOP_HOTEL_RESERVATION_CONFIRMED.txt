@@ -11,16 +11,9 @@
 주문번호: #{orderNumber}
 예약번호: #{reservationNumber}
 
-★ 공동구매 혜택
-#{benefitDetails1}
-#{benefitDetails2}
-
 ★ 취소 및 변경 규정
 이용일 기준
-- #{refundDay1}일 전까지: 전액 환불
-- #{refundDay2}일 전: #{refundRate2}% 환불
-- #{refundDay3}일 전: #{refundRate3}% 환불
-- 당일 및 NO-SHOW: 환불 불가
+#{refundPolicyText}
 
 취소/변경은 공휴일, 주말 제외 영업일 기준 17시 이전 접수분에 적용됩니다.
 

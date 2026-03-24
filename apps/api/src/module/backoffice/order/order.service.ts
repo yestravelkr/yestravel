@@ -1,5 +1,6 @@
 import {
   Injectable,
+  Logger,
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
@@ -41,15 +42,23 @@ import type {
   CancelOrderResponse,
 } from './order.dto';
 import { OrderHistoryService } from './order-history.service';
+import { SmtntService } from '@src/module/shared/notification/smtnt/smtnt.service';
+
 import type { Nullish } from '@src/types/utility.type';
 
 @Injectable()
 export class OrderService {
+  private readonly logger = new Logger(OrderService.name);
+
+  /** Shop 고객센터 URL */
+  private readonly CS_LINK = 'https://travelcs.channel.io/home';
+
   constructor(
     private readonly repositoryProvider: RepositoryProvider,
     private readonly s3Service: S3Service,
     private readonly shopPaymentService: ShopPaymentService,
-    private readonly orderHistoryService: OrderHistoryService
+    private readonly orderHistoryService: OrderHistoryService,
+    private readonly smtntService: SmtntService
   ) {}
 
   /**
@@ -620,12 +629,95 @@ export class OrderService {
       description: `${ORDER_STATUS_LABELS[previousStatus]} 에서 ${ORDER_STATUS_LABELS[newStatus]} 상태로 변경되었습니다.`,
     });
 
+    // 호텔 주문 예약 확정 시 알림톡 발송
+    if (newStatus === 'RESERVATION_CONFIRMED' && order.type === 'HOTEL') {
+      await this.sendReservationConfirmedAlimtalk(order);
+    }
+
     return {
       success: true,
       orderId: order.id,
       previousStatus,
       newStatus,
     };
+  }
+
+  /**
+   * 호텔 예약 확정 알림톡 발송
+   * 발송 실패 시 에러 로깅만 하고 상태 변경 프로세스에 영향을 주지 않음
+   */
+  private async sendReservationConfirmedAlimtalk(
+    order: OrderEntity
+  ): Promise<void> {
+    try {
+      const snapshot = order.orderOptionSnapshot as HotelOrderOptionData;
+
+      // 호텔 상품 조회 - 취소 정책 포함
+      const hotelProduct =
+        await this.repositoryProvider.HotelProductRepository.findOne({
+          where: { id: order.productId },
+          select: ['id', 'name', 'cancellationFees'],
+        });
+      const productName = hotelProduct?.name ?? '상품명 없음';
+
+      const checkInDate = snapshot.checkInDate;
+      const optionName = snapshot.hotelOptionName;
+
+      // 취소 정책 메시지 조합
+      const cancellationFees = hotelProduct?.cancellationFees ?? [];
+      // daysBeforeCheckIn 내림차순 정렬 (먼 날짜부터)
+      const sortedFees = [...cancellationFees].sort(
+        (a, b) => b.daysBeforeCheckIn - a.daysBeforeCheckIn
+      );
+
+      let refundPolicyText = '';
+      for (const fee of sortedFees) {
+        const refundRate = 100 - fee.feePercentage;
+        if (fee.feePercentage === 0) {
+          refundPolicyText += `- ${fee.daysBeforeCheckIn}일 전까지: 전액 환불\n`;
+        } else if (refundRate > 0) {
+          refundPolicyText += `- ${fee.daysBeforeCheckIn}일 전: ${refundRate}% 환불\n`;
+        } else {
+          refundPolicyText += `- ${fee.daysBeforeCheckIn}일 전: 환불 불가\n`;
+        }
+      }
+      refundPolicyText += '- 당일 및 NO-SHOW: 환불 불가';
+
+      const message =
+        `[예스트래블] 예약 확정 안내\n\n` +
+        `안녕하세요, ${order.customerName} 고객님.\n\n` +
+        `${order.customerName} 고객님의 ${productName} 예약이 아래와 같이 확정되었습니다.\n\n` +
+        `★ 예약 확정 정보\n` +
+        `투숙일: ${checkInDate}\n` +
+        `객실 타입: ${optionName}\n` +
+        `선택옵션: ${optionName}\n` +
+        `주문번호: ${order.orderNumber}\n` +
+        `예약번호: ${order.orderNumber}\n\n` +
+        `★ 취소 및 변경 규정\n` +
+        `이용일 기준\n` +
+        `${refundPolicyText}\n\n` +
+        `취소/변경은 공휴일, 주말 제외 영업일 기준 17시 이전 접수분에 적용됩니다.\n\n` +
+        `★ 고객센터 안내\n` +
+        `궁금한 사항이 있으시면 고객센터로 문의해 주세요.\n` +
+        `고객센터: ${this.CS_LINK}\n\n` +
+        `즐거운 여행 되시길 바랍니다.\n` +
+        `감사합니다.`;
+
+      await this.smtntService.sendAlimtalk({
+        phone: order.customerPhone,
+        message,
+        templateCode: 'SHOP_HOTEL_RESERVATION_CONFIRMED',
+        failedType: 'LMS',
+        failedMessage: message,
+      });
+
+      this.logger.log(`호텔 예약 확정 알림톡 발송 성공: orderId=${order.id}`);
+    } catch (error) {
+      this.logger.error(
+        `호텔 예약 확정 알림톡 발송 실패: orderId=${order.id}`,
+        error
+      );
+    }
   }
 
   /**
