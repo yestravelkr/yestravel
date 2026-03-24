@@ -35,10 +35,10 @@ export function OtherProductsContent({
   currentSaleId,
 }: OtherProductsContentProps) {
   const { data, isLoading, isError } =
-    trpc.shopInfluencer.getCampaignDetail.useQuery({
-      slug,
-      campaignId,
-    });
+    trpc.shopInfluencer.getCampaignDetail.useQuery(
+      { slug, campaignId },
+      { retry: false, staleTime: 1000 * 60 * 5 }
+    );
 
   if (isLoading) {
     return <StatusContainer>불러오는 중...</StatusContainer>;

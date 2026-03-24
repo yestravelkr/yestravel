@@ -10,7 +10,7 @@ import type { HotelOptionSelectorConfig } from '@yestravelkr/option-selector';
 import dayjs from 'dayjs';
 import 'dayjs/locale/ko';
 import { Calendar } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import tw from 'tailwind-styled-components';
 
 import { CheckInOutSection } from './CheckInOutSection';
@@ -26,6 +26,7 @@ import {
 } from './SalesInfoContent';
 
 import { openLoginBottomSheet } from '@/components/auth/LoginBottomSheet';
+import { trpc } from '@/shared';
 import { useAuthStore } from '@/store/authStore';
 
 dayjs.locale('ko');
@@ -107,6 +108,17 @@ export function HotelProductComponent(props: HotelProductComponentProps) {
   const [checkOutDate, setCheckOutDate] = useState<string>(initialCheckOut);
   const [selectedOptionId, setSelectedOptionId] = useState<number | null>(null);
   const [selectedTab, setSelectedTab] = useState<ProductDetailTab>('info');
+
+  // 다른 상품 보기 데이터 프리페칭 (탭 클릭 시 즉시 표시)
+  const trpcUtils = trpc.useUtils();
+  useEffect(() => {
+    if (influencer.slug) {
+      trpcUtils.shopInfluencer.getCampaignDetail.prefetch({
+        slug: influencer.slug,
+        campaignId: campaign.id,
+      });
+    }
+  }, [influencer.slug, campaign.id, trpcUtils]);
 
   // 바텀시트 열기 (구매하기 버튼 클릭 시)
   const handleOpenOptionSheet = async () => {
