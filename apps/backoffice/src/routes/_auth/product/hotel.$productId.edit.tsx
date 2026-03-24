@@ -50,6 +50,12 @@ interface ProductFormData {
     daysBeforeCheckIn: number;
     feePercentage: number;
   }>;
+  happyCallConfig: {
+    useHappyCall: boolean;
+    useGuide: boolean;
+    happyCallLink: string | null;
+    guideLink: string | null;
+  } | null;
 }
 
 function EditProductPage() {
@@ -90,6 +96,7 @@ function EditProductPage() {
       hotelOptions: [],
       hotelSkus: [],
       cancellationFees: [],
+      happyCallConfig: null,
     },
   });
 
@@ -113,6 +120,7 @@ function EditProductPage() {
         hotelOptions: product.hotelOptions || [],
         hotelSkus: product.hotelSkus || [],
         cancellationFees: (product as any).cancellationFees || [],
+        happyCallConfig: (product as any).happyCallConfig || null,
       });
       setThumbnails(product.thumbnailUrls);
     }
@@ -155,6 +163,7 @@ function EditProductPage() {
       tags: formData.tags,
       hotelOptions: formData.hotelOptions,
       hotelSkus: formData.hotelSkus,
+      happyCallConfig: formData.happyCallConfig,
     });
   };
 

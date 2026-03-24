@@ -51,6 +51,12 @@ interface ProductFormData {
     daysBeforeCheckIn: number;
     feePercentage: number;
   }>;
+  happyCallConfig: {
+    useHappyCall: boolean;
+    useGuide: boolean;
+    happyCallLink: string | null;
+    guideLink: string | null;
+  } | null;
 }
 
 function CreateProductPage() {
@@ -84,6 +90,7 @@ function CreateProductPage() {
       hotelOptions: [],
       hotelSkus: [],
       cancellationFees: [],
+      happyCallConfig: null,
     },
   });
 
@@ -125,6 +132,7 @@ function CreateProductPage() {
       tags: formData.tags,
       hotelOptions: formData.hotelOptions,
       hotelSkus: formData.hotelSkus,
+      happyCallConfig: formData.happyCallConfig,
     });
   };
 
