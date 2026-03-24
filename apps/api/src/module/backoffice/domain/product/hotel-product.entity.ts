@@ -9,8 +9,8 @@ import type { HotelCancelPolicyItem } from '@src/module/backoffice/domain/order/
 export interface HappyCallConfig {
   useHappyCall: boolean;
   useGuide: boolean;
-  happyCallLink: string | null;
-  guideLink: string | null;
+  happyCallLink?: string | null;
+  guideLink?: string | null;
 }
 
 export interface CreateHotelProductInput {
