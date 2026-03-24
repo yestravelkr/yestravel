@@ -12,7 +12,6 @@
  * />
  */
 
-import { Suspense } from 'react';
 import tw from 'tailwind-styled-components';
 
 import { ProductCard } from '@/components/campaign/ProductCard';
@@ -28,28 +27,26 @@ export interface OtherProductsContentProps {
 }
 
 /**
- * OtherProductsContent - Suspense 래퍼
+ * OtherProductsContent - 다른 상품 목록
  */
-export function OtherProductsContent(props: OtherProductsContentProps) {
-  return (
-    <Suspense fallback={<StatusContainer>불러오는 중...</StatusContainer>}>
-      <OtherProductsInner {...props} />
-    </Suspense>
-  );
-}
-
-/**
- * OtherProductsInner - 실제 데이터 fetch 및 렌더링
- */
-function OtherProductsInner({
+export function OtherProductsContent({
   slug,
   campaignId,
   currentSaleId,
 }: OtherProductsContentProps) {
-  const [data] = trpc.shopInfluencer.getCampaignDetail.useSuspenseQuery({
-    slug,
-    campaignId,
-  });
+  const { data, isLoading, isError } =
+    trpc.shopInfluencer.getCampaignDetail.useQuery({
+      slug,
+      campaignId,
+    });
+
+  if (isLoading) {
+    return <StatusContainer>불러오는 중...</StatusContainer>;
+  }
+
+  if (isError || !data) {
+    return <StatusContainer>다른 상품이 없습니다.</StatusContainer>;
+  }
 
   const otherProducts = data.products.filter(
     product => product.saleId !== currentSaleId
