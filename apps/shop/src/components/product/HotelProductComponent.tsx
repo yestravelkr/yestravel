@@ -179,12 +179,17 @@ export function HotelProductComponent(props: HotelProductComponentProps) {
 
         {/* 판매정보 탭 */}
         {selectedTab === 'sale' && <SalesInfoContent salesInfo={salesInfo} />}
-        {selectedTab === 'recommend' && (
+        {selectedTab === 'recommend' && influencer.slug && (
           <OtherProductsContent
-            slug={influencer.slug ?? ''}
+            slug={influencer.slug}
             campaignId={campaign.id}
             currentSaleId={saleId}
           />
+        )}
+        {selectedTab === 'recommend' && !influencer.slug && (
+          <EmptySlugContainer>
+            추천 상품을 불러올 수 없습니다.
+          </EmptySlugContainer>
         )}
       </TabSection>
 
@@ -319,4 +324,11 @@ const FloatingDateText = tw.span`
   text-base
   font-medium
   leading-5
+`;
+
+const EmptySlugContainer = tw.div`
+  p-10
+  text-center
+  text-fg-muted
+  bg-white
 `;

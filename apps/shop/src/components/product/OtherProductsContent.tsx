@@ -32,7 +32,7 @@ export interface OtherProductsContentProps {
  */
 export function OtherProductsContent(props: OtherProductsContentProps) {
   return (
-    <Suspense fallback={<LoadingContainer>불러오는 중...</LoadingContainer>}>
+    <Suspense fallback={<StatusContainer>불러오는 중...</StatusContainer>}>
       <OtherProductsInner {...props} />
     </Suspense>
   );
@@ -56,7 +56,7 @@ function OtherProductsInner({
   );
 
   if (otherProducts.length === 0) {
-    return <EmptyContainer>다른 상품이 없습니다.</EmptyContainer>;
+    return <StatusContainer>다른 상품이 없습니다.</StatusContainer>;
   }
 
   return (
@@ -77,14 +77,7 @@ function OtherProductsInner({
 }
 
 // Styled Components
-const LoadingContainer = tw.div`
-  p-10
-  text-center
-  text-fg-muted
-  bg-white
-`;
-
-const EmptyContainer = tw.div`
+const StatusContainer = tw.div`
   p-10
   text-center
   text-fg-muted

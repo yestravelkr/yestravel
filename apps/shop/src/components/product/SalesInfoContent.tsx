@@ -6,6 +6,7 @@
  */
 
 import { useState } from 'react';
+import { toast } from 'sonner';
 import tw from 'tailwind-styled-components';
 
 /** 판매자 정보 */
@@ -22,6 +23,7 @@ interface SellerInfo {
   mailOrderLicenseNumber: string | null | undefined;
 }
 
+// TODO: 호텔 숙박 정보 섹션 구현 시 사용
 /** 숙소 정보 */
 interface AccommodationInfo {
   /** 체크인 시간 */
@@ -67,7 +69,7 @@ export function SalesInfoContent({ salesInfo }: SalesInfoContentProps) {
       {/* 문의하기 섹션 */}
       <InquirySection>
         <InquiryIconWrapper>
-          <InquiryIconPlaceholder />
+          <i className="iQuestion text-zinc-400 text-[48px]" />
         </InquiryIconWrapper>
         <InquiryTextGroup>
           <InquiryTitle>상품에 대해 궁금한 것이 있으신가요?</InquiryTitle>
@@ -77,10 +79,8 @@ export function SalesInfoContent({ salesInfo }: SalesInfoContentProps) {
             문의하기 버튼을 눌러 문의해 주세요.
           </InquiryDescription>
         </InquiryTextGroup>
-        <InquiryButton>
-          <InquiryButtonInner>
-            <InquiryButtonText>문의하기</InquiryButtonText>
-          </InquiryButtonInner>
+        <InquiryButton onClick={() => toast('문의하기 기능 준비 중입니다.')}>
+          <InquiryButtonText>문의하기</InquiryButtonText>
         </InquiryButton>
       </InquirySection>
 
@@ -151,13 +151,7 @@ const InquirySection = tw.div`
 
 const InquiryIconWrapper = tw.div`
   w-[60px] h-[60px]
-  relative overflow-hidden
-`;
-
-const InquiryIconPlaceholder = tw.div`
-  w-[48.75px] h-[48.75px]
-  absolute left-[5.63px] top-[5.63px]
-  bg-zinc-300
+  flex items-center justify-center
 `;
 
 const InquiryTextGroup = tw.div`
@@ -176,14 +170,9 @@ const InquiryDescription = tw.div`
 `;
 
 const InquiryButton = tw.button`
-  h-11 px-3
+  h-11 px-4
   bg-zinc-900 rounded-xl
   inline-flex justify-center items-center
-`;
-
-const InquiryButtonInner = tw.div`
-  px-1
-  flex justify-start items-start
 `;
 
 const InquiryButtonText = tw.span`
@@ -213,7 +202,7 @@ const AccordionTitle = tw.span`
 const AccordionIconWrapper = tw.div`
   w-6 h-6
   flex items-center justify-center
-  text-[#9e9e9e]
+  text-zinc-400
 `;
 
 const AccordionContent = tw.div`
