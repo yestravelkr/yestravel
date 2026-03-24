@@ -75,6 +75,9 @@ function SaleDetailContent({ saleId }: { saleId: number }) {
             skus: data.options.skus,
             hotelOptions: data.options.hotelOptions,
           },
+          salesInfo: data.salesInfo,
+          campaign: data.campaign,
+          influencer: data.influencer,
         };
         return <HotelProductComponent {...props} />;
       }
