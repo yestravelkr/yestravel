@@ -30,6 +30,14 @@ const deliveryPolicySchema = z.object({
   isRemoteIslandRestricted: z.boolean().default(false),
 });
 
+// HappyCallConfig 스키마
+const happyCallConfigSchema = z.object({
+  useHappyCall: z.boolean().default(false),
+  useGuide: z.boolean().default(false),
+  happyCallLink: z.string().nullish().default(null),
+  guideLink: z.string().nullish().default(null),
+});
+
 @Router({ alias: 'backofficeProduct' })
 export class ProductRouter extends BaseTrpcRouter {
   constructor(protected readonly microserviceClient: MicroserviceClient) {
@@ -125,6 +133,7 @@ export class ProductRouter extends BaseTrpcRouter {
             feePercentage: z.number(),
           })
         ),
+        happyCallConfig: happyCallConfigSchema.nullish(),
         hotelOptions: z.array(
           z.object({
             id: z.number(),
@@ -281,6 +290,7 @@ export class ProductRouter extends BaseTrpcRouter {
             })
           )
           .default([]),
+        happyCallConfig: happyCallConfigSchema.nullish().default(null),
       }),
       // Delivery Product
       z.object({
@@ -413,6 +423,7 @@ export class ProductRouter extends BaseTrpcRouter {
             })
           )
           .default([]),
+        happyCallConfig: happyCallConfigSchema.nullish().default(null),
       }),
       // Delivery Product Update
       z.object({

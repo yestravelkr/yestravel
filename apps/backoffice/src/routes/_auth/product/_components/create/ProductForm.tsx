@@ -21,6 +21,7 @@ import {
 } from '../../../product-template/_components/create/styled';
 
 import { CancellationFeeCard } from './CancellationFeeCard';
+import { HappyCallCard } from './HappyCallCard';
 import { ProductOptionsPricingCard } from './ProductOptionsPricingCard';
 
 interface ProductFormData {
@@ -53,6 +54,12 @@ interface ProductFormData {
     daysBeforeCheckIn: number;
     feePercentage: number;
   }>;
+  happyCallConfig: {
+    useHappyCall: boolean;
+    useGuide: boolean;
+    happyCallLink: string | null;
+    guideLink: string | null;
+  } | null;
 }
 
 interface ProductFormProps {
@@ -114,6 +121,7 @@ export function ProductForm({
               />
               <ProductOptionsPricingCard />
               <CancellationFeeCard />
+              <HappyCallCard />
             </LeftColumn>
 
             <RightColumn>

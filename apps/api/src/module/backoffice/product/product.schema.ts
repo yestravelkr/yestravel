@@ -42,6 +42,14 @@ const deliveryPolicySchema = z.object({
   isRemoteIslandRestricted: z.boolean().default(false),
 });
 
+// HappyCallConfig 스키마
+const happyCallConfigSchema = z.object({
+  useHappyCall: z.boolean(),
+  useGuide: z.boolean(),
+  happyCallLink: z.string().nullish(),
+  guideLink: z.string().nullish(),
+});
+
 // Base Product Input Schema (공통 필드)
 const baseProductInputSchema = z.object({
   name: z.string().min(1, '상품명은 필수입니다'),
@@ -84,6 +92,7 @@ const hotelProductInputSchema = baseProductInputSchema.extend({
       })
     )
     .default([]),
+  happyCallConfig: happyCallConfigSchema.nullish().default(null),
   hotelOptions: z.array(hotelOptionInputSchema).default([]),
   hotelSkus: z.array(hotelSkuInputSchema).default([]),
 });
@@ -184,6 +193,7 @@ const hotelProductSchema = z.object({
       feePercentage: z.number(),
     })
   ),
+  happyCallConfig: happyCallConfigSchema.nullish(),
   hotelOptions: z.array(hotelOptionResponseSchema),
   hotelSkus: z.array(
     z.object({

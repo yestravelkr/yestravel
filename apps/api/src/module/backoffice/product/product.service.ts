@@ -110,6 +110,7 @@ export class ProductService {
           bedTypes: hotel.bedTypes ?? [],
           tags: hotel.tags ?? [],
           cancellationFees: hotel.cancellationFees ?? [],
+          happyCallConfig: hotel.happyCallConfig ?? null,
           hotelOptions: hotelOptions.map(opt => ({
             id: opt.id,
             name: opt.name,

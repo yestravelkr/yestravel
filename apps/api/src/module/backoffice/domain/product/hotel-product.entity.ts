@@ -6,6 +6,13 @@ import { getEntityManager } from '@src/database/datasources';
 import type { Nullish } from '@src/types/utility.type';
 import type { HotelCancelPolicyItem } from '@src/module/backoffice/domain/order/claim-detail.type';
 
+export interface HappyCallConfig {
+  useHappyCall: boolean;
+  useGuide: boolean;
+  happyCallLink?: string | null;
+  guideLink?: string | null;
+}
+
 export interface CreateHotelProductInput {
   name: string;
   brandId: number;
@@ -25,6 +32,7 @@ export interface CreateHotelProductInput {
   bedTypes?: string[];
   tags?: string[];
   cancellationFees?: HotelCancelPolicyItem[];
+  happyCallConfig?: HappyCallConfig | null;
 }
 
 export interface UpdateHotelProductInput extends CreateHotelProductInput {
@@ -73,6 +81,10 @@ export class HotelProductEntity extends ProductEntity {
   @Column('jsonb', { default: [], nullable: true })
   cancellationFees: Nullish<HotelCancelPolicyItem[]>;
 
+  // 해피콜/이용가이드 설정
+  @Column('jsonb', { nullable: true })
+  happyCallConfig: Nullish<HappyCallConfig>;
+
   // 헬퍼 메서드: Entity 생성
   static createFromInput(input: CreateHotelProductInput): HotelProductEntity {
     const product = new HotelProductEntity();
@@ -94,6 +106,7 @@ export class HotelProductEntity extends ProductEntity {
     product.bedTypes = input.bedTypes || [];
     product.tags = input.tags || [];
     product.cancellationFees = input.cancellationFees || [];
+    product.happyCallConfig = input.happyCallConfig || null;
     return product;
   }
 
@@ -117,6 +130,7 @@ export class HotelProductEntity extends ProductEntity {
     this.bedTypes = input.bedTypes || [];
     this.tags = input.tags || [];
     this.cancellationFees = input.cancellationFees || [];
+    this.happyCallConfig = input.happyCallConfig || null;
   }
 }
 
