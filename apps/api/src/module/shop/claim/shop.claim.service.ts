@@ -141,6 +141,11 @@ export class ShopClaimService {
       },
     });
 
+    // 6-2. 반품 요청 시 알림톡 발송
+    if (type === 'RETURN') {
+      await this.sendReturnRequestedAlimtalk(order);
+    }
+
     // 7. PAID 상태이고 취소 요청인 경우 → 자동 승인 + 포트원 환불
     if (order.status === 'PAID' && type === 'CANCEL') {
       savedClaim.status = 'APPROVED';
@@ -660,6 +665,53 @@ export class ShopClaimService {
     } catch (error) {
       this.logger.error(
         `환불 완료 알림톡 발송 실패: orderId=${order.id}`,
+        error
+      );
+    }
+  }
+
+  /**
+   * 반품 접수 알림톡 (SHOP_DELIVERY_RETURN_REQUESTED)
+   */
+  private async sendReturnRequestedAlimtalk(order: OrderEntity): Promise<void> {
+    try {
+      const product = await this.repositoryProvider.ProductRepository.findOne({
+        where: { id: order.productId },
+        select: ['id', 'name'],
+      });
+      const productName = product?.name ?? '상품명 없음';
+      const address = order.shippingAddress?.address ?? '-';
+      const detailAddress = order.shippingAddress?.detail ?? '';
+
+      const message =
+        `[예스트래블] 반품 접수 안내\n\n` +
+        `안녕하세요, ${order.customerName} 고객님.\n\n` +
+        `요청하신 상품의 반품 접수가 완료되었습니다.\n\n` +
+        `★ 반품 정보\n` +
+        `주문번호: ${order.orderNumber}\n` +
+        `상품명: ${productName}\n` +
+        `회수 예정지: ${address} ${detailAddress}\n\n` +
+        `★ 반품 진행 안내\n` +
+        `지정 택배사 기사가 영업일 기준 1~3일 내에 방문하여 상품을 수거할 예정입니다.\n` +
+        `상품을 원래 상태로 포장해 주시기 바랍니다.\n` +
+        `상품 수거 및 검수 완료 후 환불이 진행됩니다.\n\n` +
+        `★ 고객센터 안내\n` +
+        `궁금한 사항이 있으시면 고객센터로 문의해 주세요.\n` +
+        `고객센터: ${this.CS_LINK}\n\n` +
+        `감사합니다.`;
+
+      await this.smtntService.sendAlimtalk({
+        phone: order.customerPhone,
+        message,
+        templateCode: 'SHOP_DELIVERY_RETURN_REQUESTED',
+        failedType: 'LMS',
+        failedMessage: message,
+      });
+
+      this.logger.log(`반품 접수 알림톡 발송 성공: orderId=${order.id}`);
+    } catch (error) {
+      this.logger.error(
+        `반품 접수 알림톡 발송 실패: orderId=${order.id}`,
         error
       );
     }
