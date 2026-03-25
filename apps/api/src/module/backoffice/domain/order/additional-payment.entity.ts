@@ -7,7 +7,7 @@ import {
   JoinColumn,
   Index,
 } from 'typeorm';
-import { BaseEntity } from '@src/module/backoffice/domain/base.entity';
+import { SoftDeleteEntity } from '@src/module/backoffice/domain/base.entity';
 import { TransactionService } from '@src/module/shared/transaction/transaction.service';
 import { getEntityManager } from '@src/database/datasources';
 import type { Nullish } from '@src/types/utility.type';
@@ -69,7 +69,7 @@ export const additionalPaymentNumberParser = {
 @Entity('additional_payment')
 @Index('IDX_additional_payment_expires_at', ['expiresAt'])
 @Index('IDX_additional_payment_order_id', ['orderId'])
-export class AdditionalPaymentEntity extends BaseEntity {
+export class AdditionalPaymentEntity extends SoftDeleteEntity {
   /** 주문 ID (FK) */
   @Column({ name: 'order_id' })
   orderId: number;
@@ -108,13 +108,6 @@ export class AdditionalPaymentEntity extends BaseEntity {
   @JoinColumn({ name: 'payment_id' })
   payment: Nullish<PaymentEntity>;
 
-  /** 관리자 무효화 일시 (soft delete) */
-  @Column({
-    name: 'deleted_at',
-    type: 'timestamp with time zone',
-    nullable: true,
-  })
-  deletedAt: Nullish<Date>;
 }
 
 export const getAdditionalPaymentRepository = (
