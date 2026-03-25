@@ -55,9 +55,8 @@ export class PaymentEntity extends BaseEntity {
   order: OrderEntity;
 
   @OneToOne(
-    () =>
-      require('./additional-payment.entity').AdditionalPaymentEntity,
-    (ap: AdditionalPaymentEntity) => ap.payment,
+    () => require('./additional-payment.entity').AdditionalPaymentEntity,
+    (ap: AdditionalPaymentEntity) => ap.payment
   )
   additionalPayment?: AdditionalPaymentEntity;
 }

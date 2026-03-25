@@ -1,6 +1,5 @@
 import {
   Injectable,
-  Logger,
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
@@ -12,7 +11,6 @@ import {
 } from '@src/module/backoffice/domain/order/additional-payment.entity';
 import { ConfigProvider } from '@src/config';
 import { OrderHistoryService } from '@src/module/backoffice/order/order-history.service';
-import type { OrderHistoryAction } from '@src/module/backoffice/domain/order/order-history-action';
 import type {
   CreateAdditionalPaymentInput,
   CreateAdditionalPaymentResponse,
@@ -31,7 +29,6 @@ import type {
  */
 @Injectable()
 export class AdditionalPaymentService {
-  private readonly logger = new Logger(AdditionalPaymentService.name);
   private readonly SHOP_URL = ConfigProvider.shopUrl;
 
   constructor(
@@ -86,6 +83,7 @@ export class AdditionalPaymentService {
 
     // AdditionalPaymentEntity 생성
     const additionalPayment = new AdditionalPaymentEntity();
+    additionalPayment.orderId = input.orderId;
     additionalPayment.token = token;
     additionalPayment.title = input.title;
     additionalPayment.amount = input.amount;
@@ -121,69 +119,21 @@ export class AdditionalPaymentService {
   /**
    * 주문별 추가결제 목록 조회
    *
-   * 두 가지 경로로 추가결제를 수집합니다:
-   * 1. Payment를 통해 join (결제 완료된 건)
-   * 2. OrderHistory metadata의 additionalPaymentId로 조회 (미결제 건)
+   * orderId FK를 통해 단일 쿼리로 조회합니다.
    */
   async findByOrderId(
     input: FindByOrderIdInput
   ): Promise<FindByOrderIdResponse> {
-    // 1. Payment를 통해 결제 완료된 추가결제 ID 수집
-    const payments = await this.repositoryProvider.PaymentRepository.find({
-      where: { orderId: input.orderId },
-      relations: ['additionalPayment'],
-    });
+    const additionalPayments =
+      await this.repositoryProvider.AdditionalPaymentRepository.find({
+        where: { orderId: input.orderId },
+        relations: ['payment'],
+        order: { createdAt: 'DESC' },
+      });
 
-    const paidAdditionalPayments = payments
-      .filter(p => p.additionalPayment != null)
-      .map(p => ({
-        entity: p.additionalPayment!,
-        payment: p,
-      }));
-
-    const paidIds = new Set(paidAdditionalPayments.map(item => item.entity.id));
-
-    // 2. OrderHistory metadata에서 미결제 추가결제 ID 수집
-    const histories = await this.repositoryProvider.OrderHistoryRepository.find(
-      {
-        where: {
-          orderId: input.orderId,
-          action:
-            'ADDITIONAL_PAYMENT_REQUESTED' as const satisfies OrderHistoryAction,
-        },
-      }
+    return additionalPayments.map(ap =>
+      this.toAdditionalPaymentItem(ap, ap.payment ?? null)
     );
-
-    const unpaidIds = histories
-      .map(h => h.metadata?.additionalPaymentId)
-      .filter((id): id is number => id != null && !paidIds.has(id));
-
-    // 3. 미결제 추가결제 엔티티 조회
-    let unpaidAdditionalPayments: AdditionalPaymentEntity[] = [];
-    if (unpaidIds.length > 0) {
-      unpaidAdditionalPayments =
-        await this.repositoryProvider.AdditionalPaymentRepository.findByIds(
-          unpaidIds
-        );
-    }
-
-    // 4. 모든 추가결제 합산 후 응답 변환
-    const allItems: AdditionalPaymentItem[] = [
-      ...paidAdditionalPayments.map(item =>
-        this.toAdditionalPaymentItem(item.entity, item.payment)
-      ),
-      ...unpaidAdditionalPayments.map(ap =>
-        this.toAdditionalPaymentItem(ap, null)
-      ),
-    ];
-
-    // 생성일시 역순 정렬
-    allItems.sort(
-      (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
-
-    return allItems;
   }
 
   /**
@@ -220,27 +170,22 @@ export class AdditionalPaymentService {
       additionalPayment
     );
 
-    // OrderHistory 기록 - orderId를 OrderHistory metadata에서 역추적
-    const orderId = await this.findOrderIdByAdditionalPaymentId(
-      additionalPayment.id
-    );
+    // OrderHistory 기록 - orderId 직접 참조
+    const orderId = additionalPayment.orderId;
+    const order = await this.repositoryProvider.OrderRepository.findOne({
+      where: { id: orderId },
+    });
 
-    if (orderId) {
-      const order = await this.repositoryProvider.OrderRepository.findOne({
-        where: { id: orderId },
+    if (order) {
+      await this.orderHistoryService.record({
+        orderId,
+        previousStatus: order.status,
+        newStatus: order.status,
+        actorType: 'ADMIN',
+        action: 'ADDITIONAL_PAYMENT_CANCELLED',
+        description: `추가결제 무효화: ${additionalPayment.title} (${additionalPayment.amount.toLocaleString()}원)`,
+        metadata: { additionalPaymentId: additionalPayment.id },
       });
-
-      if (order) {
-        await this.orderHistoryService.record({
-          orderId,
-          previousStatus: order.status,
-          newStatus: order.status,
-          actorType: 'ADMIN',
-          action: 'ADDITIONAL_PAYMENT_CANCELLED',
-          description: `추가결제 무효화: ${additionalPayment.title} (${additionalPayment.amount.toLocaleString()}원)`,
-          metadata: { additionalPaymentId: additionalPayment.id },
-        });
-      }
     }
 
     return {
@@ -281,28 +226,5 @@ export class AdditionalPaymentService {
       createdAt: ap.createdAt,
       paidAt: payment?.paidAt ?? ap.payment?.paidAt ?? null,
     };
-  }
-
-  /**
-   * AdditionalPayment ID로부터 orderId를 역추적
-   *
-   * OrderHistory metadata의 additionalPaymentId로 검색
-   */
-  private async findOrderIdByAdditionalPaymentId(
-    additionalPaymentId: number
-  ): Promise<number | null> {
-    const history =
-      await this.repositoryProvider.OrderHistoryRepository.createQueryBuilder(
-        'oh'
-      )
-        .where('oh.action = :action', {
-          action: 'ADDITIONAL_PAYMENT_REQUESTED',
-        })
-        .andWhere("oh.metadata->>'additionalPaymentId' = :apId", {
-          apId: String(additionalPaymentId),
-        })
-        .getOne();
-
-    return history?.orderId ?? null;
   }
 }

@@ -3,6 +3,7 @@ import {
   Column,
   EntityManager,
   OneToOne,
+  ManyToOne,
   JoinColumn,
   Index,
 } from 'typeorm';
@@ -11,6 +12,7 @@ import { TransactionService } from '@src/module/shared/transaction/transaction.s
 import { getEntityManager } from '@src/database/datasources';
 import type { Nullish } from '@src/types/utility.type';
 import { PaymentEntity } from '@src/module/backoffice/domain/order/payment.entity';
+import type { OrderEntity } from '@src/module/backoffice/domain/order/order.entity';
 import Sqids from 'sqids';
 import dayjs from 'dayjs';
 import { ConfigProvider } from '@src/config';
@@ -66,7 +68,17 @@ export const additionalPaymentNumberParser = {
  */
 @Entity('additional_payment')
 @Index('IDX_additional_payment_expires_at', ['expiresAt'])
+@Index('IDX_additional_payment_order_id', ['orderId'])
 export class AdditionalPaymentEntity extends BaseEntity {
+  /** 주문 ID (FK) */
+  @Column({ name: 'order_id' })
+  orderId: number;
+
+  /** 주문 관계 (N:1) */
+  @ManyToOne('OrderEntity')
+  @JoinColumn({ name: 'order_id' })
+  order: OrderEntity;
+
   /** 결제 링크 토큰 (UUID v4) */
   @Column({ type: 'varchar', length: 64, unique: true })
   token: string;
