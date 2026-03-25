@@ -154,15 +154,24 @@ function OrderDetailContent({ orderNumber }: { orderNumber: string }) {
             checkIn: data.checkIn,
             checkOut: data.checkOut,
           }}
-          onCancelOrder={handleCancelOrder}
-          onCancelRequest={handleCancelRequest}
+          onCancelOrder={
+            data.hasActiveAdditionalPayment ? undefined : handleCancelOrder
+          }
+          onCancelRequest={
+            data.hasActiveAdditionalPayment ? undefined : handleCancelRequest
+          }
+          hasActiveAdditionalPayment={data.hasActiveAdditionalPayment}
         />
 
         {/* User Info */}
         <UserInfoSection user={data.user} />
 
         {/* Payment Summary */}
-        <PaymentSummarySection payment={data.payment} type="accommodation" />
+        <PaymentSummarySection
+          payment={data.payment}
+          payments={data.payments}
+          type="accommodation"
+        />
       </ContentWrapper>
     </Container>
   );

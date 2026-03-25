@@ -467,6 +467,7 @@ export class ShopOrderService {
         productAmount: order.totalAmount,
         paymentMethod: this.getPaymentMethod(order.payments),
       },
+      payments: this.formatPayments(order.payments),
     };
   }
 
@@ -580,6 +581,38 @@ export class ShopOrderService {
     }
 
     return '카드결제';
+  }
+
+  /**
+   * 결제 내역을 프론트엔드 표시용 배열로 변환
+   * - 1차 결제 (additionalPayment가 null)
+   * - 추가결제 (additionalPayment가 존재)
+   */
+  private formatPayments(
+    payments:
+      | {
+          paidAmount: number;
+          pgProvider: string;
+          pgRawData?: Record<string, any> | null;
+          additionalPayment?: { reason: string } | null;
+        }[]
+      | undefined
+  ): {
+    amount: number;
+    paymentMethod: string;
+    isAdditionalPayment: boolean;
+    additionalPaymentReason: string | null;
+  }[] {
+    if (!payments || payments.length === 0) {
+      return [];
+    }
+
+    return payments.map(p => ({
+      amount: p.paidAmount,
+      paymentMethod: this.getPaymentMethod([p]),
+      isAdditionalPayment: !!p.additionalPayment,
+      additionalPaymentReason: p.additionalPayment?.reason ?? null,
+    }));
   }
 
   /**
