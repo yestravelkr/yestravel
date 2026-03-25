@@ -37,6 +37,7 @@ import { getInfluencerSettlementRepository } from '@src/module/backoffice/domain
 import { getBrandSettlementRepository } from '@src/module/backoffice/domain/settlement/brand-settlement.entity';
 import { getBrandManagerRepository } from '@src/module/backoffice/domain/brand-manager.entity';
 import { getInfluencerManagerRepository } from '@src/module/backoffice/domain/influencer-manager.entity';
+import { getAdditionalPaymentRepository } from '@src/module/backoffice/domain/order/additional-payment.entity';
 import { DataSource, EntityManager } from 'typeorm';
 import { getEntityManager } from '@src/database/datasources';
 
@@ -198,5 +199,9 @@ export class RepositoryProvider {
 
   get OrderHistoryRepository() {
     return getOrderHistoryRepository(this.transaction);
+  }
+
+  get AdditionalPaymentRepository() {
+    return getAdditionalPaymentRepository(this.transaction);
   }
 }
