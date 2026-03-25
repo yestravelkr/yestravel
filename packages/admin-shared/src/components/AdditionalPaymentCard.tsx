@@ -114,9 +114,9 @@ export function AdditionalPaymentCard({
                       kind="neutral"
                       variant="outline"
                       size="small"
+                      leadingIcon={<Copy size={14} />}
                       onClick={() => handleCopyLink(payment.paymentUrl!)}
                     >
-                      <Copy className="w-3.5 h-3.5" />
                       링크 복사
                     </Button>
                     <Button
@@ -139,10 +139,10 @@ export function AdditionalPaymentCard({
           kind="neutral"
           variant="outline"
           size="medium"
+          leadingIcon={<Plus size={16} />}
           onClick={handleCreate}
           disabled={isSettled}
         >
-          <Plus className="w-4 h-4" />
           추가결제 발급
         </Button>
       </ContentWrapper>
@@ -250,9 +250,9 @@ function CreateAdditionalPaymentModal({ orderId }: CreateModalProps) {
             kind="neutral"
             variant="solid"
             size="large"
+            leadingIcon={<Copy size={16} />}
             onClick={handleCopyUrl}
           >
-            <Copy className="w-4 h-4" />
             링크 복사
           </Button>
           <Button

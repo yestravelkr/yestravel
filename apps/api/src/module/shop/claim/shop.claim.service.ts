@@ -307,13 +307,12 @@ export class ShopClaimService {
   private async validateNoActiveAdditionalPayment(
     orderId: number
   ): Promise<void> {
-    const payments =
-      await this.repositoryProvider.PaymentRepository.find({
-        where: { orderId },
-        relations: ['additionalPayment'],
-      });
+    const payments = await this.repositoryProvider.PaymentRepository.find({
+      where: { orderId },
+      relations: ['additionalPayment'],
+    });
 
-    const hasActive = payments.some((payment) => {
+    const hasActive = payments.some(payment => {
       const ap = payment.additionalPayment;
       if (!ap) return false;
       if (ap.deletedAt) return false;
