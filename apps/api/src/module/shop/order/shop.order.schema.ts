@@ -65,6 +65,7 @@ export const getOrderDetailOutputSchema = z.object({
   status: z.string(),
   statusDescription: z.string().nullish(),
   influencerSlug: z.string().nullish(),
+  hasActiveAdditionalPayment: z.boolean(),
   accommodation: z.object({
     thumbnail: z.string().nullish(),
     hotelName: z.string(),
