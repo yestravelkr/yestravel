@@ -31,4 +31,6 @@ export interface OrderHistoryMetadata {
     attributes: Record<string, string>;
     quantity: number;
   }>;
+  /** 추가결제 ID */
+  additionalPaymentId?: number;
 }
