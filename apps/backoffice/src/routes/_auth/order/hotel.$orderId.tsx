@@ -309,7 +309,7 @@ function HotelOrderDetailPage() {
             />
             <AdditionalPaymentCard
               orderId={Number(orderId)}
-              isSettled={false}
+              isSettled={orderDetail.isSettled}
             />
             <MemberInfoCard
               member={{

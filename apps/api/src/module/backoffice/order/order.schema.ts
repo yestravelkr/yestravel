@@ -268,6 +268,9 @@ export const orderDetailResponseSchema = z.object({
 
   // 회원 정보
   member: memberInfoSchema,
+
+  // 정산 여부
+  isSettled: z.boolean(),
 });
 
 // ===== 엑셀 내보내기 Schemas =====

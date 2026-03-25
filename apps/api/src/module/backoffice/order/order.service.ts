@@ -916,6 +916,11 @@ export class OrderService {
         name: order.customerName,
         phone: order.customerPhone,
       },
+
+      // 정산 여부
+      isSettled:
+        order.influencerSettlementId !== null ||
+        order.brandSettlementId !== null,
     };
   }
 
