@@ -266,12 +266,17 @@ export class AdditionalPaymentService {
     ap: AdditionalPaymentEntity,
     payment: { paidAt: Date | null | undefined } | null
   ): AdditionalPaymentItem {
+    const status = this.computeStatus(ap);
     return {
       id: ap.id,
       title: ap.title,
       amount: ap.amount,
       reason: ap.reason,
-      status: this.computeStatus(ap),
+      status,
+      paymentUrl:
+        status === 'PENDING'
+          ? `${this.SHOP_URL}/additional-payment/${ap.token}`
+          : null,
       expiresAt: ap.expiresAt,
       createdAt: ap.createdAt,
       paidAt: payment?.paidAt ?? ap.payment?.paidAt ?? null,

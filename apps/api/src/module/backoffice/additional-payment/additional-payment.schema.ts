@@ -55,6 +55,7 @@ export const additionalPaymentItemSchema = z.object({
   amount: z.number(),
   reason: z.string(),
   status: additionalPaymentStatusSchema,
+  paymentUrl: z.string().nullish(),
   expiresAt: z.date(),
   createdAt: z.date(),
   paidAt: z.date().nullish(),

@@ -7,6 +7,7 @@
 
 import { createFileRoute } from '@tanstack/react-router';
 import {
+  AdditionalPaymentCard,
   BACKOFFICE_CAPABILITIES,
   MemberInfoCard,
   openCancelApproveModal,
@@ -305,6 +306,10 @@ function HotelOrderDetailPage() {
                 refundAmount: orderDetail.payment.refundAmount,
                 totalAmount: orderDetail.payment.totalAmount,
               }}
+            />
+            <AdditionalPaymentCard
+              orderId={Number(orderId)}
+              isSettled={false}
             />
             <MemberInfoCard
               member={{

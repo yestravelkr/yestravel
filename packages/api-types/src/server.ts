@@ -2778,6 +2778,36 @@ const appRouter = t.router({
       message: z.string(),
     })).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
   }),
+  backofficeAdditionalPayment: t.router({
+    create: publicProcedure.input(z.object({
+      orderId: z.number().int().positive(),
+      amount: z.number().int().min(1000),
+      title: z.string().min(1).max(200),
+      reason: z.string().min(1).max(500),
+    })).output(z.object({
+      additionalPaymentId: z.number(),
+      paymentUrl: z.string(),
+    })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    findByOrderId: publicProcedure.input(z.object({
+      orderId: z.number().int().positive(),
+    })).output(z.array(z.object({
+      id: z.number(),
+      title: z.string(),
+      amount: z.number(),
+      reason: z.string(),
+      status: z.enum(['PENDING', 'PAID', 'EXPIRED', 'DELETED'] as const),
+      paymentUrl: z.string().nullish(),
+      expiresAt: z.date(),
+      createdAt: z.date(),
+      paidAt: z.date().nullish(),
+    }))).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    cancel: publicProcedure.input(z.object({
+      additionalPaymentId: z.number().int().positive(),
+    })).output(z.object({
+      success: z.boolean(),
+      additionalPaymentId: z.number(),
+    })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+  }),
   backofficeAdmin: t.router({
     create: publicProcedure.input(z.object({
       email: z.string().email('올바른 이메일 형식이 아닙니다'),
