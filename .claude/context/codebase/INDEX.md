@@ -10,6 +10,7 @@ description: 코드베이스 모듈 참조 목록
 | 모듈 | 설명 | 문서 |
 |------|------|------|
 | Shop Payment | Shop 결제 처리 - PortOne 연동, 결제 승인/취소, TmpOrder->Order 변환, 호텔 재고 동시성 제어 | [shop-payment.md](./shop-payment.md) |
+| Shop Product | Shop 상품 상세 페이지 - 탭 네비게이션(상품정보/판매정보/다른 상품 보기), 상품 타입별 분기 렌더링 | [shop-product.md](./shop-product.md) |
 | GitHub Actions CI/CD | PR 통합 테스트, Partner 빌드, API 배포(ECR + Elastic Beanstalk, Docker Buildx GHA 캐시) | [github-actions-ci.md](./github-actions-ci.md) |
 | Claude Agents | Claude Code 전문 Agent 15개 - 역할, 모델, 위임 체계 | [claude-agents.md](./claude-agents.md) |
 | Claude Hooks | Claude Code Hook 스크립트 - 세션/프롬프트/명령어 이벤트별 자동 실행 | [claude-hooks.md](./claude-hooks.md) |
@@ -21,4 +22,3 @@ description: 코드베이스 모듈 참조 목록
 | Backoffice Order | 백오피스 주문 관리 - 조회/상태변경/엑셀, Partner 데이터 스코핑 | [backoffice-order.md](./backoffice-order.md) |
 | Backoffice Manager | 백오피스 파트너 관리자 UI - 관리자 목록/추가/역할 변경/제거 공유 컴포넌트 | [backoffice-manager.md](./backoffice-manager.md) |
 | Frontend Deploy | 프론트엔드 배포 - GitHub Actions + S3 + CloudFront, 신규 앱 추가 가이드 | [frontend-deploy.md](./frontend-deploy.md) |
-
