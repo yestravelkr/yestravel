@@ -29,14 +29,21 @@ export const cancelAdditionalPaymentInputSchema = z.object({
 // ===== Output Schemas =====
 
 /**
- * 추가결제 상태 Schema
+ * 추가결제 상태 Enum
  */
-export const additionalPaymentStatusSchema = z.enum([
+export const ADDITIONAL_PAYMENT_STATUS_ENUM_VALUE = [
   'PENDING',
   'PAID',
   'EXPIRED',
   'DELETED',
-]);
+] as const;
+
+export type AdditionalPaymentStatusEnumType =
+  (typeof ADDITIONAL_PAYMENT_STATUS_ENUM_VALUE)[number];
+
+export const additionalPaymentStatusEnumSchema = z.enum(
+  ADDITIONAL_PAYMENT_STATUS_ENUM_VALUE
+);
 
 /**
  * 추가결제 생성 Response Schema
@@ -54,7 +61,7 @@ export const additionalPaymentItemSchema = z.object({
   title: z.string(),
   amount: z.number(),
   reason: z.string(),
-  status: additionalPaymentStatusSchema,
+  status: additionalPaymentStatusEnumSchema,
   paymentUrl: z.string().nullish(),
   expiresAt: z.date(),
   createdAt: z.date(),

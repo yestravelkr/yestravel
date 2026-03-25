@@ -7,7 +7,7 @@ import type {
   cancelAdditionalPaymentInputSchema,
   cancelAdditionalPaymentResponseSchema,
   additionalPaymentItemSchema,
-  additionalPaymentStatusSchema,
+  additionalPaymentStatusEnumSchema,
 } from './additional-payment.schema';
 
 // ===== Input DTOs =====
@@ -25,7 +25,7 @@ export type CancelAdditionalPaymentInput = z.infer<
 // ===== Output DTOs =====
 
 export type AdditionalPaymentStatus = z.infer<
-  typeof additionalPaymentStatusSchema
+  typeof additionalPaymentStatusEnumSchema
 >;
 
 export type AdditionalPaymentItem = z.infer<typeof additionalPaymentItemSchema>;

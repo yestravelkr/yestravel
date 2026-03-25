@@ -3,6 +3,7 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
+import { randomUUID } from 'crypto';
 import dayjs from 'dayjs';
 import { RepositoryProvider } from '@src/module/shared/transaction/repository.provider';
 import {
@@ -79,7 +80,7 @@ export class AdditionalPaymentService {
     }
 
     // UUID v4 토큰 생성
-    const token = crypto.randomUUID();
+    const token = randomUUID();
 
     // AdditionalPaymentEntity 생성
     const additionalPayment = new AdditionalPaymentEntity();
