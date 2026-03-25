@@ -10,6 +10,7 @@ import { InfluencerModule } from '@src/module/backoffice/influencer/influencer.m
 import { OrderModule } from '@src/module/backoffice/order/order.module';
 import { SettlementModule } from '@src/module/backoffice/settlement/settlement.module';
 import { ClaimModule } from '@src/module/backoffice/claim/claim.module';
+import { AdditionalPaymentModule } from '@src/module/backoffice/additional-payment/additional-payment.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { ClaimModule } from '@src/module/backoffice/claim/claim.module';
     OrderModule,
     SettlementModule,
     ClaimModule,
+    AdditionalPaymentModule,
   ],
   exports: [
     BackofficeAuthModule,
@@ -37,6 +39,7 @@ import { ClaimModule } from '@src/module/backoffice/claim/claim.module';
     OrderModule,
     SettlementModule,
     ClaimModule,
+    AdditionalPaymentModule,
   ],
 })
 export class BackofficeModule {}

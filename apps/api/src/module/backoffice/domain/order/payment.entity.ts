@@ -4,6 +4,7 @@ import {
   EntityManager,
   Index,
   ManyToOne,
+  OneToOne,
   JoinColumn,
 } from 'typeorm';
 import { BaseEntity } from '@src/module/backoffice/domain/base.entity';
@@ -11,6 +12,7 @@ import { TransactionService } from '@src/module/shared/transaction/transaction.s
 import { getEntityManager } from '@src/database/datasources';
 import type { Nullish } from '@src/types/utility.type';
 import { OrderEntity } from '@src/module/backoffice/domain/order/order.entity';
+import type { AdditionalPaymentEntity } from '@src/module/backoffice/domain/order/additional-payment.entity';
 
 /**
  * PaymentEntity - 결제 엔티티
@@ -51,6 +53,12 @@ export class PaymentEntity extends BaseEntity {
   @ManyToOne(() => OrderEntity)
   @JoinColumn({ name: 'order_id' })
   order: OrderEntity;
+
+  @OneToOne(
+    () => require('./additional-payment.entity').AdditionalPaymentEntity,
+    (ap: AdditionalPaymentEntity) => ap.payment
+  )
+  additionalPayment?: AdditionalPaymentEntity;
 }
 
 export const getPaymentRepository = (

@@ -2,6 +2,7 @@
 export { OrderStatusCard, type OrderItem } from './OrderStatusCard';
 export { OrderDetailHeader } from './OrderDetailHeader';
 export { PaymentInfoCard, type PaymentInfo } from './PaymentInfoCard';
+export { AdditionalPaymentCard } from './AdditionalPaymentCard';
 export { MemberInfoCard, type MemberInfo } from './MemberInfoCard';
 export {
   OrderFilters,

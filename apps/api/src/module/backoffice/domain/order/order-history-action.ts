@@ -36,6 +36,11 @@
  *
  * ### 환불 (Actor: SYSTEM 또는 ADMIN)
  * - REFUND_PROCESSED: 환불 처리 완료 시 (CANCELLED → CANCELLED, metadata에 refundAmount 포함) — 여러 Service
+ *
+ * ### 추가결제 (Actor: ADMIN/SYSTEM)
+ * - ADDITIONAL_PAYMENT_REQUESTED: 관리자가 추가결제 링크 생성 시 (Order.status 변경 없음, metadata에 additionalPaymentId) — AdditionalPaymentService
+ * - ADDITIONAL_PAYMENT_COMPLETED: 고객이 추가결제 완료 시 (Order.status 변경 없음, metadata에 additionalPaymentId) — ShopPaymentService
+ * - ADDITIONAL_PAYMENT_CANCELLED: 관리자가 추가결제 무효화 시 (Order.status 변경 없음, metadata에 additionalPaymentId) — AdditionalPaymentService
  */
 
 export const ORDER_HISTORY_ACTION = [
@@ -59,6 +64,10 @@ export const ORDER_HISTORY_ACTION = [
   'RETURN_REJECTED',
   // 환불 (SYSTEM/ADMIN)
   'REFUND_PROCESSED',
+  // 추가결제 (ADMIN/SYSTEM)
+  'ADDITIONAL_PAYMENT_REQUESTED',
+  'ADDITIONAL_PAYMENT_COMPLETED',
+  'ADDITIONAL_PAYMENT_CANCELLED',
 ] as const;
 
 export type OrderHistoryAction = (typeof ORDER_HISTORY_ACTION)[number];
