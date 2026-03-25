@@ -3,6 +3,7 @@ import {
   Logger,
   NotFoundException,
   BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { RepositoryProvider } from '@src/module/shared/transaction/repository.provider';
 import { ClaimEntity } from '@src/module/backoffice/domain/order/claim.entity';
@@ -91,6 +92,9 @@ export class ShopClaimService {
     if (existingClaim) {
       throw new BadRequestException('이미 처리 중인 클레임이 있습니다.');
     }
+
+    // 2-1. 추가결제 활성 여부 확인 (PENDING 또는 PAID 상태면 취소 차단)
+    await this.validateNoActiveAdditionalPayment(orderId);
 
     // 3. 주문 상태별 클레임 가능 여부 검증
     this.validateClaimable(order.type, order.status, type);
@@ -292,6 +296,42 @@ export class ShopClaimService {
       orderId,
       newOrderStatus: order.status,
     };
+  }
+
+  /**
+   * 추가결제가 활성 상태(PENDING/PAID)인지 확인하여 취소를 차단합니다.
+   *
+   * - PENDING: additionalPayment 존재 + deletedAt null + paymentId null + expiresAt > now
+   * - PAID: additionalPayment 존재 + paymentId 존재 (결제 완료)
+   */
+  private async validateNoActiveAdditionalPayment(
+    orderId: number
+  ): Promise<void> {
+    const payments =
+      await this.repositoryProvider.PaymentRepository.find({
+        where: { orderId },
+        relations: ['additionalPayment'],
+      });
+
+    const hasActive = payments.some((payment) => {
+      const ap = payment.additionalPayment;
+      if (!ap) return false;
+      if (ap.deletedAt) return false;
+
+      // PAID: 결제 완료된 추가결제
+      if (ap.paymentId) return true;
+
+      // PENDING: 아직 결제 전이고 만료되지 않은 추가결제
+      if (ap.expiresAt > new Date()) return true;
+
+      return false;
+    });
+
+    if (hasActive) {
+      throw new ForbiddenException(
+        '추가결제가 진행 중이므로 취소할 수 없습니다. 고객센터로 문의해주세요.'
+      );
+    }
   }
 
   /**
