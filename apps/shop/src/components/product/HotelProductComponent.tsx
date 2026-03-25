@@ -10,17 +10,23 @@ import type { HotelOptionSelectorConfig } from '@yestravelkr/option-selector';
 import dayjs from 'dayjs';
 import 'dayjs/locale/ko';
 import { Calendar } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import tw from 'tailwind-styled-components';
 
 import { CheckInOutSection } from './CheckInOutSection';
 import { openHotelOptionBottomSheet } from './HotelOptionBottomSheet';
+import { OtherProductsContent } from './OtherProductsContent';
 import { ProductDetailContent } from './ProductDetailContent';
 import { ProductDetailTabs, type ProductDetailTab } from './ProductDetailTabs';
 import { ProductThumbnail } from './ProductThumbnail';
 import { ProductTitleSection } from './ProductTitleSection';
+import {
+  SalesInfoContent,
+  type SalesInfoContentProps,
+} from './SalesInfoContent';
 
 import { openLoginBottomSheet } from '@/components/auth/LoginBottomSheet';
+import { trpc } from '@/shared';
 import { useAuthStore } from '@/store/authStore';
 
 dayjs.locale('ko');
@@ -45,6 +51,12 @@ export interface HotelProductComponentProps {
   campaignEndAt: Date | string;
   /** 옵션 설정 (HotelOptionSelectorConfig) */
   options: HotelOptionSelectorConfig;
+  /** 판매 정보 */
+  salesInfo: SalesInfoContentProps['salesInfo'];
+  /** 캠페인 정보 (다른 상품 조회용) */
+  campaign: { id: number; endAt: Date | string };
+  /** 인플루언서 정보 (다른 상품 조회용) */
+  influencer: { slug?: string | null };
 }
 
 /**
@@ -71,6 +83,9 @@ export function HotelProductComponent(props: HotelProductComponentProps) {
     detailHtml,
     campaignEndAt,
     options,
+    salesInfo,
+    campaign,
+    influencer,
   } = props;
 
   // 옵션의 가용 날짜 중 오늘 이후 날짜를 초기값으로 설정
@@ -93,6 +108,17 @@ export function HotelProductComponent(props: HotelProductComponentProps) {
   const [checkOutDate, setCheckOutDate] = useState<string>(initialCheckOut);
   const [selectedOptionId, setSelectedOptionId] = useState<number | null>(null);
   const [selectedTab, setSelectedTab] = useState<ProductDetailTab>('info');
+
+  // 다른 상품 보기 데이터 프리페칭 (탭 클릭 시 즉시 표시)
+  const trpcUtils = trpc.useUtils();
+  useEffect(() => {
+    if (influencer.slug) {
+      trpcUtils.shopInfluencer.getCampaignDetail.prefetch({
+        slug: influencer.slug,
+        campaignId: campaign.id,
+      });
+    }
+  }, [influencer.slug, campaign.id, trpcUtils]);
 
   // 바텀시트 열기 (구매하기 버튼 클릭 시)
   const handleOpenOptionSheet = async () => {
@@ -163,12 +189,19 @@ export function HotelProductComponent(props: HotelProductComponentProps) {
           <ProductDetailContent htmlContent={detailHtml ?? ''} />
         )}
 
-        {/* 판매정보, 추천 탭은 추후 구현 */}
-        {selectedTab === 'sale' && (
-          <PlaceholderContent>판매정보 (추후 구현)</PlaceholderContent>
+        {/* 판매정보 탭 */}
+        {selectedTab === 'sale' && <SalesInfoContent salesInfo={salesInfo} />}
+        {selectedTab === 'recommend' && influencer.slug && (
+          <OtherProductsContent
+            slug={influencer.slug}
+            campaignId={campaign.id}
+            currentSaleId={saleId}
+          />
         )}
-        {selectedTab === 'recommend' && (
-          <PlaceholderContent>추천 (추후 구현)</PlaceholderContent>
+        {selectedTab === 'recommend' && !influencer.slug && (
+          <EmptySlugContainer>
+            추천 상품을 불러올 수 없습니다.
+          </EmptySlugContainer>
         )}
       </TabSection>
 
@@ -208,6 +241,9 @@ export function HotelProductComponent(props: HotelProductComponentProps) {
  *   detailHtml="<p>상세 내용</p>"
  *   campaignEndAt={new Date('2025-01-31')}
  *   options={{ skus: [...], hotelOptions: [...] }}
+ *   salesInfo={{ seller: { companyName: "(주)신라호텔", ceoName: "이부진", address: "서울", licenseNumber: "123-45-67890", mailOrderLicenseNumber: "2024-서울중구-0001" } }}
+ *   campaign={{ id: 1, endAt: new Date('2025-01-31') }}
+ *   influencer={{ slug: "influencer-slug" }}
  * />
  */
 
@@ -231,13 +267,6 @@ const InfoSection = tw.div`
 `;
 
 const TabSection = tw.div`
-  bg-white
-`;
-
-const PlaceholderContent = tw.div`
-  p-10
-  text-center
-  text-fg-muted
   bg-white
 `;
 
@@ -307,4 +336,11 @@ const FloatingDateText = tw.span`
   text-base
   font-medium
   leading-5
+`;
+
+const EmptySlugContainer = tw.div`
+  p-10
+  text-center
+  text-fg-muted
+  bg-white
 `;

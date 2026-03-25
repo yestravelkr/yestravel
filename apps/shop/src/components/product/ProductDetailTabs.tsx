@@ -18,7 +18,7 @@ export interface ProductDetailTabsProps {
 const TAB_LABELS: Record<ProductDetailTab, string> = {
   info: '상품정보',
   sale: '판매정보',
-  recommend: '추천',
+  recommend: '다른 상품 보기',
 };
 
 export function ProductDetailTabs({
