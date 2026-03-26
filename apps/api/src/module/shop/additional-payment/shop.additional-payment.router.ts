@@ -1,5 +1,4 @@
 import { Router, Mutation, Query, Input } from 'nestjs-trpc-v2';
-import { Injectable } from '@nestjs/common';
 import { BaseTrpcRouter } from '@src/module/trpc/baseTrpcRouter';
 import {
   shopAdditionalPaymentGetByTokenInputSchema,
@@ -18,7 +17,6 @@ import type {
  * 인증 미들웨어를 적용하지 않습니다 (토큰이 인증 역할).
  */
 @Router({ alias: 'shopAdditionalPayment' })
-@Injectable()
 export class ShopAdditionalPaymentRouter extends BaseTrpcRouter {
   @Query({
     input: shopAdditionalPaymentGetByTokenInputSchema,
