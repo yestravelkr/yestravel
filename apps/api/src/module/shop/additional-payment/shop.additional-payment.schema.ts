@@ -18,6 +18,7 @@ export const shopAdditionalPaymentGetByTokenOutputSchema = z.object({
   orderNumber: z.string(),
   productName: z.string(),
   customerName: z.string(),
+  customerPhone: z.string(),
 });
 
 // ===== complete =====

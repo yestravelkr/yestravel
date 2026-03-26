@@ -210,31 +210,6 @@ const appRouter = t.router({
       }),
     ])).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
   }),
-  shopAdditionalPayment: t.router({
-    getByToken: publicProcedure.input(z.object({
-      token: z.string(),
-    })).output(z.object({
-      id: z.number(),
-      token: z.string(),
-      title: z.string(),
-      amount: z.number(),
-      reason: z.string(),
-      status: z.enum(['PENDING', 'PAID', 'EXPIRED', 'DELETED']),
-      expiresAt: z.date(),
-      orderId: z.number(),
-      orderNumber: z.string(),
-      productName: z.string(),
-      customerName: z.string(),
-    })).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
-    complete: publicProcedure.input(z.object({
-      token: z.string(),
-      paymentId: z.string(),
-      txId: z.string(),
-    })).output(z.object({
-      success: z.boolean(),
-      orderNumber: z.string(),
-    })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
-  }),
   shopPayment: t.router({
     complete: publicProcedure.input(z.object({
       paymentId: z.string(),
@@ -320,12 +295,14 @@ const appRouter = t.router({
         productAmount: z.number(),
         paymentMethod: z.string(),
       }),
-      payments: z.array(z.object({
-        amount: z.number(),
-        paymentMethod: z.string(),
-        isAdditionalPayment: z.boolean(),
-        additionalPaymentReason: z.string().nullish(),
-      })),
+      payments: z.array(
+        z.object({
+          amount: z.number(),
+          paymentMethod: z.string(),
+          isAdditionalPayment: z.boolean(),
+          additionalPaymentReason: z.string().nullish(),
+        })
+      ),
     })).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
     getMyOrders: publicProcedure.input(z.object({
       offset: z.number().optional().default(0),
@@ -593,6 +570,32 @@ const appRouter = t.router({
         phone: z.string(),
         name: z.string().nullable(),
       }),
+    })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
+  }),
+  shopAdditionalPayment: t.router({
+    getByToken: publicProcedure.input(z.object({
+      token: z.string(),
+    })).output(z.object({
+      id: z.number(),
+      token: z.string(),
+      title: z.string(),
+      amount: z.number(),
+      reason: z.string(),
+      status: z.enum(['PENDING', 'PAID', 'EXPIRED', 'DELETED']),
+      expiresAt: z.date(),
+      orderId: z.number(),
+      orderNumber: z.string(),
+      productName: z.string(),
+      customerName: z.string(),
+      customerPhone: z.string(),
+    })).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    complete: publicProcedure.input(z.object({
+      token: z.string(),
+      paymentId: z.string(),
+      txId: z.string(),
+    })).output(z.object({
+      success: z.boolean(),
+      orderNumber: z.string(),
     })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
   }),
   partnerAuth: t.router({
@@ -1759,6 +1762,9 @@ const appRouter = t.router({
         name: z.string(),
         phone: z.string(),
       }),
+
+      // 정산 여부
+      isSettled: z.boolean(),
     })).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
     updateStatus: publicProcedure.input(z.object({
       orderId: z.number().int().positive(),
@@ -2916,12 +2922,14 @@ const appRouter = t.router({
       title: z.string(),
       amount: z.number(),
       reason: z.string(),
-      status: z.enum([
-        'PENDING',
-        'PAID',
-        'EXPIRED',
-        'DELETED',
-      ]),
+      status: z.enum(
+        [
+          'PENDING',
+          'PAID',
+          'EXPIRED',
+          'DELETED',
+        ] as const
+      ),
       paymentUrl: z.string().nullish(),
       expiresAt: z.date(),
       createdAt: z.date(),

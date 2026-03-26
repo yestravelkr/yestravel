@@ -82,6 +82,7 @@ interface PendingPaymentData {
   orderNumber: string;
   productName: string;
   customerName: string;
+  customerPhone: string;
 }
 
 function PendingPaymentView({
@@ -124,6 +125,7 @@ function PendingPaymentView({
       customer: {
         customerId: data.orderNumber,
         fullName: data.customerName,
+        phoneNumber: data.customerPhone,
         email: 'info@yestravel.co.kr',
       },
       redirectUrl: `${API_BASEURL}/payment/complete-redirect?origin=${window.location.origin}`,

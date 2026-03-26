@@ -89,6 +89,7 @@ export class ShopAdditionalPaymentService {
       orderNumber: order.orderNumber,
       productName: product?.name ?? '상품명 없음',
       customerName: order.customerName,
+      customerPhone: order.customerPhone,
     };
   }
 
