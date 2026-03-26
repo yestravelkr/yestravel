@@ -592,6 +592,7 @@ const appRouter = t.router({
     complete: publicProcedure.input(z.object({
       token: z.string(),
       paymentId: z.string(),
+      paymentToken: z.string(),
       txId: z.string(),
     })).output(z.object({
       success: z.boolean(),

@@ -142,6 +142,7 @@ function PendingPaymentView({
         completeMutation.mutate({
           token,
           paymentId: response.paymentId ?? paymentId,
+          paymentToken: response.paymentToken ?? '',
           txId: response.txId ?? '',
         });
       })

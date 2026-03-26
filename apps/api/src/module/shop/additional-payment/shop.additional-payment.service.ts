@@ -106,7 +106,7 @@ export class ShopAdditionalPaymentService {
   async complete(
     input: ShopAdditionalPaymentCompleteInput
   ): Promise<ShopAdditionalPaymentCompleteOutput> {
-    const { token, paymentId, txId } = input;
+    const { token, paymentId, paymentToken, txId } = input;
 
     // 1. token으로 AdditionalPayment 조회
     const additionalPayment =
@@ -127,7 +127,7 @@ export class ShopAdditionalPaymentService {
     }
 
     // 2. PortOne 결제 승인
-    await this.confirmPortonePayment(paymentId, txId);
+    await this.confirmPortonePayment(paymentId, paymentToken, txId);
 
     // 결제 상세 정보 조회
     const paymentDetail = await this.getPaymentDetail(paymentId);
@@ -198,6 +198,7 @@ export class ShopAdditionalPaymentService {
    */
   private async confirmPortonePayment(
     paymentId: string,
+    paymentToken: string,
     txId: string
   ): Promise<void> {
     await this.generatePortoneAccessToken();
@@ -205,7 +206,7 @@ export class ShopAdditionalPaymentService {
     return axios
       .post(
         `${this.PORTONE_API_URL}/payments/${paymentId}/confirm`,
-        { txId },
+        { paymentToken, txId },
         {
           headers: {
             'Content-Type': 'application/json',

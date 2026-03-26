@@ -26,6 +26,7 @@ export const shopAdditionalPaymentGetByTokenOutputSchema = z.object({
 export const shopAdditionalPaymentCompleteInputSchema = z.object({
   token: z.string(),
   paymentId: z.string(),
+  paymentToken: z.string(),
   txId: z.string(),
 });
 
