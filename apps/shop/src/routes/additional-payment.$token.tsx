@@ -133,8 +133,25 @@ function PendingPaymentView({
 
     PortOne.requestPayment(paymentRequest)
       .then(response => {
-        if (!response || response.code === 'FAILURE_TYPE_PG') {
+        if (!response) {
           toast.error('결제가 실패했습니다.');
+          setIsSubmitting(false);
+          return;
+        }
+
+        // 사용자 취소
+        if (
+          response.code === 'FAILURE_TYPE_PG' ||
+          response.code === 'PAY_PROCESS_CANCELED'
+        ) {
+          toast.error(response.message || '결제가 취소되었습니다.');
+          setIsSubmitting(false);
+          return;
+        }
+
+        // 결제 실패
+        if (response.code) {
+          toast.error(response.message || '결제에 실패했습니다.');
           setIsSubmitting(false);
           return;
         }
