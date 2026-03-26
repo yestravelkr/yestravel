@@ -132,6 +132,14 @@ export class ShopAdditionalPaymentService {
     // 결제 상세 정보 조회
     const paymentDetail = await this.getPaymentDetail(paymentId);
 
+    // 결제 금액 검증
+    const paidAmount = paymentDetail?.amount?.total;
+    if (paidAmount !== undefined && paidAmount !== additionalPayment.amount) {
+      throw new BadRequestException(
+        `결제 금액이 일치하지 않습니다. (요청: ${additionalPayment.amount}원, 실제: ${paidAmount}원)`
+      );
+    }
+
     // 3. Payment 레코드 생성
     const payment = new PaymentEntity();
     payment.orderId = additionalPayment.orderId;
