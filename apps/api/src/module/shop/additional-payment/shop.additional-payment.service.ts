@@ -4,11 +4,10 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
-import axios from 'axios';
 import dayjs from 'dayjs';
-import { ConfigProvider } from '@src/config';
 import { RepositoryProvider } from '@src/module/shared/transaction/repository.provider';
 import { OrderHistoryService } from '@src/module/backoffice/order/order-history.service';
+import { ShopPaymentService } from '@src/module/shop/payment/shop.payment.service';
 import { AdditionalPaymentEntity } from '@src/module/backoffice/domain/order/additional-payment.entity';
 import { PaymentEntity } from '@src/module/backoffice/domain/order/payment.entity';
 import type {
@@ -23,21 +22,11 @@ type AdditionalPaymentStatus = 'PENDING' | 'PAID' | 'EXPIRED' | 'DELETED';
 @Injectable()
 export class ShopAdditionalPaymentService {
   private readonly logger = new Logger(ShopAdditionalPaymentService.name);
-  private readonly PORTONE_API_URL = 'https://api.portone.io';
-  private readonly PORTONE_API_SECRET = ConfigProvider.portone.apiSecret;
-  private portoneToken: {
-    accessToken: string | null;
-    refreshToken: string | null;
-    expiredAt: dayjs.Dayjs;
-  } = {
-    accessToken: null,
-    refreshToken: null,
-    expiredAt: dayjs().add(-1, 'h'),
-  };
 
   constructor(
     private readonly repositoryProvider: RepositoryProvider,
-    private readonly orderHistoryService: OrderHistoryService
+    private readonly orderHistoryService: OrderHistoryService,
+    private readonly shopPaymentService: ShopPaymentService
   ) {}
 
   /**
@@ -127,13 +116,25 @@ export class ShopAdditionalPaymentService {
     }
 
     // 2. PortOne 결제 승인
-    await this.confirmPortonePayment(paymentId, paymentToken, txId);
+    await this.shopPaymentService.confirmPortonePayment(
+      paymentId,
+      paymentToken,
+      txId
+    );
 
     // 결제 상세 정보 조회
-    const paymentDetail = await this.getPaymentDetail(paymentId);
+    const paymentDetail =
+      await this.shopPaymentService.getPaymentDetail(paymentId);
+
+    // 결제 상세 조회 실패 시 에러 처리
+    if (!paymentDetail || !paymentDetail.amount) {
+      throw new BadRequestException(
+        `결제 상세 정보를 조회할 수 없습니다. (paymentId: ${paymentId})`
+      );
+    }
 
     // 결제 금액 검증
-    const paidAmount = paymentDetail?.amount?.total;
+    const paidAmount = paymentDetail.amount.total;
     if (paidAmount !== undefined && paidAmount !== additionalPayment.amount) {
       throw new BadRequestException(
         `결제 금액이 일치하지 않습니다. (요청: ${additionalPayment.amount}원, 실제: ${paidAmount}원)`
@@ -199,83 +200,5 @@ export class ShopAdditionalPaymentService {
     if (ap.payment) return 'PAID';
     if (dayjs(ap.expiresAt).isBefore(dayjs())) return 'EXPIRED';
     return 'PENDING';
-  }
-
-  /**
-   * PortOne 결제 승인
-   */
-  private async confirmPortonePayment(
-    paymentId: string,
-    paymentToken: string,
-    txId: string
-  ): Promise<void> {
-    await this.generatePortoneAccessToken();
-
-    return axios
-      .post(
-        `${this.PORTONE_API_URL}/payments/${paymentId}/confirm`,
-        { paymentToken, txId },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${this.portoneToken.accessToken}`,
-          },
-        }
-      )
-      .then(() => {
-        this.logger.log('Additional payment confirmed successfully');
-      })
-      .catch((error: any) => {
-        if (error.response?.data?.type === 'ALREADY_PAID') {
-          this.logger.log('이미 결제된 추가결제 요청은 에러 없이 처리');
-          return;
-        }
-        this.logger.error('Additional payment confirmation failed', error);
-        throw error;
-      });
-  }
-
-  /**
-   * PortOne 결제 상세 정보 조회
-   */
-  private async getPaymentDetail(
-    paymentId: string
-  ): Promise<Record<string, any>> {
-    return axios
-      .get(`${this.PORTONE_API_URL}/payments/${paymentId}`, {
-        headers: {
-          Authorization: `Bearer ${this.portoneToken.accessToken}`,
-        },
-      })
-      .then(response => response.data)
-      .catch(error => {
-        this.logger.error('Failed to get payment detail', error);
-        return {};
-      });
-  }
-
-  /**
-   * PortOne Access Token 생성/갱신
-   */
-  private async generatePortoneAccessToken(): Promise<void> {
-    if (
-      this.portoneToken.accessToken &&
-      dayjs().isBefore(this.portoneToken.expiredAt)
-    ) {
-      return;
-    }
-
-    const { data } = await axios.post<{
-      accessToken: string;
-      refreshToken: string;
-    }>(`${this.PORTONE_API_URL}/login/api-secret`, {
-      apiSecret: this.PORTONE_API_SECRET,
-    });
-
-    this.portoneToken = {
-      ...data,
-      expiredAt: dayjs().add(20, 'minutes'),
-    };
-    this.logger.log('PortOne access token generated');
   }
 }

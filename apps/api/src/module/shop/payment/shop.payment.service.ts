@@ -417,18 +417,18 @@ export class ShopPaymentService {
   }
 
   /**
-   * PortOne 결제 승인 및 Payment 저장
+   * PortOne 결제 승인 API 호출
+   * ALREADY_PAID 응답은 에러 없이 처리
    */
-  private async confirmPayment(
-    data: ShopPaymentCompleteInput,
-    order: OrderEntity
+  async confirmPortonePayment(
+    paymentId: string,
+    paymentToken: string,
+    txId: string
   ): Promise<void> {
-    const { paymentId, paymentToken, txId } = data;
     await this.generatePortoneAccessToken();
 
-    try {
-      // 1. 결제 승인
-      await axios.post(
+    return axios
+      .post(
         `${this.PORTONE_API_URL}/payments/${paymentId}/confirm`,
         { paymentToken, txId },
         {
@@ -437,46 +437,54 @@ export class ShopPaymentService {
             Authorization: `Bearer ${this.portoneToken.accessToken}`,
           },
         }
-      );
-
-      this.logger.log('Payment confirmed successfully');
-
-      // 2. 결제 상세 정보 조회 (결제 수단 등 상세 정보 포함)
-      const paymentDetail = await this.getPaymentDetail(paymentId);
-
-      // Payment 저장 (실패해도 결제 승인은 이미 완료된 상태)
-      await this.savePaymentSafely(order, paymentDetail, txId);
-    } catch (error: any) {
-      if (error.response?.data?.type === 'ALREADY_PAID') {
-        this.logger.log('이미 결제된 요청은 에러 없이 처리');
-
-        // 기존 Payment 존재 여부 확인
-        const existingPayment =
-          await this.repositoryProvider.PaymentRepository.findOne({
-            where: { impUid: txId },
-          });
-
-        if (existingPayment) {
-          this.logger.log(`이미 저장된 Payment 존재. impUid=${txId}`);
+      )
+      .then(() => {
+        this.logger.log('Payment confirmed successfully');
+      })
+      .catch((error: any) => {
+        if (error.response?.data?.type === 'ALREADY_PAID') {
+          this.logger.log('이미 결제된 요청은 에러 없이 처리');
           return;
         }
+        this.logger.error('Payment confirmation failed', error);
+        throw error;
+      });
+  }
 
-        // 결제 상세 정보 조회 후 저장
-        const paymentDetail = await this.getPaymentDetail(paymentId);
-        await this.savePaymentSafely(order, paymentDetail, txId);
-        return;
-      }
-      this.logger.error('Payment confirmation failed', error);
-      throw error;
+  /**
+   * PortOne 결제 승인 및 Payment 저장
+   */
+  private async confirmPayment(
+    data: ShopPaymentCompleteInput,
+    order: OrderEntity
+  ): Promise<void> {
+    const { paymentId, paymentToken, txId } = data;
+
+    // 1. 결제 승인 (ALREADY_PAID는 내부에서 에러 없이 처리)
+    await this.confirmPortonePayment(paymentId, paymentToken, txId);
+
+    // 2. 기존 Payment 존재 여부 확인 (이미 결제된 경우 중복 저장 방지)
+    const existingPayment =
+      await this.repositoryProvider.PaymentRepository.findOne({
+        where: { impUid: txId },
+      });
+
+    if (existingPayment) {
+      this.logger.log(`이미 저장된 Payment 존재. impUid=${txId}`);
+      return;
     }
+
+    // 3. 결제 상세 정보 조회 (결제 수단 등 상세 정보 포함)
+    const paymentDetail = await this.getPaymentDetail(paymentId);
+
+    // 4. Payment 저장 (실패해도 결제 승인은 이미 완료된 상태)
+    await this.savePaymentSafely(order, paymentDetail, txId);
   }
 
   /**
    * PortOne 결제 상세 정보 조회
    */
-  private async getPaymentDetail(
-    paymentId: string
-  ): Promise<Record<string, any>> {
+  async getPaymentDetail(paymentId: string): Promise<Record<string, any>> {
     try {
       const response = await axios.get(
         `${this.PORTONE_API_URL}/payments/${paymentId}`,

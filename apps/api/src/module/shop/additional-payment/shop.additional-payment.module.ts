@@ -1,10 +1,11 @@
 import { Module } from '@nestjs/common';
 import { OrderHistoryModule } from '@src/module/backoffice/order/order-history.module';
+import { ShopPaymentModule } from '@src/module/shop/payment/shop.payment.module';
 import { ShopAdditionalPaymentController } from './shop.additional-payment.controller';
 import { ShopAdditionalPaymentService } from './shop.additional-payment.service';
 
 @Module({
-  imports: [OrderHistoryModule],
+  imports: [OrderHistoryModule, ShopPaymentModule],
   controllers: [ShopAdditionalPaymentController],
   providers: [ShopAdditionalPaymentService],
   exports: [ShopAdditionalPaymentService],
