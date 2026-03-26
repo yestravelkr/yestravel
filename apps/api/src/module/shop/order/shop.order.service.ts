@@ -405,7 +405,7 @@ export class ShopOrderService {
 
     const order = await this.repositoryProvider.OrderRepository.findOne({
       where: { id: orderId },
-      relations: ['payments'],
+      relations: ['payments', 'payments.additionalPayment'],
     });
 
     if (!order) {
@@ -414,17 +414,19 @@ export class ShopOrderService {
       );
     }
 
-    const [hotelProduct, influencer, pendingClaim] = await Promise.all([
-      this.repositoryProvider.HotelProductRepository.findOne({
-        where: { id: order.productId, type: ProductTypeEnum.HOTEL },
-      }),
-      this.repositoryProvider.InfluencerRepository.findOne({
-        where: { id: order.influencerId },
-      }),
-      this.repositoryProvider.ClaimRepository.findOne({
-        where: { orderId: order.id, status: 'REQUESTED' },
-      }),
-    ]);
+    const [hotelProduct, influencer, pendingClaim, hasActiveAdditionalPayment] =
+      await Promise.all([
+        this.repositoryProvider.HotelProductRepository.findOne({
+          where: { id: order.productId, type: ProductTypeEnum.HOTEL },
+        }),
+        this.repositoryProvider.InfluencerRepository.findOne({
+          where: { id: order.influencerId },
+        }),
+        this.repositoryProvider.ClaimRepository.findOne({
+          where: { orderId: order.id, status: 'REQUESTED' },
+        }),
+        this.checkActiveAdditionalPayment(order.id),
+      ]);
 
     if (!hotelProduct) {
       throw new NotFoundException(
@@ -440,6 +442,7 @@ export class ShopOrderService {
       status: this.getDisplayStatus(order.status, pendingClaim),
       statusDescription: null,
       influencerSlug: influencer?.slug ?? null,
+      hasActiveAdditionalPayment,
       accommodation: {
         thumbnail: hotelProduct.thumbnailUrls[0] ?? null,
         hotelName: hotelProduct.name,
@@ -464,6 +467,7 @@ export class ShopOrderService {
         productAmount: order.totalAmount,
         paymentMethod: this.getPaymentMethod(order.payments),
       },
+      payments: this.formatPayments(order.payments),
     };
   }
 
@@ -577,6 +581,38 @@ export class ShopOrderService {
     }
 
     return '카드결제';
+  }
+
+  /**
+   * 결제 내역을 프론트엔드 표시용 배열로 변환
+   * - 1차 결제 (additionalPayment가 null)
+   * - 추가결제 (additionalPayment가 존재)
+   */
+  private formatPayments(
+    payments:
+      | {
+          paidAmount: number;
+          pgProvider: string;
+          pgRawData?: Record<string, any> | null;
+          additionalPayment?: { reason: string } | null;
+        }[]
+      | undefined
+  ): {
+    amount: number;
+    paymentMethod: string;
+    isAdditionalPayment: boolean;
+    additionalPaymentReason: string | null;
+  }[] {
+    if (!payments || payments.length === 0) {
+      return [];
+    }
+
+    return payments.map(p => ({
+      amount: p.paidAmount,
+      paymentMethod: this.getPaymentMethod([p]),
+      isAdditionalPayment: !!p.additionalPayment,
+      additionalPaymentReason: p.additionalPayment?.reason ?? null,
+    }));
   }
 
   /**
@@ -701,5 +737,30 @@ export class ShopOrderService {
       total,
       hasMore: offset + limit < total,
     };
+  }
+
+  /**
+   * 활성 추가결제 존재 여부 확인
+   *
+   * deletedAt이 null이고 (미만료 또는 결제완료)인 추가결제가 있는지 확인합니다.
+   * - PENDING: deletedAt null + paymentId null + expiresAt > now
+   * - PAID: deletedAt null + paymentId not null
+   */
+  private async checkActiveAdditionalPayment(
+    orderId: number
+  ): Promise<boolean> {
+    const additionalPayments =
+      await this.repositoryProvider.AdditionalPaymentRepository.find({
+        where: { orderId },
+        relations: ['payment'],
+      });
+
+    return additionalPayments.some(ap => {
+      // PAID: 결제 완료
+      if (ap.payment) return true;
+      // PENDING: 미만료
+      if (dayjs(ap.expiresAt).isAfter(dayjs())) return true;
+      return false;
+    });
   }
 }

@@ -133,7 +133,11 @@ function OrderCompleteContent({ orderNumber }: { orderNumber: string }) {
         <UserInfoSection user={data.user} />
 
         {/* Payment Summary */}
-        <PaymentSummarySection payment={data.payment} type="accommodation" />
+        <PaymentSummarySection
+          payment={data.payment}
+          payments={data.payments}
+          type="accommodation"
+        />
       </ContentWrapper>
 
       {/* Footer Button */}

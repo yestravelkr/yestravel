@@ -8,8 +8,11 @@
  * <AccommodationOrderStatusCard
  *   data={accommodationOrderData}
  *   onCancelRequest={() => console.log('취소 신청')}
+ *   hasActiveAdditionalPayment={false}
  * />
  */
+
+import tw from 'tailwind-styled-components';
 
 import { OrderStatusCard, type OrderStatusType } from './OrderStatusCard';
 
@@ -36,6 +39,8 @@ export interface AccommodationOrderStatusCardProps {
   data: AccommodationOrderData;
   onCancelOrder?: () => void;
   onCancelRequest?: () => void;
+  /** 추가결제가 진행 중인지 여부 */
+  hasActiveAdditionalPayment?: boolean;
 }
 
 /** 취소 신청이 가능한 상태 (어드민 승인 필요) */
@@ -48,6 +53,7 @@ export function AccommodationOrderStatusCard({
   data,
   onCancelOrder,
   onCancelRequest,
+  hasActiveAdditionalPayment = false,
 }: AccommodationOrderStatusCardProps) {
   const isPaid = data.status === 'PAID';
   const canCancelRequest = CANCEL_REQUEST_STATUSES.includes(data.status);
@@ -68,14 +74,19 @@ export function AccommodationOrderStatusCard({
         checkIn={data.checkIn}
         checkOut={data.checkOut}
       />
-      {isPaid && (
+      {hasActiveAdditionalPayment && (
+        <AdditionalPaymentNotice>
+          추가결제가 진행 중이므로 취소가 불가합니다. 고객센터에 문의해주세요.
+        </AdditionalPaymentNotice>
+      )}
+      {!hasActiveAdditionalPayment && isPaid && (
         <OrderStatusCard.Actions>
           <OrderStatusCard.SubtleButton onClick={onCancelOrder}>
             주문 취소
           </OrderStatusCard.SubtleButton>
         </OrderStatusCard.Actions>
       )}
-      {canCancelRequest && (
+      {!hasActiveAdditionalPayment && canCancelRequest && (
         <OrderStatusCard.Actions>
           <OrderStatusCard.SubtleButton onClick={onCancelRequest}>
             취소 신청
@@ -85,3 +96,19 @@ export function AccommodationOrderStatusCard({
     </OrderStatusCard>
   );
 }
+
+// ============================================================================
+// Styled Components
+// ============================================================================
+
+const AdditionalPaymentNotice = tw.p`
+  mx-5
+  mb-4
+  px-4
+  py-3
+  bg-yellow-50
+  text-yellow-800
+  text-[13.5px]
+  leading-[18px]
+  rounded-lg
+`;

@@ -65,6 +65,7 @@ export const getOrderDetailOutputSchema = z.object({
   status: z.string(),
   statusDescription: z.string().nullish(),
   influencerSlug: z.string().nullish(),
+  hasActiveAdditionalPayment: z.boolean(),
   accommodation: z.object({
     thumbnail: z.string().nullish(),
     hotelName: z.string(),
@@ -89,6 +90,14 @@ export const getOrderDetailOutputSchema = z.object({
     productAmount: z.number(),
     paymentMethod: z.string(),
   }),
+  payments: z.array(
+    z.object({
+      amount: z.number(),
+      paymentMethod: z.string(),
+      isAdditionalPayment: z.boolean(),
+      additionalPaymentReason: z.string().nullish(),
+    })
+  ),
 });
 
 // getMyOrders - 내 주문내역 조회

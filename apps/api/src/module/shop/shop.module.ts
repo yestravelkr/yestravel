@@ -5,6 +5,7 @@ import { ShopProductModule } from './product/shop.product.module';
 import { ShopInfluencerModule } from './influencer/shop.influencer.module';
 import { ShopOrderModule } from './order/shop.order.module';
 import { ShopClaimModule } from './claim/shop.claim.module';
+import { ShopAdditionalPaymentModule } from './additional-payment/shop.additional-payment.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { ShopClaimModule } from './claim/shop.claim.module';
     ShopInfluencerModule,
     ShopOrderModule,
     ShopClaimModule,
+    ShopAdditionalPaymentModule,
   ],
   exports: [
     ShopAuthModule,
@@ -22,6 +24,7 @@ import { ShopClaimModule } from './claim/shop.claim.module';
     ShopInfluencerModule,
     ShopOrderModule,
     ShopClaimModule,
+    ShopAdditionalPaymentModule,
   ],
 })
 export class ShopModule {}
